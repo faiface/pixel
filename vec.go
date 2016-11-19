@@ -67,9 +67,9 @@ func (u Vec) Unit() Vec {
 	return u / V(u.Len(), 0)
 }
 
-// Scaled returns a vector u multiplied by k.
-func (u Vec) Scaled(k float64) Vec {
-	return u * V(k, 0)
+// Scaled returns a vector u multiplied by c.
+func (u Vec) Scaled(c float64) Vec {
+	return u * V(c, 0)
 }
 
 // Rotated returns a vector u rotated by the given angle in radians.
