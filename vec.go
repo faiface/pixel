@@ -37,7 +37,11 @@ func V(x, y float64) Vec {
 	return Vec(complex(x, y))
 }
 
-// String returns the string representation of a vector u as "Vec(x, y)".
+// String returns the string representation of a vector u.
+//
+//   u := pixel.V(4.5, -1.3)
+//   u.String()     // returns "Vec(4.5, -1.3)"
+//   fmt.Println(u) // Vec(4.5, -1.3)
 func (u Vec) String() string {
 	return fmt.Sprintf("Vec(%v, %v)", u.X(), u.Y())
 }
