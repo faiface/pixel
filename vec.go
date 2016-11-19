@@ -19,13 +19,13 @@ import (
 // Add and subtract them using the standard + and - operators:
 //
 //   w := u + v
-//   fmt.Println(w)     // Vec2(9, -1)
-//   fmt.Println(u - v) // Vec2(-7, 5)
+//   fmt.Println(w)     // Vec(9, -1)
+//   fmt.Println(u - v) // Vec(-7, 5)
 //
 // Additional standard vector operations can be obtained with methods:
 //
-//   u := pixel.Vec(2, 3)
-//   v := pixel.Vec(8, 1)
+//   u := pixel.V(2, 3)
+//   v := pixel.V(8, 1)
 //   if u.X() < 0 {
 //       fmt.Println("this won't happend")
 //   }
