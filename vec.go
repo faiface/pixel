@@ -27,7 +27,7 @@ import (
 //   u := pixel.V(2, 3)
 //   v := pixel.V(8, 1)
 //   if u.X() < 0 {
-//       fmt.Println("this won't happend")
+//       fmt.Println("this won't happen")
 //   }
 //   x := u.Unit().Dot(v.Unit())
 type Vec complex128
@@ -78,7 +78,8 @@ func (u Vec) Scaled(c float64) Vec {
 
 // Rotated returns a vector u rotated by the given angle in radians.
 func (u Vec) Rotated(angle float64) Vec {
-	return u * V(math.Cos(angle), math.Sin(angle))
+	sin, cos := math.Sincos(angle)
+	return u * V(cos, sin)
 }
 
 // Dot returns the dot product of vectors u and v.
