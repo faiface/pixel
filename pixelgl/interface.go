@@ -20,9 +20,9 @@ package pixelgl
 //
 // Don't do this! A better practice is to make a BeginEnder so that it wraps another BeginEnder like this:
 //
-//   shader = NewShader(window)
-//   texture = NewTexture(shader)
-//   vertexarray = NewVertexArray(texture)
+//   shader := NewShader(window)
+//   texture := NewTexture(shader)
+//   vertexarray := NewVertexArray(texture)
 //   // now, somewhere else in your code, instead of calling numerous Begin/Ends, you just call
 //   vertexarray.Draw()
 //
