@@ -1,8 +1,6 @@
 package pixelgl
 
-import (
-	"runtime"
-)
+import "runtime"
 
 // Due to the existance and usage of thread-local variables by OpenGL, it's recommended to
 // execute all OpenGL calls from a single dedicated thread. This file defines functions to make

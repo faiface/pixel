@@ -23,7 +23,7 @@ package pixelgl
 //   shader = NewShader(window)
 //   texture = NewTexture(shader)
 //   vertexarray = NewVertexArray(texture)
-//   // now, somewhere else in your code, instead of calling numerous Begin/Ends, you just calling
+//   // now, somewhere else in your code, instead of calling numerous Begin/Ends, you just call
 //   vertexarray.Draw()
 //
 // The final single call to draw a vertex array executes all of the Begins and Ends, because the objects are
