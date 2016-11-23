@@ -47,45 +47,41 @@ const (
 // VertexUsage specifies how often the vertex array data will be updated.
 type VertexUsage int
 
-// Possible VertexUsage values are:
-//
-// 1. StaticUsage - never or rarely updated
-//
-// 2. DynamicUsage - often updated
-//
-// 3. StreamUsage - updated every frame
 const (
-	StaticUsage  VertexUsage = gl.STATIC_DRAW
-	DynamicUsage             = gl.DYNAMIC_DRAW
-	StreamUsage              = gl.STREAM_DRAW
+	// StaticUsage means the data never or rarely gets updated.
+	StaticUsage VertexUsage = gl.STATIC_DRAW
+
+	// DynamicUsage means the data gets updated often.
+	DynamicUsage VertexUsage = gl.DYNAMIC_DRAW
+
+	// StreamUsage means the data gets updated every frame.
+	StreamUsage VertexUsage = gl.STREAM_DRAW
 )
 
 // VertexDrawMode specifies how should the vertices be drawn.
 type VertexDrawMode int
 
-// Possible VertexDrawMode values are:
-//
-// 1. PointsDrawMode - just draw individual PointsDrawMode
-//
-// 2. LinesDrawMode - take pairs of vertices and draw a line from each pair
-//
-// 3. LineStripDrawMode - take each two subsequent vertices and draw a line from each two
-//
-// 4. LineLoopDrawMode - same as line strip, but also draw a line between the first and the last vertex
-//
-// 5. TrianglesDrawMode - take triples of vertices and draw a triangle from each triple
-//
-// 6. TriangleStripDrawMode - take each three subsequent vertices and draw a triangle from each three
-//
-// 7. TriangleFanDrawMode - take each two subsequent vertices excluding the first vertex and draw a triangle from the first vertex and the two
 const (
-	PointsDrawMode        VertexDrawMode = gl.POINTS
-	LinesDrawMode                        = gl.LINES
-	LineStripDrawMode                    = gl.LINE_STRIP
-	LineLoopDrawMode                     = gl.LINE_LOOP
-	TrianglesDrawMode                    = gl.TRIANGLES
-	TriangleStripDrawMode                = gl.TRIANGLE_STRIP
-	TriangleFanDrawMode                  = gl.TRIANGLE_FAN
+	// PointsDrawMode just draws individual points
+	PointsDrawMode VertexDrawMode = gl.POINTS
+
+	// LinesDrawMode takes pairs of vertices and draws a line from each pair
+	LinesDrawMode VertexDrawMode = gl.LINES
+
+	// LineStripDrawMode takes each two subsequent vertices and draws a line from each two
+	LineStripDrawMode VertexDrawMode = gl.LINE_STRIP
+
+	// LineLoopDrawMode is same as line strip, but also draws a line between the first and the last vertex
+	LineLoopDrawMode VertexDrawMode = gl.LINE_LOOP
+
+	// TrianglesDrawMode takes triples of vertices and draws a triangle from each triple
+	TrianglesDrawMode VertexDrawMode = gl.TRIANGLES
+
+	// TriangleStripDrawMode takes each three subsequent vertices and draws a triangle from each three
+	TriangleStripDrawMode VertexDrawMode = gl.TRIANGLE_STRIP
+
+	// TriangleFanDrawMode draws triangles from the first vertex and each two subsequent: {0, 1, 2, 3} -> {0, 1, 2}, {0, 2, 3}.
+	TriangleFanDrawMode VertexDrawMode = gl.TRIANGLE_FAN
 )
 
 // VertexArray is an OpenGL vertex array object that also holds it's own vertex buffer object.
