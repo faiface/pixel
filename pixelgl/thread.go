@@ -16,6 +16,7 @@ func init() {
 	go func() {
 		runtime.LockOSThread()
 		for f := range callQueue {
+			GetLastError() // swallow unchecked errors
 			f()
 		}
 	}()

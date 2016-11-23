@@ -1,6 +1,9 @@
 package pixelgl
 
-import "github.com/go-gl/gl/v3.3-core/gl"
+import (
+	"github.com/go-gl/gl/v3.3-core/gl"
+	"github.com/pkg/errors"
+)
 
 // VertexFormat defines a data format in a vertex buffer.
 //
@@ -96,13 +99,13 @@ type VertexArray struct {
 }
 
 // NewVertexArray creates a new vertex array and wraps another BeginEnder around it.
-func NewVertexArray(parent BeginEnder, format VertexFormat, mode VertexDrawMode, usage VertexUsage, data []float64) *VertexArray {
+func NewVertexArray(parent BeginEnder, format VertexFormat, mode VertexDrawMode, usage VertexUsage, data []float64) (*VertexArray, error) {
 	va := &VertexArray{
 		parent: parent,
 		format: format,
 		mode:   mode,
 	}
-	Do(func() {
+	err := DoErr(func() error {
 		gl.GenVertexArrays(1, &va.vao)
 		gl.BindVertexArray(va.vao)
 
@@ -129,8 +132,13 @@ func NewVertexArray(parent BeginEnder, format VertexFormat, mode VertexDrawMode,
 
 		gl.BindBuffer(gl.ARRAY_BUFFER, 0)
 		gl.BindVertexArray(0)
+
+		return GetLastError()
 	})
-	return va
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to create a vertex array")
+	}
+	return va, nil
 }
 
 // VertexFormat returns the format of the vertices inside a vertex array.
@@ -164,12 +172,17 @@ func (va *VertexArray) Draw() {
 // UpdateData overwrites the current vertex array data starting at the index offset.
 //
 // Offset is not a number of bytes, instead, it's an index in the array.
-func (va *VertexArray) UpdateData(offset int, data []float64) {
-	Do(func() {
+func (va *VertexArray) UpdateData(offset int, data []float64) error {
+	err := DoErr(func() error {
 		gl.BindBuffer(gl.ARRAY_BUFFER, va.vbo)
 		gl.BufferSubData(gl.ARRAY_BUFFER, 8*offset, 8*len(data), gl.Ptr(data))
 		gl.BindBuffer(gl.ARRAY_BUFFER, 0)
+		return GetLastError()
 	})
+	if err != nil {
+		return errors.Wrap(err, "failed to update vertex array")
+	}
+	return nil
 }
 
 // Begin binds a vertex array and it's associated vertex buffer.
