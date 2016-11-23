@@ -27,9 +27,7 @@ func init() {
 // It must be called under the presence of an active OpenGL context, e.g., always after calling window.MakeContextCurrent().
 // Also, always call this function when switching contexts.
 func Init() {
-	err := DoErr(func() error {
-		return gl.Init()
-	})
+	err := gl.Init()
 	if err != nil {
 		panic(err)
 	}
