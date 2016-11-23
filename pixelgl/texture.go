@@ -34,7 +34,7 @@ func NewTexture(parent BeginEnder, width, height int, pixels []uint8) (*Texture,
 
 		gl.BindTexture(gl.TEXTURE_2D, 0)
 
-		return GetLastError()
+		return getLastError()
 	})
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to create a texture")
