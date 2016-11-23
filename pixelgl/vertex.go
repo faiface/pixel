@@ -123,7 +123,7 @@ func NewVertexArray(parent BeginEnder, format VertexFormat, mode VertexDrawMode,
 				int32(attr.Size),
 				gl.DOUBLE,
 				false,
-				int32(stride),
+				int32(8*stride),
 				gl.PtrOffset(8*offset),
 			)
 			gl.EnableVertexAttribArray(uint32(i))
