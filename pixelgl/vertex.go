@@ -105,7 +105,7 @@ func NewVertexArray(parent BeginEnder, format VertexFormat, mode VertexDrawMode,
 		format: format,
 		mode:   mode,
 	}
-	err := DoErr(func() error {
+	err := DoGLErr(func() {
 		gl.GenVertexArrays(1, &va.vao)
 		gl.BindVertexArray(va.vao)
 
@@ -132,8 +132,6 @@ func NewVertexArray(parent BeginEnder, format VertexFormat, mode VertexDrawMode,
 
 		gl.BindBuffer(gl.ARRAY_BUFFER, 0)
 		gl.BindVertexArray(0)
-
-		return getLastError()
 	})
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to create a vertex array")
@@ -173,11 +171,10 @@ func (va *VertexArray) Draw() {
 //
 // Offset is not a number of bytes, instead, it's an index in the array.
 func (va *VertexArray) UpdateData(offset int, data []float64) error {
-	err := DoErr(func() error {
+	err := DoGLErr(func() {
 		gl.BindBuffer(gl.ARRAY_BUFFER, va.vbo)
 		gl.BufferSubData(gl.ARRAY_BUFFER, 8*offset, 8*len(data), gl.Ptr(data))
 		gl.BindBuffer(gl.ARRAY_BUFFER, 0)
-		return getLastError()
 	})
 	if err != nil {
 		return errors.Wrap(err, "failed to update vertex array")

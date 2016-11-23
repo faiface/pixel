@@ -15,7 +15,7 @@ type Texture struct {
 // The pixels must be a sequence of RGBA values.
 func NewTexture(parent BeginEnder, width, height int, pixels []uint8) (*Texture, error) {
 	texture := &Texture{parent: parent}
-	err := DoErr(func() error {
+	err := DoGLErr(func() {
 		gl.GenTextures(1, &texture.tex)
 		gl.BindTexture(gl.TEXTURE_2D, texture.tex)
 
@@ -33,8 +33,6 @@ func NewTexture(parent BeginEnder, width, height int, pixels []uint8) (*Texture,
 		gl.GenerateMipmap(gl.TEXTURE_2D)
 
 		gl.BindTexture(gl.TEXTURE_2D, 0)
-
-		return getLastError()
 	})
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to create a texture")
