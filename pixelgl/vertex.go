@@ -48,8 +48,11 @@ const (
 type VertexUsage int
 
 // Possible VertexUsage values are:
+//
 // 1. StaticUsage - never or rarely updated
+//
 // 2. DynamicUsage - often updated
+//
 // 3. StreamUsage - updated every frame
 const (
 	StaticUsage  VertexUsage = gl.STATIC_DRAW
@@ -61,12 +64,19 @@ const (
 type VertexDrawMode int
 
 // Possible VertexDrawMode values are:
+//
 // 1. PointsDrawMode - just draw individual PointsDrawMode
+//
 // 2. LinesDrawMode - take pairs of vertices and draw a line from each pair
+//
 // 3. LineStripDrawMode - take each two subsequent vertices and draw a line from each two
+//
 // 4. LineLoopDrawMode - same as line strip, but also draw a line between the first and the last vertex
+//
 // 5. TrianglesDrawMode - take triples of vertices and draw a triangle from each triple
+//
 // 6. TriangleStripDrawMode - take each three subsequent vertices and draw a triangle from each three
+//
 // 7. TriangleFanDrawMode - take each two subsequent vertices excluding the first vertex and draw a triangle from the first vertex and the two
 const (
 	PointsDrawMode        VertexDrawMode = gl.POINTS
