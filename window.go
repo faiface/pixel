@@ -2,6 +2,7 @@ package pixel
 
 import (
 	"github.com/faiface/pixel/pixelgl"
+	"github.com/go-gl/gl/v3.3-core/gl"
 	"github.com/go-gl/glfw/v3.2/glfw"
 	"github.com/pkg/errors"
 )
@@ -59,26 +60,38 @@ func NewWindow(config WindowConfig) (*Window, error) {
 	return w, nil
 }
 
-func (w *Window) Update() {
+func (w *Window) Clear(r, g, b, a float64) {
+	w.Begin()
 	pixelgl.Do(func() {
-		w.Begin()
+		gl.ClearColor(float32(r), float32(g), float32(b), float32(a))
+		gl.Clear(gl.COLOR_BUFFER_BIT)
+	})
+	w.End()
+}
+
+func (w *Window) Update() {
+	w.Begin()
+	pixelgl.Do(func() {
 		if w.config.VSync {
 			glfw.SwapInterval(1)
 		}
 		w.window.SwapBuffers()
 		glfw.PollEvents()
-		w.End()
 	})
+	w.End()
 }
 
 var currentWindow *Window = nil
 
 func (w *Window) Begin() {
-	if currentWindow != w {
-		w.window.MakeContextCurrent()
-		pixelgl.Init()
-		currentWindow = w
-	}
+	pixelgl.Do(func() {
+		if currentWindow != w {
+			w.window.MakeContextCurrent()
+			pixelgl.Init()
+			currentWindow = w
+		}
+	})
+
 }
 
 func (w *Window) End() {

@@ -17,6 +17,9 @@ type Shader struct {
 //
 // Note that vertexShader and fragmentShader parameters must contain the source code, they're not filenames.
 func NewShader(parent BeginEnder, vertexShader, fragmentShader string) (*Shader, error) {
+	parent.Begin()
+	defer parent.End()
+
 	shader := &Shader{
 		parent: parent,
 	}

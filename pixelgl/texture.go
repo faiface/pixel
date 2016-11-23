@@ -14,6 +14,9 @@ type Texture struct {
 // NewTexture creates a new texture with the specified width and height.
 // The pixels must be a sequence of RGBA values.
 func NewTexture(parent BeginEnder, width, height int, pixels []uint8) (*Texture, error) {
+	parent.Begin()
+	defer parent.End()
+
 	texture := &Texture{parent: parent}
 	err := DoGLErr(func() {
 		gl.GenTextures(1, &texture.tex)

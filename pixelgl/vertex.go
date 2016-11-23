@@ -100,6 +100,9 @@ type VertexArray struct {
 
 // NewVertexArray creates a new vertex array and wraps another BeginEnder around it.
 func NewVertexArray(parent BeginEnder, format VertexFormat, mode VertexDrawMode, usage VertexUsage, data []float64) (*VertexArray, error) {
+	parent.Begin()
+	defer parent.End()
+
 	va := &VertexArray{
 		parent: parent,
 		format: format,
