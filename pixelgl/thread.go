@@ -4,7 +4,7 @@ import (
 	"errors"
 	"runtime"
 
-	"github.com/go-gl/gl/v2.1/gl"
+	"github.com/go-gl/gl/v3.3-core/gl"
 )
 
 // Due to the existance and usage of thread-local variables by OpenGL, it's recommended to
@@ -21,6 +21,17 @@ func init() {
 			f()
 		}
 	}()
+}
+
+// Init initializes OpenGL by loading the function pointers from the active OpenGL context.
+//
+// It must be called under the presence of an active OpenGL context, e.g., always after calling window.MakeContextCurrent().
+// Also, always call this function when switching contexts.
+func Init() {
+	err := gl.Init()
+	if err != nil {
+		panic(err)
+	}
 }
 
 // Do executes a function inside a dedicated OpenGL thread.
