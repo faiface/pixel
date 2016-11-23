@@ -17,7 +17,6 @@ func init() {
 	go func() {
 		runtime.LockOSThread()
 		for f := range callQueue {
-			getLastGLErr() // swallow unchecked errors
 			f()
 		}
 	}()
@@ -28,7 +27,9 @@ func init() {
 // It must be called under the presence of an active OpenGL context, e.g., always after calling window.MakeContextCurrent().
 // Also, always call this function when switching contexts.
 func Init() {
-	err := gl.Init()
+	err := DoErr(func() error {
+		return gl.Init()
+	})
 	if err != nil {
 		panic(err)
 	}
@@ -75,6 +76,7 @@ func DoVal(f func() interface{}) interface{} {
 func DoGLErr(f func()) (gl error) {
 	glerr := make(chan error)
 	callQueue <- func() {
+		getLastGLErr() // swallow
 		f()
 		glerr <- getLastGLErr()
 	}
@@ -86,6 +88,7 @@ func DoErrGLErr(f func() error) (_, gl error) {
 	err := make(chan error)
 	glerr := make(chan error)
 	callQueue <- func() {
+		getLastGLErr() // swallow
 		err <- f()
 		glerr <- getLastGLErr()
 	}
@@ -97,6 +100,7 @@ func DoValGLErr(f func() interface{}) (_ interface{}, gl error) {
 	val := make(chan interface{})
 	glerr := make(chan error)
 	callQueue <- func() {
+		getLastGLErr() // swallow
 		val <- f()
 		glerr <- getLastGLErr()
 	}
