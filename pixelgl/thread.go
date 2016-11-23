@@ -23,6 +23,7 @@ func init() {
 }
 
 // Init initializes OpenGL by loading the function pointers from the active OpenGL context.
+// This function must be manually run inside the dedicated thread (Do, DoErr, DoVal, etc.).
 //
 // It must be called under the presence of an active OpenGL context, e.g., always after calling window.MakeContextCurrent().
 // Also, always call this function when switching contexts.
