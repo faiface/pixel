@@ -11,11 +11,7 @@ import (
 // execute all OpenGL calls from a single dedicated thread. This file defines functions to make
 // it possible.
 
-var (
-	callQueue = make(chan func())
-
-	//TODO: some OpenGL state variables will be here
-)
+var callQueue = make(chan func())
 
 func init() {
 	go func() {
