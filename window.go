@@ -1,6 +1,8 @@
 package pixel
 
 import (
+	"sync"
+
 	"github.com/faiface/pixel/pixelgl"
 	"github.com/go-gl/gl/v3.3-core/gl"
 	"github.com/go-gl/glfw/v3.2/glfw"
@@ -81,19 +83,24 @@ func (w *Window) Update() {
 	w.End()
 }
 
-var currentWindow *Window = nil
+var (
+	windowMutex   sync.Mutex
+	currentWindow *Window
+)
 
 func (w *Window) Begin() {
-	pixelgl.Do(func() {
-		if currentWindow != w {
+	needSwitch := pixelgl.DoVal(func() interface{} {
+		return currentWindow != w
+	}).(bool)
+	if needSwitch {
+		windowMutex.Lock()
+		pixelgl.Do(func() {
 			w.window.MakeContextCurrent()
 			pixelgl.Init()
-			currentWindow = w
-		}
-	})
-
+		})
+	}
 }
 
 func (w *Window) End() {
-	// nothing really
+	windowMutex.Unlock()
 }
