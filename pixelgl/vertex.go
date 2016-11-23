@@ -139,6 +139,14 @@ func NewVertexArray(parent BeginEnder, format VertexFormat, mode VertexDrawMode,
 	return va, nil
 }
 
+// Delete deletes a vertex array and it's associated vertex buffer. Don't use a vertex array after deletion.
+func (va *VertexArray) Delete() {
+	Do(func() {
+		gl.DeleteVertexArrays(1, &va.vao)
+		gl.DeleteBuffers(1, &va.vbo)
+	})
+}
+
 // VertexFormat returns the format of the vertices inside a vertex array.
 //
 // Do not change this format!

@@ -40,6 +40,13 @@ func NewTexture(parent BeginEnder, width, height int, pixels []uint8) (*Texture,
 	return texture, nil
 }
 
+// Delete deletes a texture. Don't use a texture after deletion.
+func (t *Texture) Delete() {
+	Do(func() {
+		gl.DeleteTextures(1, &t.tex)
+	})
+}
+
 // Begin binds a texture.
 func (t *Texture) Begin() {
 	t.parent.Begin()
