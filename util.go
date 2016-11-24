@@ -2,7 +2,7 @@ package pixel
 
 import "image/color"
 
-// colorToRGBA converts a color from image/color to RGBA components in interval [0, 1)
+// colorToRGBA converts a color from image/color to RGBA components in interval [0, 1].
 func colorToRGBA(c color.Color) (r, g, b, a float64) {
 	ri, gi, bi, ai := c.RGBA()
 	r = float64(ri) / 0xffff
