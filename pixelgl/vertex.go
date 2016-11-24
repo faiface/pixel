@@ -183,6 +183,8 @@ func (va *VertexArray) Draw() {
 // UpdateData overwrites the current vertex array data starting at the index offset.
 //
 // Offset is not a number of bytes, instead, it's an index in the array.
+//
+// If offset is negative or offset+len(data)>len(originaldata) the program panics.
 func (va *VertexArray) UpdateData(offset int, data []float64) {
 	DoNoBlock(func() {
 		gl.BindBuffer(gl.ARRAY_BUFFER, va.vbo)
