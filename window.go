@@ -4,11 +4,17 @@ import (
 	"sync"
 
 	"github.com/faiface/pixel/pixelgl"
-	"github.com/go-gl/gl/v3.3-core/gl"
 	"github.com/go-gl/glfw/v3.2/glfw"
 	"github.com/pkg/errors"
 )
 
+//TODO: better doc
+
+// WindowConfig is convenience structure for specifying all possible properties of a window.
+// Properties are chosen in such a way, that you usually only need to set a few of them - defaults
+// (zeros) should usually be sensible.
+//
+// Note that you always need to set the width and the height of a window.
 type WindowConfig struct {
 	Title       string
 	Width       float64
@@ -22,11 +28,15 @@ type WindowConfig struct {
 	MSAASamples int
 }
 
+// Window is a window handler. Use this type to manipulate a window (input, drawing, ...).
 type Window struct {
 	window *glfw.Window
 	config WindowConfig
 }
 
+// NewWindow creates a new window with it's properties specified in the provided config.
+//
+// If window creation fails, an error is returned.
 func NewWindow(config WindowConfig) (*Window, error) {
 	bool2int := map[bool]int{
 		true:  glfw.True,
@@ -62,15 +72,14 @@ func NewWindow(config WindowConfig) (*Window, error) {
 	return w, nil
 }
 
+// Clear clears the window with a color.
 func (w *Window) Clear(r, g, b, a float64) {
 	w.Begin()
-	pixelgl.Do(func() {
-		gl.ClearColor(float32(r), float32(g), float32(b), float32(a))
-		gl.Clear(gl.COLOR_BUFFER_BIT)
-	})
+	pixelgl.Clear(r, g, b, a)
 	w.End()
 }
 
+// Update swaps buffers and polls events.
 func (w *Window) Update() {
 	w.Begin()
 	pixelgl.Do(func() {
@@ -88,19 +97,19 @@ var (
 	currentWindow *Window
 )
 
+// Begin makes the context of this window current.
 func (w *Window) Begin() {
-	needSwitch := pixelgl.DoVal(func() interface{} {
-		return currentWindow != w
-	}).(bool)
-	if needSwitch {
-		windowMutex.Lock()
+	windowMutex.Lock()
+	if currentWindow != w {
 		pixelgl.Do(func() {
 			w.window.MakeContextCurrent()
 			pixelgl.Init()
 		})
+		currentWindow = w
 	}
 }
 
+// End makes it possible for other windows to make their context current.
 func (w *Window) End() {
 	windowMutex.Unlock()
 }
