@@ -1,6 +1,7 @@
 package pixel
 
 import (
+	"image/color"
 	"sync"
 
 	"github.com/faiface/pixel/pixelgl"
@@ -73,9 +74,9 @@ func NewWindow(config WindowConfig) (*Window, error) {
 }
 
 // Clear clears the window with a color.
-func (w *Window) Clear(r, g, b, a float64) {
+func (w *Window) Clear(c color.Color) {
 	w.Begin()
-	pixelgl.Clear(r, g, b, a)
+	pixelgl.Clear(colorToRGBA(c))
 	w.End()
 }
 
