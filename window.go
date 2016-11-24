@@ -54,6 +54,11 @@ type WindowConfig struct {
 type Window struct {
 	window *glfw.Window
 	config WindowConfig
+
+	// need to save these to correctly restore a fullscreen window
+	restore struct {
+		xpos, ypos, width, height int
+	}
 }
 
 // NewWindow creates a new window with it's properties specified in the provided config.
@@ -80,15 +85,8 @@ func NewWindow(config WindowConfig) (*Window, error) {
 		glfw.WindowHint(glfw.Maximized, bool2int[config.Maximized])
 		glfw.WindowHint(glfw.Samples, config.MSAASamples)
 
-		var (
-			err     error
-			monitor *glfw.Monitor
-		)
-		if config.Fullscreen != nil {
-			monitor = config.Fullscreen.monitor
-		}
-
-		w.window, err = glfw.CreateWindow(int(config.Width), int(config.Height), config.Title, monitor, nil)
+		var err error
+		w.window, err = glfw.CreateWindow(int(config.Width), int(config.Height), config.Title, nil, nil)
 		if err != nil {
 			return err
 		}
@@ -99,28 +97,31 @@ func NewWindow(config WindowConfig) (*Window, error) {
 		return nil, errors.Wrap(err, "creating window failed")
 	}
 
+	w.SetFullscreen(config.Fullscreen)
+
 	return w, nil
 }
 
 // Delete destroys a window. The window can't be used any further.
 func (w *Window) Delete() {
 	w.Begin()
+	defer w.End()
 	pixelgl.Do(func() {
 		w.window.Destroy()
 	})
-	w.End()
 }
 
 // Clear clears the window with a color.
 func (w *Window) Clear(c color.Color) {
 	w.Begin()
+	defer w.End()
 	pixelgl.Clear(colorToRGBA(c))
-	w.End()
 }
 
 // Update swaps buffers and polls events.
 func (w *Window) Update() {
 	w.Begin()
+	defer w.End()
 	pixelgl.Do(func() {
 		if w.config.VSync {
 			glfw.SwapInterval(1)
@@ -128,16 +129,155 @@ func (w *Window) Update() {
 		w.window.SwapBuffers()
 		glfw.PollEvents()
 	})
-	w.End()
+}
+
+// SetTitle changes the title of a window.
+func (w *Window) SetTitle(title string) {
+	w.Begin()
+	defer w.End()
+	pixelgl.Do(func() {
+		w.window.SetTitle(title)
+	})
+}
+
+// SetSize resizes a window to the specified size in pixels.
+// In case of a fullscreen window, it changes the resolution of that window.
+func (w *Window) SetSize(width, height float64) {
+	w.Begin()
+	defer w.End()
+	pixelgl.Do(func() {
+		w.window.SetSize(int(width), int(height))
+	})
+}
+
+// Size returns the size of the client area of a window (the part you can draw on).
+func (w *Window) Size() (width, height float64) {
+	w.Begin()
+	defer w.End()
+	pixelgl.Do(func() {
+		wi, hi := w.window.GetSize()
+		width = float64(wi)
+		height = float64(hi)
+	})
+	return width, height
+}
+
+// Show makes a window visible if it was hidden.
+func (w *Window) Show() {
+	w.Begin()
+	defer w.End()
+	pixelgl.Do(func() {
+		w.window.Show()
+	})
+}
+
+// Hide hides a window if it was visible.
+func (w *Window) Hide() {
+	w.Begin()
+	defer w.End()
+	pixelgl.Do(func() {
+		w.window.Hide()
+	})
+}
+
+// SetFullscreen sets a window fullscreen on a given monitor. If the monitor is nil, the window will be resored to windowed instead.
+//
+// Note, that there is nothing about the resolution of the fullscreen window. The window is automatically set to the monitor's
+// resolution. If you want a different resolution, you need to set it manually with SetSize method.
+func (w *Window) SetFullscreen(monitor *Monitor) {
+	if w.Monitor() != monitor {
+		if monitor == nil {
+			w.Begin()
+			defer w.End()
+
+			pixelgl.Do(func() {
+				w.window.SetMonitor(
+					nil,
+					w.restore.xpos,
+					w.restore.ypos,
+					w.restore.width,
+					w.restore.height,
+					0,
+				)
+			})
+		} else {
+			w.Begin()
+			defer w.End()
+
+			pixelgl.Do(func() {
+				w.restore.xpos, w.restore.ypos = w.window.GetPos()
+				w.restore.width, w.restore.height = w.window.GetSize()
+
+				width, height := monitor.Size()
+				refreshRate := monitor.RefreshRate()
+				w.window.SetMonitor(
+					monitor.monitor,
+					0,
+					0,
+					int(width),
+					int(height),
+					int(refreshRate),
+				)
+			})
+		}
+	}
+}
+
+// IsFullscreen returns true if the window is in the fullscreen mode.
+func (w *Window) IsFullscreen() bool {
+	return w.Monitor() != nil
+}
+
+// Monitor returns a monitor a fullscreen window is on. If the window is not fullscreen, this function returns nil.
+func (w *Window) Monitor() *Monitor {
+	w.Begin()
+	defer w.End()
+
+	monitor := pixelgl.DoVal(func() interface{} {
+		return w.window.GetMonitor()
+	}).(*glfw.Monitor)
+	if monitor == nil {
+		return nil
+	}
+	return &Monitor{
+		monitor: monitor,
+	}
 }
 
 // Focus brings a window to the front and sets input focus.
 func (w *Window) Focus() {
 	w.Begin()
+	defer w.End()
 	pixelgl.Do(func() {
 		w.window.Focus()
 	})
-	w.End()
+}
+
+// Focused returns true if a window has input focus.
+func (w *Window) Focused() bool {
+	w.Begin()
+	defer w.End()
+	return pixelgl.DoVal(func() interface{} {
+		return w.window.GetAttrib(glfw.Focused) == glfw.True
+	}).(bool)
+}
+
+// Maximize puts a windowed window to a maximized state.
+func (w *Window) Maximize() {
+	w.Begin()
+	defer w.End()
+	pixelgl.Do(func() {
+		w.window.Maximize()
+	})
+}
+
+// Restore restores a windowed window from a maximized state.
+func (w *Window) Restore() {
+	w.Begin()
+	defer w.End()
+	pixelgl.Do(func() {
+		w.window.Restore()
+	})
 }
 
 var currentWindow struct {
