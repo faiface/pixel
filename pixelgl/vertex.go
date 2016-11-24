@@ -108,6 +108,7 @@ func NewVertexArray(parent BeginEnder, format VertexFormat, mode VertexDrawMode,
 		format: format,
 		mode:   mode,
 	}
+
 	err := DoGLErr(func() {
 		gl.GenVertexArrays(1, &va.vao)
 		gl.BindVertexArray(va.vao)
@@ -139,6 +140,7 @@ func NewVertexArray(parent BeginEnder, format VertexFormat, mode VertexDrawMode,
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to create a vertex array")
 	}
+
 	return va, nil
 }
 

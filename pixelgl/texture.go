@@ -18,6 +18,7 @@ func NewTexture(parent BeginEnder, width, height int, pixels []uint8) (*Texture,
 	defer parent.End()
 
 	texture := &Texture{parent: parent}
+
 	err := DoGLErr(func() {
 		gl.GenTextures(1, &texture.tex)
 		gl.BindTexture(gl.TEXTURE_2D, texture.tex)
@@ -40,6 +41,7 @@ func NewTexture(parent BeginEnder, width, height int, pixels []uint8) (*Texture,
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to create a texture")
 	}
+
 	return texture, nil
 }
 
