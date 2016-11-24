@@ -103,7 +103,7 @@ func NewShader(parent BeginEnder, vertexShader, fragmentShader string) (*Shader,
 
 // Delete deletes a shader program. Don't use a shader after deletion.
 func (s *Shader) Delete() {
-	Do(func() {
+	DoNoBlock(func() {
 		gl.DeleteProgram(s.program)
 	})
 }
@@ -111,14 +111,14 @@ func (s *Shader) Delete() {
 // Begin starts using a shader program.
 func (s *Shader) Begin() {
 	s.parent.Begin()
-	Do(func() {
+	DoNoBlock(func() {
 		gl.UseProgram(s.program)
 	})
 }
 
 // End stops using a shader program.
 func (s *Shader) End() {
-	Do(func() {
+	DoNoBlock(func() {
 		gl.UseProgram(0)
 	})
 	s.parent.End()

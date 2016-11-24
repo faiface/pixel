@@ -11,7 +11,7 @@ import (
 // execute all OpenGL calls from a single dedicated thread. This file defines functions to make
 // it possible.
 
-var callQueue = make(chan func())
+var callQueue = make(chan func(), 32)
 
 func init() {
 	go func() {
@@ -32,6 +32,12 @@ func Init() {
 	if err != nil {
 		panic(err)
 	}
+}
+
+// DoNoBlock executes a function inside a dedicated OpenGL thread.
+// DoNoBlock does not wait until the function finishes.
+func DoNoBlock(f func()) {
+	callQueue <- f
 }
 
 // Do executes a function inside a dedicated OpenGL thread.

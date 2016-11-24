@@ -45,7 +45,7 @@ func NewTexture(parent BeginEnder, width, height int, pixels []uint8) (*Texture,
 
 // Delete deletes a texture. Don't use a texture after deletion.
 func (t *Texture) Delete() {
-	Do(func() {
+	DoNoBlock(func() {
 		gl.DeleteTextures(1, &t.tex)
 	})
 }
@@ -53,14 +53,14 @@ func (t *Texture) Delete() {
 // Begin binds a texture.
 func (t *Texture) Begin() {
 	t.parent.Begin()
-	Do(func() {
+	DoNoBlock(func() {
 		gl.BindTexture(gl.TEXTURE_2D, t.tex)
 	})
 }
 
 // End unbinds a texture.
 func (t *Texture) End() {
-	Do(func() {
+	DoNoBlock(func() {
 		gl.BindTexture(gl.TEXTURE_2D, 0)
 	})
 	t.parent.End()

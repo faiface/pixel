@@ -144,7 +144,7 @@ func NewVertexArray(parent BeginEnder, format VertexFormat, mode VertexDrawMode,
 
 // Delete deletes a vertex array and it's associated vertex buffer. Don't use a vertex array after deletion.
 func (va *VertexArray) Delete() {
-	Do(func() {
+	DoNoBlock(func() {
 		gl.DeleteVertexArrays(1, &va.vao)
 		gl.DeleteBuffers(1, &va.vbo)
 	})
@@ -159,7 +159,7 @@ func (va *VertexArray) VertexFormat() VertexFormat {
 
 // SetDrawMode sets the draw mode of a vertex array. Subsequent calls to Draw will use this draw mode.
 func (va *VertexArray) SetDrawMode(mode VertexDrawMode) {
-	Do(func() {
+	DoNoBlock(func() {
 		va.mode = mode
 	})
 }
@@ -181,22 +181,21 @@ func (va *VertexArray) Draw() {
 // UpdateData overwrites the current vertex array data starting at the index offset.
 //
 // Offset is not a number of bytes, instead, it's an index in the array.
-func (va *VertexArray) UpdateData(offset int, data []float64) error {
-	err := DoGLErr(func() {
+func (va *VertexArray) UpdateData(offset int, data []float64) {
+	DoNoBlock(func() {
 		gl.BindBuffer(gl.ARRAY_BUFFER, va.vbo)
 		gl.BufferSubData(gl.ARRAY_BUFFER, 8*offset, 8*len(data), gl.Ptr(data))
 		gl.BindBuffer(gl.ARRAY_BUFFER, 0)
+		if err := getLastGLErr(); err != nil {
+			panic(errors.Wrap(err, "failed to update vertex array"))
+		}
 	})
-	if err != nil {
-		return errors.Wrap(err, "failed to update vertex array")
-	}
-	return nil
 }
 
 // Begin binds a vertex array and it's associated vertex buffer.
 func (va *VertexArray) Begin() {
 	va.parent.Begin()
-	Do(func() {
+	DoNoBlock(func() {
 		gl.BindVertexArray(va.vao)
 		gl.BindBuffer(gl.ARRAY_BUFFER, va.vbo)
 	})
@@ -204,7 +203,7 @@ func (va *VertexArray) Begin() {
 
 // End draws a vertex array and unbinds it alongside with it's associated vertex buffer.
 func (va *VertexArray) End() {
-	Do(func() {
+	DoNoBlock(func() {
 		gl.DrawArrays(uint32(va.mode), 0, int32(va.count))
 		gl.BindBuffer(gl.ARRAY_BUFFER, 0)
 		gl.BindVertexArray(0)
