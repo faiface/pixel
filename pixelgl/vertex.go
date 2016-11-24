@@ -180,6 +180,17 @@ func (va *VertexArray) Draw() {
 	va.End()
 }
 
+// Data returns a copy of data inside a vertex array (actually it's vertex buffer).
+func (va *VertexArray) Data() []float64 {
+	data := make([]float64, va.count*va.format.Size())
+	Do(func() {
+		gl.BindBuffer(gl.ARRAY_BUFFER, va.vbo)
+		gl.GetBufferSubData(gl.ARRAY_BUFFER, 0, 8*len(data), gl.Ptr(data))
+		gl.BindBuffer(gl.ARRAY_BUFFER, 0)
+	})
+	return data
+}
+
 // UpdateData overwrites the current vertex array data starting at the index offset.
 //
 // Offset is not a number of bytes, instead, it's an index in the array.
