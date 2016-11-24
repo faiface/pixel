@@ -9,23 +9,41 @@ import (
 	"github.com/pkg/errors"
 )
 
-//TODO: better doc
-
 // WindowConfig is convenience structure for specifying all possible properties of a window.
 // Properties are chosen in such a way, that you usually only need to set a few of them - defaults
 // (zeros) should usually be sensible.
 //
 // Note that you always need to set the width and the height of a window.
 type WindowConfig struct {
-	Title       string
-	Width       float64
-	Height      float64
-	Resizable   bool
-	Hidden      bool
+	// Title at the top of a window.
+	Title string
+
+	// Width of a window in pixels.
+	Width float64
+
+	// Height of a window in pixels.
+	Height float64
+
+	// Whether a window is resizable.
+	Resizable bool
+
+	// If set to true, the window will be initially invisible.
+	Hidden bool
+
+	// Undecorated window ommits the borders and decorations (close button, etc.).
 	Undecorated bool
-	Unfocused   bool
-	Maximized   bool
-	VSync       bool
+
+	// If set to true, a window will not get focused upon showing up.
+	Unfocused bool
+
+	// Whether a window is maximized.
+	Maximized bool
+
+	// VSync (vertical synchronization) synchronizes window's framerate with the framerate of the monitor.
+	VSync bool
+
+	// Number of samples for multi-sample anti-aliasing (edge-smoothing).
+	// Usual values are 0, 2, 4, 8 (powers of 2 and not much more than this).
 	MSAASamples int
 }
 
@@ -93,24 +111,28 @@ func (w *Window) Update() {
 	w.End()
 }
 
-var (
-	windowMutex   sync.Mutex
-	currentWindow *Window
-)
+var currentWindow struct {
+	sync.Mutex
+	handler *Window
+}
 
 // Begin makes the context of this window current.
+//
+// Note that you only need to use this function if you're designing a low-level technical plugin (such as an effect).
 func (w *Window) Begin() {
-	windowMutex.Lock()
-	if currentWindow != w {
+	currentWindow.Lock()
+	if currentWindow.handler != w {
 		pixelgl.Do(func() {
 			w.window.MakeContextCurrent()
 			pixelgl.Init()
 		})
-		currentWindow = w
+		currentWindow.handler = w
 	}
 }
 
 // End makes it possible for other windows to make their context current.
+//
+// Note that you only need to use this function if you're designing a low-level technical plugin (such as an effect).
 func (w *Window) End() {
-	windowMutex.Unlock()
+	currentWindow.Unlock()
 }
