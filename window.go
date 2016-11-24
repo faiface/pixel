@@ -24,6 +24,9 @@ type WindowConfig struct {
 	// Height of a window in pixels.
 	Height float64
 
+	// If set to nil, a window will be windowed. Otherwise it will be fullscreen on the specified monitor.
+	Fullscreen *Monitor
+
 	// Whether a window is resizable.
 	Resizable bool
 
@@ -77,11 +80,19 @@ func NewWindow(config WindowConfig) (*Window, error) {
 		glfw.WindowHint(glfw.Maximized, bool2int[config.Maximized])
 		glfw.WindowHint(glfw.Samples, config.MSAASamples)
 
-		var err error
-		w.window, err = glfw.CreateWindow(int(config.Width), int(config.Height), config.Title, nil, nil)
+		var (
+			err     error
+			monitor *glfw.Monitor
+		)
+		if config.Fullscreen != nil {
+			monitor = config.Fullscreen.monitor
+		}
+
+		w.window, err = glfw.CreateWindow(int(config.Width), int(config.Height), config.Title, monitor, nil)
 		if err != nil {
 			return err
 		}
+
 		return nil
 	})
 	if err != nil {
@@ -89,6 +100,15 @@ func NewWindow(config WindowConfig) (*Window, error) {
 	}
 
 	return w, nil
+}
+
+// Delete destroys a window. The window can't be used any further.
+func (w *Window) Delete() {
+	w.Begin()
+	pixelgl.Do(func() {
+		w.window.Destroy()
+	})
+	w.End()
 }
 
 // Clear clears the window with a color.
@@ -107,6 +127,15 @@ func (w *Window) Update() {
 		}
 		w.window.SwapBuffers()
 		glfw.PollEvents()
+	})
+	w.End()
+}
+
+// Focus brings a window to the front and sets input focus.
+func (w *Window) Focus() {
+	w.Begin()
+	pixelgl.Do(func() {
+		w.window.Focus()
 	})
 	w.End()
 }
