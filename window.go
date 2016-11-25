@@ -73,7 +73,10 @@ func NewWindow(config WindowConfig) (*Window, error) {
 	w := &Window{config: config}
 
 	err := pixelgl.DoErr(func() error {
-		glfw.Init()
+		err := glfw.Init()
+		if err != nil {
+			return err
+		}
 
 		glfw.WindowHint(glfw.ContextVersionMajor, 3)
 		glfw.WindowHint(glfw.ContextVersionMinor, 3)
@@ -87,7 +90,6 @@ func NewWindow(config WindowConfig) (*Window, error) {
 		glfw.WindowHint(glfw.Maximized, bool2int[config.Maximized])
 		glfw.WindowHint(glfw.Samples, config.MSAASamples)
 
-		var err error
 		w.window, err = glfw.CreateWindow(int(config.Width), int(config.Height), config.Title, nil, nil)
 		if err != nil {
 			return err
