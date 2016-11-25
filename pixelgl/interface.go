@@ -9,7 +9,7 @@ package pixelgl
 // you enter (load, bind) that object's state, then do something with it, and then leave the state. That 'something'
 // in between, let's call it sub (as in subroutine).
 //
-// The recommended way to implement a Doer is to wrap another Doer (vertex array wrap texture and so on), let's call
+// The recommended way to implement a Doer is to wrap another Doer (vertex array wraps texture and so on), let's call
 // it parent. Then the Do method will look like this:
 //
 //   func (o *MyObject) Do(sub func()) {

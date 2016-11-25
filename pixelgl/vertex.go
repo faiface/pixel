@@ -98,7 +98,7 @@ type VertexArray struct {
 	count  int
 }
 
-// NewVertexArray creates a new vertex array and wraps another BeginEnder around it.
+// NewVertexArray creates a new vertex array and wraps another Doer around it.
 func NewVertexArray(parent Doer, format VertexFormat, mode VertexDrawMode, usage VertexUsage, data []float64) (*VertexArray, error) {
 	va := &VertexArray{
 		parent: parent,

@@ -2,7 +2,7 @@ package pixelgl
 
 import "github.com/go-gl/gl/v3.3-core/gl"
 
-// This file defines functions that can operate without a parent BeginEnder.
+// This file defines functions that can operate without a parent Doer.
 
 // Clear clears the current context..
 func Clear(r, g, b, a float64) {
