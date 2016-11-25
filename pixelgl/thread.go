@@ -160,8 +160,8 @@ func getLastGLErr() error {
 	for e := gl.GetError(); e != gl.NO_ERROR; e = gl.GetError() {
 		err = e
 	}
-	if err == gl.NO_ERROR {
-		return nil
+	if err != gl.NO_ERROR {
+		return GLError(err)
 	}
-	return GLError(err)
+	return nil
 }
