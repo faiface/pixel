@@ -73,6 +73,8 @@ func NewWindow(config WindowConfig) (*Window, error) {
 	w := &Window{config: config}
 
 	err := pixelgl.DoErr(func() error {
+		glfw.Init()
+
 		glfw.WindowHint(glfw.ContextVersionMajor, 3)
 		glfw.WindowHint(glfw.ContextVersionMinor, 3)
 		glfw.WindowHint(glfw.OpenGLProfile, glfw.OpenGLCoreProfile)
