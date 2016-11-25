@@ -106,9 +106,9 @@ func NewVertexArray(parent Doer, format VertexFormat, mode VertexDrawMode, usage
 		mode:   mode,
 	}
 
-	errChan := make(chan error, 1)
+	var err error
 	parent.Do(func() {
-		err := DoGLErr(func() {
+		err = DoGLErr(func() {
 			gl.GenVertexArrays(1, &va.vao)
 			gl.BindVertexArray(va.vao)
 
@@ -136,13 +136,7 @@ func NewVertexArray(parent Doer, format VertexFormat, mode VertexDrawMode, usage
 			gl.BindBuffer(gl.ARRAY_BUFFER, 0)
 			gl.BindVertexArray(0)
 		})
-		if err != nil {
-			errChan <- err
-			return
-		}
-		errChan <- nil
 	})
-	err := <-errChan
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to create a vertex array")
 	}
@@ -152,9 +146,11 @@ func NewVertexArray(parent Doer, format VertexFormat, mode VertexDrawMode, usage
 
 // Delete deletes a vertex array and it's associated vertex buffer. Don't use a vertex array after deletion.
 func (va *VertexArray) Delete() {
-	DoNoBlock(func() {
-		gl.DeleteVertexArrays(1, &va.vao)
-		gl.DeleteBuffers(1, &va.vbo)
+	va.parent.Do(func() {
+		DoNoBlock(func() {
+			gl.DeleteVertexArrays(1, &va.vao)
+			gl.DeleteBuffers(1, &va.vbo)
+		})
 	})
 }
 

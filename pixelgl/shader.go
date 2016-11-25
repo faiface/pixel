@@ -21,9 +21,9 @@ func NewShader(parent Doer, vertexShader, fragmentShader string) (*Shader, error
 		parent: parent,
 	}
 
-	errChan := make(chan error, 1)
+	var err, glerr error
 	parent.Do(func() {
-		err, glerr := DoErrGLErr(func() error {
+		err, glerr = DoErrGLErr(func() error {
 			var vshader, fshader uint32
 
 			// vertex shader
@@ -89,22 +89,15 @@ func NewShader(parent Doer, vertexShader, fragmentShader string) (*Shader, error
 
 			return nil
 		})
-		if err != nil {
-			if glerr != nil {
-				err = errors.Wrap(glerr, err.Error())
-			}
-			errChan <- err
-			return
-		}
-		if glerr != nil {
-			errChan <- err
-			return
-		}
-		errChan <- nil
 	})
-	err := <-errChan
+	if err != nil && glerr != nil {
+		return nil, errors.Wrap(glerr, err.Error())
+	}
 	if err != nil {
 		return nil, err
+	}
+	if glerr != nil {
+		return nil, glerr
 	}
 
 	return shader, nil
@@ -112,8 +105,10 @@ func NewShader(parent Doer, vertexShader, fragmentShader string) (*Shader, error
 
 // Delete deletes a shader program. Don't use a shader after deletion.
 func (s *Shader) Delete() {
-	DoNoBlock(func() {
-		gl.DeleteProgram(s.program)
+	s.parent.Do(func() {
+		DoNoBlock(func() {
+			gl.DeleteProgram(s.program)
+		})
 	})
 }
 

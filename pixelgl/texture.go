@@ -16,9 +16,9 @@ type Texture struct {
 func NewTexture(parent Doer, width, height int, pixels []uint8) (*Texture, error) {
 	texture := &Texture{parent: parent}
 
-	errChan := make(chan error, 1)
+	var err error
 	parent.Do(func() {
-		errChan <- DoGLErr(func() {
+		err = DoGLErr(func() {
 			gl.GenTextures(1, &texture.tex)
 			gl.BindTexture(gl.TEXTURE_2D, texture.tex)
 
@@ -39,7 +39,6 @@ func NewTexture(parent Doer, width, height int, pixels []uint8) (*Texture, error
 			gl.BindTexture(gl.TEXTURE_2D, 0)
 		})
 	})
-	err := <-errChan
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to create a texture")
 	}
@@ -49,8 +48,10 @@ func NewTexture(parent Doer, width, height int, pixels []uint8) (*Texture, error
 
 // Delete deletes a texture. Don't use a texture after deletion.
 func (t *Texture) Delete() {
-	DoNoBlock(func() {
-		gl.DeleteTextures(1, &t.tex)
+	t.parent.Do(func() {
+		DoNoBlock(func() {
+			gl.DeleteTextures(1, &t.tex)
+		})
 	})
 }
 
