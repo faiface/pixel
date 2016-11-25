@@ -90,7 +90,7 @@ const (
 // VertexArray is an OpenGL vertex array object that also holds it's own vertex buffer object.
 // From the user's points of view, VertexArray is an array of vertices that can be drawn.
 type VertexArray struct {
-	parent BeginEnder
+	parent Doer
 	format VertexFormat
 	vao    uint32
 	vbo    uint32
@@ -99,44 +99,50 @@ type VertexArray struct {
 }
 
 // NewVertexArray creates a new vertex array and wraps another BeginEnder around it.
-func NewVertexArray(parent BeginEnder, format VertexFormat, mode VertexDrawMode, usage VertexUsage, data []float64) (*VertexArray, error) {
-	parent.Begin()
-	defer parent.End()
-
+func NewVertexArray(parent Doer, format VertexFormat, mode VertexDrawMode, usage VertexUsage, data []float64) (*VertexArray, error) {
 	va := &VertexArray{
 		parent: parent,
 		format: format,
 		mode:   mode,
 	}
 
-	err := DoGLErr(func() {
-		gl.GenVertexArrays(1, &va.vao)
-		gl.BindVertexArray(va.vao)
+	errChan := make(chan error, 1)
+	parent.Do(func() {
+		err := DoGLErr(func() {
+			gl.GenVertexArrays(1, &va.vao)
+			gl.BindVertexArray(va.vao)
 
-		gl.GenBuffers(1, &va.vbo)
-		gl.BindBuffer(gl.ARRAY_BUFFER, va.vbo)
-		gl.BufferData(gl.ARRAY_BUFFER, 8*len(data), gl.Ptr(data), uint32(usage))
+			gl.GenBuffers(1, &va.vbo)
+			gl.BindBuffer(gl.ARRAY_BUFFER, va.vbo)
+			gl.BufferData(gl.ARRAY_BUFFER, 8*len(data), gl.Ptr(data), uint32(usage))
 
-		stride := format.Size()
-		va.count = len(data) / stride
+			stride := format.Size()
+			va.count = len(data) / stride
 
-		offset := 0
-		for i, attr := range format {
-			gl.VertexAttribPointer(
-				uint32(i),
-				int32(attr.Size),
-				gl.DOUBLE,
-				false,
-				int32(8*stride),
-				gl.PtrOffset(8*offset),
-			)
-			gl.EnableVertexAttribArray(uint32(i))
-			offset += attr.Size
+			offset := 0
+			for i, attr := range format {
+				gl.VertexAttribPointer(
+					uint32(i),
+					int32(attr.Size),
+					gl.DOUBLE,
+					false,
+					int32(8*stride),
+					gl.PtrOffset(8*offset),
+				)
+				gl.EnableVertexAttribArray(uint32(i))
+				offset += attr.Size
+			}
+
+			gl.BindBuffer(gl.ARRAY_BUFFER, 0)
+			gl.BindVertexArray(0)
+		})
+		if err != nil {
+			errChan <- err
+			return
 		}
-
-		gl.BindBuffer(gl.ARRAY_BUFFER, 0)
-		gl.BindVertexArray(0)
+		errChan <- nil
 	})
+	err := <-errChan
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to create a vertex array")
 	}
@@ -176,8 +182,7 @@ func (va *VertexArray) DrawMode() VertexDrawMode {
 
 // Draw draws a vertex array.
 func (va *VertexArray) Draw() {
-	va.Begin()
-	va.End()
+	va.Do(func() {})
 }
 
 // Data returns a copy of data inside a vertex array (actually it's vertex buffer).
@@ -207,21 +212,18 @@ func (va *VertexArray) UpdateData(offset int, data []float64) {
 	})
 }
 
-// Begin binds a vertex array and it's associated vertex buffer.
-func (va *VertexArray) Begin() {
-	va.parent.Begin()
-	DoNoBlock(func() {
-		gl.BindVertexArray(va.vao)
-		gl.BindBuffer(gl.ARRAY_BUFFER, va.vbo)
+// Do binds a vertex arrray and it's associated vertex buffer, executes sub, and unbinds the vertex array and it's vertex buffer.
+func (va *VertexArray) Do(sub func()) {
+	va.parent.Do(func() {
+		DoNoBlock(func() {
+			gl.BindVertexArray(va.vao)
+			gl.BindBuffer(gl.ARRAY_BUFFER, va.vbo)
+		})
+		sub()
+		DoNoBlock(func() {
+			gl.DrawArrays(uint32(va.mode), 0, int32(va.count))
+			gl.BindBuffer(gl.ARRAY_BUFFER, 0)
+			gl.BindVertexArray(0)
+		})
 	})
-}
-
-// End draws a vertex array and unbinds it alongside with it's associated vertex buffer.
-func (va *VertexArray) End() {
-	DoNoBlock(func() {
-		gl.DrawArrays(uint32(va.mode), 0, int32(va.count))
-		gl.BindBuffer(gl.ARRAY_BUFFER, 0)
-		gl.BindVertexArray(0)
-	})
-	va.parent.End()
 }

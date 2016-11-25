@@ -104,79 +104,79 @@ func NewWindow(config WindowConfig) (*Window, error) {
 
 // Delete destroys a window. The window can't be used any further.
 func (w *Window) Delete() {
-	w.Begin()
-	defer w.End()
-	pixelgl.Do(func() {
-		w.window.Destroy()
+	w.Do(func() {
+		pixelgl.Do(func() {
+			w.window.Destroy()
+		})
 	})
 }
 
 // Clear clears the window with a color.
 func (w *Window) Clear(c color.Color) {
-	w.Begin()
-	defer w.End()
-	pixelgl.Clear(colorToRGBA(c))
+	w.Do(func() {
+		pixelgl.Clear(colorToRGBA(c))
+	})
 }
 
 // Update swaps buffers and polls events.
 func (w *Window) Update() {
-	w.Begin()
-	defer w.End()
-	pixelgl.Do(func() {
-		if w.config.VSync {
-			glfw.SwapInterval(1)
-		}
-		w.window.SwapBuffers()
-		glfw.PollEvents()
+	w.Do(func() {
+		pixelgl.Do(func() {
+			if w.config.VSync {
+				glfw.SwapInterval(1)
+			}
+			w.window.SwapBuffers()
+			glfw.PollEvents()
+		})
 	})
 }
 
 // SetTitle changes the title of a window.
 func (w *Window) SetTitle(title string) {
-	w.Begin()
-	defer w.End()
-	pixelgl.Do(func() {
-		w.window.SetTitle(title)
+	w.Do(func() {
+		pixelgl.Do(func() {
+			w.window.SetTitle(title)
+		})
 	})
 }
 
 // SetSize resizes a window to the specified size in pixels.
 // In case of a fullscreen window, it changes the resolution of that window.
 func (w *Window) SetSize(width, height float64) {
-	w.Begin()
-	defer w.End()
-	pixelgl.Do(func() {
-		w.window.SetSize(int(width), int(height))
+	w.Do(func() {
+		pixelgl.Do(func() {
+			w.window.SetSize(int(width), int(height))
+		})
 	})
 }
 
 // Size returns the size of the client area of a window (the part you can draw on).
 func (w *Window) Size() (width, height float64) {
-	w.Begin()
-	defer w.End()
-	pixelgl.Do(func() {
-		wi, hi := w.window.GetSize()
-		width = float64(wi)
-		height = float64(hi)
+	w.Do(func() {
+		pixelgl.Do(func() {
+			wi, hi := w.window.GetSize()
+			width = float64(wi)
+			height = float64(hi)
+		})
 	})
 	return width, height
 }
 
 // Show makes a window visible if it was hidden.
 func (w *Window) Show() {
-	w.Begin()
-	defer w.End()
-	pixelgl.Do(func() {
-		w.window.Show()
+	w.Do(func() {
+		pixelgl.Do(func() {
+			w.window.Show()
+		})
 	})
 }
 
 // Hide hides a window if it was visible.
 func (w *Window) Hide() {
-	w.Begin()
-	defer w.End()
-	pixelgl.Do(func() {
-		w.window.Hide()
+	w.Do(func() {
+		pixelgl.Do(func() {
+			w.window.Hide()
+		})
 	})
 }
 
@@ -187,37 +187,35 @@ func (w *Window) Hide() {
 func (w *Window) SetFullscreen(monitor *Monitor) {
 	if w.Monitor() != monitor {
 		if monitor == nil {
-			w.Begin()
-			defer w.End()
-
-			pixelgl.Do(func() {
-				w.window.SetMonitor(
-					nil,
-					w.restore.xpos,
-					w.restore.ypos,
-					w.restore.width,
-					w.restore.height,
-					0,
-				)
+			w.Do(func() {
+				pixelgl.Do(func() {
+					w.window.SetMonitor(
+						nil,
+						w.restore.xpos,
+						w.restore.ypos,
+						w.restore.width,
+						w.restore.height,
+						0,
+					)
+				})
 			})
 		} else {
-			w.Begin()
-			defer w.End()
+			w.Do(func() {
+				pixelgl.Do(func() {
+					w.restore.xpos, w.restore.ypos = w.window.GetPos()
+					w.restore.width, w.restore.height = w.window.GetSize()
 
-			pixelgl.Do(func() {
-				w.restore.xpos, w.restore.ypos = w.window.GetPos()
-				w.restore.width, w.restore.height = w.window.GetSize()
-
-				width, height := monitor.Size()
-				refreshRate := monitor.RefreshRate()
-				w.window.SetMonitor(
-					monitor.monitor,
-					0,
-					0,
-					int(width),
-					int(height),
-					int(refreshRate),
-				)
+					width, height := monitor.Size()
+					refreshRate := monitor.RefreshRate()
+					w.window.SetMonitor(
+						monitor.monitor,
+						0,
+						0,
+						int(width),
+						int(height),
+						int(refreshRate),
+					)
+				})
 			})
 		}
 	}
@@ -230,12 +228,12 @@ func (w *Window) IsFullscreen() bool {
 
 // Monitor returns a monitor a fullscreen window is on. If the window is not fullscreen, this function returns nil.
 func (w *Window) Monitor() *Monitor {
-	w.Begin()
-	defer w.End()
-
-	monitor := pixelgl.DoVal(func() interface{} {
-		return w.window.GetMonitor()
-	}).(*glfw.Monitor)
+	var monitor *glfw.Monitor
+	w.Do(func() {
+		monitor = pixelgl.DoVal(func() interface{} {
+			return w.window.GetMonitor()
+		}).(*glfw.Monitor)
+	})
 	if monitor == nil {
 		return nil
 	}
@@ -246,37 +244,39 @@ func (w *Window) Monitor() *Monitor {
 
 // Focus brings a window to the front and sets input focus.
 func (w *Window) Focus() {
-	w.Begin()
-	defer w.End()
-	pixelgl.Do(func() {
-		w.window.Focus()
+	w.Do(func() {
+		pixelgl.Do(func() {
+			w.window.Focus()
+		})
 	})
 }
 
 // Focused returns true if a window has input focus.
 func (w *Window) Focused() bool {
-	w.Begin()
-	defer w.End()
-	return pixelgl.DoVal(func() interface{} {
-		return w.window.GetAttrib(glfw.Focused) == glfw.True
-	}).(bool)
+	var focused bool
+	w.Do(func() {
+		focused = pixelgl.DoVal(func() interface{} {
+			return w.window.GetAttrib(glfw.Focused) == glfw.True
+		}).(bool)
+	})
+	return focused
 }
 
 // Maximize puts a windowed window to a maximized state.
 func (w *Window) Maximize() {
-	w.Begin()
-	defer w.End()
-	pixelgl.Do(func() {
-		w.window.Maximize()
+	w.Do(func() {
+		pixelgl.Do(func() {
+			w.window.Maximize()
+		})
 	})
 }
 
 // Restore restores a windowed window from a maximized state.
 func (w *Window) Restore() {
-	w.Begin()
-	defer w.End()
-	pixelgl.Do(func() {
-		w.window.Restore()
+	w.Do(func() {
+		pixelgl.Do(func() {
+			w.window.Restore()
+		})
 	})
 }
 
@@ -285,11 +285,11 @@ var currentWindow struct {
 	handler *Window
 }
 
-// Begin makes the context of this window current.
-//
-// Note that you only need to use this function if you're designing a low-level technical plugin (such as an effect).
-func (w *Window) Begin() {
+// Do makes the context of this window current, if it's not already, and executes sub.
+func (w *Window) Do(sub func()) {
 	currentWindow.Lock()
+	defer currentWindow.Unlock()
+
 	if currentWindow.handler != w {
 		pixelgl.Do(func() {
 			w.window.MakeContextCurrent()
@@ -297,11 +297,6 @@ func (w *Window) Begin() {
 		})
 		currentWindow.handler = w
 	}
-}
 
-// End makes it possible for other windows to make their context current.
-//
-// Note that you only need to use this function if you're designing a low-level technical plugin (such as an effect).
-func (w *Window) End() {
-	currentWindow.Unlock()
+	sub()
 }
