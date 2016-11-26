@@ -215,14 +215,13 @@ func (va *VertexArray) SetVertexAttribute(vertex int, attr VertexAttribute, data
 	if vertex < 0 || vertex >= va.count {
 		panic("set vertex attribute error: invalid vertex index")
 	}
+	if _, ok := va.attrs[attr]; !ok {
+		panic("set vertex attribute error: invalid vertex attribute")
+	}
 	DoNoBlock(func() {
 		gl.BindBuffer(gl.ARRAY_BUFFER, va.vbo)
 
-		attrOffset, ok := va.attrs[attr]
-		if !ok {
-			panic("set vertex attribute error: invalid vertex attribute")
-		}
-		offset := 8*va.stride*vertex + 8*attrOffset
+		offset := 8*va.stride*vertex + 8*va.attrs[attr]
 		gl.BufferSubData(gl.ARRAY_BUFFER, offset, 8*len(data), gl.Ptr(data))
 
 		gl.BindBuffer(gl.ARRAY_BUFFER, 0)
