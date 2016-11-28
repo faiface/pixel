@@ -22,7 +22,7 @@ func NewShader(parent Doer, vertexShader, fragmentShader string) (*Shader, error
 	}
 
 	var err, glerr error
-	parent.Do(func() {
+	parent.Do(func(ctx Context) {
 		err, glerr = DoErrGLErr(func() error {
 			var vshader, fshader uint32
 
@@ -105,7 +105,7 @@ func NewShader(parent Doer, vertexShader, fragmentShader string) (*Shader, error
 
 // Delete deletes a shader program. Don't use a shader after deletion.
 func (s *Shader) Delete() {
-	s.parent.Do(func() {
+	s.parent.Do(func(ctx Context) {
 		DoNoBlock(func() {
 			gl.DeleteProgram(s.program)
 		})
@@ -113,12 +113,12 @@ func (s *Shader) Delete() {
 }
 
 // Do stars using a shader, executes sub, and stops using it.
-func (s *Shader) Do(sub func()) {
-	s.parent.Do(func() {
+func (s *Shader) Do(sub func(Context)) {
+	s.parent.Do(func(ctx Context) {
 		DoNoBlock(func() {
 			gl.UseProgram(s.program)
 		})
-		sub()
+		sub(ctx.WithShader(s))
 		DoNoBlock(func() {
 			gl.UseProgram(0)
 		})

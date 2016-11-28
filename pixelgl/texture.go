@@ -17,7 +17,7 @@ func NewTexture(parent Doer, width, height int, pixels []uint8) (*Texture, error
 	texture := &Texture{parent: parent}
 
 	var err error
-	parent.Do(func() {
+	parent.Do(func(ctx Context) {
 		err = DoGLErr(func() {
 			gl.GenTextures(1, &texture.tex)
 			gl.BindTexture(gl.TEXTURE_2D, texture.tex)
@@ -48,7 +48,7 @@ func NewTexture(parent Doer, width, height int, pixels []uint8) (*Texture, error
 
 // Delete deletes a texture. Don't use a texture after deletion.
 func (t *Texture) Delete() {
-	t.parent.Do(func() {
+	t.parent.Do(func(ctx Context) {
 		DoNoBlock(func() {
 			gl.DeleteTextures(1, &t.tex)
 		})
@@ -56,12 +56,12 @@ func (t *Texture) Delete() {
 }
 
 // Do bind a texture, executes sub, and unbinds the texture.
-func (t *Texture) Do(sub func()) {
-	t.parent.Do(func() {
+func (t *Texture) Do(sub func(Context)) {
+	t.parent.Do(func(ctx Context) {
 		DoNoBlock(func() {
 			gl.BindTexture(gl.TEXTURE_2D, t.tex)
 		})
-		sub()
+		sub(ctx)
 		DoNoBlock(func() {
 			gl.BindTexture(gl.TEXTURE_2D, 0)
 		})

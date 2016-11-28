@@ -12,10 +12,10 @@ package pixelgl
 // The recommended way to implement a Doer is to wrap another Doer (vertex array wraps texture and so on), let's call
 // it parent. Then the Do method will look like this:
 //
-//   func (o *MyObject) Do(sub func()) {
-//       o.parent.Do(func() {
+//   func (o *MyObject) Do(sub func(Context)) {
+//       o.parent.Do(func(ctx Context) {
 //	     // enter the object's state
-//           sub()
+//           sub(ctx)
 //           // leave the object's state
 //       })
 //   }
@@ -23,6 +23,45 @@ package pixelgl
 // It might seem difficult to grasp this kind of recursion at first, but it's really simple. What it's basically saying
 // is: "Hey parent, enter your state, then let me enter mine, then I'll do whatever I'm supposed to do in the middle.
 // After that I'll leave my state and please leave your state too parent."
+//
+// Also notice, that the functions are passing a Context around. This context contains the most important state variables.
+// Usually, you just pass it as you received it. If you want to pass a changed context to your child (e.g. your a shader),
+// use ctx.With* methods.
 type Doer interface {
-	Do(sub func())
+	Do(sub func(Context))
+}
+
+// Context takes state from one object to another. OpenGL is a state machine, so we have to approach it like that.
+// However, global variables are evil, so we have Context, that transfers important OpenGL state from one object to another.
+//
+// This type does *not* represent an OpenGL context in the OpenGL terminology.
+type Context struct {
+	vertexFormat VertexFormat
+	shader       *Shader
+}
+
+// VertexFormat returns the current vertex format.
+func (c Context) VertexFormat() VertexFormat {
+	return c.vertexFormat
+}
+
+// Shader returns the current shader.
+func (c Context) Shader() *Shader {
+	return c.shader
+}
+
+// WithVertexFormat returns a copy of this context with the specified vertex format.
+func (c Context) WithVertexFormat(vf VertexFormat) Context {
+	return Context{
+		vertexFormat: vf,
+		shader:       c.shader,
+	}
+}
+
+// WithShader returns a copy of this context with the specified shader.
+func (c Context) WithShader(s *Shader) Context {
+	return Context{
+		vertexFormat: c.vertexFormat,
+		shader:       s,
+	}
 }

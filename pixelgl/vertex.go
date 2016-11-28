@@ -125,7 +125,7 @@ func NewVertexArray(parent Doer, format VertexFormat, mode VertexDrawMode, usage
 	}
 
 	var err error
-	parent.Do(func() {
+	parent.Do(func(ctx Context) {
 		err = DoGLErr(func() {
 			gl.GenVertexArrays(1, &va.vao)
 			gl.BindVertexArray(va.vao)
@@ -161,7 +161,7 @@ func NewVertexArray(parent Doer, format VertexFormat, mode VertexDrawMode, usage
 
 // Delete deletes a vertex array and it's associated vertex buffer. Don't use a vertex array after deletion.
 func (va *VertexArray) Delete() {
-	va.parent.Do(func() {
+	va.parent.Do(func(ctx Context) {
 		DoNoBlock(func() {
 			gl.DeleteVertexArrays(1, &va.vao)
 			gl.DeleteBuffers(1, &va.vbo)
@@ -193,7 +193,7 @@ func (va *VertexArray) DrawMode() VertexDrawMode {
 
 // Draw draws a vertex array.
 func (va *VertexArray) Draw() {
-	va.Do(func() {})
+	va.Do(func(Context) {})
 }
 
 // Data returns a copy of data inside a vertex array (actually it's vertex buffer).
@@ -233,13 +233,13 @@ func (va *VertexArray) SetVertexAttribute(vertex int, attr VertexAttribute, data
 }
 
 // Do binds a vertex arrray and it's associated vertex buffer, executes sub, and unbinds the vertex array and it's vertex buffer.
-func (va *VertexArray) Do(sub func()) {
-	va.parent.Do(func() {
+func (va *VertexArray) Do(sub func(Context)) {
+	va.parent.Do(func(ctx Context) {
 		DoNoBlock(func() {
 			gl.BindVertexArray(va.vao)
 			gl.BindBuffer(gl.ARRAY_BUFFER, va.vbo)
 		})
-		sub()
+		sub(ctx)
 		DoNoBlock(func() {
 			gl.DrawArrays(uint32(va.mode), 0, int32(va.count))
 			gl.BindBuffer(gl.ARRAY_BUFFER, 0)
