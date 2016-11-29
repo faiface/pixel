@@ -1,6 +1,8 @@
 package pixelgl
 
 import (
+	"unsafe"
+
 	"github.com/go-gl/gl/v3.3-core/gl"
 	"github.com/pkg/errors"
 )
@@ -9,43 +11,17 @@ import (
 //
 // Example:
 //
-//   vf := VertexFormat{{Position, 2}, {Color, 4}, {TexCoord, 2}}
-type VertexFormat []VertexAttribute
+//   VertexFormat{{Position, Vec2}, {Color, Vec4}, {TexCoord, Vec2}, {Visible, Bool}}
+type VertexFormat []Attr
 
-// Size returns the total size of all vertex attributes in a vertex format.
+// Size calculates the total size of a single vertex in this vertex format (sum of the sizes of all vertex attributes).
 func (vf VertexFormat) Size() int {
-	size := 0
-	for _, va := range vf {
-		size += va.Size
+	total := 0
+	for _, attr := range vf {
+		total += attr.Type.Size()
 	}
-	return size
+	return total
 }
-
-// VertexAttribute specifies a single attribute in a vertex buffer.
-// All vertex attributes are composed of float64s.
-//
-// A vertex attribute has a Purpose (such as Position, Color, etc.) and Size. Size specifies
-// the number of float64s the vertex attribute is composed of.
-type VertexAttribute struct {
-	Purpose VertexAttributePurpose
-	Size    int
-}
-
-// VertexAttributePurpose clarifies the purpose of a vertex attribute. This can be a color, position, texture
-// coordinates or anything else.
-//
-// VertexAttributePurpose may be used to correctly assign data to a vertex buffer.
-type VertexAttributePurpose int
-
-// Position, Color and TexCoord are the standard vertex attributes.
-//
-// Feel free to define more vertex attribute purposes (e.g. in an effects library).
-const (
-	Position VertexAttributePurpose = iota
-	Color
-	TexCoord
-	NumStandardVertexAttrib
-)
 
 // VertexUsage specifies how often the vertex array data will be updated.
 type VertexUsage int
@@ -94,34 +70,35 @@ type VertexArray struct {
 	format VertexFormat
 	stride int
 	count  int
-	attrs  map[VertexAttribute]int
+	attrs  map[Attr]int
 	vao    uint32
 	vbo    uint32
 	mode   VertexDrawMode
 }
 
-// NewVertexArray creates a new vertex array and wraps another Doer around it.
-func NewVertexArray(parent Doer, format VertexFormat, mode VertexDrawMode, usage VertexUsage, data []float64) (*VertexArray, error) {
+// NewVertexArray creates a new empty vertex array and wraps another Doer around it.
+func NewVertexArray(parent Doer, format VertexFormat, mode VertexDrawMode, usage VertexUsage, count int) (*VertexArray, error) {
 	va := &VertexArray{
 		parent: parent,
 		format: format,
+		count:  count,
 		stride: format.Size(),
-		count:  len(data) / format.Size(),
-		attrs:  make(map[VertexAttribute]int),
+		attrs:  make(map[Attr]int),
 		mode:   mode,
-	}
-
-	if len(data)%format.Size() != 0 {
-		return nil, errors.New("failed to create vertex array: data length not divisable by format size")
 	}
 
 	offset := 0
 	for _, attr := range format {
+		switch attr.Type {
+		case Bool, Int, Float, Vec2, Vec3, Vec4:
+		default:
+			return nil, errors.New("failed to create vertex array: invalid vertex format: invalid attribute type")
+		}
 		if _, ok := va.attrs[attr]; ok {
 			return nil, errors.New("failed to create vertex array: invalid vertex format: duplicate vertex attribute")
 		}
 		va.attrs[attr] = offset
-		offset += attr.Size
+		offset += attr.Type.Size()
 	}
 
 	var err error
@@ -132,20 +109,46 @@ func NewVertexArray(parent Doer, format VertexFormat, mode VertexDrawMode, usage
 
 			gl.GenBuffers(1, &va.vbo)
 			gl.BindBuffer(gl.ARRAY_BUFFER, va.vbo)
-			gl.BufferData(gl.ARRAY_BUFFER, 8*len(data), gl.Ptr(data), uint32(usage))
+
+			emptyData := make([]byte, count*va.stride)
+			gl.BufferData(gl.ARRAY_BUFFER, len(emptyData), gl.Ptr(emptyData), uint32(usage))
 
 			offset := 0
 			for i, attr := range format {
+				//XXX: ugly but OpenGL is so inconsistent
+
+				var size int32
+				switch attr.Type {
+				case Bool, Int, Float:
+					size = 1
+				case Vec2:
+					size = 2
+				case Vec3:
+					size = 3
+				case Vec4:
+					size = 4
+				}
+
+				var xtype uint32
+				switch attr.Type {
+				case Bool:
+					xtype = gl.BOOL
+				case Int:
+					xtype = gl.INT
+				case Float, Vec2, Vec3, Vec4:
+					xtype = gl.DOUBLE
+				}
+
 				gl.VertexAttribPointer(
 					uint32(i),
-					int32(attr.Size),
-					gl.DOUBLE,
+					size,
+					xtype,
 					false,
-					int32(8*va.stride),
-					gl.PtrOffset(8*offset),
+					int32(va.stride),
+					gl.PtrOffset(offset),
 				)
 				gl.EnableVertexAttribArray(uint32(i))
-				offset += attr.Size
+				offset += attr.Type.Size()
 			}
 
 			gl.BindBuffer(gl.ARRAY_BUFFER, 0)
@@ -167,6 +170,11 @@ func (va *VertexArray) Delete() {
 			gl.DeleteBuffers(1, &va.vbo)
 		})
 	})
+}
+
+// Count returns the number of vertices in a vertex array.
+func (va *VertexArray) Count() int {
+	return va.count
 }
 
 // VertexFormat returns the format of the vertices inside a vertex array.
@@ -196,33 +204,40 @@ func (va *VertexArray) Draw() {
 	va.Do(func(Context) {})
 }
 
-// Data returns a copy of data inside a vertex array (actually it's vertex buffer).
-func (va *VertexArray) Data() []float64 {
-	data := make([]float64, va.count*va.format.Size())
-	Do(func() {
-		gl.BindBuffer(gl.ARRAY_BUFFER, va.vbo)
-		gl.GetBufferSubData(gl.ARRAY_BUFFER, 0, 8*len(data), gl.Ptr(data))
-		gl.BindBuffer(gl.ARRAY_BUFFER, 0)
-	})
-	return data
-}
-
-// SetVertexAttribute sets the value of the specified vertex attribute of the specified vertex.
-func (va *VertexArray) SetVertexAttribute(vertex int, attr VertexAttribute, data []float64) {
-	if len(data) != attr.Size {
-		panic("set vertex attribute error: invalid data length")
-	}
+// SetVertex sets the value of all attributes of a vertex.
+// Argument data must point to a slice/array containing the new vertex data.
+func (va *VertexArray) SetVertex(vertex int, data unsafe.Pointer) {
 	if vertex < 0 || vertex >= va.count {
-		panic("set vertex attribute error: invalid vertex index")
-	}
-	if _, ok := va.attrs[attr]; !ok {
-		panic("set vertex attribute error: invalid vertex attribute")
+		panic("set vertex error: invalid vertex index")
 	}
 	DoNoBlock(func() {
 		gl.BindBuffer(gl.ARRAY_BUFFER, va.vbo)
 
-		offset := 8*va.stride*vertex + 8*va.attrs[attr]
-		gl.BufferSubData(gl.ARRAY_BUFFER, offset, 8*len(data), gl.Ptr(data))
+		offset := va.stride * vertex
+		gl.BufferSubData(gl.ARRAY_BUFFER, offset, va.format.Size(), data)
+
+		gl.BindBuffer(gl.ARRAY_BUFFER, 0)
+
+		if err := getLastGLErr(); err != nil {
+			panic(errors.Wrap(err, "set vertex error"))
+		}
+	})
+}
+
+// SetVertexAttribute sets the value of the specified vertex attribute of the specified vertex.
+// Argument data must point to a slice/array containing the new attribute data.
+func (va *VertexArray) SetVertexAttribute(vertex int, attr Attr, data unsafe.Pointer) {
+	if vertex < 0 || vertex >= va.count {
+		panic("set vertex attribute error: invalid vertex index")
+	}
+	if _, ok := va.attrs[attr]; !ok {
+		return // ignore non-existing attributes
+	}
+	DoNoBlock(func() {
+		gl.BindBuffer(gl.ARRAY_BUFFER, va.vbo)
+
+		offset := va.stride*vertex + va.attrs[attr]
+		gl.BufferSubData(gl.ARRAY_BUFFER, offset, attr.Type.Size(), data)
 
 		gl.BindBuffer(gl.ARRAY_BUFFER, 0)
 
