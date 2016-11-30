@@ -1,8 +1,6 @@
 package pixelgl
 
 import (
-	"unsafe"
-
 	"github.com/go-gl/gl/v3.3-core/gl"
 	"github.com/pkg/errors"
 )
@@ -207,8 +205,8 @@ func (va *VertexArray) Draw() {
 }
 
 // SetVertex sets the value of all attributes of a vertex.
-// Argument data must point to a slice/array containing the new vertex data.
-func (va *VertexArray) SetVertex(vertex int, data unsafe.Pointer) {
+// Argument data must be a slice/array containing the new vertex data.
+func (va *VertexArray) SetVertex(vertex int, data interface{}) {
 	if vertex < 0 || vertex >= va.count {
 		panic("set vertex error: invalid vertex index")
 	}
@@ -216,7 +214,7 @@ func (va *VertexArray) SetVertex(vertex int, data unsafe.Pointer) {
 		gl.BindBuffer(gl.ARRAY_BUFFER, va.vbo)
 
 		offset := va.stride * vertex
-		gl.BufferSubData(gl.ARRAY_BUFFER, offset, va.format.Size(), data)
+		gl.BufferSubData(gl.ARRAY_BUFFER, offset, va.format.Size(), gl.Ptr(data))
 
 		gl.BindBuffer(gl.ARRAY_BUFFER, 0)
 
@@ -227,11 +225,11 @@ func (va *VertexArray) SetVertex(vertex int, data unsafe.Pointer) {
 }
 
 // SetVertexAttribute sets the value of the specified vertex attribute of the specified vertex.
-// Argument data must point to a slice/array containing the new attribute data.
+// Argument data must be a slice/array containing the new attribute data.
 //
 // This function returns false if the specified attribute does not exist. Note that the function panics
 // if the vertex is out of range.
-func (va *VertexArray) SetVertexAttribute(vertex int, attr Attr, data unsafe.Pointer) (ok bool) {
+func (va *VertexArray) SetVertexAttribute(vertex int, attr Attr, data interface{}) (ok bool) {
 	if vertex < 0 || vertex >= va.count {
 		panic("set vertex attribute error: invalid vertex index")
 	}
@@ -242,7 +240,7 @@ func (va *VertexArray) SetVertexAttribute(vertex int, attr Attr, data unsafe.Poi
 		gl.BindBuffer(gl.ARRAY_BUFFER, va.vbo)
 
 		offset := va.stride*vertex + va.attrs[attr]
-		gl.BufferSubData(gl.ARRAY_BUFFER, offset, attr.Type.Size(), data)
+		gl.BufferSubData(gl.ARRAY_BUFFER, offset, attr.Type.Size(), gl.Ptr(data))
 
 		gl.BindBuffer(gl.ARRAY_BUFFER, 0)
 
