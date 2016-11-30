@@ -7,18 +7,29 @@ import (
 	"github.com/pkg/errors"
 )
 
+// UniformFormat defines names, purposes and types of uniform variables inside a shader.
+//
+// Example:
+//
+//   UniformFormat{"transform": {Transform, Mat3}, "camera": {Camera, Mat3}}
+type UniformFormat map[string]Attr
+
 // Shader is an OpenGL shader program.
 type Shader struct {
-	parent  Doer
-	program uint32
+	parent   Doer
+	format   UniformFormat
+	program  uint32
+	uniforms map[Attr]int32
 }
 
 // NewShader creates a new shader program from the specified vertex shader and fragment shader sources.
 //
 // Note that vertexShader and fragmentShader parameters must contain the source code, they're not filenames.
-func NewShader(parent Doer, vertexShader, fragmentShader string) (*Shader, error) {
+func NewShader(parent Doer, format UniformFormat, vertexShader, fragmentShader string) (*Shader, error) {
 	shader := &Shader{
-		parent: parent,
+		parent:   parent,
+		format:   format,
+		uniforms: make(map[Attr]int32),
 	}
 
 	var err, glerr error
@@ -86,6 +97,15 @@ func NewShader(parent Doer, vertexShader, fragmentShader string) (*Shader, error
 
 			gl.DeleteShader(vshader)
 			gl.DeleteShader(fshader)
+
+			// uniforms
+			for uname, utype := range format {
+				ulocation := gl.GetUniformLocation(shader.program, gl.Str(uname+"\x00"))
+				if ulocation == -1 {
+					return fmt.Errorf("shader does not contain uniform '%s'", uname)
+				}
+				shader.uniforms[utype] = ulocation
+			}
 
 			return nil
 		})

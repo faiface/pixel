@@ -12,6 +12,8 @@ import (
 // Example:
 //
 //   VertexFormat{{Position, Vec2}, {Color, Vec4}, {TexCoord, Vec2}, {Visible, Bool}}
+//
+// Note: vertex array currently doesn't support matrices in vertex format.
 type VertexFormat []Attr
 
 // Size calculates the total size of a single vertex in this vertex format (sum of the sizes of all vertex attributes).
@@ -226,12 +228,15 @@ func (va *VertexArray) SetVertex(vertex int, data unsafe.Pointer) {
 
 // SetVertexAttribute sets the value of the specified vertex attribute of the specified vertex.
 // Argument data must point to a slice/array containing the new attribute data.
-func (va *VertexArray) SetVertexAttribute(vertex int, attr Attr, data unsafe.Pointer) {
+//
+// This function returns false if the specified attribute does not exist. Note that the function panics
+// if the vertex is out of range.
+func (va *VertexArray) SetVertexAttribute(vertex int, attr Attr, data unsafe.Pointer) (ok bool) {
 	if vertex < 0 || vertex >= va.count {
 		panic("set vertex attribute error: invalid vertex index")
 	}
 	if _, ok := va.attrs[attr]; !ok {
-		return // ignore non-existing attributes
+		return false
 	}
 	DoNoBlock(func() {
 		gl.BindBuffer(gl.ARRAY_BUFFER, va.vbo)
@@ -245,6 +250,7 @@ func (va *VertexArray) SetVertexAttribute(vertex int, attr Attr, data unsafe.Poi
 			panic(errors.Wrap(err, "set attribute vertex error"))
 		}
 	})
+	return true
 }
 
 // Do binds a vertex arrray and it's associated vertex buffer, executes sub, and unbinds the vertex array and it's vertex buffer.
