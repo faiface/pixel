@@ -29,8 +29,7 @@ type AttrType int
 
 // List of all possible attribute types.
 const (
-	Bool AttrType = iota
-	Int
+	Int AttrType = iota
 	Float
 	Vec2
 	Vec3
@@ -49,7 +48,6 @@ const (
 // Size returns the size of a type in bytes.
 func (at AttrType) Size() int {
 	sizeOf := map[AttrType]int{
-		Bool:  1,
 		Int:   4,
 		Float: 8,
 		Vec2:  2 * 8,
