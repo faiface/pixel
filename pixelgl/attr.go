@@ -51,19 +51,19 @@ const (
 func (at AttrType) Size() int {
 	sizeOf := map[AttrType]int{
 		Int:   4,
-		Float: 8,
-		Vec2:  2 * 8,
-		Vec3:  3 * 8,
-		Vec4:  4 * 8,
-		Mat2:  2 * 2 * 8,
-		Mat23: 2 * 3 * 8,
-		Mat24: 2 * 4 * 8,
-		Mat3:  3 * 3 * 8,
-		Mat32: 3 * 2 * 8,
-		Mat34: 3 * 4 * 8,
-		Mat4:  4 * 4 * 8,
-		Mat42: 4 * 2 * 8,
-		Mat43: 4 * 3 * 8,
+		Float: 4,
+		Vec2:  2 * 4,
+		Vec3:  3 * 4,
+		Vec4:  4 * 4,
+		Mat2:  2 * 2 * 4,
+		Mat23: 2 * 3 * 4,
+		Mat24: 2 * 4 * 4,
+		Mat3:  3 * 3 * 4,
+		Mat32: 3 * 2 * 4,
+		Mat34: 3 * 4 * 4,
+		Mat4:  4 * 4 * 4,
+		Mat42: 4 * 2 * 4,
+		Mat43: 4 * 3 * 4,
 	}
 	return sizeOf[at]
 }

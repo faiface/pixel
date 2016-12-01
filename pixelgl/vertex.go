@@ -4,7 +4,7 @@ import (
 	"unsafe"
 
 	"github.com/go-gl/gl/v3.3-core/gl"
-	"github.com/go-gl/mathgl/mgl64"
+	"github.com/go-gl/mathgl/mgl32"
 	"github.com/pkg/errors"
 )
 
@@ -137,7 +137,7 @@ func NewVertexArray(parent Doer, format VertexFormat, mode VertexDrawMode, usage
 				case Int:
 					xtype = gl.INT
 				case Float, Vec2, Vec3, Vec4:
-					xtype = gl.DOUBLE
+					xtype = gl.FLOAT
 				}
 
 				gl.VertexAttribPointer(
@@ -262,7 +262,7 @@ func (va *VertexArray) SetVertexAttributeInt(vertex int, purpose AttrPurpose, va
 //
 // This function returns false if the specified vertex attribute does not exist. Note that the function panics if
 // the vertex if out of range.
-func (va *VertexArray) SetVertexAttributeFloat(vertex int, purpose AttrPurpose, value float64) (ok bool) {
+func (va *VertexArray) SetVertexAttributeFloat(vertex int, purpose AttrPurpose, value float32) (ok bool) {
 	va.checkVertex(vertex)
 	attr := Attr{Purpose: purpose, Type: Float}
 	if _, ok := va.attrs[attr]; !ok {
@@ -288,7 +288,7 @@ func (va *VertexArray) SetVertexAttributeFloat(vertex int, purpose AttrPurpose, 
 //
 // This function returns false if the specified vertex attribute does not exist. Note that the function panics if
 // the vertex if out of range.
-func (va *VertexArray) SetVertexAttributeVec2(vertex int, purpose AttrPurpose, value mgl64.Vec2) (ok bool) {
+func (va *VertexArray) SetVertexAttributeVec2(vertex int, purpose AttrPurpose, value mgl32.Vec2) (ok bool) {
 	va.checkVertex(vertex)
 	attr := Attr{Purpose: purpose, Type: Vec2}
 	if _, ok := va.attrs[attr]; !ok {
@@ -314,7 +314,7 @@ func (va *VertexArray) SetVertexAttributeVec2(vertex int, purpose AttrPurpose, v
 //
 // This function returns false if the specified vertex attribute does not exist. Note that the function panics if
 // the vertex if out of range.
-func (va *VertexArray) SetVertexAttributeVec3(vertex int, purpose AttrPurpose, value mgl64.Vec3) (ok bool) {
+func (va *VertexArray) SetVertexAttributeVec3(vertex int, purpose AttrPurpose, value mgl32.Vec3) (ok bool) {
 	va.checkVertex(vertex)
 	attr := Attr{Purpose: purpose, Type: Vec3}
 	if _, ok := va.attrs[attr]; !ok {
@@ -340,7 +340,7 @@ func (va *VertexArray) SetVertexAttributeVec3(vertex int, purpose AttrPurpose, v
 //
 // This function returns false if the specified vertex attribute does not exist. Note that the function panics if
 // the vertex if out of range.
-func (va *VertexArray) SetVertexAttributeVec4(vertex int, purpose AttrPurpose, value mgl64.Vec4) (ok bool) {
+func (va *VertexArray) SetVertexAttributeVec4(vertex int, purpose AttrPurpose, value mgl32.Vec4) (ok bool) {
 	va.checkVertex(vertex)
 	attr := Attr{Purpose: purpose, Type: Vec4}
 	if _, ok := va.attrs[attr]; !ok {
