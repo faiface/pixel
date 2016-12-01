@@ -56,6 +56,11 @@ func (u Vec) Y() float64 {
 	return imag(u)
 }
 
+// XY returns the components of a vector in two return values.
+func (u Vec) XY() (x, y float64) {
+	return real(u), imag(u)
+}
+
 // Len returns the length of a vector u.
 func (u Vec) Len() float64 {
 	return cmplx.Abs(complex128(u))
