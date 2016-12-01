@@ -20,6 +20,8 @@ const (
 	Transform
 	// Camera is a camera view matrix
 	Camera
+	// NumStandardAttrPurposes is the number of standard attribute purposes
+	NumStandardAttrPurposes
 )
 
 // AttrType represents the type of an OpenGL attribute.
