@@ -1,7 +1,10 @@
 package pixelgl
 
 import (
+	"unsafe"
+
 	"github.com/go-gl/gl/v3.3-core/gl"
+	"github.com/go-gl/mathgl/mgl64"
 	"github.com/pkg/errors"
 )
 
@@ -9,7 +12,7 @@ import (
 //
 // Example:
 //
-//   VertexFormat{{Position, Vec2}, {Color, Vec4}, {TexCoord, Vec2}, {Visible, Bool}}
+//   VertexFormat{{Position, Vec2}, {Color, Vec4}, {TexCoord, Vec2}}
 //
 // Note: vertex array currently doesn't support matrices in vertex format.
 type VertexFormat []Attr
@@ -90,7 +93,7 @@ func NewVertexArray(parent Doer, format VertexFormat, mode VertexDrawMode, usage
 	offset := 0
 	for _, attr := range format {
 		switch attr.Type {
-		case Bool, Int, Float, Vec2, Vec3, Vec4:
+		case Int, Float, Vec2, Vec3, Vec4:
 		default:
 			return nil, errors.New("failed to create vertex array: invalid vertex format: invalid attribute type")
 		}
@@ -119,7 +122,7 @@ func NewVertexArray(parent Doer, format VertexFormat, mode VertexDrawMode, usage
 
 				var size int32
 				switch attr.Type {
-				case Bool, Int, Float:
+				case Int, Float:
 					size = 1
 				case Vec2:
 					size = 2
@@ -131,8 +134,6 @@ func NewVertexArray(parent Doer, format VertexFormat, mode VertexDrawMode, usage
 
 				var xtype uint32
 				switch attr.Type {
-				case Bool:
-					xtype = gl.BOOL
 				case Int:
 					xtype = gl.INT
 				case Float, Vec2, Vec3, Vec4:
@@ -224,15 +225,20 @@ func (va *VertexArray) SetVertex(vertex int, data interface{}) {
 	})
 }
 
-// SetVertexAttribute sets the value of the specified vertex attribute of the specified vertex.
-// Argument data must be a slice/array containing the new attribute data.
-//
-// This function returns false if the specified attribute does not exist. Note that the function panics
-// if the vertex is out of range.
-func (va *VertexArray) SetVertexAttribute(vertex int, attr Attr, data interface{}) (ok bool) {
+func (va *VertexArray) checkVertex(vertex int) {
 	if vertex < 0 || vertex >= va.count {
-		panic("set vertex attribute error: invalid vertex index")
+		panic("invalid vertex index")
 	}
+}
+
+// SetVertexAttributeInt sets the value of a specified vertex attribute Attr{Purpose: purpose, Type: Int} of type Int
+// of the specified vertex.
+//
+// This function returns false if the specified vertex attribute does not exist. Note that the function panics if
+// the vertex if out of range.
+func (va *VertexArray) SetVertexAttributeInt(vertex int, purpose AttrPurpose, value int32) (ok bool) {
+	va.checkVertex(vertex)
+	attr := Attr{Purpose: purpose, Type: Int}
 	if _, ok := va.attrs[attr]; !ok {
 		return false
 	}
@@ -240,12 +246,116 @@ func (va *VertexArray) SetVertexAttribute(vertex int, attr Attr, data interface{
 		gl.BindBuffer(gl.ARRAY_BUFFER, va.vbo)
 
 		offset := va.stride*vertex + va.attrs[attr]
-		gl.BufferSubData(gl.ARRAY_BUFFER, offset, attr.Type.Size(), gl.Ptr(data))
+		gl.BufferSubData(gl.ARRAY_BUFFER, offset, attr.Type.Size(), unsafe.Pointer(&value))
 
 		gl.BindBuffer(gl.ARRAY_BUFFER, 0)
 
 		if err := getLastGLErr(); err != nil {
-			panic(errors.Wrap(err, "set attribute vertex error"))
+			panic(errors.Wrap(err, "set attribute vertex"))
+		}
+	})
+	return true
+}
+
+// SetVertexAttributeFloat sets the value of a specified vertex attribute Attr{Purpose: purpose, Type: Float} of type Float
+// of the specified vertex.
+//
+// This function returns false if the specified vertex attribute does not exist. Note that the function panics if
+// the vertex if out of range.
+func (va *VertexArray) SetVertexAttributeFloat(vertex int, purpose AttrPurpose, value float64) (ok bool) {
+	va.checkVertex(vertex)
+	attr := Attr{Purpose: purpose, Type: Float}
+	if _, ok := va.attrs[attr]; !ok {
+		return false
+	}
+	DoNoBlock(func() {
+		gl.BindBuffer(gl.ARRAY_BUFFER, va.vbo)
+
+		offset := va.stride*vertex + va.attrs[attr]
+		gl.BufferSubData(gl.ARRAY_BUFFER, offset, attr.Type.Size(), unsafe.Pointer(&value))
+
+		gl.BindBuffer(gl.ARRAY_BUFFER, 0)
+
+		if err := getLastGLErr(); err != nil {
+			panic(errors.Wrap(err, "set attribute vertex"))
+		}
+	})
+	return true
+}
+
+// SetVertexAttributeVec2 sets the value of a specified vertex attribute Attr{Purpose: purpose, Type: Vec2} of type Vec2
+// of the specified vertex.
+//
+// This function returns false if the specified vertex attribute does not exist. Note that the function panics if
+// the vertex if out of range.
+func (va *VertexArray) SetVertexAttributeVec2(vertex int, purpose AttrPurpose, value mgl64.Vec2) (ok bool) {
+	va.checkVertex(vertex)
+	attr := Attr{Purpose: purpose, Type: Vec2}
+	if _, ok := va.attrs[attr]; !ok {
+		return false
+	}
+	DoNoBlock(func() {
+		gl.BindBuffer(gl.ARRAY_BUFFER, va.vbo)
+
+		offset := va.stride*vertex + va.attrs[attr]
+		gl.BufferSubData(gl.ARRAY_BUFFER, offset, attr.Type.Size(), unsafe.Pointer(&value))
+
+		gl.BindBuffer(gl.ARRAY_BUFFER, 0)
+
+		if err := getLastGLErr(); err != nil {
+			panic(errors.Wrap(err, "set attribute vertex"))
+		}
+	})
+	return true
+}
+
+// SetVertexAttributeVec3 sets the value of a specified vertex attribute Attr{Purpose: purpose, Type: Vec3} of type Vec3
+// of the specified vertex.
+//
+// This function returns false if the specified vertex attribute does not exist. Note that the function panics if
+// the vertex if out of range.
+func (va *VertexArray) SetVertexAttributeVec3(vertex int, purpose AttrPurpose, value mgl64.Vec3) (ok bool) {
+	va.checkVertex(vertex)
+	attr := Attr{Purpose: purpose, Type: Vec3}
+	if _, ok := va.attrs[attr]; !ok {
+		return false
+	}
+	DoNoBlock(func() {
+		gl.BindBuffer(gl.ARRAY_BUFFER, va.vbo)
+
+		offset := va.stride*vertex + va.attrs[attr]
+		gl.BufferSubData(gl.ARRAY_BUFFER, offset, attr.Type.Size(), unsafe.Pointer(&value))
+
+		gl.BindBuffer(gl.ARRAY_BUFFER, 0)
+
+		if err := getLastGLErr(); err != nil {
+			panic(errors.Wrap(err, "set attribute vertex"))
+		}
+	})
+	return true
+}
+
+// SetVertexAttributeVec4 sets the value of a specified vertex attribute Attr{Purpose: purpose, Type: Vec4} of type Vec4
+// of the specified vertex.
+//
+// This function returns false if the specified vertex attribute does not exist. Note that the function panics if
+// the vertex if out of range.
+func (va *VertexArray) SetVertexAttributeVec4(vertex int, purpose AttrPurpose, value mgl64.Vec4) (ok bool) {
+	va.checkVertex(vertex)
+	attr := Attr{Purpose: purpose, Type: Vec4}
+	if _, ok := va.attrs[attr]; !ok {
+		return false
+	}
+	DoNoBlock(func() {
+		gl.BindBuffer(gl.ARRAY_BUFFER, va.vbo)
+
+		offset := va.stride*vertex + va.attrs[attr]
+		gl.BufferSubData(gl.ARRAY_BUFFER, offset, attr.Type.Size(), unsafe.Pointer(&value))
+
+		gl.BindBuffer(gl.ARRAY_BUFFER, 0)
+
+		if err := getLastGLErr(); err != nil {
+			panic(errors.Wrap(err, "set attribute vertex"))
 		}
 	})
 	return true
