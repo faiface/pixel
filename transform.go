@@ -94,6 +94,5 @@ func (t Transform) Mat3() mgl32.Mat3 {
 //
 // It is possible to apply additional rotations, scales and moves to the returned transform.
 func Camera(center, zoom, screenSize Vec) Transform {
-	scale := screenSize * zoom / 2
-	return Position(0).Anchor(center).ScaleXY(scale)
+	return Position(0).Anchor(center).ScaleXY(2 * zoom).ScaleXY(V(1/screenSize.X(), 1/screenSize.Y()))
 }
