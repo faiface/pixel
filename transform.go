@@ -27,6 +27,12 @@ func Position(position Vec) Transform {
 	}
 }
 
+// Position sets position.
+func (t Transform) Position(position Vec) Transform {
+	t.pos = position
+	return t
+}
+
 // Move adds delta to position.
 func (t Transform) Move(delta Vec) Transform {
 	t.pos += delta
@@ -50,7 +56,7 @@ func (t Transform) MoveAnchor(delta Vec) Transform {
 // Note, that subsequent calls to this method accumulate the final scale factor. Scaling two times by 2 is equivalent
 // to scaling once by 4.
 func (t Transform) Scale(scale float64) Transform {
-	t.sca *= V(scale, scale)
+	t.sca = t.sca.Scaled(scale)
 	return t
 }
 
@@ -59,7 +65,7 @@ func (t Transform) Scale(scale float64) Transform {
 // Note, that subsequent calls to this method accumulate the final scale factor. Scaling two times by 2 is equivalent
 // to scaling once by 4.
 func (t Transform) ScaleXY(scale Vec) Transform {
-	t.sca *= scale
+	t.sca = V(t.sca.X()*scale.X(), t.sca.Y()*scale.Y())
 	return t
 }
 
@@ -80,4 +86,14 @@ func (t Transform) Mat3() mgl32.Mat3 {
 	mat = mat.Mul3(mgl32.Scale2D(float32(t.sca.X()), float32(t.sca.Y())))
 	mat = mat.Mul3(mgl32.Translate2D(float32(t.anc.X()), float32(t.anc.Y())))
 	return mat
+}
+
+// Camera is a convenience function, that returns a Transform that acts like a camera.
+// Center is the position in the world coordinates, that will be projected onto the center of the screen.
+// One unit in world coordinates will be projected onto zoom pixels.
+//
+// It is possible to apply additional rotations, scales and moves to the returned transform.
+func Camera(center, zoom, screenSize Vec) Transform {
+	scale := screenSize * zoom / 2
+	return Position(0).Anchor(center).ScaleXY(scale)
 }
