@@ -94,7 +94,7 @@ func NewVertexArray(parent Doer, format VertexFormat, mode VertexDrawMode, usage
 	offset := 0
 	for _, attr := range format {
 		switch attr.Type {
-		case Int, Float, Vec2, Vec3, Vec4:
+		case Float, Vec2, Vec3, Vec4:
 		default:
 			return nil, errors.New("failed to create vertex array: invalid vertex format: invalid attribute type")
 		}
@@ -126,7 +126,7 @@ func NewVertexArray(parent Doer, format VertexFormat, mode VertexDrawMode, usage
 
 				var size int32
 				switch attr.Type {
-				case Int, Float:
+				case Float:
 					size = 1
 				case Vec2:
 					size = 2
