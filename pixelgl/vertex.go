@@ -70,12 +70,12 @@ const (
 // From the user's points of view, VertexArray is an array of vertices that can be drawn.
 type VertexArray struct {
 	parent Doer
+	vao    uint32
+	vbo    uint32
 	format VertexFormat
 	stride int
 	count  int
 	attrs  map[Attr]int
-	vao    uint32
-	vbo    uint32
 	mode   VertexDrawMode
 }
 
