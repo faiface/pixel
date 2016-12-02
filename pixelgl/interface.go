@@ -36,13 +36,7 @@ type Doer interface {
 //
 // This type does *not* represent an OpenGL context in the OpenGL terminology.
 type Context struct {
-	vertexFormat VertexFormat
-	shader       *Shader
-}
-
-// VertexFormat returns the current vertex format.
-func (c Context) VertexFormat() VertexFormat {
-	return c.vertexFormat
+	shader *Shader
 }
 
 // Shader returns the current shader.
@@ -50,18 +44,19 @@ func (c Context) Shader() *Shader {
 	return c.shader
 }
 
-// WithVertexFormat returns a copy of this context with the specified vertex format.
-func (c Context) WithVertexFormat(vf VertexFormat) Context {
-	return Context{
-		vertexFormat: vf,
-		shader:       c.shader,
-	}
-}
-
 // WithShader returns a copy of this context with the specified shader.
 func (c Context) WithShader(s *Shader) Context {
 	return Context{
-		vertexFormat: c.vertexFormat,
-		shader:       s,
+		shader: s,
 	}
+}
+
+// ContextHolder is a root Doer with no parent. It simply forwards a context to a child.
+type ContextHolder struct {
+	Context
+}
+
+// Do calls sub and passes it the held context.
+func (ch *ContextHolder) Do(sub func(ctx Context)) {
+	sub(ch.Context)
 }
