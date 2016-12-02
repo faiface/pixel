@@ -58,6 +58,8 @@ func NewShader(parent Doer, vertexFormat VertexFormat, uniformFormat UniformForm
 					gl.GetShaderInfoLog(vshader, int32(len(infoLog)), nil, &infoLog[0])
 					return fmt.Errorf("error compiling vertex shader: %s", string(infoLog))
 				}
+
+				defer gl.DeleteShader(vshader)
 			}
 
 			// fragment shader
@@ -78,6 +80,8 @@ func NewShader(parent Doer, vertexFormat VertexFormat, uniformFormat UniformForm
 					gl.GetShaderInfoLog(fshader, int32(len(infoLog)), nil, &infoLog[0])
 					return fmt.Errorf("error compiling fragment shader: %s", string(infoLog))
 				}
+
+				defer gl.DeleteShader(fshader)
 			}
 
 			// shader program
@@ -98,14 +102,16 @@ func NewShader(parent Doer, vertexFormat VertexFormat, uniformFormat UniformForm
 				}
 			}
 
-			gl.DeleteShader(vshader)
-			gl.DeleteShader(fshader)
-
 			// uniforms
 			for uname, utype := range uniformFormat {
 				ulocation := gl.GetUniformLocation(shader.program, gl.Str(uname+"\x00"))
 				if ulocation == -1 {
+					gl.DeleteProgram(shader.program)
 					return fmt.Errorf("shader does not contain uniform '%s'", uname)
+				}
+				if _, ok := shader.uniforms[utype]; ok {
+					gl.DeleteProgram(shader.program)
+					return fmt.Errorf("failed to create shader: invalid uniform format: duplicate uniform attribute")
 				}
 				shader.uniforms[utype] = ulocation
 			}
