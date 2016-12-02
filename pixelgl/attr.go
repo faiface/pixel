@@ -47,7 +47,7 @@ const (
 
 // Size returns the size of a type in bytes.
 func (at AttrType) Size() int {
-	sizeOf := map[AttrType]int{
+	return map[AttrType]int{
 		Int:   4,
 		Float: 4,
 		Vec2:  2 * 4,
@@ -62,6 +62,5 @@ func (at AttrType) Size() int {
 		Mat4:  4 * 4 * 4,
 		Mat42: 4 * 2 * 4,
 		Mat43: 4 * 3 * 4,
-	}
-	return sizeOf[at]
+	}[at]
 }
