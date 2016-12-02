@@ -18,9 +18,9 @@ type UniformFormat map[string]Attr
 // Shader is an OpenGL shader program.
 type Shader struct {
 	parent        Doer
+	program       uint32
 	vertexFormat  VertexFormat
 	uniformFormat UniformFormat
-	program       uint32
 	uniforms      map[Attr]int32
 }
 
