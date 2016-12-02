@@ -25,8 +25,6 @@ const (
 )
 
 // AttrType represents the type of an OpenGL attribute.
-//
-// Important note: Int is 32-bit and Float is 64-bit.
 type AttrType int
 
 // List of all possible attribute types.
