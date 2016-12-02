@@ -18,8 +18,6 @@ const (
 	TexCoord
 	// Transform is an object transformation matrix
 	Transform
-	// Camera is a camera view matrix
-	Camera
 	// IsTexture signals, whether a texture is present.
 	IsTexture
 	// NumStandardAttrPurposes is the number of standard attribute purposes
