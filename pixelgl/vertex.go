@@ -136,18 +136,10 @@ func NewVertexArray(parent Doer, format VertexFormat, mode VertexDrawMode, usage
 					size = 4
 				}
 
-				var xtype uint32
-				switch attr.Type {
-				case Int:
-					xtype = gl.INT
-				case Float, Vec2, Vec3, Vec4:
-					xtype = gl.FLOAT
-				}
-
 				gl.VertexAttribPointer(
 					uint32(location),
 					size,
-					xtype,
+					gl.FLOAT,
 					false,
 					int32(va.stride),
 					gl.PtrOffset(offset),
@@ -246,32 +238,6 @@ func (va *VertexArray) checkVertex(vertex int) {
 	if vertex < 0 || vertex >= va.count {
 		panic("invalid vertex index")
 	}
-}
-
-// SetVertexAttributeInt sets the value of a specified vertex attribute Attr{Purpose: purpose, Type: Int} of type Int
-// of the specified vertex.
-//
-// This function returns false if the specified vertex attribute does not exist. Note that the function panics if
-// the vertex if out of range.
-func (va *VertexArray) SetVertexAttributeInt(vertex int, purpose AttrPurpose, value int32) (ok bool) {
-	va.checkVertex(vertex)
-	attr := Attr{Purpose: purpose, Type: Int}
-	if _, ok := va.attrs[attr]; !ok {
-		return false
-	}
-	DoNoBlock(func() {
-		gl.BindBuffer(gl.ARRAY_BUFFER, va.vbo)
-
-		offset := va.stride*vertex + va.attrs[attr]
-		gl.BufferSubData(gl.ARRAY_BUFFER, offset, attr.Type.Size(), unsafe.Pointer(&value))
-
-		gl.BindBuffer(gl.ARRAY_BUFFER, 0)
-
-		if err := getLastGLErr(); err != nil {
-			panic(errors.Wrap(err, "set attribute vertex"))
-		}
-	})
-	return true
 }
 
 // SetVertexAttributeFloat sets the value of a specified vertex attribute Attr{Purpose: purpose, Type: Float} of type Float

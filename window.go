@@ -315,14 +315,14 @@ func (w *Window) Do(sub func(pixelgl.Context)) {
 }
 
 var defaultVertexFormat = pixelgl.VertexFormat{
-	"position":  {Purpose: pixelgl.Position, Type: pixelgl.Vec2},
-	"color":     {Purpose: pixelgl.Color, Type: pixelgl.Vec4},
-	"texCoord":  {Purpose: pixelgl.TexCoord, Type: pixelgl.Vec2},
-	"isTexture": {Purpose: pixelgl.IsTexture, Type: pixelgl.Int},
+	"position": {Purpose: pixelgl.Position, Type: pixelgl.Vec2},
+	"color":    {Purpose: pixelgl.Color, Type: pixelgl.Vec4},
+	"texCoord": {Purpose: pixelgl.TexCoord, Type: pixelgl.Vec2},
 }
 
 var defaultUniformFormat = pixelgl.UniformFormat{
 	"transform": {Purpose: pixelgl.Transform, Type: pixelgl.Mat3},
+	"isTexture": {Purpose: pixelgl.IsTexture, Type: pixelgl.Int},
 }
 
 var defaultVertexShader = `
@@ -331,11 +331,9 @@ var defaultVertexShader = `
 in vec2 position;
 in vec4 color;
 in vec2 texCoord;
-in int isTexture;
 
 out vec4 Color;
 out vec2 TexCoord;
-out int IsTexture;
 
 uniform mat3 transform;
 
@@ -343,7 +341,6 @@ void main() {
 	gl_Position = vec4((transform * vec3(position.x, position.y, 1.0)).xy, 0.0, 1.0);
 	Color = color;
 	TexCoord = texCoord;
-	IsTexture = isTexture;
 }
 `
 
@@ -352,14 +349,14 @@ var defaultFragmentShader = `
 
 in vec4 Color;
 in vec2 TexCoord;
-in int IsTexture;
 
 out vec4 color;
 
+uniform int isTexture;
 uniform sampler2D tex;
 
 void main() {
-	if (IsTexture != 0) {
+	if (isTexture != 0) {
 		color = Color * texture(tex, vec2(TexCoord.x, 1 - TexCoord.y));
 	} else {
 		color = Color;
