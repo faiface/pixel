@@ -1,7 +1,6 @@
 package pixelgl
 
 import (
-	"fmt"
 	"unsafe"
 
 	"github.com/go-gl/gl/v3.3-core/gl"
@@ -16,7 +15,7 @@ import (
 //   VertexFormat{"position": {Position, Vec2}, "colr": {Color, Vec4}, "texCoord": {TexCoord, Vec2}}
 //
 // Note: vertex array currently doesn't support matrices in vertex format.
-type VertexFormat map[string]Attr
+type VertexFormat []Attr
 
 // Size calculates the total size of a single vertex in this vertex format (sum of the sizes of all vertex attributes).
 func (vf VertexFormat) Size() int {
@@ -118,12 +117,7 @@ func NewVertexArray(parent Doer, format VertexFormat, mode VertexDrawMode, usage
 			gl.BufferData(gl.ARRAY_BUFFER, len(emptyData), gl.Ptr(emptyData), uint32(usage))
 
 			offset := 0
-			for name, attr := range format {
-				location := gl.GetAttribLocation(ctx.Shader().ID(), gl.Str(name+"\x00"))
-				if location == -1 {
-					return fmt.Errorf("shader does not contain vertex attribute '%s'", name)
-				}
-
+			for i, attr := range format {
 				var size int32
 				switch attr.Type {
 				case Float:
@@ -137,14 +131,14 @@ func NewVertexArray(parent Doer, format VertexFormat, mode VertexDrawMode, usage
 				}
 
 				gl.VertexAttribPointer(
-					uint32(location),
+					uint32(i),
 					size,
 					gl.FLOAT,
 					false,
 					int32(va.stride),
 					gl.PtrOffset(offset),
 				)
-				gl.EnableVertexAttribArray(uint32(location))
+				gl.EnableVertexAttribArray(uint32(i))
 				offset += attr.Type.Size()
 			}
 

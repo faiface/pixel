@@ -315,9 +315,9 @@ func (w *Window) Do(sub func(pixelgl.Context)) {
 }
 
 var defaultVertexFormat = pixelgl.VertexFormat{
-	"position": {Purpose: pixelgl.Position, Type: pixelgl.Vec2},
-	"color":    {Purpose: pixelgl.Color, Type: pixelgl.Vec4},
-	"texCoord": {Purpose: pixelgl.TexCoord, Type: pixelgl.Vec2},
+	{Purpose: pixelgl.Position, Type: pixelgl.Vec2},
+	{Purpose: pixelgl.Color, Type: pixelgl.Vec4},
+	{Purpose: pixelgl.TexCoord, Type: pixelgl.Vec2},
 }
 
 var defaultUniformFormat = pixelgl.UniformFormat{
@@ -328,9 +328,9 @@ var defaultUniformFormat = pixelgl.UniformFormat{
 var defaultVertexShader = `
 #version 330 core
 
-in vec2 position;
-in vec4 color;
-in vec2 texCoord;
+layout (location = 0) in vec2 position;
+layout (location = 1) in vec4 color;
+layout (location = 2) in vec2 texCoord;
 
 out vec4 Color;
 out vec2 TexCoord;
