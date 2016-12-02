@@ -17,20 +17,22 @@ type UniformFormat map[string]Attr
 
 // Shader is an OpenGL shader program.
 type Shader struct {
-	parent   Doer
-	format   UniformFormat
-	program  uint32
-	uniforms map[Attr]int32
+	parent        Doer
+	vertexFormat  VertexFormat
+	uniformFormat UniformFormat
+	program       uint32
+	uniforms      map[Attr]int32
 }
 
 // NewShader creates a new shader program from the specified vertex shader and fragment shader sources.
 //
 // Note that vertexShader and fragmentShader parameters must contain the source code, they're not filenames.
-func NewShader(parent Doer, format UniformFormat, vertexShader, fragmentShader string) (*Shader, error) {
+func NewShader(parent Doer, vertexFormat VertexFormat, uniformFormat UniformFormat, vertexShader, fragmentShader string) (*Shader, error) {
 	shader := &Shader{
-		parent:   parent,
-		format:   format,
-		uniforms: make(map[Attr]int32),
+		parent:        parent,
+		vertexFormat:  vertexFormat,
+		uniformFormat: uniformFormat,
+		uniforms:      make(map[Attr]int32),
 	}
 
 	var err, glerr error
@@ -100,7 +102,7 @@ func NewShader(parent Doer, format UniformFormat, vertexShader, fragmentShader s
 			gl.DeleteShader(fshader)
 
 			// uniforms
-			for uname, utype := range format {
+			for uname, utype := range uniformFormat {
 				ulocation := gl.GetUniformLocation(shader.program, gl.Str(uname+"\x00"))
 				if ulocation == -1 {
 					return fmt.Errorf("shader does not contain uniform '%s'", uname)
@@ -131,6 +133,21 @@ func (s *Shader) Delete() {
 			gl.DeleteProgram(s.program)
 		})
 	})
+}
+
+// ID returns an OpenGL identifier of a shader program.
+func (s *Shader) ID() uint32 {
+	return s.program
+}
+
+// VertexFormat returns the vertex attribute format of this shader. Do not change it.
+func (s *Shader) VertexFormat() VertexFormat {
+	return s.vertexFormat
+}
+
+// UniformFormat returns the uniform attribute format of this shader. Do not change it.
+func (s *Shader) UniformFormat() UniformFormat {
+	return s.uniformFormat
 }
 
 // SetUniformInt sets the value of an uniform attribute Attr{Purpose: purpose, Type: Int}.

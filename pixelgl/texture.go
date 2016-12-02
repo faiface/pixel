@@ -55,6 +55,11 @@ func (t *Texture) Delete() {
 	})
 }
 
+// ID returns an OpenGL identifier of a texture.
+func (t *Texture) ID() uint32 {
+	return t.tex
+}
+
 // Do bind a texture, executes sub, and unbinds the texture.
 func (t *Texture) Do(sub func(Context)) {
 	t.parent.Do(func(ctx Context) {

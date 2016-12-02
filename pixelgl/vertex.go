@@ -1,6 +1,7 @@
 package pixelgl
 
 import (
+	"fmt"
 	"unsafe"
 
 	"github.com/go-gl/gl/v3.3-core/gl"
@@ -12,10 +13,10 @@ import (
 //
 // Example:
 //
-//   VertexFormat{{Position, Vec2}, {Color, Vec4}, {TexCoord, Vec2}}
+//   VertexFormat{"position": {Position, Vec2}, "colr": {Color, Vec4}, "texCoord": {TexCoord, Vec2}}
 //
 // Note: vertex array currently doesn't support matrices in vertex format.
-type VertexFormat []Attr
+type VertexFormat map[string]Attr
 
 // Size calculates the total size of a single vertex in this vertex format (sum of the sizes of all vertex attributes).
 func (vf VertexFormat) Size() int {
@@ -104,9 +105,9 @@ func NewVertexArray(parent Doer, format VertexFormat, mode VertexDrawMode, usage
 		offset += attr.Type.Size()
 	}
 
-	var err error
+	var err, glerr error
 	parent.Do(func(ctx Context) {
-		err = DoGLErr(func() {
+		err, glerr = DoErrGLErr(func() error {
 			gl.GenVertexArrays(1, &va.vao)
 			gl.BindVertexArray(va.vao)
 
@@ -117,8 +118,11 @@ func NewVertexArray(parent Doer, format VertexFormat, mode VertexDrawMode, usage
 			gl.BufferData(gl.ARRAY_BUFFER, len(emptyData), gl.Ptr(emptyData), uint32(usage))
 
 			offset := 0
-			for i, attr := range format {
-				//XXX: ugly but OpenGL is so inconsistent
+			for name, attr := range format {
+				location := gl.GetAttribLocation(ctx.Shader().ID(), gl.Str(name+"\x00"))
+				if location == -1 {
+					return fmt.Errorf("shader does not contain vertex attribute '%s'", name)
+				}
 
 				var size int32
 				switch attr.Type {
@@ -141,23 +145,31 @@ func NewVertexArray(parent Doer, format VertexFormat, mode VertexDrawMode, usage
 				}
 
 				gl.VertexAttribPointer(
-					uint32(i),
+					uint32(location),
 					size,
 					xtype,
 					false,
 					int32(va.stride),
 					gl.PtrOffset(offset),
 				)
-				gl.EnableVertexAttribArray(uint32(i))
+				gl.EnableVertexAttribArray(uint32(location))
 				offset += attr.Type.Size()
 			}
 
 			gl.BindBuffer(gl.ARRAY_BUFFER, 0)
 			gl.BindVertexArray(0)
+
+			return nil
 		})
 	})
+	if err != nil && glerr != nil {
+		return nil, errors.Wrap(errors.Wrap(glerr, err.Error()), "failed to create vertex array")
+	}
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to create a vertex array")
+		return nil, errors.Wrap(err, "failed to create vertex array")
+	}
+	if glerr != nil {
+		return nil, errors.Wrap(glerr, "failed to create vertex array")
 	}
 
 	return va, nil
@@ -171,6 +183,11 @@ func (va *VertexArray) Delete() {
 			gl.DeleteBuffers(1, &va.vbo)
 		})
 	})
+}
+
+// ID returns an OpenGL identifier of a vertex array.
+func (va *VertexArray) ID() uint32 {
+	return va.vao
 }
 
 // Count returns the number of vertices in a vertex array.
