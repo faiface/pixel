@@ -28,7 +28,7 @@ func (m *Monitor) Name() string {
 	return m.monitor.GetName()
 }
 
-// PhysicalSize returns the size of the display are of a monitor in millimeters.
+// PhysicalSize returns the size of the display area of a monitor in millimeters.
 func (m *Monitor) PhysicalSize() (width, height float64) {
 	wi, hi := m.monitor.GetPhysicalSize()
 	width = float64(wi)
