@@ -53,7 +53,7 @@ func (c Context) WithShader(s *Shader) Context {
 
 // ContextHolder is a root Doer with no parent. It simply forwards a context to a child.
 type ContextHolder struct {
-	Context
+	Context Context
 }
 
 // Do calls sub and passes it the held context.
