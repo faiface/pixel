@@ -52,8 +52,9 @@ type WindowConfig struct {
 
 // Window is a window handler. Use this type to manipulate a window (input, drawing, ...).
 type Window struct {
-	window *glfw.Window
-	config WindowConfig
+	window        *glfw.Window
+	config        WindowConfig
+	defaultShader *pixelgl.Shader
 
 	// need to save these to correctly restore a fullscreen window
 	restore struct {
@@ -102,6 +103,12 @@ func NewWindow(config WindowConfig) (*Window, error) {
 	}
 
 	w.SetFullscreen(config.Fullscreen)
+
+	w.defaultShader, err = pixelgl.NewShader(w, defaultUniformFormat, defaultVertexShader, defaultFragmentShader)
+	if err != nil {
+		w.Delete()
+		return nil, errors.Wrap(err, "creating window failed")
+	}
 
 	return w, nil
 }
@@ -304,3 +311,50 @@ func (w *Window) Do(sub func(pixelgl.Context)) {
 
 	sub(pixelgl.Context{})
 }
+
+var defaultUniformFormat = pixelgl.UniformFormat{
+	"camera":    {Purpose: pixelgl.Camera, Type: pixelgl.Mat3},
+	"transform": {Purpose: pixelgl.Transform, Type: pixelgl.Mat3},
+	"isTexture": {Purpose: pixelgl.IsTexture, Type: pixelgl.Int},
+}
+
+var defaultVertexShader = `
+#version 330 core
+
+layout (location = 0) in vec2 position;
+layout (location = 1) in vec4 color;
+layout (location = 2) in vec2 texCoord;
+
+out vec4 Color;
+out vec2 TexCoord;
+
+uniform mat3 camera;
+uniform mat3 transform;
+
+void main() {
+	gl_Position = vec4((camera * transform * vec3(position.x, position.y, 1.0)).xy, 0.0, 1.0);
+	Color = color;
+	TexCoord = texCoord;
+}
+`
+
+var defaultFragmentShader = `
+#version 330 core
+
+in vec4 Color;
+in vec2 TexCoord;
+
+out vec4 color;
+
+uniform int isTexture;
+
+uniform sampler2D tex;
+
+void main() {
+	if (isTexture != 0) {
+		color = Color * texture(tex, vec2(TexCoord.x, 1 - TexCoord.y));
+	} else {
+		color = Color;
+	}
+}
+`
