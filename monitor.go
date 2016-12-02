@@ -14,7 +14,7 @@ func PrimaryMonitor() *Monitor {
 	}
 }
 
-// Monitors returns a slice of all currently attached monitors.
+// Monitors returns a slice of all currently available monitors.
 func Monitors() []*Monitor {
 	var monitors []*Monitor
 	for _, monitor := range glfw.GetMonitors() {
