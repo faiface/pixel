@@ -2,6 +2,7 @@ package pixel
 
 import (
 	"image/color"
+	"math"
 
 	"github.com/faiface/pixel/pixelgl"
 	"github.com/go-gl/mathgl/mgl32"
@@ -45,7 +46,7 @@ type PolygonColor struct {
 }
 
 // NewPolygonColor creates a new polygon shape filled with a single color. Parent is an object that this shape belongs to,
-// such as a window, or a graphical effect.
+// such as a window, or a graphics effect.
 func NewPolygonColor(parent pixelgl.Doer, c color.Color, points ...Vec) *PolygonColor {
 	pc := &PolygonColor{
 		parent: parent,
@@ -59,14 +60,31 @@ func NewPolygonColor(parent pixelgl.Doer, c color.Color, points ...Vec) *Polygon
 	})
 
 	var err error
-	pc.va, err = pixelgl.NewVertexArray(parent, format, pixelgl.TriangleFanDrawMode, pixelgl.DynamicUsage, len(points))
+	pc.va, err = pixelgl.NewVertexArray(
+		parent,
+		format,
+		pixelgl.TriangleFanDrawMode,
+		pixelgl.DynamicUsage,
+		len(points),
+	)
 	if err != nil {
 		panic(errors.Wrap(err, "failed to create polygon"))
 	}
 
 	for i, p := range points {
-		pc.va.SetVertexAttributeVec2(i, pixelgl.Position, mgl32.Vec2{float32(p.X()), float32(p.Y())})
-		pc.va.SetVertexAttributeVec4(i, pixelgl.Color, mgl32.Vec4{1, 1, 1, 1})
+		pc.va.SetVertexAttributeVec2(
+			i,
+			pixelgl.Position,
+			mgl32.Vec2{
+				float32(p.X()),
+				float32(p.Y()),
+			},
+		)
+		pc.va.SetVertexAttributeVec4(
+			i,
+			pixelgl.Color,
+			mgl32.Vec4{1, 1, 1, 1},
+		)
 	}
 
 	return pc
@@ -125,4 +143,119 @@ func (pc *PolygonColor) Draw(t ...Transform) {
 // Delete destroys a polygon shape and releases it's video memory. Do not use this shape after calling Delete.
 func (pc *PolygonColor) Delete() {
 	pc.va.Delete()
+}
+
+// EllipseColor is an ellipse shape filled with a single color.
+type EllipseColor struct {
+	parent pixelgl.Doer
+	color  color.Color
+	radius Vec
+	fill   float64
+	va     *pixelgl.VertexArray
+}
+
+// NewEllipseColor creates a new ellipse shape filled with a single color. Parent is an object that this shape belongs to,
+// such as a window, or a graphics effect. Fill should be a number between 0 and 1 which specifies how much of the ellipse will
+// be filled (from the outside). The value of 1 means that the whole ellipse is filled. The value of 0 means that none of the
+// ellipse is filled (which makes the ellipse invisible).
+func NewEllipseColor(parent pixelgl.Doer, c color.Color, radius Vec, fill float64) *EllipseColor {
+	const n = 256
+
+	ec := &EllipseColor{
+		parent: parent,
+		color:  c,
+		radius: radius,
+		fill:   fill,
+	}
+
+	var format pixelgl.VertexFormat
+	parent.Do(func(ctx pixelgl.Context) {
+		format = ctx.Shader().VertexFormat()
+	})
+
+	var err error
+	ec.va, err = pixelgl.NewVertexArray(
+		parent,
+		format,
+		pixelgl.TriangleStripDrawMode,
+		pixelgl.DynamicUsage,
+		(n+1)*2,
+	)
+	if err != nil {
+		panic(errors.Wrap(err, "failed to create circle"))
+	}
+
+	for k := 0; k < n+1; k++ {
+		i, j := k*2, k*2+1
+		angle := math.Pi * 2 * float64(k%n) / n
+		ec.va.SetVertexAttributeVec2(
+			i,
+			pixelgl.Position,
+			mgl32.Vec2{
+				float32(math.Cos(angle)),
+				float32(math.Sin(angle)),
+			},
+		)
+		ec.va.SetVertexAttributeVec4(
+			i,
+			pixelgl.Color,
+			mgl32.Vec4{1, 1, 1, 1},
+		)
+		ec.va.SetVertexAttributeVec2(
+			j,
+			pixelgl.Position,
+			mgl32.Vec2{
+				float32(math.Cos(angle) * (1 - fill)),
+				float32(math.Sin(angle) * (1 - fill)),
+			},
+		)
+		ec.va.SetVertexAttributeVec4(
+			j,
+			pixelgl.Color,
+			mgl32.Vec4{1, 1, 1, 1},
+		)
+	}
+
+	return ec
+}
+
+// SetColor changes the color of an ellipse.
+func (ec *EllipseColor) SetColor(c color.Color) {
+	ec.color = c
+}
+
+// Color returns the current color of an ellipse.
+func (ec *EllipseColor) Color() color.Color {
+	return ec.color
+}
+
+// SetRadius sets the radius (which can be different in X and Y axis) of an ellipse.
+func (ec *EllipseColor) SetRadius(radius Vec) {
+	ec.radius = radius
+}
+
+// Radius returns the current radius of an ellipse.
+func (ec *EllipseColor) Radius() Vec {
+	return ec.radius
+}
+
+// Draw dras an ellipse transformed by the supplied transforms applied in the reverse order.
+func (ec *EllipseColor) Draw(t ...Transform) {
+	mat := mgl32.Ident3()
+	for i := range t {
+		mat = mat.Mul3(t[i].Mat3())
+	}
+	mat = mat.Mul3(mgl32.Scale2D(float32(ec.radius.X()), float32(ec.radius.Y())))
+
+	var shader *pixelgl.Shader
+	ec.parent.Do(func(ctx pixelgl.Context) {
+		shader = ctx.Shader()
+	})
+
+	r, g, b, a := colorToRGBA(ec.color)
+	shader.SetUniformVec4(pixelgl.MaskColor, mgl32.Vec4{r, g, b, a})
+	shader.SetUniformMat3(pixelgl.Transform, mat)
+	shader.SetUniformInt(pixelgl.IsTexture, 0)
+
+	ec.va.Draw()
 }
