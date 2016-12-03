@@ -142,6 +142,9 @@ func (w *Window) Update() {
 			w.window.SwapBuffers()
 			glfw.PollEvents()
 		})
+
+		w, h := w.window.GetSize()
+		pixelgl.SetViewport(0, 0, int32(w), int32(h))
 	})
 }
 

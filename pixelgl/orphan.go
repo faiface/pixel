@@ -11,3 +11,10 @@ func Clear(r, g, b, a float32) {
 		gl.Clear(gl.COLOR_BUFFER_BIT)
 	})
 }
+
+// SetViewport sets the OpenGL viewport.
+func SetViewport(x, y, w, h int32) {
+	DoNoBlock(func() {
+		gl.Viewport(x, y, w, h)
+	})
+}
