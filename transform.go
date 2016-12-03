@@ -84,7 +84,7 @@ func (t Transform) Mat3() mgl32.Mat3 {
 	mat = mat.Mul3(mgl32.Translate2D(float32(t.pos.X()), float32(t.pos.Y())))
 	mat = mat.Mul3(mgl32.Rotate3DZ(float32(t.rot)))
 	mat = mat.Mul3(mgl32.Scale2D(float32(t.sca.X()), float32(t.sca.Y())))
-	mat = mat.Mul3(mgl32.Translate2D(float32(t.anc.X()), float32(t.anc.Y())))
+	mat = mat.Mul3(mgl32.Translate2D(float32(-t.anc.X()), float32(-t.anc.Y())))
 	return mat
 }
 
