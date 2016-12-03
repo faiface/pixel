@@ -55,6 +55,7 @@ type Window struct {
 	window        *glfw.Window
 	config        WindowConfig
 	contextHolder pixelgl.ContextHolder
+	defaultShader *pixelgl.Shader
 
 	// need to save these to correctly restore a fullscreen window
 	restore struct {
@@ -104,13 +105,13 @@ func NewWindow(config WindowConfig) (*Window, error) {
 
 	w.SetFullscreen(config.Fullscreen)
 
-	defaultShader, err := pixelgl.NewShader(w, defaultVertexFormat, defaultUniformFormat, defaultVertexShader, defaultFragmentShader)
+	defaultShader, err := pixelgl.NewShader(&w.contextHolder, defaultVertexFormat, defaultUniformFormat, defaultVertexShader, defaultFragmentShader)
 	if err != nil {
 		w.Delete()
 		return nil, errors.Wrap(err, "creating window failed")
 	}
 
-	w.contextHolder.Context = pixelgl.Context{}.WithShader(defaultShader)
+	w.defaultShader = defaultShader
 
 	return w, nil
 }
@@ -311,7 +312,11 @@ func (w *Window) Do(sub func(pixelgl.Context)) {
 		currentWindow.handler = w
 	}
 
-	w.contextHolder.Do(sub)
+	if w.defaultShader != nil {
+		w.defaultShader.Do(sub)
+	} else {
+		w.contextHolder.Do(sub)
+	}
 }
 
 var defaultVertexFormat = pixelgl.VertexFormat{
