@@ -110,7 +110,7 @@ func NewWindow(config WindowConfig) (*Window, error) {
 		return nil, errors.Wrap(err, "creating window failed")
 	}
 
-	w.contextHolder.Context = w.contextHolder.Context.WithShader(defaultShader)
+	w.contextHolder.Context = pixelgl.Context{}.WithShader(defaultShader)
 
 	return w, nil
 }
