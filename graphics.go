@@ -37,6 +37,129 @@ type DrawDeleter interface {
 	Deleter
 }
 
+// LineColor a line shape (with sharp ends) filled with a single color.
+type LineColor struct {
+	parent pixelgl.Doer
+	color  color.Color
+	a, b   Vec
+	width  float64
+	va     *pixelgl.VertexArray
+}
+
+// NewLineColor creates a new line shape between points A and B filled with a single color. Parent is an object
+// that this shape belongs to, such as a window, or a graphics effect.
+func NewLineColor(parent pixelgl.Doer, c color.Color, a, b Vec, width float64) *LineColor {
+	lc := &LineColor{
+		parent: parent,
+		color:  c,
+		a:      a,
+		b:      b,
+		width:  width,
+	}
+
+	var format pixelgl.VertexFormat
+	parent.Do(func(ctx pixelgl.Context) {
+		format = ctx.Shader().VertexFormat()
+	})
+
+	var err error
+	lc.va, err = pixelgl.NewVertexArray(
+		parent,
+		format,
+		pixelgl.TriangleStripDrawMode,
+		pixelgl.DynamicUsage,
+		4,
+	)
+	if err != nil {
+		panic(errors.Wrap(err, "failed to create line"))
+	}
+
+	lc.va.SetVertexAttributeVec4(0, pixelgl.Color, mgl32.Vec4{1, 1, 1, 1})
+	lc.va.SetVertexAttributeVec4(1, pixelgl.Color, mgl32.Vec4{1, 1, 1, 1})
+	lc.va.SetVertexAttributeVec4(2, pixelgl.Color, mgl32.Vec4{1, 1, 1, 1})
+	lc.va.SetVertexAttributeVec4(3, pixelgl.Color, mgl32.Vec4{1, 1, 1, 1})
+
+	lc.setPoints()
+
+	return lc
+}
+
+// setPoints updates the vertex array data according to A, B and width.
+func (lc *LineColor) setPoints() {
+	r := (lc.b - lc.a).Unit().Scaled(lc.width / 2).Rotated(math.Pi / 2)
+	for i, p := range []Vec{lc.a - r, lc.a + r, lc.b - r, lc.b + r} {
+		lc.va.SetVertexAttributeVec2(i, pixelgl.Position, mgl32.Vec2{float32(p.X()), float32(p.Y())})
+	}
+}
+
+// SetColor changes the color of a line.
+func (lc *LineColor) SetColor(c color.Color) {
+	lc.color = c
+}
+
+// Color returns the current color of a line.
+func (lc *LineColor) Color() color.Color {
+	return lc.color
+}
+
+// SetA changes the position of the first endpoint of a line.
+func (lc *LineColor) SetA(a Vec) {
+	lc.a = a
+	lc.setPoints()
+}
+
+// A returns the current position of the first endpoint of a line.
+func (lc *LineColor) A() Vec {
+	return lc.a
+}
+
+// SetB changes the position of the second endpoint of a line.
+func (lc *LineColor) SetB(b Vec) {
+	lc.b = b
+	lc.setPoints()
+}
+
+// B returns the current position of the second endpoint of a line.
+func (lc *LineColor) B() Vec {
+	return lc.b
+}
+
+// SetWidth changes the width of a line.
+func (lc *LineColor) SetWidth(width float64) {
+	lc.width = width
+	lc.setPoints()
+}
+
+// Width returns the current width of a line.
+func (lc *LineColor) Width() float64 {
+	return lc.width
+}
+
+// Draw draws a line transformed by the supplied transforms applied in the reverse order.
+func (lc *LineColor) Draw(t ...Transform) {
+	mat := mgl32.Ident3()
+	for i := range t {
+		mat = mat.Mul3(t[i].Mat3())
+	}
+
+	var shader *pixelgl.Shader
+	lc.parent.Do(func(ctx pixelgl.Context) {
+		shader = ctx.Shader()
+	})
+
+	r, g, b, a := colorToRGBA(lc.color)
+	shader.SetUniformVec4(pixelgl.MaskColor, mgl32.Vec4{r, g, b, a})
+	shader.SetUniformMat3(pixelgl.Transform, mat)
+	shader.SetUniformInt(pixelgl.IsTexture, 0)
+
+	lc.va.Draw()
+}
+
+// Delete destroys a line shape and releases it's video memory. Do not use this shape after calling Delete.
+func (lc *LineColor) Delete() {
+	lc.va.Delete()
+}
+
 // PolygonColor is a polygon shape filled with a single color.
 type PolygonColor struct {
 	parent pixelgl.Doer
@@ -258,4 +381,9 @@ func (ec *EllipseColor) Draw(t ...Transform) {
 	shader.SetUniformInt(pixelgl.IsTexture, 0)
 
 	ec.va.Draw()
+}
+
+// Delete destroys an ellipse shape and releases it's video memory. Do not use this shape after calling Delete.
+func (ec *EllipseColor) Delete() {
+	ec.va.Delete()
 }
