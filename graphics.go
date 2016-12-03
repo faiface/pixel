@@ -10,7 +10,7 @@ import (
 
 // Drawer is anything that can be drawn. It's by no means a drawer inside your table.
 //
-// Drawer consists of a single method: Draw. Draw methods takes any number of Transform arguments. It applies these
+// Drawer consists of a single methods: Draw. Draw methods takes any number of Transform arguments. It applies these
 // transforms in the reverse order and finally draws something transformed by these transforms.
 //
 // Example:
@@ -21,6 +21,19 @@ import (
 //   object.Draw(camera, pixel.Position(0).Scale(0.5))
 type Drawer interface {
 	Draw(t ...Transform)
+}
+
+// Deleter is anything that can be deleted. All graphics objects that have some associated video memory
+// are deleters. It is necessary to call Delete when you're done with an object, otherwise you're going
+// to have video memory leaks.
+type Deleter interface {
+	Delete()
+}
+
+// DrawDeleter combines Drawer and Deleter interfaces.
+type DrawDeleter interface {
+	Drawer
+	Deleter
 }
 
 // PolygonColor is a polygon shape filled with a single color.
@@ -107,4 +120,9 @@ func (pc *PolygonColor) Draw(t ...Transform) {
 	shader.SetUniformInt(pixelgl.IsTexture, 0)
 
 	pc.va.Draw()
+}
+
+// Delete destroys a polygon shape and releases it's video memory. Do not use this shape after calling Delete.
+func (pc *PolygonColor) Delete() {
+	pc.va.Delete()
 }
