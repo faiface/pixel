@@ -51,6 +51,8 @@ func Init() {
 	if err != nil {
 		panic(err)
 	}
+	gl.Enable(gl.BLEND)
+	gl.BlendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA)
 }
 
 // DoNoBlock executes a function inside the main OpenGL thread.
