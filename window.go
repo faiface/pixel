@@ -5,6 +5,7 @@ import (
 	"sync"
 
 	"github.com/faiface/pixel/pixelgl"
+	"github.com/go-gl/gl/v3.3-core/gl"
 	"github.com/go-gl/glfw/v3.2/glfw"
 	"github.com/pkg/errors"
 )
@@ -128,7 +129,10 @@ func (w *Window) Delete() {
 // Clear clears the window with a color.
 func (w *Window) Clear(c color.Color) {
 	w.Do(func(pixelgl.Context) {
-		pixelgl.Clear(colorToRGBA(c))
+		pixelgl.DoNoBlock(func() {
+			gl.ClearColor(colorToRGBA(c))
+			gl.Clear(gl.COLOR_BUFFER_BIT)
+		})
 	})
 }
 
@@ -141,10 +145,10 @@ func (w *Window) Update() {
 			}
 			w.window.SwapBuffers()
 			glfw.PollEvents()
-		})
 
-		w, h := w.window.GetSize()
-		pixelgl.SetViewport(0, 0, int32(w), int32(h))
+			w, h := w.window.GetSize()
+			gl.Viewport(0, 0, int32(w), int32(h))
+		})
 	})
 }
 
