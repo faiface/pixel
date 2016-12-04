@@ -37,6 +37,54 @@ type DrawDeleter interface {
 	Deleter
 }
 
+// Group is used to effeciently handle a collection of objects with a common parent. Usually many objects share a parent,
+// using a group can significantly increase performance in these cases.
+//
+// To use a group, first, create a group and as it's parent use the common parent of the collection of objects:
+//
+//   group := pixel.NewGroup(commonParent)
+//
+// Then, when creating the objects, use the group as their parent, instead of the original common parent, but, don't forget
+// to put everything into a With block, like this:
+//
+//   group.With(func() {
+//       object := newArbitratyObject(group, ...) // group is the parent of the object
+//   })
+//
+// When dealing with objects associated with a group, it's always necessary to wrap that into a With block:
+//
+//   group.With(func() {
+//       for _, obj := range objectsWithCommonParent {
+//           // do something with obj
+//       }
+//   })
+//
+// That's all!
+type Group struct {
+	parent  pixelgl.Doer
+	context pixelgl.Context
+}
+
+// NewGroup creates a new group with the specified parent.
+func NewGroup(parent pixelgl.Doer) *Group {
+	return &Group{
+		parent: parent,
+	}
+}
+
+// With enables the parent of a group and executes sub.
+func (g *Group) With(sub func()) {
+	g.parent.Do(func(ctx pixelgl.Context) {
+		g.context = ctx
+		sub()
+	})
+}
+
+// Do just passes a cached context to sub.
+func (g *Group) Do(sub func(pixelgl.Context)) {
+	sub(g.context)
+}
+
 // LineColor a line shape (with sharp ends) filled with a single color.
 type LineColor struct {
 	parent pixelgl.Doer
@@ -142,15 +190,12 @@ func (lc *LineColor) Draw(t ...Transform) {
 		mat = mat.Mul3(t[i].Mat3())
 	}
 
-	var shader *pixelgl.Shader
 	lc.parent.Do(func(ctx pixelgl.Context) {
-		shader = ctx.Shader()
+		r, g, b, a := colorToRGBA(lc.color)
+		ctx.Shader().SetUniformVec4(pixelgl.MaskColor, mgl32.Vec4{r, g, b, a})
+		ctx.Shader().SetUniformMat3(pixelgl.Transform, mat)
+		ctx.Shader().SetUniformInt(pixelgl.IsTexture, 0)
 	})
-
-	r, g, b, a := colorToRGBA(lc.color)
-	shader.SetUniformVec4(pixelgl.MaskColor, mgl32.Vec4{r, g, b, a})
-	shader.SetUniformMat3(pixelgl.Transform, mat)
-	shader.SetUniformInt(pixelgl.IsTexture, 0)
 
 	lc.va.Draw()
 }
@@ -250,15 +295,12 @@ func (pc *PolygonColor) Draw(t ...Transform) {
 		mat = mat.Mul3(t[i].Mat3())
 	}
 
-	var shader *pixelgl.Shader
 	pc.parent.Do(func(ctx pixelgl.Context) {
-		shader = ctx.Shader()
+		r, g, b, a := colorToRGBA(pc.color)
+		ctx.Shader().SetUniformVec4(pixelgl.MaskColor, mgl32.Vec4{r, g, b, a})
+		ctx.Shader().SetUniformMat3(pixelgl.Transform, mat)
+		ctx.Shader().SetUniformInt(pixelgl.IsTexture, 0)
 	})
-
-	r, g, b, a := colorToRGBA(pc.color)
-	shader.SetUniformVec4(pixelgl.MaskColor, mgl32.Vec4{r, g, b, a})
-	shader.SetUniformMat3(pixelgl.Transform, mat)
-	shader.SetUniformInt(pixelgl.IsTexture, 0)
 
 	pc.va.Draw()
 }
@@ -370,15 +412,12 @@ func (ec *EllipseColor) Draw(t ...Transform) {
 	}
 	mat = mat.Mul3(mgl32.Scale2D(float32(ec.radius.X()), float32(ec.radius.Y())))
 
-	var shader *pixelgl.Shader
 	ec.parent.Do(func(ctx pixelgl.Context) {
-		shader = ctx.Shader()
+		r, g, b, a := colorToRGBA(ec.color)
+		ctx.Shader().SetUniformVec4(pixelgl.MaskColor, mgl32.Vec4{r, g, b, a})
+		ctx.Shader().SetUniformMat3(pixelgl.Transform, mat)
+		ctx.Shader().SetUniformInt(pixelgl.IsTexture, 0)
 	})
-
-	r, g, b, a := colorToRGBA(ec.color)
-	shader.SetUniformVec4(pixelgl.MaskColor, mgl32.Vec4{r, g, b, a})
-	shader.SetUniformMat3(pixelgl.Transform, mat)
-	shader.SetUniformInt(pixelgl.IsTexture, 0)
 
 	ec.va.Draw()
 }
