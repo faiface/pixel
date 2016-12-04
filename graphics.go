@@ -105,22 +105,19 @@ func NewLineColor(parent pixelgl.Doer, c color.Color, a, b Vec, width float64) *
 		width:  width,
 	}
 
-	var format pixelgl.VertexFormat
 	parent.Do(func(ctx pixelgl.Context) {
-		format = ctx.Shader().VertexFormat()
+		var err error
+		lc.va, err = pixelgl.NewVertexArray(
+			parent,
+			ctx.Shader().VertexFormat(),
+			pixelgl.TriangleStripDrawMode,
+			pixelgl.DynamicUsage,
+			4,
+		)
+		if err != nil {
+			panic(errors.Wrap(err, "failed to create line"))
+		}
 	})
-
-	var err error
-	lc.va, err = pixelgl.NewVertexArray(
-		parent,
-		format,
-		pixelgl.TriangleStripDrawMode,
-		pixelgl.DynamicUsage,
-		4,
-	)
-	if err != nil {
-		panic(errors.Wrap(err, "failed to create line"))
-	}
 
 	lc.va.SetVertexAttributeVec4(0, pixelgl.Color, mgl32.Vec4{1, 1, 1, 1})
 	lc.va.SetVertexAttributeVec4(1, pixelgl.Color, mgl32.Vec4{1, 1, 1, 1})
@@ -222,22 +219,19 @@ func NewPolygonColor(parent pixelgl.Doer, c color.Color, points ...Vec) *Polygon
 		points: points,
 	}
 
-	var format pixelgl.VertexFormat
 	parent.Do(func(ctx pixelgl.Context) {
-		format = ctx.Shader().VertexFormat()
+		var err error
+		pc.va, err = pixelgl.NewVertexArray(
+			parent,
+			ctx.Shader().VertexFormat(),
+			pixelgl.TriangleFanDrawMode,
+			pixelgl.DynamicUsage,
+			len(points),
+		)
+		if err != nil {
+			panic(errors.Wrap(err, "failed to create polygon"))
+		}
 	})
-
-	var err error
-	pc.va, err = pixelgl.NewVertexArray(
-		parent,
-		format,
-		pixelgl.TriangleFanDrawMode,
-		pixelgl.DynamicUsage,
-		len(points),
-	)
-	if err != nil {
-		panic(errors.Wrap(err, "failed to create polygon"))
-	}
 
 	for i, p := range points {
 		pc.va.SetVertexAttributeVec2(
@@ -333,22 +327,19 @@ func NewEllipseColor(parent pixelgl.Doer, c color.Color, radius Vec, fill float6
 		fill:   fill,
 	}
 
-	var format pixelgl.VertexFormat
 	parent.Do(func(ctx pixelgl.Context) {
-		format = ctx.Shader().VertexFormat()
+		var err error
+		ec.va, err = pixelgl.NewVertexArray(
+			parent,
+			ctx.Shader().VertexFormat(),
+			pixelgl.TriangleStripDrawMode,
+			pixelgl.DynamicUsage,
+			(n+1)*2,
+		)
+		if err != nil {
+			panic(errors.Wrap(err, "failed to create circle"))
+		}
 	})
-
-	var err error
-	ec.va, err = pixelgl.NewVertexArray(
-		parent,
-		format,
-		pixelgl.TriangleStripDrawMode,
-		pixelgl.DynamicUsage,
-		(n+1)*2,
-	)
-	if err != nil {
-		panic(errors.Wrap(err, "failed to create circle"))
-	}
 
 	for k := 0; k < n+1; k++ {
 		i, j := k*2, k*2+1
