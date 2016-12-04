@@ -7,8 +7,9 @@ import (
 
 // Texture is an OpenGL texture.
 type Texture struct {
-	parent Doer
-	tex    uint32
+	enabled bool
+	parent  Doer
+	tex     uint32
 }
 
 // NewTexture creates a new texture with the specified width and height.
@@ -63,6 +64,11 @@ func (t *Texture) ID() uint32 {
 // Do bind a texture, executes sub, and unbinds the texture.
 func (t *Texture) Do(sub func(Context)) {
 	t.parent.Do(func(ctx Context) {
+		if t.enabled {
+			sub(ctx)
+			return
+		}
+		t.enabled = true
 		DoNoBlock(func() {
 			gl.BindTexture(gl.TEXTURE_2D, t.tex)
 		})
@@ -70,5 +76,6 @@ func (t *Texture) Do(sub func(Context)) {
 		DoNoBlock(func() {
 			gl.BindTexture(gl.TEXTURE_2D, 0)
 		})
+		t.enabled = false
 	})
 }

@@ -17,6 +17,7 @@ type UniformFormat map[string]Attr
 
 // Shader is an OpenGL shader program.
 type Shader struct {
+	enabled       bool
 	parent        Doer
 	program       uint32
 	vertexFormat  VertexFormat
@@ -383,6 +384,11 @@ func (s *Shader) SetUniformMat43(purpose AttrPurpose, value mgl32.Mat4x3) (ok bo
 // Do stars using a shader, executes sub, and stops using it.
 func (s *Shader) Do(sub func(Context)) {
 	s.parent.Do(func(ctx Context) {
+		if s.enabled {
+			sub(ctx.WithShader(s))
+			return
+		}
+		s.enabled = true
 		DoNoBlock(func() {
 			gl.UseProgram(s.program)
 		})
@@ -390,5 +396,6 @@ func (s *Shader) Do(sub func(Context)) {
 		DoNoBlock(func() {
 			gl.UseProgram(0)
 		})
+		s.enabled = false
 	})
 }

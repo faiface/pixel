@@ -27,6 +27,8 @@ package pixelgl
 // Also notice, that the functions are passing a Context around. This context contains the most important state variables.
 // Usually, you just pass it as you received it. If you want to pass a changed context to your child (e.g. your a shader),
 // use ctx.With* methods.
+//
+// If possible and makes sense, Do method should be reentrant.
 type Doer interface {
 	Do(sub func(Context))
 }

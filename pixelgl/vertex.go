@@ -69,14 +69,15 @@ const (
 // VertexArray is an OpenGL vertex array object that also holds it's own vertex buffer object.
 // From the user's points of view, VertexArray is an array of vertices that can be drawn.
 type VertexArray struct {
-	parent Doer
-	vao    uint32
-	vbo    uint32
-	format VertexFormat
-	stride int
-	count  int
-	attrs  map[Attr]int
-	mode   VertexDrawMode
+	enabled bool
+	parent  Doer
+	vao     uint32
+	vbo     uint32
+	format  VertexFormat
+	stride  int
+	count   int
+	attrs   map[Attr]int
+	mode    VertexDrawMode
 }
 
 // NewVertexArray creates a new empty vertex array and wraps another Doer around it.
@@ -341,6 +342,11 @@ func (va *VertexArray) SetVertexAttributeVec4(vertex int, purpose AttrPurpose, v
 // Do binds a vertex arrray and it's associated vertex buffer, executes sub, and unbinds the vertex array and it's vertex buffer.
 func (va *VertexArray) Do(sub func(Context)) {
 	va.parent.Do(func(ctx Context) {
+		if va.enabled {
+			sub(ctx)
+			return
+		}
+		va.enabled = true
 		DoNoBlock(func() {
 			gl.BindVertexArray(va.vao)
 			gl.BindBuffer(gl.ARRAY_BUFFER, va.vbo)
@@ -351,5 +357,6 @@ func (va *VertexArray) Do(sub func(Context)) {
 			gl.BindBuffer(gl.ARRAY_BUFFER, 0)
 			gl.BindVertexArray(0)
 		})
+		va.enabled = false
 	})
 }
