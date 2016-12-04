@@ -70,4 +70,4 @@ func (noOpDoer) Do(sub func(ctx Context)) {
 }
 
 // NoOpDoer is a Doer that just passes an empty context to the caller of Do.
-var NoOpDoer = noOpDoer{}
+var NoOpDoer Doer = noOpDoer{}
