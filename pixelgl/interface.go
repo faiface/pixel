@@ -62,3 +62,12 @@ type ContextHolder struct {
 func (ch *ContextHolder) Do(sub func(ctx Context)) {
 	sub(ch.Context)
 }
+
+type noOpDoer struct{}
+
+func (noOpDoer) Do(sub func(ctx Context)) {
+	sub(Context{})
+}
+
+// NoOpDoer is a Doer that just passes an empty context to the caller of Do.
+var NoOpDoer = noOpDoer{}
