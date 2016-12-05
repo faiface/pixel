@@ -96,3 +96,57 @@ func (u Vec) Dot(v Vec) float64 {
 func (u Vec) Cross(v Vec) float64 {
 	return u.X()*v.Y() - v.X()*u.Y()
 }
+
+// Rect is a 2d rectangle aligned with the axis of the coordinate system. It has a position and a size.
+//
+// You can manipulate the position and the size using the usual vector operations.
+type Rect struct {
+	Pos, Size Vec
+}
+
+// R returns a new 2d rectangle with the given position (x, y) and size (w, h).
+func R(x, y, w, h float64) Rect {
+	return Rect{
+		Pos:  V(x, y),
+		Size: V(w, h),
+	}
+}
+
+// String returns the string representation of a rectangle.
+//
+//   r := pixel.R(100, 50, 200, 300)
+//   r.String()     // returns "Rect(100, 50, 200, 300)"
+//   fmt.Println(r) // Rect(100, 50, 200, 300)
+func (r Rect) String() string {
+	return fmt.Sprintf("Rect(%v, %v, %v, %v)", r.X(), r.Y(), r.W(), r.H())
+}
+
+// X returns the x coordinate of the position of a rectangle.
+func (r Rect) X() float64 {
+	return r.Pos.X()
+}
+
+// Y returns the y coordinate of the position of a rectangle
+func (r Rect) Y() float64 {
+	return r.Pos.Y()
+}
+
+// W returns the width of a rectangle.
+func (r Rect) W() float64 {
+	return r.Size.X()
+}
+
+// H returns the height of a rectangle.
+func (r Rect) H() float64 {
+	return r.Size.Y()
+}
+
+// XYWH returns all of the four components of a rectangle in four return values.
+func (r Rect) XYWH() (x, y, w, h float64) {
+	return r.X(), r.Y(), r.W(), r.H()
+}
+
+// Center returns the position of the center of a rectangle.
+func (r Rect) Center() Vec {
+	return r.Pos + r.Size.Scaled(0.5)
+}
