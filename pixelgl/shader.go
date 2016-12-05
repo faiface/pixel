@@ -388,14 +388,14 @@ func (s *Shader) Do(sub func(Context)) {
 			sub(ctx.WithShader(s))
 			return
 		}
-		s.enabled = true
 		DoNoBlock(func() {
 			gl.UseProgram(s.program)
 		})
+		s.enabled = true
 		sub(ctx.WithShader(s))
+		s.enabled = false
 		DoNoBlock(func() {
 			gl.UseProgram(0)
 		})
-		s.enabled = false
 	})
 }

@@ -346,17 +346,17 @@ func (va *VertexArray) Do(sub func(Context)) {
 			sub(ctx)
 			return
 		}
-		va.enabled = true
 		DoNoBlock(func() {
 			gl.BindVertexArray(va.vao)
 			gl.BindBuffer(gl.ARRAY_BUFFER, va.vbo)
 		})
+		va.enabled = true
 		sub(ctx)
+		va.enabled = false
 		DoNoBlock(func() {
 			gl.DrawArrays(uint32(va.mode), 0, int32(va.count))
 			gl.BindBuffer(gl.ARRAY_BUFFER, 0)
 			gl.BindVertexArray(0)
 		})
-		va.enabled = false
 	})
 }

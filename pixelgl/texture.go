@@ -68,14 +68,14 @@ func (t *Texture) Do(sub func(Context)) {
 			sub(ctx)
 			return
 		}
-		t.enabled = true
 		DoNoBlock(func() {
 			gl.BindTexture(gl.TEXTURE_2D, t.tex)
 		})
+		t.enabled = true
 		sub(ctx)
+		t.enabled = false
 		DoNoBlock(func() {
 			gl.BindTexture(gl.TEXTURE_2D, 0)
 		})
-		t.enabled = false
 	})
 }
