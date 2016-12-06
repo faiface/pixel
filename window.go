@@ -106,7 +106,13 @@ func NewWindow(config WindowConfig) (*Window, error) {
 
 	w.SetFullscreen(config.Fullscreen)
 
-	defaultShader, err := pixelgl.NewShader(&w.contextHolder, defaultVertexFormat, defaultUniformFormat, defaultVertexShader, defaultFragmentShader)
+	defaultShader, err := pixelgl.NewShader(
+		&w.contextHolder,
+		defaultVertexFormat,
+		defaultUniformFormat,
+		defaultVertexShader,
+		defaultFragmentShader,
+	)
 	if err != nil {
 		w.Delete()
 		return nil, errors.Wrap(err, "creating window failed")
