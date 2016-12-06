@@ -49,6 +49,8 @@ func (p Picture) Delete() {
 }
 
 // Texture returns a pointer to the underlying OpenGL texture of a picture.
+//
+// Note, that the parent of this texture is pixelgl.NoOpDoer.
 func (p Picture) Texture() *pixelgl.Texture {
 	return p.texture
 }
