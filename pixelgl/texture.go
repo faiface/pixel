@@ -1,9 +1,6 @@
 package pixelgl
 
-import (
-	"github.com/go-gl/gl/v3.3-core/gl"
-	"github.com/pkg/errors"
-)
+import "github.com/go-gl/gl/v3.3-core/gl"
 
 // Texture is an OpenGL texture.
 type Texture struct {
@@ -17,9 +14,8 @@ type Texture struct {
 func NewTexture(parent Doer, width, height int, pixels []uint8) (*Texture, error) {
 	texture := &Texture{parent: parent}
 
-	var err error
 	parent.Do(func(ctx Context) {
-		err = DoGLErr(func() {
+		Do(func() {
 			gl.GenTextures(1, &texture.tex)
 			gl.BindTexture(gl.TEXTURE_2D, texture.tex)
 
@@ -40,9 +36,6 @@ func NewTexture(parent Doer, width, height int, pixels []uint8) (*Texture, error
 			gl.BindTexture(gl.TEXTURE_2D, 0)
 		})
 	})
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to create a texture")
-	}
 
 	return texture, nil
 }

@@ -5,7 +5,6 @@ import (
 
 	"github.com/go-gl/gl/v3.3-core/gl"
 	"github.com/go-gl/mathgl/mgl32"
-	"github.com/pkg/errors"
 )
 
 // UniformFormat defines names, purposes and types of uniform variables inside a shader.
@@ -36,9 +35,9 @@ func NewShader(parent Doer, vertexFormat VertexFormat, uniformFormat UniformForm
 		uniforms:      make(map[Attr]int32),
 	}
 
-	var err, glerr error
+	var err error
 	parent.Do(func(ctx Context) {
-		err, glerr = DoErrGLErr(func() error {
+		err = DoErr(func() error {
 			var vshader, fshader uint32
 
 			// vertex shader
@@ -120,14 +119,8 @@ func NewShader(parent Doer, vertexFormat VertexFormat, uniformFormat UniformForm
 			return nil
 		})
 	})
-	if err != nil && glerr != nil {
-		return nil, errors.Wrap(glerr, err.Error())
-	}
 	if err != nil {
 		return nil, err
-	}
-	if glerr != nil {
-		return nil, glerr
 	}
 
 	return shader, nil

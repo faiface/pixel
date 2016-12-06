@@ -105,9 +105,9 @@ func NewVertexArray(parent Doer, format VertexFormat, mode VertexDrawMode, usage
 		offset += attr.Type.Size()
 	}
 
-	var err, glerr error
+	var err error
 	parent.Do(func(ctx Context) {
-		err, glerr = DoErrGLErr(func() error {
+		err = DoErr(func() error {
 			gl.GenVertexArrays(1, &va.vao)
 			gl.BindVertexArray(va.vao)
 
@@ -149,14 +149,8 @@ func NewVertexArray(parent Doer, format VertexFormat, mode VertexDrawMode, usage
 			return nil
 		})
 	})
-	if err != nil && glerr != nil {
-		return nil, errors.Wrap(errors.Wrap(glerr, err.Error()), "failed to create vertex array")
-	}
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to create vertex array")
-	}
-	if glerr != nil {
-		return nil, errors.Wrap(glerr, "failed to create vertex array")
 	}
 
 	return va, nil
@@ -222,10 +216,6 @@ func (va *VertexArray) SetVertex(vertex int, data interface{}) {
 		gl.BufferSubData(gl.ARRAY_BUFFER, offset, va.format.Size(), gl.Ptr(data))
 
 		gl.BindBuffer(gl.ARRAY_BUFFER, 0)
-
-		if err := getLastGLErr(); err != nil {
-			panic(errors.Wrap(err, "set vertex error"))
-		}
 	})
 }
 
@@ -253,10 +243,6 @@ func (va *VertexArray) SetVertexAttributeFloat(vertex int, purpose AttrPurpose, 
 		gl.BufferSubData(gl.ARRAY_BUFFER, offset, attr.Type.Size(), unsafe.Pointer(&value))
 
 		gl.BindBuffer(gl.ARRAY_BUFFER, 0)
-
-		if err := getLastGLErr(); err != nil {
-			panic(errors.Wrap(err, "set attribute vertex"))
-		}
 	})
 	return true
 }
@@ -279,10 +265,6 @@ func (va *VertexArray) SetVertexAttributeVec2(vertex int, purpose AttrPurpose, v
 		gl.BufferSubData(gl.ARRAY_BUFFER, offset, attr.Type.Size(), unsafe.Pointer(&value))
 
 		gl.BindBuffer(gl.ARRAY_BUFFER, 0)
-
-		if err := getLastGLErr(); err != nil {
-			panic(errors.Wrap(err, "set attribute vertex"))
-		}
 	})
 	return true
 }
@@ -305,10 +287,6 @@ func (va *VertexArray) SetVertexAttributeVec3(vertex int, purpose AttrPurpose, v
 		gl.BufferSubData(gl.ARRAY_BUFFER, offset, attr.Type.Size(), unsafe.Pointer(&value))
 
 		gl.BindBuffer(gl.ARRAY_BUFFER, 0)
-
-		if err := getLastGLErr(); err != nil {
-			panic(errors.Wrap(err, "set attribute vertex"))
-		}
 	})
 	return true
 }
@@ -331,10 +309,6 @@ func (va *VertexArray) SetVertexAttributeVec4(vertex int, purpose AttrPurpose, v
 		gl.BufferSubData(gl.ARRAY_BUFFER, offset, attr.Type.Size(), unsafe.Pointer(&value))
 
 		gl.BindBuffer(gl.ARRAY_BUFFER, 0)
-
-		if err := getLastGLErr(); err != nil {
-			panic(errors.Wrap(err, "set attribute vertex"))
-		}
 	})
 	return true
 }
