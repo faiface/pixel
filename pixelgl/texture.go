@@ -4,15 +4,20 @@ import "github.com/go-gl/gl/v3.3-core/gl"
 
 // Texture is an OpenGL texture.
 type Texture struct {
-	enabled bool
-	parent  Doer
-	tex     uint32
+	enabled       bool
+	parent        Doer
+	tex           uint32
+	width, height int
 }
 
 // NewTexture creates a new texture with the specified width and height.
 // The pixels must be a sequence of RGBA values.
 func NewTexture(parent Doer, width, height int, pixels []uint8) (*Texture, error) {
-	texture := &Texture{parent: parent}
+	texture := &Texture{
+		parent: parent,
+		width:  width,
+		height: height,
+	}
 
 	parent.Do(func(ctx Context) {
 		Do(func() {
@@ -52,6 +57,16 @@ func (t *Texture) Delete() {
 // ID returns an OpenGL identifier of a texture.
 func (t *Texture) ID() uint32 {
 	return t.tex
+}
+
+// Width returns the width of a texture in pixels.
+func (t *Texture) Width() int {
+	return t.width
+}
+
+// Height returns the height of a texture in pixels.
+func (t *Texture) Height() int {
+	return t.height
 }
 
 // Do bind a texture, executes sub, and unbinds the texture.
