@@ -85,6 +85,127 @@ func (g *Group) Do(sub func(pixelgl.Context)) {
 	sub(g.context)
 }
 
+// Sprite is a picture that can be drawn on the screen. Optionally it can be color masked or tranformed.
+//
+// Usually, you only transform objects when you're drawing them (by passing transforms to the Draw method).
+// With sprites however, it can be useful to also transform them "statically". For example, sprites are
+// anchor by their bottom-left corner by default. Setting a transform can change this anchor to the center,
+// or wherever you want.
+type Sprite struct {
+	parent    pixelgl.Doer
+	color     color.Color
+	picture   Picture
+	transform Transform
+	va        *pixelgl.VertexArray
+}
+
+// NewSprite creates a new sprite with the supplied picture. The sprite's size is the size of the supplied picture.
+// If you want to change the sprite's size, change it's transform.
+func NewSprite(parent pixelgl.Doer, picture Picture) *Sprite {
+	s := &Sprite{
+		parent:    parent,
+		color:     color.White,
+		picture:   picture,
+		transform: Position(0),
+	}
+
+	parent.Do(func(ctx pixelgl.Context) {
+		var err error
+		s.va, err = pixelgl.NewVertexArray(
+			picture.Texture(),
+			ctx.Shader().VertexFormat(),
+			pixelgl.TriangleFanDrawMode,
+			pixelgl.DynamicUsage,
+			4,
+		)
+		if err != nil {
+			panic(errors.Wrap(err, "failed to create sprite"))
+		}
+	})
+
+	w, h := picture.Bounds().Size.XY()
+	for i, p := range []Vec{V(0, 0), V(w, 0), V(w, h), V(0, h)} {
+		texCoord := V(
+			(picture.Bounds().X()+p.X())/float64(picture.Texture().Width()),
+			(picture.Bounds().Y()+p.Y())/float64(picture.Texture().Height()),
+		)
+
+		s.va.SetVertexAttributeVec2(
+			i,
+			pixelgl.Position,
+			mgl32.Vec2{
+				float32(p.X()),
+				float32(p.Y()),
+			},
+		)
+		s.va.SetVertexAttributeVec4(i, pixelgl.Color, mgl32.Vec4{1, 1, 1, 1})
+		s.va.SetVertexAttributeVec2(
+			i,
+			pixelgl.TexCoord,
+			mgl32.Vec2{
+				float32(texCoord.X()),
+				float32(texCoord.Y()),
+			},
+		)
+	}
+
+	return s
+}
+
+// Delete deletes a sprite. Note, that this does not delete it's picture.
+func (s *Sprite) Delete() {
+	s.va.Delete()
+}
+
+// Picture returns the sprite's picture.
+func (s *Sprite) Picture() Picture {
+	return s.picture
+}
+
+// SetColor sets a mask color of a sprite.
+func (s *Sprite) SetColor(c color.Color) {
+	s.color = c
+}
+
+// Color returns the mask color of a sprite. Default is white.
+func (s *Sprite) Color() color.Color {
+	return s.color
+}
+
+// SetTransform sets a "static" transform of a sprite. Setting a transform is equivalent to passing
+// the transform as the last parameter to Draw.
+//
+//   sprite.SetTransform(transform)
+//   sprite.Draw(camera)
+//   // same as below
+//   sprite.Draw(camera, tranform)
+func (s *Sprite) SetTransform(t Transform) {
+	s.transform = t
+}
+
+// Transform returns the static transform of a sprite.
+func (s *Sprite) Transform() Transform {
+	return s.transform
+}
+
+// Draw draws a sprite transformed by the supplied transforms applied in the reverse order.
+func (s *Sprite) Draw(t ...Transform) {
+	mat := mgl32.Ident3()
+	for i := range t {
+		mat = mat.Mul3(t[i].Mat3())
+	}
+	mat = mat.Mul3(s.transform.Mat3())
+
+	s.parent.Do(func(ctx pixelgl.Context) {
+		r, g, b, a := colorToRGBA(s.color)
+		ctx.Shader().SetUniformVec4(pixelgl.MaskColor, mgl32.Vec4{r, g, b, a})
+		ctx.Shader().SetUniformMat3(pixelgl.Transform, mat)
+		ctx.Shader().SetUniformInt(pixelgl.IsTexture, 1)
+
+		s.va.Draw()
+	})
+}
+
 // LineColor a line shape (with sharp ends) filled with a single color.
 type LineColor struct {
 	parent pixelgl.Doer
