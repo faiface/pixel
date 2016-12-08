@@ -53,6 +53,7 @@ type WindowConfig struct {
 
 // Window is a window handler. Use this type to manipulate a window (input, drawing, ...).
 type Window struct {
+	enabled       bool
 	window        *glfw.Window
 	config        WindowConfig
 	contextHolder pixelgl.ContextHolder
@@ -314,22 +315,26 @@ var currentWindow struct {
 
 // Do makes the context of this window current, if it's not already, and executes sub.
 func (w *Window) Do(sub func(pixelgl.Context)) {
-	currentWindow.Lock()
-	defer currentWindow.Unlock()
+	if !w.enabled {
+		currentWindow.Lock()
+		defer currentWindow.Unlock()
 
-	if currentWindow.handler != w {
-		pixelgl.Do(func() {
-			w.window.MakeContextCurrent()
-			pixelgl.Init()
-		})
-		currentWindow.handler = w
+		if currentWindow.handler != w {
+			pixelgl.Do(func() {
+				w.window.MakeContextCurrent()
+				pixelgl.Init()
+			})
+			currentWindow.handler = w
+		}
 	}
 
+	w.enabled = true
 	if w.defaultShader != nil {
 		w.defaultShader.Do(sub)
 	} else {
 		w.contextHolder.Do(sub)
 	}
+	w.enabled = false
 }
 
 var defaultVertexFormat = pixelgl.VertexFormat{

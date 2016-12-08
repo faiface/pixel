@@ -40,55 +40,31 @@ const (
 	StreamUsage VertexUsage = gl.STREAM_DRAW
 )
 
-// VertexDrawMode specifies how should the vertices be drawn.
-type VertexDrawMode int
-
-const (
-	// PointsDrawMode just draws individual points
-	PointsDrawMode VertexDrawMode = gl.POINTS
-
-	// LinesDrawMode takes pairs of vertices and draws a line from each pair
-	LinesDrawMode VertexDrawMode = gl.LINES
-
-	// LineStripDrawMode takes each two subsequent vertices and draws a line from each two
-	LineStripDrawMode VertexDrawMode = gl.LINE_STRIP
-
-	// LineLoopDrawMode is same as line strip, but also draws a line between the first and the last vertex
-	LineLoopDrawMode VertexDrawMode = gl.LINE_LOOP
-
-	// TrianglesDrawMode takes triples of vertices and draws a triangle from each triple
-	TrianglesDrawMode VertexDrawMode = gl.TRIANGLES
-
-	// TriangleStripDrawMode takes each three subsequent vertices and draws a triangle from each three
-	TriangleStripDrawMode VertexDrawMode = gl.TRIANGLE_STRIP
-
-	// TriangleFanDrawMode draws triangles from the first vertex and each two subsequent: {0, 1, 2, 3} -> {0, 1, 2}, {0, 2, 3}.
-	TriangleFanDrawMode VertexDrawMode = gl.TRIANGLE_FAN
-)
-
 // VertexArray is an OpenGL vertex array object that also holds it's own vertex buffer object.
 // From the user's points of view, VertexArray is an array of vertices that can be drawn.
 type VertexArray struct {
-	enabled bool
-	parent  Doer
-	vao     uint32
-	vbo     uint32
-	format  VertexFormat
-	stride  int
-	count   int
-	attrs   map[Attr]int
-	mode    VertexDrawMode
+	enabled             bool
+	parent              Doer
+	vao, vbo, ebo       uint32
+	vertexNum, indexNum int
+	format              VertexFormat
+	usage               VertexUsage
+	stride              int
+	attrs               map[Attr]int
 }
 
 // NewVertexArray creates a new empty vertex array and wraps another Doer around it.
-func NewVertexArray(parent Doer, format VertexFormat, mode VertexDrawMode, usage VertexUsage, count int) (*VertexArray, error) {
+//
+// You cannot specify vertex attributes in this constructor, only their count. Use SetVertexAttribute* methods to
+// set the vertex attributes. Use indices to specify how you want to combine vertices into triangles.
+func NewVertexArray(parent Doer, format VertexFormat, usage VertexUsage, vertexNum int, indices []int) (*VertexArray, error) {
 	va := &VertexArray{
-		parent: parent,
-		format: format,
-		count:  count,
-		stride: format.Size(),
-		attrs:  make(map[Attr]int),
-		mode:   mode,
+		parent:    parent,
+		format:    format,
+		usage:     usage,
+		vertexNum: vertexNum,
+		stride:    format.Size(),
+		attrs:     make(map[Attr]int),
 	}
 
 	offset := 0
@@ -105,17 +81,18 @@ func NewVertexArray(parent Doer, format VertexFormat, mode VertexDrawMode, usage
 		offset += attr.Type.Size()
 	}
 
-	var err error
 	parent.Do(func(ctx Context) {
-		err = DoErr(func() error {
+		Do(func() {
 			gl.GenVertexArrays(1, &va.vao)
 			gl.BindVertexArray(va.vao)
 
 			gl.GenBuffers(1, &va.vbo)
 			gl.BindBuffer(gl.ARRAY_BUFFER, va.vbo)
 
-			emptyData := make([]byte, count*va.stride)
+			emptyData := make([]byte, vertexNum*va.stride)
 			gl.BufferData(gl.ARRAY_BUFFER, len(emptyData), gl.Ptr(emptyData), uint32(usage))
+
+			gl.GenBuffers(1, &va.ebo)
 
 			offset := 0
 			for i, attr := range format {
@@ -143,15 +120,16 @@ func NewVertexArray(parent Doer, format VertexFormat, mode VertexDrawMode, usage
 				offset += attr.Type.Size()
 			}
 
+			gl.BindBuffer(gl.ELEMENT_ARRAY_BUFFER, va.ebo) // need to bind EBO, so that VAO registers it
+
 			gl.BindBuffer(gl.ARRAY_BUFFER, 0)
 			gl.BindVertexArray(0)
 
-			return nil
+			gl.BindBuffer(gl.ELEMENT_ARRAY_BUFFER, 0)
 		})
 	})
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to create vertex array")
-	}
+
+	va.SetIndices(indices)
 
 	return va, nil
 }
@@ -173,7 +151,7 @@ func (va *VertexArray) ID() uint32 {
 
 // Count returns the number of vertices in a vertex array.
 func (va *VertexArray) Count() int {
-	return va.count
+	return va.vertexNum
 }
 
 // VertexFormat returns the format of the vertices inside a vertex array.
@@ -183,19 +161,9 @@ func (va *VertexArray) VertexFormat() VertexFormat {
 	return va.format
 }
 
-// SetDrawMode sets the draw mode of a vertex array. Subsequent calls to Draw will use this draw mode.
-func (va *VertexArray) SetDrawMode(mode VertexDrawMode) {
-	DoNoBlock(func() {
-		va.mode = mode
-	})
-}
-
-// DrawMode returns the most recently set draw mode of a vertex array.
-func (va *VertexArray) DrawMode() VertexDrawMode {
-	mode := DoVal(func() interface{} {
-		return va.mode
-	})
-	return mode.(VertexDrawMode)
+// VertexUsage returns the usage of the verteices inside a vertex array.
+func (va *VertexArray) VertexUsage() VertexUsage {
+	return va.usage
 }
 
 // Draw draws a vertex array.
@@ -203,10 +171,29 @@ func (va *VertexArray) Draw() {
 	va.Do(func(Context) {})
 }
 
+// SetIndices sets the indices of triangles to be drawn. Triangles will be formed from the vertices of the array
+// as defined by these indices. The first drawn triangle is specified by the first three indices, the second by
+// the fourth through sixth and so on.
+func (va *VertexArray) SetIndices(indices []int) {
+	if len(indices)%3 != 0 {
+		panic("vertex array set indices: number of indices not divisible by 3")
+	}
+	indices32 := make([]uint32, len(indices))
+	for i := range indices32 {
+		indices32[i] = uint32(indices[i])
+	}
+	va.indexNum = len(indices32)
+	DoNoBlock(func() {
+		gl.BindBuffer(gl.ELEMENT_ARRAY_BUFFER, va.ebo)
+		gl.BufferData(gl.ELEMENT_ARRAY_BUFFER, 4*len(indices32), gl.Ptr(indices32), uint32(va.usage))
+		gl.BindBuffer(gl.ELEMENT_ARRAY_BUFFER, 0)
+	})
+}
+
 // SetVertex sets the value of all attributes of a vertex.
 // Argument data must be a slice/array containing the new vertex data.
 func (va *VertexArray) SetVertex(vertex int, data interface{}) {
-	if vertex < 0 || vertex >= va.count {
+	if vertex < 0 || vertex >= va.vertexNum {
 		panic("set vertex error: invalid vertex index")
 	}
 	DoNoBlock(func() {
@@ -220,7 +207,7 @@ func (va *VertexArray) SetVertex(vertex int, data interface{}) {
 }
 
 func (va *VertexArray) checkVertex(vertex int) {
-	if vertex < 0 || vertex >= va.count {
+	if vertex < 0 || vertex >= va.vertexNum {
 		panic("invalid vertex index")
 	}
 }
@@ -322,14 +309,12 @@ func (va *VertexArray) Do(sub func(Context)) {
 		}
 		DoNoBlock(func() {
 			gl.BindVertexArray(va.vao)
-			gl.BindBuffer(gl.ARRAY_BUFFER, va.vbo)
 		})
 		va.enabled = true
 		sub(ctx)
 		va.enabled = false
 		DoNoBlock(func() {
-			gl.DrawArrays(uint32(va.mode), 0, int32(va.count))
-			gl.BindBuffer(gl.ARRAY_BUFFER, 0)
+			gl.DrawElements(gl.TRIANGLES, int32(va.indexNum), gl.UNSIGNED_INT, gl.PtrOffset(0))
 			gl.BindVertexArray(0)
 		})
 	})

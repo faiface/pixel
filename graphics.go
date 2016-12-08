@@ -114,9 +114,9 @@ func NewSprite(parent pixelgl.Doer, picture Picture) *Sprite {
 		s.va, err = pixelgl.NewVertexArray(
 			picture.Texture(),
 			ctx.Shader().VertexFormat(),
-			pixelgl.TriangleFanDrawMode,
 			pixelgl.DynamicUsage,
 			4,
+			[]int{0, 1, 2, 0, 2, 3},
 		)
 		if err != nil {
 			panic(errors.Wrap(err, "failed to create sprite"))
@@ -231,9 +231,9 @@ func NewLineColor(parent pixelgl.Doer, c color.Color, a, b Vec, width float64) *
 		lc.va, err = pixelgl.NewVertexArray(
 			parent,
 			ctx.Shader().VertexFormat(),
-			pixelgl.TriangleStripDrawMode,
 			pixelgl.DynamicUsage,
 			4,
+			[]int{0, 1, 2, 1, 2, 3},
 		)
 		if err != nil {
 			panic(errors.Wrap(err, "failed to create line"))
@@ -340,14 +340,19 @@ func NewPolygonColor(parent pixelgl.Doer, c color.Color, points ...Vec) *Polygon
 		points: points,
 	}
 
+	var indices []int
+	for i := 2; i < len(points); i++ {
+		indices = append(indices, 0, i-1, i)
+	}
+
 	parent.Do(func(ctx pixelgl.Context) {
 		var err error
 		pc.va, err = pixelgl.NewVertexArray(
 			parent,
 			ctx.Shader().VertexFormat(),
-			pixelgl.TriangleFanDrawMode,
 			pixelgl.DynamicUsage,
 			len(points),
+			indices,
 		)
 		if err != nil {
 			panic(errors.Wrap(err, "failed to create polygon"))
@@ -448,17 +453,22 @@ func NewEllipseColor(parent pixelgl.Doer, c color.Color, radius Vec, fill float6
 		fill:   fill,
 	}
 
+	var indices []int
+	for i := 2; i < (n+1)*2; i++ {
+		indices = append(indices, i-2, i-1, i)
+	}
+
 	parent.Do(func(ctx pixelgl.Context) {
 		var err error
 		ec.va, err = pixelgl.NewVertexArray(
 			parent,
 			ctx.Shader().VertexFormat(),
-			pixelgl.TriangleStripDrawMode,
 			pixelgl.DynamicUsage,
 			(n+1)*2,
+			indices,
 		)
 		if err != nil {
-			panic(errors.Wrap(err, "failed to create circle"))
+			panic(errors.Wrap(err, "failed to create ellipse"))
 		}
 	})
 
