@@ -149,8 +149,8 @@ func (va *VertexArray) ID() uint32 {
 	return va.vao
 }
 
-// Count returns the number of vertices in a vertex array.
-func (va *VertexArray) Count() int {
+// VertexNum returns the number of vertices in a vertex array.
+func (va *VertexArray) VertexNum() int {
 	return va.vertexNum
 }
 
