@@ -20,8 +20,6 @@ const (
 	Transform
 	// MaskColor is a masking color. When drawing, each color gets multiplied by this color.
 	MaskColor
-	// IsTexture signals, whether a texture is present.
-	IsTexture
 	// NumStandardAttrPurposes is the number of standard attribute purposes
 	NumStandardAttrPurposes
 )

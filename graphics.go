@@ -200,7 +200,6 @@ func (s *Sprite) Draw(t ...Transform) {
 		r, g, b, a := colorToRGBA(s.color)
 		ctx.Shader().SetUniformVec4(pixelgl.MaskColor, mgl32.Vec4{r, g, b, a})
 		ctx.Shader().SetUniformMat3(pixelgl.Transform, mat)
-		ctx.Shader().SetUniformInt(pixelgl.IsTexture, 1)
 
 		s.va.Draw()
 	})
@@ -240,10 +239,10 @@ func NewLineColor(parent pixelgl.Doer, c color.Color, a, b Vec, width float64) *
 		}
 	})
 
-	lc.va.SetVertexAttributeVec4(0, pixelgl.Color, mgl32.Vec4{1, 1, 1, 1})
-	lc.va.SetVertexAttributeVec4(1, pixelgl.Color, mgl32.Vec4{1, 1, 1, 1})
-	lc.va.SetVertexAttributeVec4(2, pixelgl.Color, mgl32.Vec4{1, 1, 1, 1})
-	lc.va.SetVertexAttributeVec4(3, pixelgl.Color, mgl32.Vec4{1, 1, 1, 1})
+	for i := 0; i < 4; i++ {
+		lc.va.SetVertexAttributeVec4(i, pixelgl.Color, mgl32.Vec4{1, 1, 1, 1})
+		lc.va.SetVertexAttributeVec2(i, pixelgl.TexCoord, mgl32.Vec2{-1, -1})
+	}
 
 	lc.setPoints()
 
@@ -312,7 +311,6 @@ func (lc *LineColor) Draw(t ...Transform) {
 		r, g, b, a := colorToRGBA(lc.color)
 		ctx.Shader().SetUniformVec4(pixelgl.MaskColor, mgl32.Vec4{r, g, b, a})
 		ctx.Shader().SetUniformMat3(pixelgl.Transform, mat)
-		ctx.Shader().SetUniformInt(pixelgl.IsTexture, 0)
 	})
 
 	lc.va.Draw()
@@ -373,6 +371,11 @@ func NewPolygonColor(parent pixelgl.Doer, c color.Color, points ...Vec) *Polygon
 			pixelgl.Color,
 			mgl32.Vec4{1, 1, 1, 1},
 		)
+		pc.va.SetVertexAttributeVec2(
+			i,
+			pixelgl.TexCoord,
+			mgl32.Vec2{-1, -1},
+		)
 	}
 
 	return pc
@@ -419,7 +422,6 @@ func (pc *PolygonColor) Draw(t ...Transform) {
 		r, g, b, a := colorToRGBA(pc.color)
 		ctx.Shader().SetUniformVec4(pixelgl.MaskColor, mgl32.Vec4{r, g, b, a})
 		ctx.Shader().SetUniformMat3(pixelgl.Transform, mat)
-		ctx.Shader().SetUniformInt(pixelgl.IsTexture, 0)
 	})
 
 	pc.va.Draw()
@@ -489,6 +491,11 @@ func NewEllipseColor(parent pixelgl.Doer, c color.Color, radius Vec, fill float6
 			mgl32.Vec4{1, 1, 1, 1},
 		)
 		ec.va.SetVertexAttributeVec2(
+			i,
+			pixelgl.TexCoord,
+			mgl32.Vec2{-1, -1},
+		)
+		ec.va.SetVertexAttributeVec2(
 			j,
 			pixelgl.Position,
 			mgl32.Vec2{
@@ -500,6 +507,11 @@ func NewEllipseColor(parent pixelgl.Doer, c color.Color, radius Vec, fill float6
 			j,
 			pixelgl.Color,
 			mgl32.Vec4{1, 1, 1, 1},
+		)
+		ec.va.SetVertexAttributeVec2(
+			j,
+			pixelgl.TexCoord,
+			mgl32.Vec2{-1, -1},
 		)
 	}
 
@@ -538,7 +550,6 @@ func (ec *EllipseColor) Draw(t ...Transform) {
 		r, g, b, a := colorToRGBA(ec.color)
 		ctx.Shader().SetUniformVec4(pixelgl.MaskColor, mgl32.Vec4{r, g, b, a})
 		ctx.Shader().SetUniformMat3(pixelgl.Transform, mat)
-		ctx.Shader().SetUniformInt(pixelgl.IsTexture, 0)
 	})
 
 	ec.va.Draw()

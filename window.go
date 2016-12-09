@@ -346,7 +346,6 @@ var defaultVertexFormat = pixelgl.VertexFormat{
 var defaultUniformFormat = pixelgl.UniformFormat{
 	"maskColor": {Purpose: pixelgl.MaskColor, Type: pixelgl.Vec4},
 	"transform": {Purpose: pixelgl.Transform, Type: pixelgl.Mat3},
-	"isTexture": {Purpose: pixelgl.IsTexture, Type: pixelgl.Int},
 }
 
 var defaultVertexShader = `
@@ -377,14 +376,13 @@ in vec2 TexCoord;
 out vec4 color;
 
 uniform vec4 maskColor;
-uniform int isTexture;
 uniform sampler2D tex;
 
 void main() {
-	if (isTexture != 0) {
-		color = maskColor * Color * texture(tex, vec2(TexCoord.x, 1 - TexCoord.y));
-	} else {
+	if (TexCoord == vec2(-1, -1)) {
 		color = maskColor * Color;
+	} else {
+		color = maskColor * Color * texture(tex, vec2(TexCoord.x, 1 - TexCoord.y));
 	}
 }
 `
