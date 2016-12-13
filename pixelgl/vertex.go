@@ -190,114 +190,95 @@ func (va *VertexArray) SetIndices(indices []int) {
 	})
 }
 
-// SetVertex sets the value of all attributes of a vertex.
-// Argument data must be a slice/array containing the new vertex data.
-func (va *VertexArray) SetVertex(vertex int, data interface{}) {
+// SetVertexAttr sets the value of the specified vertex attribute of the specified vertex.
+//
+// If the vertex attribute does not exist, this method returns false. If the vertex is out of range,
+// this method panics.
+//
+// Supplied value must correspond to the type of the attribute. Correct types are these (righ-hand is the type of value):
+//   Attr{Type: Float}: float32
+//   Attr{Type: Vec2}:  mgl32.Vec2
+//   Attr{Type: Vec3}:  mgl32.Vec3
+//   Attr{Type: Vec4}:  mgl32.Vec4
+// No other types are supported.
+func (va *VertexArray) SetVertexAttr(vertex int, attr Attr, value interface{}) (ok bool) {
 	if vertex < 0 || vertex >= va.vertexNum {
-		panic("set vertex error: invalid vertex index")
+		panic("set vertex attr: invalid vertex index")
 	}
+
+	if _, ok := va.attrs[attr]; !ok {
+		return false
+	}
+
 	DoNoBlock(func() {
 		gl.BindBuffer(gl.ARRAY_BUFFER, va.vbo)
 
-		offset := va.stride * vertex
-		gl.BufferSubData(gl.ARRAY_BUFFER, offset, va.format.Size(), gl.Ptr(data))
+		offset := va.stride*vertex + va.attrs[attr]
+
+		switch attr.Type {
+		case Float:
+			value := value.(float32)
+			gl.BufferSubData(gl.ARRAY_BUFFER, offset, attr.Type.Size(), unsafe.Pointer(&value))
+		case Vec2:
+			value := value.(mgl32.Vec2)
+			gl.BufferSubData(gl.ARRAY_BUFFER, offset, attr.Type.Size(), unsafe.Pointer(&value))
+		case Vec3:
+			value := value.(mgl32.Vec3)
+			gl.BufferSubData(gl.ARRAY_BUFFER, offset, attr.Type.Size(), unsafe.Pointer(&value))
+		case Vec4:
+			value := value.(mgl32.Vec4)
+			gl.BufferSubData(gl.ARRAY_BUFFER, offset, attr.Type.Size(), unsafe.Pointer(&value))
+		}
 
 		gl.BindBuffer(gl.ARRAY_BUFFER, 0)
 	})
+
+	return true
 }
 
-func (va *VertexArray) checkVertex(vertex int) {
+// VertexAttr returns the current value of the specified vertex attribute of the specified vertex.
+//
+// If the vertex attribute does not exist, this method returns nil and false. If the vertex is out of range,
+// this method panics.
+//
+// The type of the returned value follows the same rules as with SetVertexAttr.
+func (va *VertexArray) VertexAttr(vertex int, attr Attr) (value interface{}, ok bool) {
 	if vertex < 0 || vertex >= va.vertexNum {
-		panic("invalid vertex index")
+		panic("vertex attr: invalid vertex index")
 	}
-}
 
-// SetVertexAttributeFloat sets the value of a specified vertex attribute Attr{Purpose: purpose, Type: Float} of type Float
-// of the specified vertex.
-//
-// This function returns false if the specified vertex attribute does not exist. Note that the function panics if
-// the vertex if out of range.
-func (va *VertexArray) SetVertexAttributeFloat(vertex int, purpose AttrPurpose, value float32) (ok bool) {
-	va.checkVertex(vertex)
-	attr := Attr{Purpose: purpose, Type: Float}
 	if _, ok := va.attrs[attr]; !ok {
-		return false
+		return nil, false
 	}
+
 	DoNoBlock(func() {
 		gl.BindBuffer(gl.ARRAY_BUFFER, va.vbo)
 
 		offset := va.stride*vertex + va.attrs[attr]
-		gl.BufferSubData(gl.ARRAY_BUFFER, offset, attr.Type.Size(), unsafe.Pointer(&value))
+
+		switch attr.Type {
+		case Float:
+			var data float32
+			gl.GetBufferSubData(gl.ARRAY_BUFFER, offset, attr.Type.Size(), unsafe.Pointer(&data))
+			value = data
+		case Vec2:
+			var data mgl32.Vec2
+			gl.GetBufferSubData(gl.ARRAY_BUFFER, offset, attr.Type.Size(), unsafe.Pointer(&data))
+			value = data
+		case Vec3:
+			var data mgl32.Vec3
+			gl.GetBufferSubData(gl.ARRAY_BUFFER, offset, attr.Type.Size(), unsafe.Pointer(&data))
+			value = data
+		case Vec4:
+			var data mgl32.Vec4
+			gl.GetBufferSubData(gl.ARRAY_BUFFER, offset, attr.Type.Size(), unsafe.Pointer(&data))
+			value = data
+		}
 
 		gl.BindBuffer(gl.ARRAY_BUFFER, 0)
 	})
-	return true
-}
 
-// SetVertexAttributeVec2 sets the value of a specified vertex attribute Attr{Purpose: purpose, Type: Vec2} of type Vec2
-// of the specified vertex.
-//
-// This function returns false if the specified vertex attribute does not exist. Note that the function panics if
-// the vertex if out of range.
-func (va *VertexArray) SetVertexAttributeVec2(vertex int, purpose AttrPurpose, value mgl32.Vec2) (ok bool) {
-	va.checkVertex(vertex)
-	attr := Attr{Purpose: purpose, Type: Vec2}
-	if _, ok := va.attrs[attr]; !ok {
-		return false
-	}
-	DoNoBlock(func() {
-		gl.BindBuffer(gl.ARRAY_BUFFER, va.vbo)
-
-		offset := va.stride*vertex + va.attrs[attr]
-		gl.BufferSubData(gl.ARRAY_BUFFER, offset, attr.Type.Size(), unsafe.Pointer(&value))
-
-		gl.BindBuffer(gl.ARRAY_BUFFER, 0)
-	})
-	return true
-}
-
-// SetVertexAttributeVec3 sets the value of a specified vertex attribute Attr{Purpose: purpose, Type: Vec3} of type Vec3
-// of the specified vertex.
-//
-// This function returns false if the specified vertex attribute does not exist. Note that the function panics if
-// the vertex if out of range.
-func (va *VertexArray) SetVertexAttributeVec3(vertex int, purpose AttrPurpose, value mgl32.Vec3) (ok bool) {
-	va.checkVertex(vertex)
-	attr := Attr{Purpose: purpose, Type: Vec3}
-	if _, ok := va.attrs[attr]; !ok {
-		return false
-	}
-	DoNoBlock(func() {
-		gl.BindBuffer(gl.ARRAY_BUFFER, va.vbo)
-
-		offset := va.stride*vertex + va.attrs[attr]
-		gl.BufferSubData(gl.ARRAY_BUFFER, offset, attr.Type.Size(), unsafe.Pointer(&value))
-
-		gl.BindBuffer(gl.ARRAY_BUFFER, 0)
-	})
-	return true
-}
-
-// SetVertexAttributeVec4 sets the value of a specified vertex attribute Attr{Purpose: purpose, Type: Vec4} of type Vec4
-// of the specified vertex.
-//
-// This function returns false if the specified vertex attribute does not exist. Note that the function panics if
-// the vertex if out of range.
-func (va *VertexArray) SetVertexAttributeVec4(vertex int, purpose AttrPurpose, value mgl32.Vec4) (ok bool) {
-	va.checkVertex(vertex)
-	attr := Attr{Purpose: purpose, Type: Vec4}
-	if _, ok := va.attrs[attr]; !ok {
-		return false
-	}
-	DoNoBlock(func() {
-		gl.BindBuffer(gl.ARRAY_BUFFER, va.vbo)
-
-		offset := va.stride*vertex + va.attrs[attr]
-		gl.BufferSubData(gl.ARRAY_BUFFER, offset, attr.Type.Size(), unsafe.Pointer(&value))
-
-		gl.BindBuffer(gl.ARRAY_BUFFER, 0)
-	})
-	return true
+	return value, true
 }
 
 // Do binds a vertex arrray and it's associated vertex buffer, executes sub, and unbinds the vertex array and it's vertex buffer.
