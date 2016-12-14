@@ -181,7 +181,7 @@ func (s *Shader) SetUniformAttr(attr Attr, value interface{}) (ok bool) {
 	}
 
 	DoNoBlock(func() {
-		defer s.program.bind().restore()
+		s.program.bind()
 
 		switch attr.Type {
 		case Int:
@@ -229,6 +229,8 @@ func (s *Shader) SetUniformAttr(attr Attr, value interface{}) (ok bool) {
 		default:
 			panic("set uniform attr: invalid attribute type")
 		}
+
+		s.program.restore()
 	})
 
 	return true
