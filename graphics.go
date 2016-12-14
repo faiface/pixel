@@ -85,6 +85,94 @@ func (g *Group) Do(sub func(pixelgl.Context)) {
 	sub(g.context)
 }
 
+// Shape is a general drawable shape constructed from vertices.
+//
+// Vertices are specified in the vertex array of a shape. A shape can have a picture, a color (mask) and a static
+// transform.
+//
+// Usually you use this type only indirectly throught other specific shapes (sprites, polygons, ...) embedding it.
+type Shape struct {
+	parent    pixelgl.Doer
+	picture   Picture
+	color     color.Color
+	transform Transform
+	va        *pixelgl.VertexArray
+}
+
+// NewShape creates a new shape with specified parent, picture, color, transform and vertex array.
+func NewShape(parent pixelgl.Doer, picture Picture, c color.Color, transform Transform, va *pixelgl.VertexArray) *Shape {
+	return &Shape{
+		parent:    parent,
+		picture:   picture,
+		color:     c,
+		transform: transform,
+		va:        va,
+	}
+}
+
+// Delete deletes the underlying
+func (s *Shape) Delete() {
+	s.va.Delete()
+}
+
+// SetPicture changes the picture of a shape.
+func (s *Shape) SetPicture(picture Picture) {
+	s.picture = picture
+}
+
+// Picture returns the current picture of a shape.
+func (s *Shape) Picture() Picture {
+	return s.picture
+}
+
+// SetColor changes the color (mask) of a shape.
+func (s *Shape) SetColor(c color.Color) {
+	s.color = c
+}
+
+// Color returns the current color (mask) of a shape.
+func (s *Shape) Color() color.Color {
+	return s.color
+}
+
+// SetTransform changes the ("static") transform of a shape.
+func (s *Shape) SetTransform(transform Transform) {
+	s.transform = transform
+}
+
+// Transform returns the current ("static") transform of a shape.
+func (s *Shape) Transform() Transform {
+	return s.transform
+}
+
+// VertexArray changes the underlying vertex array of a shape.
+func (s *Shape) VertexArray() *pixelgl.VertexArray {
+	return s.va
+}
+
+// Draw draws a sprite transformed by the supplied transforms applied in the reverse order.
+func (s *Shape) Draw(t ...Transform) {
+	mat := mgl32.Ident3()
+	for i := range t {
+		mat = mat.Mul3(t[i].Mat3())
+	}
+	mat = mat.Mul3(s.transform.Mat3())
+
+	s.parent.Do(func(ctx pixelgl.Context) {
+		r, g, b, a := colorToRGBA(s.color)
+		ctx.Shader().SetUniformAttr(maskColorVec4, mgl32.Vec4{r, g, b, a})
+		ctx.Shader().SetUniformAttr(transformMat3, mat)
+
+		if s.picture.Texture() != nil {
+			s.picture.Texture().Do(func(pixelgl.Context) {
+				s.va.Draw()
+			})
+		} else {
+			s.va.Draw()
+		}
+	})
+}
+
 // Sprite is a picture that can be drawn on the screen. Optionally it can be color masked or tranformed.
 //
 // Usually, you only transform objects when you're drawing them (by passing transforms to the Draw method).
@@ -92,26 +180,17 @@ func (g *Group) Do(sub func(pixelgl.Context)) {
 // anchor by their bottom-left corner by default. Setting a transform can change this anchor to the center,
 // or wherever you want.
 type Sprite struct {
-	parent    pixelgl.Doer
-	color     color.Color
-	picture   Picture
-	transform Transform
-	va        *pixelgl.VertexArray
+	*Shape
 }
 
 // NewSprite creates a new sprite with the supplied picture. The sprite's size is the size of the supplied picture.
 // If you want to change the sprite's size, change it's transform.
 func NewSprite(parent pixelgl.Doer, picture Picture) *Sprite {
-	s := &Sprite{
-		parent:    parent,
-		color:     color.White,
-		picture:   picture,
-		transform: Position(0),
-	}
+	var va *pixelgl.VertexArray
 
 	parent.Do(func(ctx pixelgl.Context) {
 		var err error
-		s.va, err = pixelgl.NewVertexArray(
+		va, err = pixelgl.NewVertexArray(
 			picture.Texture(),
 			ctx.Shader().VertexFormat(),
 			pixelgl.DynamicUsage,
@@ -130,104 +209,29 @@ func NewSprite(parent pixelgl.Doer, picture Picture) *Sprite {
 			(picture.Bounds().Y()+p.Y())/float64(picture.Texture().Height()),
 		)
 
-		s.va.SetVertexAttributeVec2(
-			i,
-			pixelgl.Position,
-			mgl32.Vec2{
-				float32(p.X()),
-				float32(p.Y()),
-			},
-		)
-		s.va.SetVertexAttributeVec4(i, pixelgl.Color, mgl32.Vec4{1, 1, 1, 1})
-		s.va.SetVertexAttributeVec2(
-			i,
-			pixelgl.TexCoord,
-			mgl32.Vec2{
-				float32(texCoord.X()),
-				float32(texCoord.Y()),
-			},
-		)
+		va.SetVertexAttr(i, positionVec2, mgl32.Vec2{float32(p.X()), float32(p.Y())})
+		va.SetVertexAttr(i, colorVec4, mgl32.Vec4{1, 1, 1, 1})
+		va.SetVertexAttr(i, texCoordVec2, mgl32.Vec2{float32(texCoord.X()), float32(texCoord.Y())})
 	}
 
-	return s
-}
-
-// Delete deletes a sprite. Note, that this does not delete it's picture.
-func (s *Sprite) Delete() {
-	s.va.Delete()
-}
-
-// Picture returns the sprite's picture.
-func (s *Sprite) Picture() Picture {
-	return s.picture
-}
-
-// SetColor sets a mask color of a sprite.
-func (s *Sprite) SetColor(c color.Color) {
-	s.color = c
-}
-
-// Color returns the mask color of a sprite. Default is white.
-func (s *Sprite) Color() color.Color {
-	return s.color
-}
-
-// SetTransform sets a "static" transform of a sprite. Setting a transform is equivalent to passing
-// the transform as the last parameter to Draw.
-//
-//   sprite.SetTransform(transform)
-//   sprite.Draw(camera)
-//   // same as below
-//   sprite.Draw(camera, tranform)
-func (s *Sprite) SetTransform(t Transform) {
-	s.transform = t
-}
-
-// Transform returns the static transform of a sprite.
-func (s *Sprite) Transform() Transform {
-	return s.transform
-}
-
-// Draw draws a sprite transformed by the supplied transforms applied in the reverse order.
-func (s *Sprite) Draw(t ...Transform) {
-	mat := mgl32.Ident3()
-	for i := range t {
-		mat = mat.Mul3(t[i].Mat3())
-	}
-	mat = mat.Mul3(s.transform.Mat3())
-
-	s.parent.Do(func(ctx pixelgl.Context) {
-		r, g, b, a := colorToRGBA(s.color)
-		ctx.Shader().SetUniformVec4(pixelgl.MaskColor, mgl32.Vec4{r, g, b, a})
-		ctx.Shader().SetUniformMat3(pixelgl.Transform, mat)
-
-		s.va.Draw()
-	})
+	return &Sprite{NewShape(parent, picture, color.White, Position(0), va)}
 }
 
 // LineColor a line shape (with sharp ends) filled with a single color.
 type LineColor struct {
-	parent pixelgl.Doer
-	color  color.Color
-	a, b   Vec
-	width  float64
-	va     *pixelgl.VertexArray
+	*Shape
+	a, b  Vec
+	width float64
 }
 
 // NewLineColor creates a new line shape between points A and B filled with a single color. Parent is an object
 // that this shape belongs to, such as a window, or a graphics effect.
 func NewLineColor(parent pixelgl.Doer, c color.Color, a, b Vec, width float64) *LineColor {
-	lc := &LineColor{
-		parent: parent,
-		color:  c,
-		a:      a,
-		b:      b,
-		width:  width,
-	}
+	var va *pixelgl.VertexArray
 
 	parent.Do(func(ctx pixelgl.Context) {
 		var err error
-		lc.va, err = pixelgl.NewVertexArray(
+		va, err = pixelgl.NewVertexArray(
 			parent,
 			ctx.Shader().VertexFormat(),
 			pixelgl.DynamicUsage,
@@ -240,12 +244,12 @@ func NewLineColor(parent pixelgl.Doer, c color.Color, a, b Vec, width float64) *
 	})
 
 	for i := 0; i < 4; i++ {
-		lc.va.SetVertexAttributeVec4(i, pixelgl.Color, mgl32.Vec4{1, 1, 1, 1})
-		lc.va.SetVertexAttributeVec2(i, pixelgl.TexCoord, mgl32.Vec2{-1, -1})
+		va.SetVertexAttr(i, colorVec4, mgl32.Vec4{1, 1, 1, 1})
+		va.SetVertexAttr(i, texCoordVec2, mgl32.Vec2{-1, -1})
 	}
 
+	lc := &LineColor{NewShape(parent, Picture{}, c, Position(0), va), a, b, width}
 	lc.setPoints()
-
 	return lc
 }
 
@@ -253,18 +257,8 @@ func NewLineColor(parent pixelgl.Doer, c color.Color, a, b Vec, width float64) *
 func (lc *LineColor) setPoints() {
 	r := (lc.b - lc.a).Unit().Scaled(lc.width / 2).Rotated(math.Pi / 2)
 	for i, p := range []Vec{lc.a - r, lc.a + r, lc.b - r, lc.b + r} {
-		lc.va.SetVertexAttributeVec2(i, pixelgl.Position, mgl32.Vec2{float32(p.X()), float32(p.Y())})
+		lc.va.SetVertexAttr(i, positionVec2, mgl32.Vec2{float32(p.X()), float32(p.Y())})
 	}
-}
-
-// SetColor changes the color of a line.
-func (lc *LineColor) SetColor(c color.Color) {
-	lc.color = c
-}
-
-// Color returns the current color of a line.
-func (lc *LineColor) Color() color.Color {
-	return lc.color
 }
 
 // SetA changes the position of the first endpoint of a line.
@@ -300,43 +294,16 @@ func (lc *LineColor) Width() float64 {
 	return lc.width
 }
 
-// Draw draws a line transformed by the supplied transforms applied in the reverse order.
-func (lc *LineColor) Draw(t ...Transform) {
-	mat := mgl32.Ident3()
-	for i := range t {
-		mat = mat.Mul3(t[i].Mat3())
-	}
-
-	lc.parent.Do(func(ctx pixelgl.Context) {
-		r, g, b, a := colorToRGBA(lc.color)
-		ctx.Shader().SetUniformVec4(pixelgl.MaskColor, mgl32.Vec4{r, g, b, a})
-		ctx.Shader().SetUniformMat3(pixelgl.Transform, mat)
-	})
-
-	lc.va.Draw()
-}
-
-// Delete destroys a line shape and releases it's video memory. Do not use this shape after calling Delete.
-func (lc *LineColor) Delete() {
-	lc.va.Delete()
-}
-
-// PolygonColor is a polygon shape filled with a single color.
+// PolygonColor is a convex polygon shape filled with a single color.
 type PolygonColor struct {
-	parent pixelgl.Doer
-	color  color.Color
+	*Shape
 	points []Vec
-	va     *pixelgl.VertexArray
 }
 
 // NewPolygonColor creates a new polygon shape filled with a single color. Parent is an object that this shape belongs to,
 // such as a window, or a graphics effect.
 func NewPolygonColor(parent pixelgl.Doer, c color.Color, points ...Vec) *PolygonColor {
-	pc := &PolygonColor{
-		parent: parent,
-		color:  c,
-		points: points,
-	}
+	var va *pixelgl.VertexArray
 
 	var indices []int
 	for i := 2; i < len(points); i++ {
@@ -345,7 +312,7 @@ func NewPolygonColor(parent pixelgl.Doer, c color.Color, points ...Vec) *Polygon
 
 	parent.Do(func(ctx pixelgl.Context) {
 		var err error
-		pc.va, err = pixelgl.NewVertexArray(
+		va, err = pixelgl.NewVertexArray(
 			parent,
 			ctx.Shader().VertexFormat(),
 			pixelgl.DynamicUsage,
@@ -358,42 +325,17 @@ func NewPolygonColor(parent pixelgl.Doer, c color.Color, points ...Vec) *Polygon
 	})
 
 	for i, p := range points {
-		pc.va.SetVertexAttributeVec2(
-			i,
-			pixelgl.Position,
-			mgl32.Vec2{
-				float32(p.X()),
-				float32(p.Y()),
-			},
-		)
-		pc.va.SetVertexAttributeVec4(
-			i,
-			pixelgl.Color,
-			mgl32.Vec4{1, 1, 1, 1},
-		)
-		pc.va.SetVertexAttributeVec2(
-			i,
-			pixelgl.TexCoord,
-			mgl32.Vec2{-1, -1},
-		)
+		va.SetVertexAttr(i, positionVec2, mgl32.Vec2{float32(p.X()), float32(p.Y())})
+		va.SetVertexAttr(i, colorVec4, mgl32.Vec4{1, 1, 1, 1})
+		va.SetVertexAttr(i, texCoordVec2, mgl32.Vec2{-1, -1})
 	}
 
-	return pc
+	return &PolygonColor{NewShape(parent, Picture{}, c, Position(0), va), points}
 }
 
-// Count returns the number of points in a polygon.
-func (pc *PolygonColor) Count() int {
+// PointNum returns the number of points in a polygon.
+func (pc *PolygonColor) PointNum() int {
 	return len(pc.points)
-}
-
-// SetColor changes the color of a polygon to c.
-func (pc *PolygonColor) SetColor(c color.Color) {
-	pc.color = c
-}
-
-// Color returns the current color of a polygon.
-func (pc *PolygonColor) Color() color.Color {
-	return pc.color
 }
 
 // SetPoint changes the position of a point in a polygon.
@@ -401,7 +343,7 @@ func (pc *PolygonColor) Color() color.Color {
 // If the index is out of range, this function panics.
 func (pc *PolygonColor) SetPoint(i int, point Vec) {
 	pc.points[i] = point
-	pc.va.SetVertexAttributeVec2(i, pixelgl.Position, mgl32.Vec2{float32(point.X()), float32(point.Y())})
+	pc.va.SetVertexAttr(i, positionVec2, mgl32.Vec2{float32(point.X()), float32(point.Y())})
 }
 
 // Point returns the position of a point in a polygon.
@@ -411,34 +353,11 @@ func (pc *PolygonColor) Point(i int) Vec {
 	return pc.points[i]
 }
 
-// Draw draws a polygon transformed by the supplied transforms applied in the reverse order.
-func (pc *PolygonColor) Draw(t ...Transform) {
-	mat := mgl32.Ident3()
-	for i := range t {
-		mat = mat.Mul3(t[i].Mat3())
-	}
-
-	pc.parent.Do(func(ctx pixelgl.Context) {
-		r, g, b, a := colorToRGBA(pc.color)
-		ctx.Shader().SetUniformVec4(pixelgl.MaskColor, mgl32.Vec4{r, g, b, a})
-		ctx.Shader().SetUniformMat3(pixelgl.Transform, mat)
-	})
-
-	pc.va.Draw()
-}
-
-// Delete destroys a polygon shape and releases it's video memory. Do not use this shape after calling Delete.
-func (pc *PolygonColor) Delete() {
-	pc.va.Delete()
-}
-
 // EllipseColor is an ellipse shape filled with a single color.
 type EllipseColor struct {
-	parent pixelgl.Doer
-	color  color.Color
+	*Shape
 	radius Vec
 	fill   float64
-	va     *pixelgl.VertexArray
 }
 
 // NewEllipseColor creates a new ellipse shape filled with a single color. Parent is an object that this shape belongs to,
@@ -446,14 +365,9 @@ type EllipseColor struct {
 // be filled (from the outside). The value of 1 means that the whole ellipse is filled. The value of 0 means that none of the
 // ellipse is filled (which makes the ellipse invisible).
 func NewEllipseColor(parent pixelgl.Doer, c color.Color, radius Vec, fill float64) *EllipseColor {
-	const n = 256
+	var va *pixelgl.VertexArray
 
-	ec := &EllipseColor{
-		parent: parent,
-		color:  c,
-		radius: radius,
-		fill:   fill,
-	}
+	const n = 256
 
 	var indices []int
 	for i := 2; i < (n+1)*2; i++ {
@@ -462,7 +376,7 @@ func NewEllipseColor(parent pixelgl.Doer, c color.Color, radius Vec, fill float6
 
 	parent.Do(func(ctx pixelgl.Context) {
 		var err error
-		ec.va, err = pixelgl.NewVertexArray(
+		va, err = pixelgl.NewVertexArray(
 			parent,
 			ctx.Shader().VertexFormat(),
 			pixelgl.DynamicUsage,
@@ -477,85 +391,31 @@ func NewEllipseColor(parent pixelgl.Doer, c color.Color, radius Vec, fill float6
 	for k := 0; k < n+1; k++ {
 		i, j := k*2, k*2+1
 		angle := math.Pi * 2 * float64(k%n) / n
-		ec.va.SetVertexAttributeVec2(
-			i,
-			pixelgl.Position,
-			mgl32.Vec2{
-				float32(math.Cos(angle)),
-				float32(math.Sin(angle)),
-			},
-		)
-		ec.va.SetVertexAttributeVec4(
-			i,
-			pixelgl.Color,
-			mgl32.Vec4{1, 1, 1, 1},
-		)
-		ec.va.SetVertexAttributeVec2(
-			i,
-			pixelgl.TexCoord,
-			mgl32.Vec2{-1, -1},
-		)
-		ec.va.SetVertexAttributeVec2(
-			j,
-			pixelgl.Position,
-			mgl32.Vec2{
-				float32(math.Cos(angle) * (1 - fill)),
-				float32(math.Sin(angle) * (1 - fill)),
-			},
-		)
-		ec.va.SetVertexAttributeVec4(
-			j,
-			pixelgl.Color,
-			mgl32.Vec4{1, 1, 1, 1},
-		)
-		ec.va.SetVertexAttributeVec2(
-			j,
-			pixelgl.TexCoord,
-			mgl32.Vec2{-1, -1},
-		)
+
+		va.SetVertexAttr(i, positionVec2, mgl32.Vec2{
+			float32(math.Cos(angle) * radius.X()),
+			float32(math.Sin(angle) * radius.Y()),
+		})
+		va.SetVertexAttr(i, colorVec4, mgl32.Vec4{1, 1, 1, 1})
+		va.SetVertexAttr(i, texCoordVec2, mgl32.Vec2{-1, -1})
+
+		va.SetVertexAttr(j, positionVec2, mgl32.Vec2{
+			float32(math.Cos(angle) * radius.X() * (1 - fill)),
+			float32(math.Sin(angle) * radius.Y() * (1 - fill)),
+		})
+		va.SetVertexAttr(j, colorVec4, mgl32.Vec4{1, 1, 1, 1})
+		va.SetVertexAttr(j, texCoordVec2, mgl32.Vec2{-1, -1})
 	}
 
-	return ec
+	return &EllipseColor{NewShape(parent, Picture{}, c, Position(0), va), radius, fill}
 }
 
-// SetColor changes the color of an ellipse.
-func (ec *EllipseColor) SetColor(c color.Color) {
-	ec.color = c
-}
-
-// Color returns the current color of an ellipse.
-func (ec *EllipseColor) Color() color.Color {
-	return ec.color
-}
-
-// SetRadius sets the radius (which can be different in X and Y axis) of an ellipse.
-func (ec *EllipseColor) SetRadius(radius Vec) {
-	ec.radius = radius
-}
-
-// Radius returns the current radius of an ellipse.
+// Radius returns the radius of an ellipse.
 func (ec *EllipseColor) Radius() Vec {
 	return ec.radius
 }
 
-// Draw dras an ellipse transformed by the supplied transforms applied in the reverse order.
-func (ec *EllipseColor) Draw(t ...Transform) {
-	mat := mgl32.Ident3()
-	for i := range t {
-		mat = mat.Mul3(t[i].Mat3())
-	}
-	mat = mat.Mul3(mgl32.Scale2D(float32(ec.radius.X()), float32(ec.radius.Y())))
-
-	ec.parent.Do(func(ctx pixelgl.Context) {
-		r, g, b, a := colorToRGBA(ec.color)
-		ctx.Shader().SetUniformVec4(pixelgl.MaskColor, mgl32.Vec4{r, g, b, a})
-		ctx.Shader().SetUniformMat3(pixelgl.Transform, mat)
-	})
-
-	ec.va.Draw()
-}
-
-// Delete destroys an ellipse shape and releases it's video memory. Do not use this shape after calling Delete.
-func (ec *EllipseColor) Delete() {
-	ec.va.Delete()
+// Fill returns the fill ratio of an ellipse.
+func (ec *EllipseColor) Fill() float64 {
+	return ec.fill
 }
