@@ -4,9 +4,8 @@ import "github.com/go-gl/gl/v3.3-core/gl"
 
 // Texture is an OpenGL texture.
 type Texture struct {
-	enabled       bool
 	parent        Doer
-	tex           uint32
+	tex           binder
 	width, height int
 }
 
@@ -15,14 +14,20 @@ type Texture struct {
 func NewTexture(parent Doer, width, height int, pixels []uint8) (*Texture, error) {
 	texture := &Texture{
 		parent: parent,
+		tex: binder{
+			restoreLoc: gl.TEXTURE_BINDING_2D,
+			bindFunc: func(obj uint32) {
+				gl.BindTexture(gl.TEXTURE_2D, obj)
+			},
+		},
 		width:  width,
 		height: height,
 	}
 
 	parent.Do(func(ctx Context) {
 		Do(func() {
-			gl.GenTextures(1, &texture.tex)
-			gl.BindTexture(gl.TEXTURE_2D, texture.tex)
+			gl.GenTextures(1, &texture.tex.obj)
+			defer texture.tex.bind().restore()
 
 			gl.TexImage2D(
 				gl.TEXTURE_2D,
@@ -37,8 +42,6 @@ func NewTexture(parent Doer, width, height int, pixels []uint8) (*Texture, error
 			)
 
 			gl.GenerateMipmap(gl.TEXTURE_2D)
-
-			gl.BindTexture(gl.TEXTURE_2D, 0)
 		})
 	})
 
@@ -49,14 +52,14 @@ func NewTexture(parent Doer, width, height int, pixels []uint8) (*Texture, error
 func (t *Texture) Delete() {
 	t.parent.Do(func(ctx Context) {
 		DoNoBlock(func() {
-			gl.DeleteTextures(1, &t.tex)
+			gl.DeleteTextures(1, &t.tex.obj)
 		})
 	})
 }
 
 // ID returns an OpenGL identifier of a texture.
 func (t *Texture) ID() uint32 {
-	return t.tex
+	return t.tex.obj
 }
 
 // Width returns the width of a texture in pixels.
@@ -72,18 +75,12 @@ func (t *Texture) Height() int {
 // Do bind a texture, executes sub, and unbinds the texture.
 func (t *Texture) Do(sub func(Context)) {
 	t.parent.Do(func(ctx Context) {
-		if t.enabled {
-			sub(ctx)
-			return
-		}
 		DoNoBlock(func() {
-			gl.BindTexture(gl.TEXTURE_2D, t.tex)
+			t.tex.bind()
 		})
-		t.enabled = true
 		sub(ctx)
-		t.enabled = false
 		DoNoBlock(func() {
-			gl.BindTexture(gl.TEXTURE_2D, 0)
+			t.tex.restore()
 		})
 	})
 }
