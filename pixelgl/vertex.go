@@ -197,8 +197,9 @@ func (va *VertexArray) SetIndices(indices []int) {
 	}
 	va.indexNum = len(indices32)
 	DoNoBlock(func() {
-		defer va.ebo.bind().restore()
+		va.ebo.bind()
 		gl.BufferData(gl.ELEMENT_ARRAY_BUFFER, 4*len(indices32), gl.Ptr(indices32), uint32(va.usage))
+		va.ebo.restore()
 	})
 }
 
@@ -223,7 +224,7 @@ func (va *VertexArray) SetVertexAttr(vertex int, attr Attr, value interface{}) (
 	}
 
 	DoNoBlock(func() {
-		defer va.vbo.bind().restore()
+		va.vbo.bind()
 
 		offset := va.stride*vertex + va.attrs[attr]
 
@@ -243,6 +244,8 @@ func (va *VertexArray) SetVertexAttr(vertex int, attr Attr, value interface{}) (
 		default:
 			panic("set vertex attr: invalid attribute type")
 		}
+
+		va.vbo.restore()
 	})
 
 	return true
@@ -264,7 +267,7 @@ func (va *VertexArray) VertexAttr(vertex int, attr Attr) (value interface{}, ok 
 	}
 
 	Do(func() {
-		defer va.vbo.bind().restore()
+		va.vbo.bind()
 
 		offset := va.stride*vertex + va.attrs[attr]
 
@@ -285,7 +288,11 @@ func (va *VertexArray) VertexAttr(vertex int, attr Attr) (value interface{}, ok 
 			var data mgl32.Vec4
 			gl.GetBufferSubData(gl.ARRAY_BUFFER, offset, attr.Type.Size(), unsafe.Pointer(&data))
 			value = data
+		default:
+			panic("set vertex attr: invalid attribute type")
 		}
+
+		va.vbo.restore()
 	})
 
 	return value, true
