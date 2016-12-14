@@ -386,3 +386,26 @@ void main() {
 	}
 }
 `
+
+var (
+	positionVec2 = pixelgl.Attr{
+		Purpose: pixelgl.Position,
+		Type:    pixelgl.Vec2,
+	}
+	colorVec4 = pixelgl.Attr{
+		Purpose: pixelgl.Color,
+		Type:    pixelgl.Vec4,
+	}
+	texCoordVec2 = pixelgl.Attr{
+		Purpose: pixelgl.TexCoord,
+		Type:    pixelgl.Vec2,
+	}
+	maskColorVec4 = pixelgl.Attr{
+		Purpose: pixelgl.MaskColor,
+		Type:    pixelgl.Vec4,
+	}
+	transformMat3 = pixelgl.Attr{
+		Purpose: pixelgl.Transform,
+		Type:    pixelgl.Mat3,
+	}
+)
