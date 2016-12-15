@@ -8,24 +8,6 @@ import (
 	"github.com/pkg/errors"
 )
 
-// VertexFormat defines a data format in a vertex buffer.
-//
-// Example:
-//
-//   VertexFormat{"position": {Position, Vec2}, "colr": {Color, Vec4}, "texCoord": {TexCoord, Vec2}}
-//
-// Note: vertex array currently doesn't support matrices in vertex format.
-type VertexFormat []Attr
-
-// Size calculates the total size of a single vertex in this vertex format (sum of the sizes of all vertex attributes).
-func (vf VertexFormat) Size() int {
-	total := 0
-	for _, attr := range vf {
-		total += attr.Type.Size()
-	}
-	return total
-}
-
 // VertexUsage specifies how often the vertex array data will be updated.
 type VertexUsage int
 
@@ -46,17 +28,17 @@ type VertexArray struct {
 	parent              Doer
 	vao, vbo, ebo       binder
 	vertexNum, indexNum int
-	format              VertexFormat
+	format              AttrFormat
 	usage               VertexUsage
 	stride              int
-	attrs               map[Attr]int
+	offset              map[string]int
 }
 
 // NewVertexArray creates a new empty vertex array and wraps another Doer around it.
 //
 // You cannot specify vertex attributes in this constructor, only their count. Use SetVertexAttribute* methods to
 // set the vertex attributes. Use indices to specify how you want to combine vertices into triangles.
-func NewVertexArray(parent Doer, format VertexFormat, usage VertexUsage, vertexNum int, indices []int) (*VertexArray, error) {
+func NewVertexArray(parent Doer, format AttrFormat, usage VertexUsage, vertexNum int, indices []int) (*VertexArray, error) {
 	va := &VertexArray{
 		parent: parent,
 		vao: binder{
@@ -81,21 +63,18 @@ func NewVertexArray(parent Doer, format VertexFormat, usage VertexUsage, vertexN
 		format:    format,
 		usage:     usage,
 		stride:    format.Size(),
-		attrs:     make(map[Attr]int),
+		offset:    make(map[string]int),
 	}
 
 	offset := 0
-	for _, attr := range format {
-		switch attr.Type {
+	for name, typ := range format {
+		switch typ {
 		case Float, Vec2, Vec3, Vec4:
 		default:
 			return nil, errors.New("failed to create vertex array: invalid vertex format: invalid attribute type")
 		}
-		if _, ok := va.attrs[attr]; ok {
-			return nil, errors.New("failed to create vertex array: invalid vertex format: duplicate vertex attribute")
-		}
-		va.attrs[attr] = offset
-		offset += attr.Type.Size()
+		va.offset[name] = offset
+		offset += typ.Size()
 	}
 
 	parent.Do(func(ctx Context) {
@@ -112,10 +91,11 @@ func NewVertexArray(parent Doer, format VertexFormat, usage VertexUsage, vertexN
 			gl.GenBuffers(1, &va.ebo.obj)
 			defer va.ebo.bind().restore()
 
-			offset := 0
-			for i, attr := range format {
+			for name, typ := range format {
+				loc := gl.GetAttribLocation(ctx.Shader().ID(), gl.Str(name+"\x00"))
+
 				var size int32
-				switch attr.Type {
+				switch typ {
 				case Float:
 					size = 1
 				case Vec2:
@@ -127,15 +107,14 @@ func NewVertexArray(parent Doer, format VertexFormat, usage VertexUsage, vertexN
 				}
 
 				gl.VertexAttribPointer(
-					uint32(i),
+					uint32(loc),
 					size,
 					gl.FLOAT,
 					false,
 					int32(va.stride),
-					gl.PtrOffset(offset),
+					gl.PtrOffset(va.offset[name]),
 				)
-				gl.EnableVertexAttribArray(uint32(i))
-				offset += attr.Type.Size()
+				gl.EnableVertexAttribArray(uint32(loc))
 			}
 
 			va.vao.restore()
@@ -153,6 +132,7 @@ func (va *VertexArray) Delete() {
 		DoNoBlock(func() {
 			gl.DeleteVertexArrays(1, &va.vao.obj)
 			gl.DeleteBuffers(1, &va.vbo.obj)
+			gl.DeleteBuffers(1, &va.ebo.obj)
 		})
 	})
 }
@@ -170,7 +150,7 @@ func (va *VertexArray) VertexNum() int {
 // VertexFormat returns the format of the vertices inside a vertex array.
 //
 // Do not change this format!
-func (va *VertexArray) VertexFormat() VertexFormat {
+func (va *VertexArray) VertexFormat() AttrFormat {
 	return va.format
 }
 
@@ -219,14 +199,14 @@ func (va *VertexArray) SetVertexAttr(vertex int, attr Attr, value interface{}) (
 		panic("set vertex attr: invalid vertex index")
 	}
 
-	if _, ok := va.attrs[attr]; !ok {
+	if !va.format.Contains(attr) {
 		return false
 	}
 
 	DoNoBlock(func() {
 		va.vbo.bind()
 
-		offset := va.stride*vertex + va.attrs[attr]
+		offset := va.stride*vertex + va.offset[attr.Name]
 
 		switch attr.Type {
 		case Float:
@@ -262,14 +242,14 @@ func (va *VertexArray) VertexAttr(vertex int, attr Attr) (value interface{}, ok 
 		panic("vertex attr: invalid vertex index")
 	}
 
-	if _, ok := va.attrs[attr]; !ok {
+	if !va.format.Contains(attr) {
 		return nil, false
 	}
 
 	Do(func() {
 		va.vbo.bind()
 
-		offset := va.stride*vertex + va.attrs[attr]
+		offset := va.stride*vertex + va.offset[attr.Name]
 
 		switch attr.Type {
 		case Float:

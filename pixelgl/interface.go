@@ -59,7 +59,7 @@ type ContextHolder struct {
 }
 
 // Do calls sub and passes it the held context.
-func (ch *ContextHolder) Do(sub func(ctx Context)) {
+func (ch ContextHolder) Do(sub func(ctx Context)) {
 	sub(ch.Context)
 }
 

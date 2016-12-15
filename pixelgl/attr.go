@@ -1,28 +1,40 @@
 package pixelgl
 
-// Attr represents an arbitrary OpenGL attribute, such as a vertex attribute or a shader uniform attribute.
-type Attr struct {
-	Purpose AttrPurpose
-	Type    AttrType
+// AttrFormat defines names and types of OpenGL attributes (vertex format, uniform format, etc.).
+//
+// Example:
+//   AttrFormat{"position": Vec2, "color": Vec4, "texCoord": Vec2}
+type AttrFormat map[string]AttrType
+
+// Contains checks whether a format contains a specific attribute.
+//
+// It does a little more than a hard check: e.g. if you query a Vec2 attribute, but the format contains Vec3,
+// Contains returns true, because Vec2 is assignable to Vec3. Specifically, Float -> Vec2 -> Vec3 -> Vec4 (transitively).
+// This however does not work for matrices or ints.
+func (af AttrFormat) Contains(attr Attr) bool {
+	if typ, ok := af[attr.Name]; ok {
+		if (Float <= typ && typ <= Vec4) && (Float <= attr.Type && attr.Type <= typ) {
+			return true
+		}
+		return attr.Type == typ
+	}
+	return false
 }
 
-// AttrPurpose specified a purpose of an attribute. Feel free to create your own purposes for your own needs.
-type AttrPurpose int
+// Size returns the total size of all attributes of an attribute format.
+func (af AttrFormat) Size() int {
+	total := 0
+	for _, typ := range af {
+		total += typ.Size()
+	}
+	return total
+}
 
-const (
-	// Position of a vertex
-	Position AttrPurpose = iota
-	// Color of a vertex
-	Color
-	// TexCoord are texture coordinates
-	TexCoord
-	// Transform is an object transformation matrix
-	Transform
-	// MaskColor is a masking color. When drawing, each color gets multiplied by this color.
-	MaskColor
-	// NumStandardAttrPurposes is the number of standard attribute purposes
-	NumStandardAttrPurposes
-)
+// Attr represents an arbitrary OpenGL attribute, such as a vertex attribute or a shader uniform attribute.
+type Attr struct {
+	Name string
+	Type AttrType
+}
 
 // AttrType represents the type of an OpenGL attribute.
 type AttrType int

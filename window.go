@@ -337,23 +337,23 @@ func (w *Window) Do(sub func(pixelgl.Context)) {
 	w.enabled = false
 }
 
-var defaultVertexFormat = pixelgl.VertexFormat{
-	{Purpose: pixelgl.Position, Type: pixelgl.Vec2},
-	{Purpose: pixelgl.Color, Type: pixelgl.Vec4},
-	{Purpose: pixelgl.TexCoord, Type: pixelgl.Vec2},
+var defaultVertexFormat = pixelgl.AttrFormat{
+	"position": pixelgl.Vec2,
+	"color":    pixelgl.Vec4,
+	"texCoord": pixelgl.Vec2,
 }
 
-var defaultUniformFormat = pixelgl.UniformFormat{
-	"maskColor": {Purpose: pixelgl.MaskColor, Type: pixelgl.Vec4},
-	"transform": {Purpose: pixelgl.Transform, Type: pixelgl.Mat3},
+var defaultUniformFormat = pixelgl.AttrFormat{
+	"maskColor": pixelgl.Vec4,
+	"transform": pixelgl.Mat3,
 }
 
 var defaultVertexShader = `
 #version 330 core
 
-layout (location = 0) in vec2 position;
-layout (location = 1) in vec4 color;
-layout (location = 2) in vec2 texCoord;
+in vec2 position;
+in vec4 color;
+in vec2 texCoord;
 
 out vec4 Color;
 out vec2 TexCoord;
@@ -389,23 +389,23 @@ void main() {
 
 var (
 	positionVec2 = pixelgl.Attr{
-		Purpose: pixelgl.Position,
-		Type:    pixelgl.Vec2,
+		Name: "position",
+		Type: pixelgl.Vec2,
 	}
 	colorVec4 = pixelgl.Attr{
-		Purpose: pixelgl.Color,
-		Type:    pixelgl.Vec4,
+		Name: "color",
+		Type: pixelgl.Vec4,
 	}
 	texCoordVec2 = pixelgl.Attr{
-		Purpose: pixelgl.TexCoord,
-		Type:    pixelgl.Vec2,
+		Name: "texCoord",
+		Type: pixelgl.Vec2,
 	}
 	maskColorVec4 = pixelgl.Attr{
-		Purpose: pixelgl.MaskColor,
-		Type:    pixelgl.Vec4,
+		Name: "maskColor",
+		Type: pixelgl.Vec4,
 	}
 	transformMat3 = pixelgl.Attr{
-		Purpose: pixelgl.Transform,
-		Type:    pixelgl.Mat3,
+		Name: "transform",
+		Type: pixelgl.Mat3,
 	}
 )
