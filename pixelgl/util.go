@@ -16,12 +16,16 @@ func (b *binder) bind() *binder {
 	gl.GetIntegerv(b.restoreLoc, &prev)
 	b.prev = append(b.prev, uint32(prev))
 
-	b.bindFunc(b.obj)
+	if b.prev[len(b.prev)-1] != b.obj {
+		b.bindFunc(b.obj)
+	}
 	return b
 }
 
 func (b *binder) restore() *binder {
-	b.bindFunc(b.prev[len(b.prev)-1])
+	if b.prev[len(b.prev)-1] != b.obj {
+		b.bindFunc(b.prev[len(b.prev)-1])
+	}
 	b.prev = b.prev[:len(b.prev)-1]
 	return b
 }
