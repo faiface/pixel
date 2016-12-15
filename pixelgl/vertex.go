@@ -183,6 +183,21 @@ func (va *VertexArray) SetIndices(indices []int) {
 	})
 }
 
+// Indices returns the current indices of triangles to be drawn.
+func (va *VertexArray) Indices() []int {
+	indices32 := make([]uint32, va.indexNum)
+	Do(func() {
+		va.ebo.bind()
+		gl.GetBufferSubData(gl.ELEMENT_ARRAY_BUFFER, 0, 4*len(indices32), gl.Ptr(indices32))
+		va.ebo.restore()
+	})
+	indices := make([]int, len(indices32))
+	for i := range indices {
+		indices[i] = int(indices32[i])
+	}
+	return indices
+}
+
 // SetVertexAttr sets the value of the specified vertex attribute of the specified vertex.
 //
 // If the vertex attribute does not exist, this method returns false. If the vertex is out of range,
