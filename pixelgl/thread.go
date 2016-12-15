@@ -65,10 +65,10 @@ func DoNoBlock(f func()) {
 //
 // All OpenGL calls must be done in the dedicated thread.
 func Do(f func()) {
-	done := make(chan bool)
+	done := make(chan struct{})
 	callQueue <- func() {
 		f()
-		done <- true
+		close(done)
 	}
 	<-done
 }
