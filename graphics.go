@@ -193,7 +193,6 @@ func NewSprite(parent pixelgl.Doer, picture Picture) *Sprite {
 		va, err = pixelgl.NewVertexArray(
 			pixelgl.ContextHolder{Context: ctx},
 			ctx.Shader().VertexFormat(),
-			pixelgl.DynamicUsage,
 			4,
 			[]int{0, 1, 2, 0, 2, 3},
 		)
@@ -234,7 +233,6 @@ func NewLineColor(parent pixelgl.Doer, c color.Color, a, b Vec, width float64) *
 		va, err = pixelgl.NewVertexArray(
 			pixelgl.ContextHolder{Context: ctx},
 			ctx.Shader().VertexFormat(),
-			pixelgl.DynamicUsage,
 			4,
 			[]int{0, 1, 2, 1, 2, 3},
 		)
@@ -315,7 +313,6 @@ func NewPolygonColor(parent pixelgl.Doer, c color.Color, points ...Vec) *Polygon
 		va, err = pixelgl.NewVertexArray(
 			pixelgl.ContextHolder{Context: ctx},
 			ctx.Shader().VertexFormat(),
-			pixelgl.DynamicUsage,
 			len(points),
 			indices,
 		)
@@ -379,7 +376,6 @@ func NewEllipseColor(parent pixelgl.Doer, c color.Color, radius Vec, fill float6
 		va, err = pixelgl.NewVertexArray(
 			pixelgl.ContextHolder{Context: ctx},
 			ctx.Shader().VertexFormat(),
-			pixelgl.DynamicUsage,
 			(n+1)*2,
 			indices,
 		)

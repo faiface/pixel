@@ -8,20 +8,6 @@ import (
 	"github.com/pkg/errors"
 )
 
-// VertexUsage specifies how often the vertex array data will be updated.
-type VertexUsage int
-
-const (
-	// StaticUsage means the data never or rarely gets updated.
-	StaticUsage VertexUsage = gl.STATIC_DRAW
-
-	// DynamicUsage means the data gets updated often.
-	DynamicUsage VertexUsage = gl.DYNAMIC_DRAW
-
-	// StreamUsage means the data gets updated every frame.
-	StreamUsage VertexUsage = gl.STREAM_DRAW
-)
-
 // VertexArray is an OpenGL vertex array object that also holds it's own vertex buffer object.
 // From the user's points of view, VertexArray is an array of vertices that can be drawn.
 type VertexArray struct {
@@ -29,7 +15,6 @@ type VertexArray struct {
 	vao, vbo, ebo       binder
 	vertexNum, indexNum int
 	format              AttrFormat
-	usage               VertexUsage
 	stride              int
 	offset              map[string]int
 }
@@ -38,7 +23,7 @@ type VertexArray struct {
 //
 // You cannot specify vertex attributes in this constructor, only their count. Use SetVertexAttribute* methods to
 // set the vertex attributes. Use indices to specify how you want to combine vertices into triangles.
-func NewVertexArray(parent Doer, format AttrFormat, usage VertexUsage, vertexNum int, indices []int) (*VertexArray, error) {
+func NewVertexArray(parent Doer, format AttrFormat, vertexNum int, indices []int) (*VertexArray, error) {
 	va := &VertexArray{
 		parent: parent,
 		vao: binder{
@@ -61,7 +46,6 @@ func NewVertexArray(parent Doer, format AttrFormat, usage VertexUsage, vertexNum
 		},
 		vertexNum: vertexNum,
 		format:    format,
-		usage:     usage,
 		stride:    format.Size(),
 		offset:    make(map[string]int),
 	}
@@ -86,7 +70,7 @@ func NewVertexArray(parent Doer, format AttrFormat, usage VertexUsage, vertexNum
 			defer va.vbo.bind().restore()
 
 			emptyData := make([]byte, vertexNum*va.stride)
-			gl.BufferData(gl.ARRAY_BUFFER, len(emptyData), gl.Ptr(emptyData), uint32(usage))
+			gl.BufferData(gl.ARRAY_BUFFER, len(emptyData), gl.Ptr(emptyData), gl.DYNAMIC_DRAW)
 
 			gl.GenBuffers(1, &va.ebo.obj)
 			defer va.ebo.bind().restore()
@@ -154,11 +138,6 @@ func (va *VertexArray) VertexFormat() AttrFormat {
 	return va.format
 }
 
-// VertexUsage returns the usage of the verteices inside a vertex array.
-func (va *VertexArray) VertexUsage() VertexUsage {
-	return va.usage
-}
-
 // Draw draws a vertex array.
 func (va *VertexArray) Draw() {
 	va.Do(func(Context) {})
@@ -178,7 +157,7 @@ func (va *VertexArray) SetIndices(indices []int) {
 	va.indexNum = len(indices32)
 	DoNoBlock(func() {
 		va.ebo.bind()
-		gl.BufferData(gl.ELEMENT_ARRAY_BUFFER, 4*len(indices32), gl.Ptr(indices32), uint32(va.usage))
+		gl.BufferData(gl.ELEMENT_ARRAY_BUFFER, 4*len(indices32), gl.Ptr(indices32), gl.DYNAMIC_DRAW)
 		va.ebo.restore()
 	})
 }
