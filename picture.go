@@ -48,6 +48,11 @@ func (p Picture) Delete() {
 	p.texture.Delete()
 }
 
+// IsNil returns true if a picture is no picture.
+func (p Picture) IsNil() bool {
+	return p.texture == nil
+}
+
 // Texture returns a pointer to the underlying OpenGL texture of a picture.
 //
 // Note, that the parent of this texture is pixelgl.NoOpDoer.
