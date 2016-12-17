@@ -156,6 +156,11 @@ func (w *Window) Update() {
 	})
 }
 
+// DefaultShader returns the default shader used by a window.
+func (w *Window) DefaultShader() *pixelgl.Shader {
+	return w.defaultShader
+}
+
 // SetTitle changes the title of a window.
 func (w *Window) SetTitle(title string) {
 	pixelgl.Do(func() {
