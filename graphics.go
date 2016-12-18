@@ -173,6 +173,99 @@ func (s *Shape) Draw(t ...Transform) {
 	})
 }
 
+// MultiShape is a shape composed of several other shapes. These shapes cannot be modifies after combined into a multishape.
+//
+// Using a multishape can greatly increase drawing performance. However, it's only usable when the relative transformations
+// of the shapes don't change (e.g. static blocks in a level).
+//
+// All shapes in a multishape must share the same texture (or use no texture).
+type MultiShape struct {
+	*Shape
+}
+
+// NewMultiShape creates a new multishape from several other shapes. These shapes are automatically deleted after creating a multishape.
+//
+// If two of the supplied shapes have different pictures, this function panics.
+func NewMultiShape(parent pixelgl.Doer, shapes ...*Shape) *MultiShape {
+	var picture Picture
+	for _, shape := range shapes {
+		if picture.IsNil() {
+			picture = shape.Picture()
+		} else {
+			if shape.Picture().IsNil() && shape.Picture() != picture {
+				panic(errors.New("failed to create multishape: shapes have different pictures"))
+			}
+		}
+	}
+
+	var va *pixelgl.VertexArray
+
+	var (
+		vertexNum int
+		indices   []int
+	)
+	offset := 0
+	for _, shape := range shapes {
+		vertexNum += shape.VertexArray().VertexNum()
+
+		for _, i := range shape.va.Indices() {
+			indices = append(indices, offset+i)
+		}
+		offset += shape.VertexArray().VertexNum()
+	}
+
+	parent.Do(func(ctx pixelgl.Context) {
+		var err error
+		va, err = pixelgl.NewVertexArray(
+			pixelgl.ContextHolder{Context: ctx},
+			ctx.Shader().VertexFormat(),
+			vertexNum,
+			indices,
+		)
+		if err != nil {
+			panic(errors.Wrap(err, "failed to create multishape"))
+		}
+	})
+
+	offset = 0
+	for _, shape := range shapes {
+		for i := 0; i < shape.VertexArray().VertexNum(); i++ {
+			for name, typ := range va.VertexFormat() {
+				attr := pixelgl.Attr{Name: name, Type: typ}
+				value, ok := shape.VertexArray().VertexAttr(i, attr)
+				if !ok {
+					continue
+				}
+				va.SetVertexAttr(offset+i, attr, value)
+			}
+
+			if position, ok := shape.VertexArray().VertexAttr(i, positionVec2); ok {
+				position := position.(mgl32.Vec2)
+				position = shape.Transform().Mat3().Mul3x1(mgl32.Vec3{position.X(), position.Y(), 1}).Vec2()
+				va.SetVertexAttr(offset+i, positionVec2, position)
+			}
+			if color, ok := shape.VertexArray().VertexAttr(i, colorVec4); ok {
+				color := color.(mgl32.Vec4)
+				r, g, b, a := colorToRGBA(shape.Color())
+				color = mgl32.Vec4{
+					color[0] * r,
+					color[1] * g,
+					color[2] * b,
+					color[3] * a,
+				}
+				va.SetVertexAttr(offset+i, colorVec4, color)
+			}
+		}
+		offset += shape.VertexArray().VertexNum()
+	}
+
+	for _, shape := range shapes {
+		shape.Delete()
+	}
+
+	return &MultiShape{NewShape(parent, picture, color.White, Position(0), va)}
+}
+
 // Sprite is a picture that can be drawn on the screen. Optionally it can be color masked or tranformed.
 //
 // Usually, you only transform objects when you're drawing them (by passing transforms to the Draw method).
