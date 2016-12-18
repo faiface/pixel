@@ -24,19 +24,6 @@ type Drawer interface {
 	Draw(t ...Transform)
 }
 
-// Deleter is anything that can be deleted. All graphics objects that have some associated video memory
-// are deleters. It is necessary to call Delete when you're done with an object, otherwise you're going
-// to have video memory leaks.
-type Deleter interface {
-	Delete()
-}
-
-// DrawDeleter combines Drawer and Deleter interfaces.
-type DrawDeleter interface {
-	Drawer
-	Deleter
-}
-
 // Group is used to effeciently handle a collection of objects with a common parent. Usually many objects share a parent,
 // using a group can significantly increase performance in these cases.
 //
@@ -110,11 +97,6 @@ func NewShape(parent pixelgl.Doer, picture Picture, c color.Color, transform Tra
 	}
 }
 
-// Delete deletes the underlying
-func (s *Shape) Delete() {
-	s.va.Delete()
-}
-
 // SetPicture changes the picture of a shape.
 func (s *Shape) SetPicture(picture Picture) {
 	s.picture = picture
@@ -183,7 +165,7 @@ type MultiShape struct {
 	*Shape
 }
 
-// NewMultiShape creates a new multishape from several other shapes. These shapes are automatically deleted after creating a multishape.
+// NewMultiShape creates a new multishape from several other shapes.
 //
 // If two of the supplied shapes have different pictures, this function panics.
 func NewMultiShape(parent pixelgl.Doer, shapes ...*Shape) *MultiShape {
@@ -257,10 +239,6 @@ func NewMultiShape(parent pixelgl.Doer, shapes ...*Shape) *MultiShape {
 			}
 		}
 		offset += shape.VertexArray().VertexNum()
-	}
-
-	for _, shape := range shapes {
-		shape.Delete()
 	}
 
 	return &MultiShape{NewShape(parent, picture, color.White, Position(0), va)}

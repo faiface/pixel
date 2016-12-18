@@ -4,6 +4,8 @@ import (
 	"image/color"
 	"sync"
 
+	"runtime"
+
 	"github.com/faiface/pixel/pixelgl"
 	"github.com/go-gl/gl/v3.3-core/gl"
 	"github.com/go-gl/glfw/v3.2/glfw"
@@ -121,15 +123,17 @@ func NewWindow(config WindowConfig) (*Window, error) {
 		w.defaultShader.SetUniformAttr(transformMat3, mgl32.Ident3())
 	})
 	if err != nil {
-		w.Delete()
+		w.Destroy()
 		return nil, errors.Wrap(err, "creating window failed")
 	}
+
+	runtime.SetFinalizer(w, (*Window).Destroy)
 
 	return w, nil
 }
 
-// Delete destroys a window. The window can't be used any further.
-func (w *Window) Delete() {
+// Destroy destroys a window. The window can't be used any further.
+func (w *Window) Destroy() {
 	pixelgl.Do(func() {
 		w.window.Destroy()
 	})

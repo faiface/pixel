@@ -3,6 +3,8 @@ package pixelgl
 import (
 	"unsafe"
 
+	"runtime"
+
 	"github.com/go-gl/gl/v3.3-core/gl"
 	"github.com/go-gl/mathgl/mgl32"
 	"github.com/pkg/errors"
@@ -107,11 +109,12 @@ func NewVertexArray(parent Doer, format AttrFormat, vertexNum int, indices []int
 
 	va.SetIndices(indices)
 
+	runtime.SetFinalizer(va, (*VertexArray).delete)
+
 	return va, nil
 }
 
-// Delete deletes a vertex array and it's associated vertex buffer. Don't use a vertex array after deletion.
-func (va *VertexArray) Delete() {
+func (va *VertexArray) delete() {
 	va.parent.Do(func(ctx Context) {
 		DoNoBlock(func() {
 			gl.DeleteVertexArrays(1, &va.vao.obj)

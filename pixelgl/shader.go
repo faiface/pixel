@@ -2,6 +2,7 @@ package pixelgl
 
 import (
 	"fmt"
+	"runtime"
 
 	"github.com/go-gl/gl/v3.3-core/gl"
 	"github.com/go-gl/mathgl/mgl32"
@@ -113,11 +114,12 @@ func NewShader(parent Doer, vertexFmt, uniformFmt AttrFormat, vertexShader, frag
 		return nil, err
 	}
 
+	runtime.SetFinalizer(shader, (*Shader).delete)
+
 	return shader, nil
 }
 
-// Delete deletes a shader program. Don't use a shader after deletion.
-func (s *Shader) Delete() {
+func (s *Shader) delete() {
 	s.parent.Do(func(ctx Context) {
 		DoNoBlock(func() {
 			gl.DeleteProgram(s.program.obj)

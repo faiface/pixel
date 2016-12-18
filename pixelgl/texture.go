@@ -1,6 +1,7 @@
 package pixelgl
 
 import "github.com/go-gl/gl/v3.3-core/gl"
+import "runtime"
 
 // Texture is an OpenGL texture.
 type Texture struct {
@@ -45,11 +46,12 @@ func NewTexture(parent Doer, width, height int, pixels []uint8) (*Texture, error
 		})
 	})
 
+	runtime.SetFinalizer(texture, (*Texture).delete)
+
 	return texture, nil
 }
 
-// Delete deletes a texture. Don't use a texture after deletion.
-func (t *Texture) Delete() {
+func (t *Texture) delete() {
 	t.parent.Do(func(ctx Context) {
 		DoNoBlock(func() {
 			gl.DeleteTextures(1, &t.tex.obj)

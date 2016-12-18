@@ -12,9 +12,6 @@ import (
 //
 // A picture is created from an image.Image, that can be either loaded from a file, or generated. After the creation
 // a picture can be sliced (slicing creates a "sub-picture" from a picture) into smaller pictures.
-//
-// However note, that all of the sliced pictures share the same underlying texture. Deleting one picture also deletes
-// all pictures that share the same underlying texture.
 type Picture struct {
 	texture *pixelgl.Texture
 	bounds  Rect
@@ -42,12 +39,6 @@ func NewPicture(img image.Image) Picture {
 	}
 }
 
-// Delete deletes this picture and all pictures that share the same underlying texuture (all that have been
-// created from the same parent using slicing).
-func (p Picture) Delete() {
-	p.texture.Delete()
-}
-
 // IsNil returns true if a picture is no picture.
 func (p Picture) IsNil() bool {
 	return p.texture == nil
@@ -61,7 +52,7 @@ func (p Picture) Texture() *pixelgl.Texture {
 }
 
 // Slice returns a picture within the supplied rectangle of the original picture. The original and the sliced picture
-// share the same texture. Thus deleting one also deletes the other one.
+// share the same texture.
 //
 // For example, suppose we have a 100x200 pixels picture. If we slice it with rectangle (50, 100, 50, 100), we get
 // the upper-right quadrant of the original picture.
