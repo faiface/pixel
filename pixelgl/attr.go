@@ -59,20 +59,36 @@ const (
 
 // Size returns the size of a type in bytes.
 func (at AttrType) Size() int {
-	return map[AttrType]int{
-		Int:   4,
-		Float: 4,
-		Vec2:  2 * 4,
-		Vec3:  3 * 4,
-		Vec4:  4 * 4,
-		Mat2:  2 * 2 * 4,
-		Mat23: 2 * 3 * 4,
-		Mat24: 2 * 4 * 4,
-		Mat3:  3 * 3 * 4,
-		Mat32: 3 * 2 * 4,
-		Mat34: 3 * 4 * 4,
-		Mat4:  4 * 4 * 4,
-		Mat42: 4 * 2 * 4,
-		Mat43: 4 * 3 * 4,
-	}[at]
+	switch at {
+	case Int:
+		return 4
+	case Float:
+		return 4
+	case Vec2:
+		return 2 * 4
+	case Vec3:
+		return 3 * 4
+	case Vec4:
+		return 4 * 4
+	case Mat2:
+		return 2 * 2 * 4
+	case Mat23:
+		return 2 * 3 * 4
+	case Mat24:
+		return 2 * 4 * 4
+	case Mat3:
+		return 3 * 3 * 4
+	case Mat32:
+		return 3 * 2 * 4
+	case Mat34:
+		return 3 * 4 * 4
+	case Mat4:
+		return 4 * 4 * 4
+	case Mat42:
+		return 4 * 2 * 4
+	case Mat43:
+		return 4 * 3 * 4
+	default:
+		panic("size of vertex attribute type: invalid type")
+	}
 }
