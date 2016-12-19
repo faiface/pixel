@@ -120,10 +120,8 @@ func NewShader(parent Doer, vertexFmt, uniformFmt AttrFormat, vertexShader, frag
 }
 
 func (s *Shader) delete() {
-	s.parent.Do(func(ctx Context) {
-		DoNoBlock(func() {
-			gl.DeleteProgram(s.program.obj)
-		})
+	DoNoBlock(func() {
+		gl.DeleteProgram(s.program.obj)
 	})
 }
 

@@ -80,14 +80,14 @@ func (g *Group) Do(sub func(pixelgl.Context)) {
 // Usually you use this type only indirectly throught other specific shapes (sprites, polygons, ...) embedding it.
 type Shape struct {
 	parent    pixelgl.Doer
-	picture   Picture
+	picture   *Picture
 	color     color.Color
 	transform Transform
 	va        *pixelgl.VertexArray
 }
 
 // NewShape creates a new shape with specified parent, picture, color, transform and vertex array.
-func NewShape(parent pixelgl.Doer, picture Picture, c color.Color, transform Transform, va *pixelgl.VertexArray) *Shape {
+func NewShape(parent pixelgl.Doer, picture *Picture, c color.Color, transform Transform, va *pixelgl.VertexArray) *Shape {
 	return &Shape{
 		parent:    parent,
 		picture:   picture,
@@ -98,12 +98,12 @@ func NewShape(parent pixelgl.Doer, picture Picture, c color.Color, transform Tra
 }
 
 // SetPicture changes the picture of a shape.
-func (s *Shape) SetPicture(picture Picture) {
+func (s *Shape) SetPicture(picture *Picture) {
 	s.picture = picture
 }
 
 // Picture returns the current picture of a shape.
-func (s *Shape) Picture() Picture {
+func (s *Shape) Picture() *Picture {
 	return s.picture
 }
 
@@ -145,7 +145,7 @@ func (s *Shape) Draw(t ...Transform) {
 		ctx.Shader().SetUniformAttr(maskColorVec4, mgl32.Vec4{r, g, b, a})
 		ctx.Shader().SetUniformAttr(transformMat3, mat)
 
-		if s.picture.Texture() != nil {
+		if s.picture != nil {
 			s.picture.Texture().Do(func(pixelgl.Context) {
 				s.va.Draw()
 			})
@@ -169,12 +169,12 @@ type MultiShape struct {
 //
 // If two of the supplied shapes have different pictures, this function panics.
 func NewMultiShape(parent pixelgl.Doer, shapes ...*Shape) *MultiShape {
-	var picture Picture
+	var picture *Picture
 	for _, shape := range shapes {
-		if picture.IsNil() {
+		if picture == nil {
 			picture = shape.Picture()
 		} else {
-			if shape.Picture().IsNil() && shape.Picture() != picture {
+			if shape.Picture() == nil && shape.Picture().Texture() != picture.Texture() {
 				panic(errors.New("failed to create multishape: shapes have different pictures"))
 			}
 		}
@@ -256,7 +256,7 @@ type Sprite struct {
 
 // NewSprite creates a new sprite with the supplied picture. The sprite's size is the size of the supplied picture.
 // If you want to change the sprite's size, change it's transform.
-func NewSprite(parent pixelgl.Doer, picture Picture) *Sprite {
+func NewSprite(parent pixelgl.Doer, picture *Picture) *Sprite {
 	var va *pixelgl.VertexArray
 
 	parent.Do(func(ctx pixelgl.Context) {
@@ -317,7 +317,7 @@ func NewLineColor(parent pixelgl.Doer, c color.Color, a, b Vec, width float64) *
 		va.SetVertexAttr(i, texCoordVec2, mgl32.Vec2{-1, -1})
 	}
 
-	lc := &LineColor{NewShape(parent, Picture{}, c, Position(0), va), a, b, width}
+	lc := &LineColor{NewShape(parent, nil, c, Position(0), va), a, b, width}
 	lc.setPoints()
 	return lc
 }
@@ -398,7 +398,7 @@ func NewPolygonColor(parent pixelgl.Doer, c color.Color, points ...Vec) *Polygon
 		va.SetVertexAttr(i, texCoordVec2, mgl32.Vec2{-1, -1})
 	}
 
-	return &PolygonColor{NewShape(parent, Picture{}, c, Position(0), va), points}
+	return &PolygonColor{NewShape(parent, nil, c, Position(0), va), points}
 }
 
 // PointNum returns the number of points in a polygon.
@@ -474,7 +474,7 @@ func NewEllipseColor(parent pixelgl.Doer, c color.Color, radius Vec, fill float6
 		va.SetVertexAttr(j, texCoordVec2, mgl32.Vec2{-1, -1})
 	}
 
-	return &EllipseColor{NewShape(parent, Picture{}, c, Position(0), va), radius, fill}
+	return &EllipseColor{NewShape(parent, nil, c, Position(0), va), radius, fill}
 }
 
 // Radius returns the radius of an ellipse.

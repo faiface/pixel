@@ -52,10 +52,8 @@ func NewTexture(parent Doer, width, height int, pixels []uint8) (*Texture, error
 }
 
 func (t *Texture) delete() {
-	t.parent.Do(func(ctx Context) {
-		DoNoBlock(func() {
-			gl.DeleteTextures(1, &t.tex.obj)
-		})
+	DoNoBlock(func() {
+		gl.DeleteTextures(1, &t.tex.obj)
 	})
 }
 

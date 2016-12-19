@@ -115,12 +115,10 @@ func NewVertexArray(parent Doer, format AttrFormat, vertexNum int, indices []int
 }
 
 func (va *VertexArray) delete() {
-	va.parent.Do(func(ctx Context) {
-		DoNoBlock(func() {
-			gl.DeleteVertexArrays(1, &va.vao.obj)
-			gl.DeleteBuffers(1, &va.vbo.obj)
-			gl.DeleteBuffers(1, &va.ebo.obj)
-		})
+	DoNoBlock(func() {
+		gl.DeleteVertexArrays(1, &va.vao.obj)
+		gl.DeleteBuffers(1, &va.vbo.obj)
+		gl.DeleteBuffers(1, &va.ebo.obj)
 	})
 }
 
