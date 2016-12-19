@@ -27,6 +27,26 @@ func Position(position Vec) Transform {
 	}
 }
 
+// GetPosition returns the position of a transform.
+func (t Transform) GetPosition() Vec {
+	return t.pos
+}
+
+// GetAnchor returns the anchor of a transform.
+func (t Transform) GetAnchor() Vec {
+	return t.anc
+}
+
+// GetScale returns the scale (2 dimensional) of transform.
+func (t Transform) GetScale() Vec {
+	return t.sca
+}
+
+// GetRotation returns the rotation of a transform (in radians).
+func (t Transform) GetRotation() float64 {
+	return t.rot
+}
+
 // Position sets position.
 func (t Transform) Position(position Vec) Transform {
 	t.pos = position
