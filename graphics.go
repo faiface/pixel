@@ -171,29 +171,28 @@ type MultiShape struct {
 func NewMultiShape(parent pixelgl.Doer, shapes ...*Shape) *MultiShape {
 	var picture *Picture
 	for _, shape := range shapes {
-		if picture == nil {
+		if picture != nil && shape.Picture() != nil && shape.Picture().Texture().ID() != picture.Texture().ID() {
+			panic(errors.New("failed to create multishape: shapes have different pictures"))
+		}
+		if shape.Picture() != nil {
 			picture = shape.Picture()
-		} else {
-			if shape.Picture() == nil && shape.Picture().Texture() != picture.Texture() {
-				panic(errors.New("failed to create multishape: shapes have different pictures"))
-			}
 		}
 	}
 
 	var va *pixelgl.VertexArray
 
-	var (
-		vertexNum int
-		indices   []int
-	)
+	var indices []int
 	offset := 0
 	for _, shape := range shapes {
-		vertexNum += shape.VertexArray().VertexNum()
-
 		for _, i := range shape.va.Indices() {
 			indices = append(indices, offset+i)
 		}
 		offset += shape.VertexArray().VertexNum()
+	}
+
+	var vertices []map[pixelgl.Attr]interface{}
+	for _, shape := range shapes {
+		vertices = append(vertices, shape.VertexArray().Vertices()...)
 	}
 
 	parent.Do(func(ctx pixelgl.Context) {
@@ -201,7 +200,7 @@ func NewMultiShape(parent pixelgl.Doer, shapes ...*Shape) *MultiShape {
 		va, err = pixelgl.NewVertexArray(
 			pixelgl.ContextHolder{Context: ctx},
 			ctx.Shader().VertexFormat(),
-			vertexNum,
+			len(vertices),
 			indices,
 		)
 		if err != nil {
@@ -209,39 +208,7 @@ func NewMultiShape(parent pixelgl.Doer, shapes ...*Shape) *MultiShape {
 		}
 	})
 
-	//TODO: optimize with VertexArray.Set
-
-	offset = 0
-	for _, shape := range shapes {
-		for i := 0; i < shape.VertexArray().VertexNum(); i++ {
-			for name, typ := range va.VertexFormat() {
-				attr := pixelgl.Attr{Name: name, Type: typ}
-				value, ok := shape.VertexArray().VertexAttr(i, attr)
-				if !ok {
-					continue
-				}
-				va.SetVertexAttr(offset+i, attr, value)
-			}
-
-			if position, ok := shape.VertexArray().VertexAttr(i, positionVec2); ok {
-				position := position.(mgl32.Vec2)
-				position = shape.Transform().Mat3().Mul3x1(mgl32.Vec3{position.X(), position.Y(), 1}).Vec2()
-				va.SetVertexAttr(offset+i, positionVec2, position)
-			}
-			if color, ok := shape.VertexArray().VertexAttr(i, colorVec4); ok {
-				color := color.(mgl32.Vec4)
-				r, g, b, a := colorToRGBA(shape.Color())
-				color = mgl32.Vec4{
-					color[0] * r,
-					color[1] * g,
-					color[2] * b,
-					color[3] * a,
-				}
-				va.SetVertexAttr(offset+i, colorVec4, color)
-			}
-		}
-		offset += shape.VertexArray().VertexNum()
-	}
+	va.SetVertices(vertices)
 
 	return &MultiShape{NewShape(parent, picture, color.White, Position(0), va)}
 }
