@@ -192,7 +192,28 @@ func NewMultiShape(parent pixelgl.Doer, shapes ...*Shape) *MultiShape {
 
 	var vertices []map[pixelgl.Attr]interface{}
 	for _, shape := range shapes {
-		vertices = append(vertices, shape.VertexArray().Vertices()...)
+		shapeVertices := shape.VertexArray().Vertices()
+
+		for vertex := range shapeVertices {
+			if pos, ok := shapeVertices[vertex][positionVec2]; ok {
+				pos := pos.(mgl32.Vec2)
+				pos = shape.Transform().Mat3().Mul3x1(mgl32.Vec3{pos.X(), pos.Y(), 1}).Vec2()
+				shapeVertices[vertex][positionVec2] = pos
+			}
+			if color, ok := shapeVertices[vertex][colorVec4]; ok {
+				color := color.(mgl32.Vec4)
+				r, g, b, a := colorToRGBA(shape.Color())
+				color = mgl32.Vec4{
+					color[0] * r,
+					color[1] * g,
+					color[2] * b,
+					color[3] * a,
+				}
+				shapeVertices[vertex][colorVec4] = color
+			}
+		}
+
+		vertices = append(vertices, shapeVertices...)
 	}
 
 	parent.Do(func(ctx pixelgl.Context) {
