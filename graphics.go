@@ -209,6 +209,8 @@ func NewMultiShape(parent pixelgl.Doer, shapes ...*Shape) *MultiShape {
 		}
 	})
 
+	//TODO: optimize with VertexArray.Set
+
 	offset = 0
 	for _, shape := range shapes {
 		for i := 0; i < shape.VertexArray().VertexNum(); i++ {
@@ -272,6 +274,8 @@ func NewSprite(parent pixelgl.Doer, picture *Picture) *Sprite {
 		}
 	})
 
+	vertices := make([]map[pixelgl.Attr]interface{}, 4)
+
 	w, h := picture.Bounds().Size.XY()
 	for i, p := range []Vec{V(0, 0), V(w, 0), V(w, h), V(0, h)} {
 		texCoord := V(
@@ -279,10 +283,14 @@ func NewSprite(parent pixelgl.Doer, picture *Picture) *Sprite {
 			(picture.Bounds().Y()+p.Y())/float64(picture.Texture().Height()),
 		)
 
-		va.SetVertexAttr(i, positionVec2, mgl32.Vec2{float32(p.X()), float32(p.Y())})
-		va.SetVertexAttr(i, colorVec4, mgl32.Vec4{1, 1, 1, 1})
-		va.SetVertexAttr(i, texCoordVec2, mgl32.Vec2{float32(texCoord.X()), float32(texCoord.Y())})
+		vertices[i] = map[pixelgl.Attr]interface{}{
+			positionVec2: mgl32.Vec2{float32(p.X()), float32(p.Y())},
+			colorVec4:    mgl32.Vec4{1, 1, 1, 1},
+			texCoordVec2: mgl32.Vec2{float32(texCoord.X()), float32(texCoord.Y())},
+		}
 	}
+
+	va.Set(vertices)
 
 	return &Sprite{NewShape(parent, picture, color.White, Position(0), va)}
 }
@@ -312,10 +320,16 @@ func NewLineColor(parent pixelgl.Doer, c color.Color, a, b Vec, width float64) *
 		}
 	})
 
+	vertices := make([]map[pixelgl.Attr]interface{}, 4)
+
 	for i := 0; i < 4; i++ {
-		va.SetVertexAttr(i, colorVec4, mgl32.Vec4{1, 1, 1, 1})
-		va.SetVertexAttr(i, texCoordVec2, mgl32.Vec2{-1, -1})
+		vertices[i] = map[pixelgl.Attr]interface{}{
+			colorVec4:    mgl32.Vec4{1, 1, 1, 1},
+			texCoordVec2: mgl32.Vec2{-1, -1},
+		}
 	}
+
+	va.Set(vertices)
 
 	lc := &LineColor{NewShape(parent, nil, c, Position(0), va), a, b, width}
 	lc.setPoints()
@@ -392,11 +406,17 @@ func NewPolygonColor(parent pixelgl.Doer, c color.Color, points ...Vec) *Polygon
 		}
 	})
 
+	vertices := make([]map[pixelgl.Attr]interface{}, len(points))
+
 	for i, p := range points {
-		va.SetVertexAttr(i, positionVec2, mgl32.Vec2{float32(p.X()), float32(p.Y())})
-		va.SetVertexAttr(i, colorVec4, mgl32.Vec4{1, 1, 1, 1})
-		va.SetVertexAttr(i, texCoordVec2, mgl32.Vec2{-1, -1})
+		vertices[i] = map[pixelgl.Attr]interface{}{
+			positionVec2: mgl32.Vec2{float32(p.X()), float32(p.Y())},
+			colorVec4:    mgl32.Vec4{1, 1, 1, 1},
+			texCoordVec2: mgl32.Vec2{-1, -1},
+		}
 	}
+
+	va.Set(vertices)
 
 	return &PolygonColor{NewShape(parent, nil, c, Position(0), va), points}
 }
@@ -455,24 +475,32 @@ func NewEllipseColor(parent pixelgl.Doer, c color.Color, radius Vec, fill float6
 		}
 	})
 
+	vertices := make([]map[pixelgl.Attr]interface{}, (n+1)*2)
+
 	for k := 0; k < n+1; k++ {
 		i, j := k*2, k*2+1
 		angle := math.Pi * 2 * float64(k%n) / n
 
-		va.SetVertexAttr(i, positionVec2, mgl32.Vec2{
-			float32(math.Cos(angle) * radius.X()),
-			float32(math.Sin(angle) * radius.Y()),
-		})
-		va.SetVertexAttr(i, colorVec4, mgl32.Vec4{1, 1, 1, 1})
-		va.SetVertexAttr(i, texCoordVec2, mgl32.Vec2{-1, -1})
+		vertices[i] = map[pixelgl.Attr]interface{}{
+			positionVec2: mgl32.Vec2{
+				float32(math.Cos(angle) * radius.X()),
+				float32(math.Sin(angle) * radius.Y()),
+			},
+			colorVec4:    mgl32.Vec4{1, 1, 1, 1},
+			texCoordVec2: mgl32.Vec2{-1, -1},
+		}
 
-		va.SetVertexAttr(j, positionVec2, mgl32.Vec2{
-			float32(math.Cos(angle) * radius.X() * (1 - fill)),
-			float32(math.Sin(angle) * radius.Y() * (1 - fill)),
-		})
-		va.SetVertexAttr(j, colorVec4, mgl32.Vec4{1, 1, 1, 1})
-		va.SetVertexAttr(j, texCoordVec2, mgl32.Vec2{-1, -1})
+		vertices[j] = map[pixelgl.Attr]interface{}{
+			positionVec2: mgl32.Vec2{
+				float32(math.Cos(angle) * radius.X() * (1 - fill)),
+				float32(math.Sin(angle) * radius.Y() * (1 - fill)),
+			},
+			colorVec4:    mgl32.Vec4{1, 1, 1, 1},
+			texCoordVec2: mgl32.Vec2{-1, -1},
+		}
 	}
+
+	va.Set(vertices)
 
 	return &EllipseColor{NewShape(parent, nil, c, Position(0), va), radius, fill}
 }

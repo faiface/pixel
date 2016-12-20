@@ -273,6 +273,98 @@ func (va *VertexArray) VertexAttr(vertex int, attr Attr) (value interface{}, ok 
 	return value, true
 }
 
+// SetVertex sets values of the attributes specified in the supplied map. All other attributes will be set to zero.
+//
+// Not existing attributes are silently skipped.
+func (va *VertexArray) SetVertex(vertex int, values map[Attr]interface{}) {
+	if vertex < 0 || vertex >= va.vertexNum {
+		panic("set vertex: invalid vertex index")
+	}
+
+	data := make([]float32, va.format.Size()/4)
+
+	for attr, value := range values {
+		if !va.format.Contains(attr) {
+			continue
+		}
+
+		offset := va.offset[attr.Name]
+
+		switch attr.Type {
+		case Float:
+			value := value.(float32)
+			copy(data[offset/4:offset/4+attr.Type.Size()/4], []float32{value})
+		case Vec2:
+			value := value.(mgl32.Vec2)
+			copy(data[offset/4:offset/4+attr.Type.Size()/4], value[:])
+		case Vec3:
+			value := value.(mgl32.Vec3)
+			copy(data[offset/4:offset/4+attr.Type.Size()/4], value[:])
+		case Vec4:
+			value := value.(mgl32.Vec4)
+			copy(data[offset/4:offset/4+attr.Type.Size()/4], value[:])
+		default:
+			panic("set vertex: invalid attribute type")
+		}
+	}
+
+	DoNoBlock(func() {
+		va.vbo.bind()
+
+		offset := va.stride * vertex
+		gl.BufferSubData(gl.ARRAY_BUFFER, offset, len(data)*4, gl.Ptr(data))
+
+		va.vbo.restore()
+	})
+}
+
+// Set sets values of vertex attributes of all vertices as specified in the supplied slice of maps. If the length of vertices
+// does not match the number of vertices in the vertex array, this method panics.
+//
+// Not existing attributes are silently skipped.
+func (va *VertexArray) Set(vertices []map[Attr]interface{}) {
+	if len(vertices) != va.vertexNum {
+		panic("set vertex array: wrong number of supplied vertices")
+	}
+
+	data := make([]float32, va.vertexNum*va.format.Size()/4)
+
+	for vertex := range vertices {
+		for attr, value := range vertices[vertex] {
+			if !va.format.Contains(attr) {
+				continue
+			}
+
+			offset := va.stride*vertex + va.offset[attr.Name]
+
+			switch attr.Type {
+			case Float:
+				value := value.(float32)
+				copy(data[offset/4:offset/4+attr.Type.Size()/4], []float32{value})
+			case Vec2:
+				value := value.(mgl32.Vec2)
+				copy(data[offset/4:offset/4+attr.Type.Size()/4], value[:])
+			case Vec3:
+				value := value.(mgl32.Vec3)
+				copy(data[offset/4:offset/4+attr.Type.Size()/4], value[:])
+			case Vec4:
+				value := value.(mgl32.Vec4)
+				copy(data[offset/4:offset/4+attr.Type.Size()/4], value[:])
+			default:
+				panic("set vertex: invalid attribute type")
+			}
+		}
+	}
+
+	DoNoBlock(func() {
+		va.vbo.bind()
+
+		gl.BufferSubData(gl.ARRAY_BUFFER, 0, len(data)*4, gl.Ptr(data))
+
+		va.vbo.restore()
+	})
+}
+
 // Do binds a vertex arrray and it's associated vertex buffer, executes sub, and unbinds the vertex array and it's vertex buffer.
 func (va *VertexArray) Do(sub func(Context)) {
 	va.parent.Do(func(ctx Context) {
