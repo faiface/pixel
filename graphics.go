@@ -290,7 +290,7 @@ func NewSprite(parent pixelgl.Doer, picture *Picture) *Sprite {
 		}
 	}
 
-	va.Set(vertices)
+	va.SetVertices(vertices)
 
 	return &Sprite{NewShape(parent, picture, color.White, Position(0), va)}
 }
@@ -329,7 +329,7 @@ func NewLineColor(parent pixelgl.Doer, c color.Color, a, b Vec, width float64) *
 		}
 	}
 
-	va.Set(vertices)
+	va.SetVertices(vertices)
 
 	lc := &LineColor{NewShape(parent, nil, c, Position(0), va), a, b, width}
 	lc.setPoints()
@@ -416,7 +416,7 @@ func NewPolygonColor(parent pixelgl.Doer, c color.Color, points ...Vec) *Polygon
 		}
 	}
 
-	va.Set(vertices)
+	va.SetVertices(vertices)
 
 	return &PolygonColor{NewShape(parent, nil, c, Position(0), va), points}
 }
@@ -500,7 +500,7 @@ func NewEllipseColor(parent pixelgl.Doer, c color.Color, radius Vec, fill float6
 		}
 	}
 
-	va.Set(vertices)
+	va.SetVertices(vertices)
 
 	return &EllipseColor{NewShape(parent, nil, c, Position(0), va), radius, fill}
 }

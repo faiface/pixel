@@ -292,8 +292,7 @@ func (va *VertexArray) SetVertex(vertex int, values map[Attr]interface{}) {
 
 		switch attr.Type {
 		case Float:
-			value := value.(float32)
-			copy(data[offset/4:offset/4+attr.Type.Size()/4], []float32{value})
+			data[offset/4] = value.(float32)
 		case Vec2:
 			value := value.(mgl32.Vec2)
 			copy(data[offset/4:offset/4+attr.Type.Size()/4], value[:])
@@ -318,11 +317,55 @@ func (va *VertexArray) SetVertex(vertex int, values map[Attr]interface{}) {
 	})
 }
 
-// Set sets values of vertex attributes of all vertices as specified in the supplied slice of maps. If the length of vertices
+// Vertex returns values of all vertex attributes of the specified vertex in a map.
+func (va *VertexArray) Vertex(vertex int) (values map[Attr]interface{}) {
+	if vertex < 0 || vertex >= va.vertexNum {
+		panic("set vertex: invalid vertex index")
+	}
+
+	data := make([]float32, va.format.Size()/4)
+
+	Do(func() {
+		va.vbo.bind()
+
+		offset := va.stride * vertex
+		gl.GetBufferSubData(gl.ARRAY_BUFFER, offset, len(data)*4, gl.Ptr(data))
+
+		va.vbo.restore()
+	})
+
+	values = make(map[Attr]interface{})
+
+	for name, typ := range va.format {
+		attr := Attr{name, typ}
+		offset := va.offset[attr.Name]
+
+		switch attr.Type {
+		case Float:
+			values[attr] = data[offset/4]
+		case Vec2:
+			var value mgl32.Vec2
+			copy(value[:], data[offset/4:offset/4+attr.Type.Size()/4])
+			values[attr] = value
+		case Vec3:
+			var value mgl32.Vec3
+			copy(value[:], data[offset/4:offset/4+attr.Type.Size()/4])
+			values[attr] = value
+		case Vec4:
+			var value mgl32.Vec4
+			copy(value[:], data[offset/4:offset/4+attr.Type.Size()/4])
+			values[attr] = value
+		}
+	}
+
+	return values
+}
+
+// SetVertices sets values of vertex attributes of all vertices as specified in the supplied slice of maps. If the length of vertices
 // does not match the number of vertices in the vertex array, this method panics.
 //
 // Not existing attributes are silently skipped.
-func (va *VertexArray) Set(vertices []map[Attr]interface{}) {
+func (va *VertexArray) SetVertices(vertices []map[Attr]interface{}) {
 	if len(vertices) != va.vertexNum {
 		panic("set vertex array: wrong number of supplied vertices")
 	}
@@ -339,8 +382,7 @@ func (va *VertexArray) Set(vertices []map[Attr]interface{}) {
 
 			switch attr.Type {
 			case Float:
-				value := value.(float32)
-				copy(data[offset/4:offset/4+attr.Type.Size()/4], []float32{value})
+				data[offset/4] = value.(float32)
 			case Vec2:
 				value := value.(mgl32.Vec2)
 				copy(data[offset/4:offset/4+attr.Type.Size()/4], value[:])
@@ -358,11 +400,52 @@ func (va *VertexArray) Set(vertices []map[Attr]interface{}) {
 
 	DoNoBlock(func() {
 		va.vbo.bind()
-
 		gl.BufferSubData(gl.ARRAY_BUFFER, 0, len(data)*4, gl.Ptr(data))
-
 		va.vbo.restore()
 	})
+}
+
+// Vertices returns values of vertex attributes of all vertices in a vertex array in a slice of maps.
+func (va *VertexArray) Vertices() (vertices []map[Attr]interface{}) {
+	data := make([]float32, va.vertexNum*va.format.Size()/4)
+
+	Do(func() {
+		va.vbo.bind()
+		gl.GetBufferSubData(gl.ARRAY_BUFFER, 0, len(data)*4, gl.Ptr(data))
+		va.vbo.restore()
+	})
+
+	vertices = make([]map[Attr]interface{}, va.vertexNum)
+
+	for vertex := range vertices {
+		values := make(map[Attr]interface{})
+
+		for name, typ := range va.format {
+			attr := Attr{name, typ}
+			offset := va.stride*vertex + va.offset[attr.Name]
+
+			switch attr.Type {
+			case Float:
+				values[attr] = data[offset/4]
+			case Vec2:
+				var value mgl32.Vec2
+				copy(value[:], data[offset/4:offset/4+attr.Type.Size()/4])
+				values[attr] = value
+			case Vec3:
+				var value mgl32.Vec3
+				copy(value[:], data[offset/4:offset/4+attr.Type.Size()/4])
+				values[attr] = value
+			case Vec4:
+				var value mgl32.Vec4
+				copy(value[:], data[offset/4:offset/4+attr.Type.Size()/4])
+				values[attr] = value
+			}
+		}
+
+		vertices[vertex] = values
+	}
+
+	return vertices
 }
 
 // Do binds a vertex arrray and it's associated vertex buffer, executes sub, and unbinds the vertex array and it's vertex buffer.
