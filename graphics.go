@@ -187,7 +187,7 @@ func NewMultiShape(parent pixelgl.Doer, shapes ...*Shape) *MultiShape {
 		for _, i := range shape.va.Indices() {
 			indices = append(indices, offset+i)
 		}
-		offset += shape.VertexArray().VertexNum()
+		offset += shape.VertexArray().NumVertices()
 	}
 
 	var vertices []map[pixelgl.Attr]interface{}
@@ -409,8 +409,8 @@ func NewPolygonColor(parent pixelgl.Doer, c color.Color, points ...Vec) *Polygon
 	return &PolygonColor{NewShape(parent, nil, c, Position(0), va), points}
 }
 
-// PointNum returns the number of points in a polygon.
-func (pc *PolygonColor) PointNum() int {
+// NumPoints returns the number of points in a polygon.
+func (pc *PolygonColor) NumPoints() int {
 	return len(pc.points)
 }
 

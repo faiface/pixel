@@ -13,19 +13,19 @@ import (
 // VertexArray is an OpenGL vertex array object that also holds it's own vertex buffer object.
 // From the user's points of view, VertexArray is an array of vertices that can be drawn.
 type VertexArray struct {
-	parent              Doer
-	vao, vbo, ebo       binder
-	vertexNum, indexNum int
-	format              AttrFormat
-	stride              int
-	offset              map[string]int
+	parent                  Doer
+	vao, vbo, ebo           binder
+	numVertices, numIndices int
+	format                  AttrFormat
+	stride                  int
+	offset                  map[string]int
 }
 
 // NewVertexArray creates a new empty vertex array and wraps another Doer around it.
 //
 // You cannot specify vertex attributes in this constructor, only their count. Use SetVertexAttribute* methods to
 // set the vertex attributes. Use indices to specify how you want to combine vertices into triangles.
-func NewVertexArray(parent Doer, format AttrFormat, vertexNum int, indices []int) (*VertexArray, error) {
+func NewVertexArray(parent Doer, format AttrFormat, numVertices int, indices []int) (*VertexArray, error) {
 	va := &VertexArray{
 		parent: parent,
 		vao: binder{
@@ -46,10 +46,10 @@ func NewVertexArray(parent Doer, format AttrFormat, vertexNum int, indices []int
 				gl.BindBuffer(gl.ELEMENT_ARRAY_BUFFER, obj)
 			},
 		},
-		vertexNum: vertexNum,
-		format:    format,
-		stride:    format.Size(),
-		offset:    make(map[string]int),
+		numVertices: numVertices,
+		format:      format,
+		stride:      format.Size(),
+		offset:      make(map[string]int),
 	}
 
 	offset := 0
@@ -71,7 +71,7 @@ func NewVertexArray(parent Doer, format AttrFormat, vertexNum int, indices []int
 			gl.GenBuffers(1, &va.vbo.obj)
 			defer va.vbo.bind().restore()
 
-			emptyData := make([]byte, vertexNum*va.stride)
+			emptyData := make([]byte, numVertices*va.stride)
 			gl.BufferData(gl.ARRAY_BUFFER, len(emptyData), gl.Ptr(emptyData), gl.DYNAMIC_DRAW)
 
 			gl.GenBuffers(1, &va.ebo.obj)
@@ -127,9 +127,9 @@ func (va *VertexArray) ID() uint32 {
 	return va.vao.obj
 }
 
-// VertexNum returns the number of vertices in a vertex array.
-func (va *VertexArray) VertexNum() int {
-	return va.vertexNum
+// NumVertices returns the number of vertices in a vertex array.
+func (va *VertexArray) NumVertices() int {
+	return va.numVertices
 }
 
 // VertexFormat returns the format of the vertices inside a vertex array.
@@ -155,7 +155,7 @@ func (va *VertexArray) SetIndices(indices []int) {
 	for i := range indices32 {
 		indices32[i] = uint32(indices[i])
 	}
-	va.indexNum = len(indices32)
+	va.numIndices = len(indices32)
 	DoNoBlock(func() {
 		va.ebo.bind()
 		gl.BufferData(gl.ELEMENT_ARRAY_BUFFER, 4*len(indices32), gl.Ptr(indices32), gl.DYNAMIC_DRAW)
@@ -165,7 +165,7 @@ func (va *VertexArray) SetIndices(indices []int) {
 
 // Indices returns the current indices of triangles to be drawn.
 func (va *VertexArray) Indices() []int {
-	indices32 := make([]uint32, va.indexNum)
+	indices32 := make([]uint32, va.numIndices)
 	Do(func() {
 		va.ebo.bind()
 		gl.GetBufferSubData(gl.ELEMENT_ARRAY_BUFFER, 0, 4*len(indices32), gl.Ptr(indices32))
@@ -190,7 +190,7 @@ func (va *VertexArray) Indices() []int {
 //   Attr{Type: Vec4}:  mgl32.Vec4
 // No other types are supported.
 func (va *VertexArray) SetVertexAttr(vertex int, attr Attr, value interface{}) (ok bool) {
-	if vertex < 0 || vertex >= va.vertexNum {
+	if vertex < 0 || vertex >= va.numVertices {
 		panic("set vertex attr: invalid vertex index")
 	}
 
@@ -233,7 +233,7 @@ func (va *VertexArray) SetVertexAttr(vertex int, attr Attr, value interface{}) (
 //
 // The type of the returned value follows the same rules as with SetVertexAttr.
 func (va *VertexArray) VertexAttr(vertex int, attr Attr) (value interface{}, ok bool) {
-	if vertex < 0 || vertex >= va.vertexNum {
+	if vertex < 0 || vertex >= va.numVertices {
 		panic("vertex attr: invalid vertex index")
 	}
 
@@ -277,7 +277,7 @@ func (va *VertexArray) VertexAttr(vertex int, attr Attr) (value interface{}, ok 
 //
 // Not existing attributes are silently skipped.
 func (va *VertexArray) SetVertex(vertex int, values map[Attr]interface{}) {
-	if vertex < 0 || vertex >= va.vertexNum {
+	if vertex < 0 || vertex >= va.numVertices {
 		panic("set vertex: invalid vertex index")
 	}
 
@@ -319,7 +319,7 @@ func (va *VertexArray) SetVertex(vertex int, values map[Attr]interface{}) {
 
 // Vertex returns values of all vertex attributes of the specified vertex in a map.
 func (va *VertexArray) Vertex(vertex int) (values map[Attr]interface{}) {
-	if vertex < 0 || vertex >= va.vertexNum {
+	if vertex < 0 || vertex >= va.numVertices {
 		panic("set vertex: invalid vertex index")
 	}
 
@@ -366,11 +366,11 @@ func (va *VertexArray) Vertex(vertex int) (values map[Attr]interface{}) {
 //
 // Not existing attributes are silently skipped.
 func (va *VertexArray) SetVertices(vertices []map[Attr]interface{}) {
-	if len(vertices) != va.vertexNum {
+	if len(vertices) != va.numVertices {
 		panic("set vertex array: wrong number of supplied vertices")
 	}
 
-	data := make([]float32, va.vertexNum*va.format.Size()/4)
+	data := make([]float32, va.numVertices*va.format.Size()/4)
 
 	for vertex := range vertices {
 		for attr, value := range vertices[vertex] {
@@ -407,7 +407,7 @@ func (va *VertexArray) SetVertices(vertices []map[Attr]interface{}) {
 
 // Vertices returns values of vertex attributes of all vertices in a vertex array in a slice of maps.
 func (va *VertexArray) Vertices() (vertices []map[Attr]interface{}) {
-	data := make([]float32, va.vertexNum*va.format.Size()/4)
+	data := make([]float32, va.numVertices*va.format.Size()/4)
 
 	Do(func() {
 		va.vbo.bind()
@@ -415,7 +415,7 @@ func (va *VertexArray) Vertices() (vertices []map[Attr]interface{}) {
 		va.vbo.restore()
 	})
 
-	vertices = make([]map[Attr]interface{}, va.vertexNum)
+	vertices = make([]map[Attr]interface{}, va.numVertices)
 
 	for vertex := range vertices {
 		values := make(map[Attr]interface{})
@@ -456,7 +456,7 @@ func (va *VertexArray) Do(sub func(Context)) {
 		})
 		sub(ctx)
 		DoNoBlock(func() {
-			gl.DrawElements(gl.TRIANGLES, int32(va.indexNum), gl.UNSIGNED_INT, gl.PtrOffset(0))
+			gl.DrawElements(gl.TRIANGLES, int32(va.numIndices), gl.UNSIGNED_INT, gl.PtrOffset(0))
 			va.vao.restore()
 		})
 	})
