@@ -136,9 +136,9 @@ func (s *Shape) VertexArray() *pixelgl.VertexArray {
 func (s *Shape) Draw(t ...Transform) {
 	mat := mgl32.Ident3()
 	for i := range t {
-		mat = mat.Mul3(t[i].Mat3())
+		mat = mat.Mul3(t[i].Mat())
 	}
-	mat = mat.Mul3(s.transform.Mat3())
+	mat = mat.Mul3(s.transform.Mat())
 
 	s.parent.Do(func(ctx pixelgl.Context) {
 		r, g, b, a := colorToRGBA(s.color)
@@ -197,7 +197,7 @@ func NewMultiShape(parent pixelgl.Doer, shapes ...*Shape) *MultiShape {
 		for vertex := range shapeVertices {
 			if pos, ok := shapeVertices[vertex][positionVec2]; ok {
 				pos := pos.(mgl32.Vec2)
-				pos = shape.Transform().Mat3().Mul3x1(mgl32.Vec3{pos.X(), pos.Y(), 1}).Vec2()
+				pos = shape.Transform().Mat().Mul3x1(mgl32.Vec3{pos.X(), pos.Y(), 1}).Vec2()
 				shapeVertices[vertex][positionVec2] = pos
 			}
 			if color, ok := shapeVertices[vertex][colorVec4]; ok {

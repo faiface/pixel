@@ -100,7 +100,7 @@ func (t Transform) Rotate(angle float64) Transform {
 
 // Project transforms a vector by a transform.
 func (t Transform) Project(v Vec) Vec {
-	mat := t.Mat3()
+	mat := t.Mat()
 	vec := mgl32.Vec3{float32(v.X()), float32(v.Y()), 1}
 	pro := mat.Mul3x1(vec)
 	return V(float64(pro.X()), float64(pro.Y()))
@@ -108,14 +108,14 @@ func (t Transform) Project(v Vec) Vec {
 
 // Unproject does the inverse operation to Project.
 func (t Transform) Unproject(v Vec) Vec {
-	mat := t.InvMat3()
+	mat := t.InvMat()
 	vec := mgl32.Vec3{float32(v.X()), float32(v.Y()), 1}
 	unp := mat.Mul3x1(vec)
 	return V(float64(unp.X()), float64(unp.Y()))
 }
 
-// Mat3 returns a transformation matrix that satisfies previously set transform properties.
-func (t Transform) Mat3() mgl32.Mat3 {
+// Mat returns a transformation matrix that satisfies previously set transform properties.
+func (t Transform) Mat() mgl32.Mat3 {
 	mat := mgl32.Ident3()
 	mat = mat.Mul3(mgl32.Translate2D(float32(t.pos.X()), float32(t.pos.Y())))
 	mat = mat.Mul3(mgl32.Rotate3DZ(float32(t.rot)))
@@ -124,8 +124,8 @@ func (t Transform) Mat3() mgl32.Mat3 {
 	return mat
 }
 
-// InvMat3 returns an inverse transformation matrix to the matrix returned by Mat3 method.
-func (t Transform) InvMat3() mgl32.Mat3 {
+// InvMat returns an inverse transformation matrix to the matrix returned by Mat3 method.
+func (t Transform) InvMat() mgl32.Mat3 {
 	mat := mgl32.Ident3()
 	mat = mat.Mul3(mgl32.Translate2D(float32(t.anc.X()), float32(t.anc.Y())))
 	mat = mat.Mul3(mgl32.Scale2D(float32(1/t.sca.X()), float32(1/t.sca.Y())))
