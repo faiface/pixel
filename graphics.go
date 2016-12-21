@@ -238,7 +238,7 @@ func NewMultiShape(parent pixelgl.Doer, shapes ...*Shape) *MultiShape {
 //
 // Usually, you only transform objects when you're drawing them (by passing transforms to the Draw method).
 // With sprites however, it can be useful to also transform them "statically". For example, sprites are
-// anchor by their bottom-left corner by default. Setting a transform can change this anchor to the center,
+// anchor by their bottom-left corner by default. Setting a transform can change this anchored to the center,
 // or wherever you want.
 type Sprite struct {
 	*Shape
