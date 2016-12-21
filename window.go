@@ -65,6 +65,11 @@ type Window struct {
 	restore struct {
 		xpos, ypos, width, height int
 	}
+
+	prevInp, tempInp, currInp struct {
+		buttons [KeyLast + 1]bool
+		scroll  Vec
+	}
 }
 
 // NewWindow creates a new window with it's properties specified in the provided config.
@@ -106,6 +111,8 @@ func NewWindow(config WindowConfig) (*Window, error) {
 	if err != nil {
 		return nil, errors.Wrap(err, "creating window failed")
 	}
+
+	w.initInput()
 
 	w.SetFullscreen(config.Fullscreen)
 
@@ -157,8 +164,11 @@ func (w *Window) Update() {
 				glfw.SwapInterval(1)
 			}
 			w.window.SwapBuffers()
-			glfw.PollEvents()
+		})
 
+		w.updateInput()
+
+		pixelgl.Do(func() {
 			w, h := w.window.GetSize()
 			gl.Viewport(0, 0, int32(w), int32(h))
 		})
@@ -168,6 +178,25 @@ func (w *Window) Update() {
 // DefaultShader returns the default shader used by a window.
 func (w *Window) DefaultShader() *pixelgl.Shader {
 	return w.defaultShader
+}
+
+// SetClosed sets the closed flag of a window.
+//
+// This is usefull when overriding the user's attempt to close a window, or just to close a window
+// from within a program.
+func (w *Window) SetClosed(closed bool) {
+	pixelgl.Do(func() {
+		w.window.SetShouldClose(closed)
+	})
+}
+
+// Closed returns the closed flag of a window, which reports whether the window should be closed.
+//
+// The closed flag is automatically set when a user attempts to close a window.
+func (w *Window) Closed() bool {
+	return pixelgl.DoVal(func() interface{} {
+		return w.window.ShouldClose()
+	}).(bool)
 }
 
 // SetTitle changes the title of a window.
@@ -273,10 +302,9 @@ func (w *Window) Focus() {
 
 // Focused returns true if a window has input focus.
 func (w *Window) Focused() bool {
-	focused := pixelgl.DoVal(func() interface{} {
+	return pixelgl.DoVal(func() interface{} {
 		return w.window.GetAttrib(glfw.Focused) == glfw.True
 	}).(bool)
-	return focused
 }
 
 // Maximize puts a windowed window to a maximized state.
