@@ -12,7 +12,7 @@ type Texture struct {
 
 // NewTexture creates a new texture with the specified width and height.
 // The pixels must be a sequence of RGBA values.
-func NewTexture(parent Doer, width, height int, pixels []uint8) (*Texture, error) {
+func NewTexture(parent Doer, width, height int, smooth bool, pixels []uint8) (*Texture, error) {
 	texture := &Texture{
 		parent: parent,
 		tex: binder{
@@ -41,6 +41,17 @@ func NewTexture(parent Doer, width, height int, pixels []uint8) (*Texture, error
 				gl.UNSIGNED_BYTE,
 				gl.Ptr(pixels),
 			)
+
+			gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.MIRRORED_REPEAT)
+			gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.MIRRORED_REPEAT)
+
+			if smooth {
+				gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR)
+				gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR)
+			} else {
+				gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST_MIPMAP_NEAREST)
+				gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST)
+			}
 
 			gl.GenerateMipmap(gl.TEXTURE_2D)
 		})
