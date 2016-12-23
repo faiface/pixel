@@ -141,8 +141,8 @@ func (s *Shape) Draw(t ...Transform) {
 	mat = mat.Mul3(s.transform.Mat())
 
 	s.parent.Do(func(ctx pixelgl.Context) {
-		r, g, b, a := colorToRGBA(s.color)
-		ctx.Shader().SetUniformAttr(maskColorVec4, mgl32.Vec4{r, g, b, a})
+		c := NRGBAModel.Convert(s.color).(NRGBA)
+		ctx.Shader().SetUniformAttr(maskColorVec4, mgl32.Vec4{float32(c.R), float32(c.G), float32(c.B), float32(c.A)})
 		ctx.Shader().SetUniformAttr(transformMat3, mat)
 
 		if s.picture != nil {
@@ -202,12 +202,12 @@ func NewMultiShape(parent pixelgl.Doer, shapes ...*Shape) *MultiShape {
 			}
 			if color, ok := shapeVertices[vertex][colorVec4]; ok {
 				color := color.(mgl32.Vec4)
-				r, g, b, a := colorToRGBA(shape.Color())
+				c := NRGBAModel.Convert(shape.Color()).(NRGBA)
 				color = mgl32.Vec4{
-					color[0] * r,
-					color[1] * g,
-					color[2] * b,
-					color[3] * a,
+					color[0] * float32(c.R),
+					color[1] * float32(c.G),
+					color[2] * float32(c.B),
+					color[3] * float32(c.A),
 				}
 				shapeVertices[vertex][colorVec4] = color
 			}

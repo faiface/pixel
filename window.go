@@ -150,7 +150,8 @@ func (w *Window) Destroy() {
 func (w *Window) Clear(c color.Color) {
 	w.Do(func(pixelgl.Context) {
 		pixelgl.DoNoBlock(func() {
-			gl.ClearColor(colorToRGBA(c))
+			c := NRGBAModel.Convert(c).(NRGBA)
+			gl.ClearColor(float32(c.R), float32(c.G), float32(c.B), float32(c.A))
 			gl.Clear(gl.COLOR_BUFFER_BIT)
 		})
 	})
