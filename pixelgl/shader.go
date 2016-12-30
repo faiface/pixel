@@ -17,9 +17,11 @@ type Shader struct {
 	uniforms   map[string]int32
 }
 
-// NewShader creates a new shader program from the specified vertex shader and fragment shader sources.
+// NewShader creates a new shader program from the specified vertex shader and fragment shader
+// sources.
 //
-// Note that vertexShader and fragmentShader parameters must contain the source code, they're not filenames.
+// Note that vertexShader and fragmentShader parameters must contain the source code, they're
+// not filenames.
 func NewShader(parent Doer, vertexFmt, uniformFmt AttrFormat, vertexShader, fragmentShader string) (*Shader, error) {
 	shader := &Shader{
 		parent: parent,
@@ -144,7 +146,8 @@ func (s *Shader) UniformFormat() AttrFormat {
 //
 // If the attribute does not exist, this method returns false.
 //
-// Supplied value must correspond to the type of the attribute. Correct types are these (right-hand is the type of the value):
+// Supplied value must correspond to the type of the attribute. Correct types are these
+// (right-hand is the type of the value):
 //   Attr{Type: Int}:   int32
 //   Attr{Type: Float}: float32
 //   Attr{Type: Vec2}:  mgl32.Vec2

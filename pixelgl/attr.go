@@ -8,9 +8,9 @@ type AttrFormat map[string]AttrType
 
 // Contains checks whether a format contains a specific attribute.
 //
-// It does a little more than a hard check: e.g. if you query a Vec2 attribute, but the format contains Vec3,
-// Contains returns true, because Vec2 is assignable to Vec3. Specifically, Float -> Vec2 -> Vec3 -> Vec4 (transitively).
-// This however does not work for matrices or ints.
+// It does a little more than a hard check: e.g. if you query a Vec2 attribute, but the format
+// contains Vec3, Contains returns true, because Vec2 is assignable to Vec3. Specifically,
+// Float -> Vec2 -> Vec3 -> Vec4 (transitively).  This however does not work for matrices or ints.
 func (af AttrFormat) Contains(attr Attr) bool {
 	if typ, ok := af[attr.Name]; ok {
 		if (Float <= typ && typ <= Vec4) && (Float <= attr.Type && attr.Type <= typ) {
@@ -30,7 +30,8 @@ func (af AttrFormat) Size() int {
 	return total
 }
 
-// Attr represents an arbitrary OpenGL attribute, such as a vertex attribute or a shader uniform attribute.
+// Attr represents an arbitrary OpenGL attribute, such as a vertex attribute or a shader
+// uniform attribute.
 type Attr struct {
 	Name string
 	Type AttrType
