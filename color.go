@@ -9,7 +9,8 @@ type NRGBA struct {
 	R, G, B, A float64
 }
 
-// Add adds color d to color c component-wise and returns the result (the components are not clamped).
+// Add adds color d to color c component-wise and returns the result (the components are not
+// clamped).
 func (c NRGBA) Add(d NRGBA) NRGBA {
 	return NRGBA{
 		R: c.R + d.R,
@@ -19,7 +20,8 @@ func (c NRGBA) Add(d NRGBA) NRGBA {
 	}
 }
 
-// Sub subtracts color d from color c component-wise and returns the result (the components are not clamped).
+// Sub subtracts color d from color c component-wise and returns the result (the components
+// are not clamped).
 func (c NRGBA) Sub(d NRGBA) NRGBA {
 	return NRGBA{
 		R: c.R - d.R,
@@ -39,7 +41,8 @@ func (c NRGBA) Mul(d NRGBA) NRGBA {
 	}
 }
 
-// Scaled multiplies each component of color c by scale and returns the result (the components are not clamped).
+// Scaled multiplies each component of color c by scale and returns the result (the components
+// are not clamped).
 func (c NRGBA) Scaled(scale float64) NRGBA {
 	return NRGBA{
 		R: c.R * scale,

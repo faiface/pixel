@@ -224,6 +224,7 @@ func (w *Window) updateInput() {
 		glfw.PollEvents()
 	})
 
-	// cache current state to temp (so that if there are callbacks outside this function, everything works)
+	// cache current state to temp (so that if there are callbacks outside this function,
+	// everything works)
 	w.tempInp = w.currInp
 }

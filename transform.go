@@ -2,16 +2,16 @@ package pixel
 
 import "github.com/go-gl/mathgl/mgl32"
 
-// Transform holds space transformation information. Concretely, a transformation is specified by position,
-// anchor, scale and rotation.
+// Transform holds space transformation information. Concretely, a transformation is specified
+// by position, anchor, scale and rotation.
 //
-// All points are first rotated around the anchor. Then they are multiplied by the scale. If the
-// scale factor is 2, the object becomes 2x bigger. Finally, all points are moved, so that the original
-// anchor is located precisely at the position.
+// All points are first rotated around the anchor. Then they are multiplied by the scale. If
+// the scale factor is 2, the object becomes 2x bigger. Finally, all points are moved, so that
+// the original anchor is located precisely at the position.
 //
-// Create a Transform object with the Position function. This sets the position variable, which is the
-// most important. Then use methods, like Scale and Rotate to change scale, rotation and achor. The order
-// in which you apply these methods is irrelevant.
+// Create a Transform object with the Position function. This sets the position variable,
+// which is the most important. Then use methods, like Scale and Rotate to change scale,
+// rotation and achor. The order in which you apply these methods is irrelevant.
 //
 //   pixel.Position(pixel.V(100, 100)).Rotate(math.Pi / 3).Scale(1.5)
 type Transform struct {
@@ -19,7 +19,8 @@ type Transform struct {
 	rot           float64
 }
 
-// Position creates a Transformation object with specified position. Anchor is (0, 0), rotation is 0 and scale is 1.
+// Position creates a Transformation object with specified position. Anchor is (0, 0), rotation
+// is 0 and scale is 1.
 func Position(position Vec) Transform {
 	return Transform{
 		pos: position,
@@ -73,17 +74,18 @@ func (t Transform) MoveAnchor(delta Vec) Transform {
 
 // Scale scales the transform by the supplied factor.
 //
-// Note, that subsequent calls to this method accumulate the final scale factor. Scaling two times by 2 is equivalent
-// to scaling once by 4.
+// Note, that subsequent calls to this method accumulate the final scale factor. Scaling two
+// times by 2 is equivalent to scaling once by 4.
 func (t Transform) Scale(scale float64) Transform {
 	t.sca = t.sca.Scaled(scale)
 	return t
 }
 
-// ScaleXY scales the transform by the supplied X and Y factor. Note, that scale is applied before rotation.
+// ScaleXY scales the transform by the supplied X and Y factor. Note, that scale is applied
+// before rotation.
 //
-// Note, that subsequent calls to this method accumulate the final scale factor. Scaling two times by 2 is equivalent
-// to scaling once by 4.
+// Note, that subsequent calls to this method accumulate the final scale factor. Scaling two
+// times by 2 is equivalent to scaling once by 4.
 func (t Transform) ScaleXY(scale Vec) Transform {
 	t.sca = V(t.sca.X()*scale.X(), t.sca.Y()*scale.Y())
 	return t
@@ -91,8 +93,8 @@ func (t Transform) ScaleXY(scale Vec) Transform {
 
 // Rotate rotates the transform by the supplied angle in radians.
 //
-// Note, that subsequent calls to this method accumulate the final rotation. Rotating two times by Pi/2 is
-// equivalent to rotating once by Pi.
+// Note, that subsequent calls to this method accumulate the final rotation. Rotating two times
+// by Pi/2 is equivalent to rotating once by Pi.
 func (t Transform) Rotate(angle float64) Transform {
 	t.rot += angle
 	return t
@@ -134,8 +136,8 @@ func (t Transform) InvMat() mgl32.Mat3 {
 	return mat
 }
 
-// Camera is a convenience function, that returns a Transform that acts like a camera.
-// Center is the position in the world coordinates, that will be projected onto the center of the screen.
+// Camera is a convenience function, that returns a Transform that acts like a camera.	Center is
+// the position in the world coordinates, that will be projected onto the center of the screen.
 // One unit in world coordinates will be projected onto zoom pixels.
 //
 // It is possible to apply additional rotations, scales and moves to the returned transform.

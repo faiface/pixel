@@ -11,8 +11,9 @@ import (
 
 // Drawer is anything that can be drawn. It's by no means a drawer inside your table.
 //
-// Drawer consists of a single methods: Draw. Draw methods takes any number of Transform arguments. It applies these
-// transforms in the reverse order and finally draws something transformed by these transforms.
+// Drawer consists of a single methods: Draw. Draw methods takes any number of Transform
+// arguments. It applies these transforms in the reverse order and finally draws something
+// transformed by these transforms.
 //
 // Example:
 //
@@ -24,21 +25,23 @@ type Drawer interface {
 	Draw(t ...Transform)
 }
 
-// Group is used to effeciently handle a collection of objects with a common parent. Usually many objects share a parent,
-// using a group can significantly increase performance in these cases.
+// Group is used to effeciently handle a collection of objects with a common parent. Usually many
+// objects share a parent, using a group can significantly increase performance in these cases.
 //
-// To use a group, first, create a group and as it's parent use the common parent of the collection of objects:
+// To use a group, first, create a group and as it's parent use the common parent of the
+// collection of objects:
 //
 //   group := pixel.NewGroup(commonParent)
 //
-// Then, when creating the objects, use the group as their parent, instead of the original common parent, but, don't forget
-// to put everything into a With block, like this:
+// Then, when creating the objects, use the group as their parent, instead of the original
+// common parent, but, don't forget to put everything into a With block, like this:
 //
 //   group.With(func() {
 //       object := newArbitratyObject(group, ...) // group is the parent of the object
 //   })
 //
-// When dealing with objects associated with a group, it's always necessary to wrap that into a With block:
+// When dealing with objects associated with a group, it's always necessary to wrap that into
+// a With block:
 //
 //   group.With(func() {
 //       for _, obj := range objectsWithCommonParent {
@@ -74,10 +77,11 @@ func (g *Group) Do(sub func(pixelgl.Context)) {
 
 // Shape is a general drawable shape constructed from vertices.
 //
-// Vertices are specified in the vertex array of a shape. A shape can have a picture, a color (mask) and a static
-// transform.
+// Vertices are specified in the vertex array of a shape. A shape can have a picture, a color
+// (mask) and a static transform.
 //
-// Usually you use this type only indirectly throught other specific shapes (sprites, polygons, ...) embedding it.
+// Usually you use this type only indirectly throught other specific shapes (sprites, polygons,
+// ...) embedding it.
 type Shape struct {
 	parent    pixelgl.Doer
 	picture   *Picture
@@ -155,10 +159,11 @@ func (s *Shape) Draw(t ...Transform) {
 	})
 }
 
-// MultiShape is a shape composed of several other shapes. These shapes cannot be modifies after combined into a multishape.
+// MultiShape is a shape composed of several other shapes. These shapes cannot be modifies
+// after combined into a multishape.
 //
-// Using a multishape can greatly increase drawing performance. However, it's only usable when the relative transformations
-// of the shapes don't change (e.g. static blocks in a level).
+// Using a multishape can greatly increase drawing performance. However, it's only usable when
+// the relative transformations of the shapes don't change (e.g. static blocks in a level).
 //
 // All shapes in a multishape must share the same texture (or use no texture).
 type MultiShape struct {
@@ -234,18 +239,19 @@ func NewMultiShape(parent pixelgl.Doer, shapes ...*Shape) *MultiShape {
 	return &MultiShape{NewShape(parent, picture, color.White, Position(0), va)}
 }
 
-// Sprite is a picture that can be drawn on the screen. Optionally it can be color masked or tranformed.
+// Sprite is a picture that can be drawn on the screen. Optionally it can be color masked
+// or tranformed.
 //
-// Usually, you only transform objects when you're drawing them (by passing transforms to the Draw method).
-// With sprites however, it can be useful to also transform them "statically". For example, sprites are
-// anchor by their bottom-left corner by default. Setting a transform can change this anchored to the center,
-// or wherever you want.
+// Usually, you only transform objects when you're drawing them (by passing transforms to the
+// Draw method).  With sprites however, it can be useful to also transform them "statically". For
+// example, sprites are anchor by their bottom-left corner by default. Setting a transform can
+// change this anchored to the center, or wherever you want.
 type Sprite struct {
 	*Shape
 }
 
-// NewSprite creates a new sprite with the supplied picture. The sprite's size is the size of the supplied picture.
-// If you want to change the sprite's size, change it's transform.
+// NewSprite creates a new sprite with the supplied picture. The sprite's size is the size of
+// the supplied picture.  If you want to change the sprite's size, change it's transform.
 func NewSprite(parent pixelgl.Doer, picture *Picture) *Sprite {
 	var va *pixelgl.VertexArray
 
@@ -290,8 +296,8 @@ type LineColor struct {
 	width float64
 }
 
-// NewLineColor creates a new line shape between points A and B filled with a single color. Parent is an object
-// that this shape belongs to, such as a window, or a graphics effect.
+// NewLineColor creates a new line shape between points A and B filled with a single color. Parent
+// is an object that this shape belongs to, such as a window, or a graphics effect.
 func NewLineColor(parent pixelgl.Doer, c color.Color, a, b Vec, width float64) *LineColor {
 	var va *pixelgl.VertexArray
 
@@ -371,8 +377,8 @@ type PolygonColor struct {
 	points []Vec
 }
 
-// NewPolygonColor creates a new polygon shape filled with a single color. Parent is an object that this shape belongs to,
-// such as a window, or a graphics effect.
+// NewPolygonColor creates a new polygon shape filled with a single color. Parent is an object
+// that this shape belongs to, such as a window, or a graphics effect.
 func NewPolygonColor(parent pixelgl.Doer, c color.Color, points ...Vec) *PolygonColor {
 	var va *pixelgl.VertexArray
 
@@ -436,9 +442,10 @@ type EllipseColor struct {
 	fill   float64
 }
 
-// NewEllipseColor creates a new ellipse shape filled with a single color. Parent is an object that this shape belongs to,
-// such as a window, or a graphics effect. Fill should be a number between 0 and 1 which specifies how much of the ellipse will
-// be filled (from the outside). The value of 1 means that the whole ellipse is filled. The value of 0 means that none of the
+// NewEllipseColor creates a new ellipse shape filled with a single color. Parent is an object
+// that this shape belongs to, such as a window, or a graphics effect. Fill should be a number
+// between 0 and 1 which specifies how much of the ellipse will be filled (from the outside). The
+// value of 1 means that the whole ellipse is filled. The value of 0 means that none of the
 // ellipse is filled (which makes the ellipse invisible).
 func NewEllipseColor(parent pixelgl.Doer, c color.Color, radius Vec, fill float64) *EllipseColor {
 	var va *pixelgl.VertexArray

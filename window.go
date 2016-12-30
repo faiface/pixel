@@ -14,8 +14,8 @@ import (
 )
 
 // WindowConfig is convenience structure for specifying all possible properties of a window.
-// Properties are chosen in such a way, that you usually only need to set a few of them - defaults
-// (zeros) should usually be sensible.
+// Properties are chosen in such a way, that you usually only need to set a few of them -
+// defaults (zeros) should usually be sensible.
 //
 // Note that you always need to set the width and the height of a window.
 type WindowConfig struct {
@@ -28,7 +28,8 @@ type WindowConfig struct {
 	// Height of a window in pixels.
 	Height float64
 
-	// If set to nil, a window will be windowed. Otherwise it will be fullscreen on the specified monitor.
+	// If set to nil, a window will be windowed. Otherwise it will be fullscreen on the
+	// specified monitor.
 	Fullscreen *Monitor
 
 	// Whether a window is resizable.
@@ -46,11 +47,12 @@ type WindowConfig struct {
 	// Whether a window is maximized.
 	Maximized bool
 
-	// VSync (vertical synchronization) synchronizes window's framerate with the framerate of the monitor.
+	// VSync (vertical synchronization) synchronizes window's framerate with the framerate
+	// of the monitor.
 	VSync bool
 
-	// Number of samples for multi-sample anti-aliasing (edge-smoothing).
-	// Usual values are 0, 2, 4, 8 (powers of 2 and not much more than this).
+	// Number of samples for multi-sample anti-aliasing (edge-smoothing).  Usual values
+	// are 0, 2, 4, 8 (powers of 2 and not much more than this).
 	MSAASamples int
 }
 
@@ -183,8 +185,8 @@ func (w *Window) DefaultShader() *pixelgl.Shader {
 
 // SetClosed sets the closed flag of a window.
 //
-// This is usefull when overriding the user's attempt to close a window, or just to close a window
-// from within a program.
+// This is usefull when overriding the user's attempt to close a window, or just to close a
+// window from within a program.
 func (w *Window) SetClosed(closed bool) {
 	pixelgl.Do(func() {
 		w.window.SetShouldClose(closed)
@@ -207,8 +209,8 @@ func (w *Window) SetTitle(title string) {
 	})
 }
 
-// SetSize resizes a window to the specified size in pixels.
-// In case of a fullscreen window, it changes the resolution of that window.
+// SetSize resizes a window to the specified size in pixels.  In case of a fullscreen window,
+// it changes the resolution of that window.
 func (w *Window) SetSize(width, height float64) {
 	pixelgl.Do(func() {
 		w.window.SetSize(int(width), int(height))
@@ -239,10 +241,12 @@ func (w *Window) Hide() {
 	})
 }
 
-// SetFullscreen sets a window fullscreen on a given monitor. If the monitor is nil, the window will be resored to windowed instead.
+// SetFullscreen sets a window fullscreen on a given monitor. If the monitor is nil, the window
+// will be resored to windowed instead.
 //
-// Note, that there is nothing about the resolution of the fullscreen window. The window is automatically set to the monitor's
-// resolution. If you want a different resolution, you need to set it manually with SetSize method.
+// Note, that there is nothing about the resolution of the fullscreen window. The window is
+// automatically set to the monitor's resolution. If you want a different resolution, you need
+// to set it manually with SetSize method.
 func (w *Window) SetFullscreen(monitor *Monitor) {
 	if w.Monitor() != monitor {
 		if monitor == nil {
@@ -281,7 +285,8 @@ func (w *Window) IsFullscreen() bool {
 	return w.Monitor() != nil
 }
 
-// Monitor returns a monitor a fullscreen window is on. If the window is not fullscreen, this function returns nil.
+// Monitor returns a monitor a fullscreen window is on. If the window is not fullscreen, this
+// function returns nil.
 func (w *Window) Monitor() *Monitor {
 	monitor := pixelgl.DoVal(func() interface{} {
 		return w.window.GetMonitor()

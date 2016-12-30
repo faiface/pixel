@@ -6,10 +6,10 @@ import (
 	"math/cmplx"
 )
 
-// Vec is a 2d vector type. It is unusually implemented as complex128 for convenience. Since Go does
-// not allow operator overloading, implementing vector as a struct leads to a bunch of methods for
-// addition, subtraction and multiplication of vectors. With complex128, much of this functionality
-// is given through operators.
+// Vec is a 2d vector type. It is unusually implemented as complex128 for convenience. Since
+// Go does not allow operator overloading, implementing vector as a struct leads to a bunch of
+// methods for addition, subtraction and multiplication of vectors. With complex128, much of
+// this functionality is given through operators.
 //
 // Create vectors with the V constructor:
 //
@@ -27,7 +27,7 @@ import (
 //   u := pixel.V(2, 3)
 //   v := pixel.V(8, 1)
 //   if u.X() < 0 {
-//       fmt.Println("this won't happen")
+//	     fmt.Println("this won't happen")
 //   }
 //   x := u.Unit().Dot(v.Unit())
 type Vec complex128
@@ -97,7 +97,8 @@ func (u Vec) Cross(v Vec) float64 {
 	return u.X()*v.Y() - v.X()*u.Y()
 }
 
-// Rect is a 2d rectangle aligned with the axis of the coordinate system. It has a position and a size.
+// Rect is a 2d rectangle aligned with the axis of the coordinate system. It has a position
+// and a size.
 //
 // You can manipulate the position and the size using the usual vector operations.
 type Rect struct {

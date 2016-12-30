@@ -10,8 +10,9 @@ import (
 
 // Picture is a raster picture. It is usually used with sprites.
 //
-// A picture is created from an image.Image, that can be either loaded from a file, or generated. After the creation
-// a picture can be sliced (slicing creates a "sub-picture" from a picture) into smaller pictures.
+// A picture is created from an image.Image, that can be either loaded from a file, or
+// generated. After the creation a picture can be sliced (slicing creates a "sub-picture"
+// from a picture) into smaller pictures.
 type Picture struct {
 	texture *pixelgl.Texture
 	bounds  Rect
@@ -47,11 +48,11 @@ func (p *Picture) Texture() *pixelgl.Texture {
 	return p.texture
 }
 
-// Slice returns a picture within the supplied rectangle of the original picture. The original and the sliced picture
-// share the same texture.
+// Slice returns a picture within the supplied rectangle of the original picture. The original
+// and the sliced picture share the same texture.
 //
-// For example, suppose we have a 100x200 pixels picture. If we slice it with rectangle (50, 100, 50, 100), we get
-// the upper-right quadrant of the original picture.
+// For example, suppose we have a 100x200 pixels picture. If we slice it with rectangle (50,
+// 100, 50, 100), we get the upper-right quadrant of the original picture.
 func (p *Picture) Slice(slice Rect) *Picture {
 	return &Picture{
 		texture: p.texture,
@@ -61,7 +62,8 @@ func (p *Picture) Slice(slice Rect) *Picture {
 
 // Bounds returns the bounding rectangle of this picture relative to the most original picture.
 //
-// If the original picture gets sliced with the return value of this method, this picture will be obtained.
+// If the original picture gets sliced with the return value of this method, this picture will
+// be obtained.
 func (p *Picture) Bounds() Rect {
 	return p.bounds
 }
