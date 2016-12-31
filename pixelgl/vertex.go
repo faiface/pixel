@@ -1,9 +1,8 @@
 package pixelgl
 
 import (
-	"unsafe"
-
 	"runtime"
+	"unsafe"
 
 	"github.com/go-gl/gl/v3.3-core/gl"
 	"github.com/go-gl/mathgl/mgl32"
@@ -13,7 +12,6 @@ import (
 // VertexArray is an OpenGL vertex array object that also holds it's own vertex buffer object.
 // From the user's points of view, VertexArray is an array of vertices that can be drawn.
 type VertexArray struct {
-	parent                  Doer
 	vao, vbo, ebo           binder
 	numVertices, numIndices int
 	format                  AttrFormat
@@ -21,14 +19,13 @@ type VertexArray struct {
 	offset                  map[string]int
 }
 
-// NewVertexArray creates a new empty vertex array and wraps another Doer around it.
+// NewVertexArray creates a new empty vertex array.
 //
 // You cannot specify vertex attributes in this constructor, only their count. Use
 // SetVertexAttribute* methods to set the vertex attributes. Use indices to specify how you
 // want to combine vertices into triangles.
-func NewVertexArray(parent Doer, format AttrFormat, numVertices int, indices []int) (*VertexArray, error) {
+func NewVertexArray(shader *Shader, numVertices int, indices []int) (*VertexArray, error) {
 	va := &VertexArray{
-		parent: parent,
 		vao: binder{
 			restoreLoc: gl.VERTEX_ARRAY_BINDING,
 			bindFunc: func(obj uint32) {
@@ -48,65 +45,62 @@ func NewVertexArray(parent Doer, format AttrFormat, numVertices int, indices []i
 			},
 		},
 		numVertices: numVertices,
-		format:      format,
-		stride:      format.Size(),
+		format:      shader.VertexFormat(),
+		stride:      shader.VertexFormat().Size(),
 		offset:      make(map[string]int),
 	}
 
 	offset := 0
-	for name, typ := range format {
+	for name, typ := range va.format {
 		switch typ {
 		case Float, Vec2, Vec3, Vec4:
 		default:
-			return nil, errors.New("failed to create vertex array: invalid vertex format: invalid attribute type")
+			return nil, errors.New("failed to create vertex array: invalid attribute type")
 		}
 		va.offset[name] = offset
 		offset += typ.Size()
 	}
 
-	parent.Do(func(ctx Context) {
-		Do(func() {
-			gl.GenVertexArrays(1, &va.vao.obj)
-			va.vao.bind()
+	gl.GenVertexArrays(1, &va.vao.obj)
 
-			gl.GenBuffers(1, &va.vbo.obj)
-			defer va.vbo.bind().restore()
+	va.vao.bind()
 
-			emptyData := make([]byte, numVertices*va.stride)
-			gl.BufferData(gl.ARRAY_BUFFER, len(emptyData), gl.Ptr(emptyData), gl.DYNAMIC_DRAW)
+	gl.GenBuffers(1, &va.vbo.obj)
+	defer va.vbo.bind().restore()
 
-			gl.GenBuffers(1, &va.ebo.obj)
-			defer va.ebo.bind().restore()
+	emptyData := make([]byte, numVertices*va.stride)
+	gl.BufferData(gl.ARRAY_BUFFER, len(emptyData), gl.Ptr(emptyData), gl.DYNAMIC_DRAW)
 
-			for name, typ := range format {
-				loc := gl.GetAttribLocation(ctx.Shader().ID(), gl.Str(name+"\x00"))
+	gl.GenBuffers(1, &va.ebo.obj)
+	defer va.ebo.bind().restore()
 
-				var size int32
-				switch typ {
-				case Float:
-					size = 1
-				case Vec2:
-					size = 2
-				case Vec3:
-					size = 3
-				case Vec4:
-					size = 4
-				}
+	for name, typ := range va.format {
+		loc := gl.GetAttribLocation(shader.ID(), gl.Str(name+"\x00"))
 
-				gl.VertexAttribPointer(
-					uint32(loc),
-					size,
-					gl.FLOAT,
-					false,
-					int32(va.stride),
-					gl.PtrOffset(va.offset[name]),
-				)
-				gl.EnableVertexAttribArray(uint32(loc))
-			}
+		var size int32
+		switch typ {
+		case Float:
+			size = 1
+		case Vec2:
+			size = 2
+		case Vec3:
+			size = 3
+		case Vec4:
+			size = 4
+		}
 
-			va.vao.restore()
-		})
-	})
+		gl.VertexAttribPointer(
+			uint32(loc),
+			size,
+			gl.FLOAT,
+			false,
+			int32(va.stride),
+			gl.PtrOffset(va.offset[name]),
+		)
+		gl.EnableVertexAttribArray(uint32(loc))
+	}
+
+	va.vao.restore()
 
 	va.SetIndices(indices)
 
@@ -141,13 +135,17 @@ func (va *VertexArray) VertexFormat() AttrFormat {
 }
 
 // Draw draws a vertex array.
+//
+// The vertex array must be bound before calling this method.
 func (va *VertexArray) Draw() {
-	va.Do(func(Context) {})
+	gl.DrawElements(gl.TRIANGLES, int32(va.numIndices), gl.UNSIGNED_INT, gl.PtrOffset(0))
 }
 
 // SetIndices sets the indices of triangles to be drawn. Triangles will be formed from the
 // vertices of the array as defined by these indices. The first drawn triangle is specified by
 // the first three indices, the second by the fourth through sixth and so on.
+//
+// The vertex array must be bound before calling this method.
 func (va *VertexArray) SetIndices(indices []int) {
 	if len(indices)%3 != 0 {
 		panic("vertex array set indices: number of indices not divisible by 3")
@@ -157,25 +155,23 @@ func (va *VertexArray) SetIndices(indices []int) {
 		indices32[i] = uint32(indices[i])
 	}
 	va.numIndices = len(indices32)
-	DoNoBlock(func() {
-		va.ebo.bind()
-		gl.BufferData(gl.ELEMENT_ARRAY_BUFFER, 4*len(indices32), gl.Ptr(indices32), gl.DYNAMIC_DRAW)
-		va.ebo.restore()
-	})
+
+	gl.BufferData(gl.ELEMENT_ARRAY_BUFFER, 4*len(indices32), gl.Ptr(indices32), gl.DYNAMIC_DRAW)
 }
 
 // Indices returns the current indices of triangles to be drawn.
+//
+// The vertex array must be bound before calling this method.
 func (va *VertexArray) Indices() []int {
 	indices32 := make([]uint32, va.numIndices)
-	Do(func() {
-		va.ebo.bind()
-		gl.GetBufferSubData(gl.ELEMENT_ARRAY_BUFFER, 0, 4*len(indices32), gl.Ptr(indices32))
-		va.ebo.restore()
-	})
+
+	gl.GetBufferSubData(gl.ELEMENT_ARRAY_BUFFER, 0, 4*len(indices32), gl.Ptr(indices32))
+
 	indices := make([]int, len(indices32))
 	for i := range indices {
 		indices[i] = int(indices32[i])
 	}
+
 	return indices
 }
 
@@ -191,6 +187,8 @@ func (va *VertexArray) Indices() []int {
 //   Attr{Type: Vec3}:  mgl32.Vec3
 //   Attr{Type: Vec4}:  mgl32.Vec4
 // No other types are supported.
+//
+// The vertex array must be bound before calling this method.
 func (va *VertexArray) SetVertexAttr(vertex int, attr Attr, value interface{}) (ok bool) {
 	if vertex < 0 || vertex >= va.numVertices {
 		panic("set vertex attr: invalid vertex index")
@@ -200,30 +198,24 @@ func (va *VertexArray) SetVertexAttr(vertex int, attr Attr, value interface{}) (
 		return false
 	}
 
-	DoNoBlock(func() {
-		va.vbo.bind()
+	offset := va.stride*vertex + va.offset[attr.Name]
 
-		offset := va.stride*vertex + va.offset[attr.Name]
-
-		switch attr.Type {
-		case Float:
-			value := value.(float32)
-			gl.BufferSubData(gl.ARRAY_BUFFER, offset, attr.Type.Size(), unsafe.Pointer(&value))
-		case Vec2:
-			value := value.(mgl32.Vec2)
-			gl.BufferSubData(gl.ARRAY_BUFFER, offset, attr.Type.Size(), unsafe.Pointer(&value))
-		case Vec3:
-			value := value.(mgl32.Vec3)
-			gl.BufferSubData(gl.ARRAY_BUFFER, offset, attr.Type.Size(), unsafe.Pointer(&value))
-		case Vec4:
-			value := value.(mgl32.Vec4)
-			gl.BufferSubData(gl.ARRAY_BUFFER, offset, attr.Type.Size(), unsafe.Pointer(&value))
-		default:
-			panic("set vertex attr: invalid attribute type")
-		}
-
-		va.vbo.restore()
-	})
+	switch attr.Type {
+	case Float:
+		value := value.(float32)
+		gl.BufferSubData(gl.ARRAY_BUFFER, offset, attr.Type.Size(), unsafe.Pointer(&value))
+	case Vec2:
+		value := value.(mgl32.Vec2)
+		gl.BufferSubData(gl.ARRAY_BUFFER, offset, attr.Type.Size(), unsafe.Pointer(&value))
+	case Vec3:
+		value := value.(mgl32.Vec3)
+		gl.BufferSubData(gl.ARRAY_BUFFER, offset, attr.Type.Size(), unsafe.Pointer(&value))
+	case Vec4:
+		value := value.(mgl32.Vec4)
+		gl.BufferSubData(gl.ARRAY_BUFFER, offset, attr.Type.Size(), unsafe.Pointer(&value))
+	default:
+		panic("set vertex attr: invalid attribute type")
+	}
 
 	return true
 }
@@ -234,6 +226,8 @@ func (va *VertexArray) SetVertexAttr(vertex int, attr Attr, value interface{}) (
 // out of range, this method panics.
 //
 // The type of the returned value follows the same rules as with SetVertexAttr.
+//
+// The vertex array must be bound before calling this method.
 func (va *VertexArray) VertexAttr(vertex int, attr Attr) (value interface{}, ok bool) {
 	if vertex < 0 || vertex >= va.numVertices {
 		panic("vertex attr: invalid vertex index")
@@ -243,34 +237,28 @@ func (va *VertexArray) VertexAttr(vertex int, attr Attr) (value interface{}, ok 
 		return nil, false
 	}
 
-	Do(func() {
-		va.vbo.bind()
+	offset := va.stride*vertex + va.offset[attr.Name]
 
-		offset := va.stride*vertex + va.offset[attr.Name]
-
-		switch attr.Type {
-		case Float:
-			var data float32
-			gl.GetBufferSubData(gl.ARRAY_BUFFER, offset, attr.Type.Size(), unsafe.Pointer(&data))
-			value = data
-		case Vec2:
-			var data mgl32.Vec2
-			gl.GetBufferSubData(gl.ARRAY_BUFFER, offset, attr.Type.Size(), unsafe.Pointer(&data))
-			value = data
-		case Vec3:
-			var data mgl32.Vec3
-			gl.GetBufferSubData(gl.ARRAY_BUFFER, offset, attr.Type.Size(), unsafe.Pointer(&data))
-			value = data
-		case Vec4:
-			var data mgl32.Vec4
-			gl.GetBufferSubData(gl.ARRAY_BUFFER, offset, attr.Type.Size(), unsafe.Pointer(&data))
-			value = data
-		default:
-			panic("set vertex attr: invalid attribute type")
-		}
-
-		va.vbo.restore()
-	})
+	switch attr.Type {
+	case Float:
+		var data float32
+		gl.GetBufferSubData(gl.ARRAY_BUFFER, offset, attr.Type.Size(), unsafe.Pointer(&data))
+		value = data
+	case Vec2:
+		var data mgl32.Vec2
+		gl.GetBufferSubData(gl.ARRAY_BUFFER, offset, attr.Type.Size(), unsafe.Pointer(&data))
+		value = data
+	case Vec3:
+		var data mgl32.Vec3
+		gl.GetBufferSubData(gl.ARRAY_BUFFER, offset, attr.Type.Size(), unsafe.Pointer(&data))
+		value = data
+	case Vec4:
+		var data mgl32.Vec4
+		gl.GetBufferSubData(gl.ARRAY_BUFFER, offset, attr.Type.Size(), unsafe.Pointer(&data))
+		value = data
+	default:
+		panic("set vertex attr: invalid attribute type")
+	}
 
 	return value, true
 }
@@ -279,6 +267,8 @@ func (va *VertexArray) VertexAttr(vertex int, attr Attr) (value interface{}, ok 
 // will be set to zero.
 //
 // Not existing attributes are silently skipped.
+//
+// The vertex array must be bound before calling this method.
 func (va *VertexArray) SetVertex(vertex int, values map[Attr]interface{}) {
 	if vertex < 0 || vertex >= va.numVertices {
 		panic("set vertex: invalid vertex index")
@@ -310,17 +300,13 @@ func (va *VertexArray) SetVertex(vertex int, values map[Attr]interface{}) {
 		}
 	}
 
-	DoNoBlock(func() {
-		va.vbo.bind()
-
-		offset := va.stride * vertex
-		gl.BufferSubData(gl.ARRAY_BUFFER, offset, len(data)*4, gl.Ptr(data))
-
-		va.vbo.restore()
-	})
+	offset := va.stride * vertex
+	gl.BufferSubData(gl.ARRAY_BUFFER, offset, len(data)*4, gl.Ptr(data))
 }
 
 // Vertex returns values of all vertex attributes of the specified vertex in a map.
+//
+// The vertex array must be bound before calling this method.
 func (va *VertexArray) Vertex(vertex int) (values map[Attr]interface{}) {
 	if vertex < 0 || vertex >= va.numVertices {
 		panic("set vertex: invalid vertex index")
@@ -328,14 +314,8 @@ func (va *VertexArray) Vertex(vertex int) (values map[Attr]interface{}) {
 
 	data := make([]float32, va.format.Size()/4)
 
-	Do(func() {
-		va.vbo.bind()
-
-		offset := va.stride * vertex
-		gl.GetBufferSubData(gl.ARRAY_BUFFER, offset, len(data)*4, gl.Ptr(data))
-
-		va.vbo.restore()
-	})
+	offset := va.stride * vertex
+	gl.GetBufferSubData(gl.ARRAY_BUFFER, offset, len(data)*4, gl.Ptr(data))
 
 	values = make(map[Attr]interface{})
 
@@ -369,6 +349,8 @@ func (va *VertexArray) Vertex(vertex int) (values map[Attr]interface{}) {
 // array, this method panics.
 //
 // Not existing attributes are silently skipped.
+//
+// The vertex array must be bound before calling this metod.
 func (va *VertexArray) SetVertices(vertices []map[Attr]interface{}) {
 	if len(vertices) != va.numVertices {
 		panic("set vertex array: wrong number of supplied vertices")
@@ -402,23 +384,17 @@ func (va *VertexArray) SetVertices(vertices []map[Attr]interface{}) {
 		}
 	}
 
-	DoNoBlock(func() {
-		va.vbo.bind()
-		gl.BufferSubData(gl.ARRAY_BUFFER, 0, len(data)*4, gl.Ptr(data))
-		va.vbo.restore()
-	})
+	gl.BufferSubData(gl.ARRAY_BUFFER, 0, len(data)*4, gl.Ptr(data))
 }
 
 // Vertices returns values of vertex attributes of all vertices in a vertex array in a slice
 // of maps.
+//
+// The vertex array must be bound before calling this metod.
 func (va *VertexArray) Vertices() (vertices []map[Attr]interface{}) {
 	data := make([]float32, va.numVertices*va.format.Size()/4)
 
-	Do(func() {
-		va.vbo.bind()
-		gl.GetBufferSubData(gl.ARRAY_BUFFER, 0, len(data)*4, gl.Ptr(data))
-		va.vbo.restore()
-	})
+	gl.GetBufferSubData(gl.ARRAY_BUFFER, 0, len(data)*4, gl.Ptr(data))
 
 	vertices = make([]map[Attr]interface{}, va.numVertices)
 
@@ -453,17 +429,16 @@ func (va *VertexArray) Vertices() (vertices []map[Attr]interface{}) {
 	return vertices
 }
 
-// Do binds a vertex arrray and it's associated vertex buffer, executes sub, and unbinds the
-// vertex array and it's vertex buffer.
-func (va *VertexArray) Do(sub func(Context)) {
-	va.parent.Do(func(ctx Context) {
-		DoNoBlock(func() {
-			va.vao.bind()
-		})
-		sub(ctx)
-		DoNoBlock(func() {
-			gl.DrawElements(gl.TRIANGLES, int32(va.numIndices), gl.UNSIGNED_INT, gl.PtrOffset(0))
-			va.vao.restore()
-		})
-	})
+// Begin binds a vertex array. This is neccessary before using the vertex array.
+func (va *VertexArray) Begin() {
+	va.vao.bind()
+	va.vbo.bind()
+	va.ebo.bind()
+}
+
+// End unbinds a vertex array and restores the previous one.
+func (va *VertexArray) End() {
+	va.ebo.restore()
+	va.vbo.restore()
+	va.vao.restore()
 }

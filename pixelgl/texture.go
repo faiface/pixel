@@ -1,20 +1,21 @@
 package pixelgl
 
-import "github.com/go-gl/gl/v3.3-core/gl"
-import "runtime"
+import (
+	"runtime"
+
+	"github.com/go-gl/gl/v3.3-core/gl"
+)
 
 // Texture is an OpenGL texture.
 type Texture struct {
-	parent        Doer
 	tex           binder
 	width, height int
 }
 
 // NewTexture creates a new texture with the specified width and height.
 // The pixels must be a sequence of RGBA values.
-func NewTexture(parent Doer, width, height int, smooth bool, pixels []uint8) (*Texture, error) {
+func NewTexture(width, height int, smooth bool, pixels []uint8) (*Texture, error) {
 	texture := &Texture{
-		parent: parent,
 		tex: binder{
 			restoreLoc: gl.TEXTURE_BINDING_2D,
 			bindFunc: func(obj uint32) {
@@ -25,37 +26,35 @@ func NewTexture(parent Doer, width, height int, smooth bool, pixels []uint8) (*T
 		height: height,
 	}
 
-	parent.Do(func(ctx Context) {
-		Do(func() {
-			gl.GenTextures(1, &texture.tex.obj)
-			defer texture.tex.bind().restore()
+	gl.GenTextures(1, &texture.tex.obj)
 
-			gl.TexImage2D(
-				gl.TEXTURE_2D,
-				0,
-				gl.RGBA,
-				int32(width),
-				int32(height),
-				0,
-				gl.RGBA,
-				gl.UNSIGNED_BYTE,
-				gl.Ptr(pixels),
-			)
+	texture.Begin()
+	defer texture.End()
 
-			gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.MIRRORED_REPEAT)
-			gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.MIRRORED_REPEAT)
+	gl.TexImage2D(
+		gl.TEXTURE_2D,
+		0,
+		gl.RGBA,
+		int32(width),
+		int32(height),
+		0,
+		gl.RGBA,
+		gl.UNSIGNED_BYTE,
+		gl.Ptr(pixels),
+	)
 
-			if smooth {
-				gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR)
-				gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR)
-			} else {
-				gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST_MIPMAP_NEAREST)
-				gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST)
-			}
+	gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.MIRRORED_REPEAT)
+	gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.MIRRORED_REPEAT)
 
-			gl.GenerateMipmap(gl.TEXTURE_2D)
-		})
-	})
+	if smooth {
+		gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR)
+		gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR)
+	} else {
+		gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST_MIPMAP_NEAREST)
+		gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST)
+	}
+
+	gl.GenerateMipmap(gl.TEXTURE_2D)
 
 	runtime.SetFinalizer(texture, (*Texture).delete)
 
@@ -83,15 +82,12 @@ func (t *Texture) Height() int {
 	return t.height
 }
 
-// Do bind a texture, executes sub, and unbinds the texture.
-func (t *Texture) Do(sub func(Context)) {
-	t.parent.Do(func(ctx Context) {
-		DoNoBlock(func() {
-			t.tex.bind()
-		})
-		sub(ctx)
-		DoNoBlock(func() {
-			t.tex.restore()
-		})
-	})
+// Begin binds a texture. This is necessary before using the texture.
+func (t *Texture) Begin() {
+	t.tex.bind()
+}
+
+// End unbinds a texture and restores the previous one.
+func (t *Texture) End() {
+	t.tex.restore()
 }
