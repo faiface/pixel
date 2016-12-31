@@ -12,19 +12,18 @@ import (
 // VertexArray is an OpenGL vertex array object that also holds it's own vertex buffer object.
 // From the user's points of view, VertexArray is an array of vertices that can be drawn.
 type VertexArray struct {
-	vao, vbo, ebo           binder
-	numVertices, numIndices int
-	format                  AttrFormat
-	stride                  int
-	offset                  map[string]int
+	vao, vbo    binder
+	numVertices int
+	format      AttrFormat
+	stride      int
+	offset      map[string]int
 }
 
 // NewVertexArray creates a new empty vertex array.
 //
 // You cannot specify vertex attributes in this constructor, only their count. Use
-// SetVertexAttribute* methods to set the vertex attributes. Use indices to specify how you
-// want to combine vertices into triangles.
-func NewVertexArray(shader *Shader, numVertices int, indices []int) (*VertexArray, error) {
+// SetVertexAttribute* methods to set the vertex attributes.
+func NewVertexArray(shader *Shader, numVertices int) (*VertexArray, error) {
 	va := &VertexArray{
 		vao: binder{
 			restoreLoc: gl.VERTEX_ARRAY_BINDING,
@@ -36,12 +35,6 @@ func NewVertexArray(shader *Shader, numVertices int, indices []int) (*VertexArra
 			restoreLoc: gl.ARRAY_BUFFER_BINDING,
 			bindFunc: func(obj uint32) {
 				gl.BindBuffer(gl.ARRAY_BUFFER, obj)
-			},
-		},
-		ebo: binder{
-			restoreLoc: gl.ELEMENT_ARRAY_BUFFER_BINDING,
-			bindFunc: func(obj uint32) {
-				gl.BindBuffer(gl.ELEMENT_ARRAY_BUFFER, obj)
 			},
 		},
 		numVertices: numVertices,
@@ -71,9 +64,6 @@ func NewVertexArray(shader *Shader, numVertices int, indices []int) (*VertexArra
 	emptyData := make([]byte, numVertices*va.stride)
 	gl.BufferData(gl.ARRAY_BUFFER, len(emptyData), gl.Ptr(emptyData), gl.DYNAMIC_DRAW)
 
-	gl.GenBuffers(1, &va.ebo.obj)
-	defer va.ebo.bind().restore()
-
 	for name, typ := range va.format {
 		loc := gl.GetAttribLocation(shader.ID(), gl.Str(name+"\x00"))
 
@@ -102,8 +92,6 @@ func NewVertexArray(shader *Shader, numVertices int, indices []int) (*VertexArra
 
 	va.vao.restore()
 
-	va.SetIndices(indices)
-
 	runtime.SetFinalizer(va, (*VertexArray).delete)
 
 	return va, nil
@@ -113,7 +101,6 @@ func (va *VertexArray) delete() {
 	DoNoBlock(func() {
 		gl.DeleteVertexArrays(1, &va.vao.obj)
 		gl.DeleteBuffers(1, &va.vbo.obj)
-		gl.DeleteBuffers(1, &va.ebo.obj)
 	})
 }
 
@@ -138,41 +125,7 @@ func (va *VertexArray) VertexFormat() AttrFormat {
 //
 // The vertex array must be bound before calling this method.
 func (va *VertexArray) Draw() {
-	gl.DrawElements(gl.TRIANGLES, int32(va.numIndices), gl.UNSIGNED_INT, gl.PtrOffset(0))
-}
-
-// SetIndices sets the indices of triangles to be drawn. Triangles will be formed from the
-// vertices of the array as defined by these indices. The first drawn triangle is specified by
-// the first three indices, the second by the fourth through sixth and so on.
-//
-// The vertex array must be bound before calling this method.
-func (va *VertexArray) SetIndices(indices []int) {
-	if len(indices)%3 != 0 {
-		panic("vertex array set indices: number of indices not divisible by 3")
-	}
-	indices32 := make([]uint32, len(indices))
-	for i := range indices32 {
-		indices32[i] = uint32(indices[i])
-	}
-	va.numIndices = len(indices32)
-
-	gl.BufferData(gl.ELEMENT_ARRAY_BUFFER, 4*len(indices32), gl.Ptr(indices32), gl.DYNAMIC_DRAW)
-}
-
-// Indices returns the current indices of triangles to be drawn.
-//
-// The vertex array must be bound before calling this method.
-func (va *VertexArray) Indices() []int {
-	indices32 := make([]uint32, va.numIndices)
-
-	gl.GetBufferSubData(gl.ELEMENT_ARRAY_BUFFER, 0, 4*len(indices32), gl.Ptr(indices32))
-
-	indices := make([]int, len(indices32))
-	for i := range indices {
-		indices[i] = int(indices32[i])
-	}
-
-	return indices
+	gl.DrawArrays(gl.TRIANGLES, 0, int32(va.numVertices))
 }
 
 // SetVertexAttr sets the value of the specified vertex attribute of the specified vertex.
@@ -433,12 +386,10 @@ func (va *VertexArray) Vertices() (vertices []map[Attr]interface{}) {
 func (va *VertexArray) Begin() {
 	va.vao.bind()
 	va.vbo.bind()
-	va.ebo.bind()
 }
 
 // End unbinds a vertex array and restores the previous one.
 func (va *VertexArray) End() {
-	va.ebo.restore()
 	va.vbo.restore()
 	va.vao.restore()
 }
