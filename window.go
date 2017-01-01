@@ -2,7 +2,6 @@ package pixel
 
 import (
 	"image/color"
-	"sync"
 
 	"runtime"
 
@@ -58,10 +57,10 @@ type WindowConfig struct {
 
 // Window is a window handler. Use this type to manipulate a window (input, drawing, ...).
 type Window struct {
-	enabled       bool
-	window        *glfw.Window
-	config        WindowConfig
-	defaultShader *pixelgl.Shader
+	enabled bool
+	window  *glfw.Window
+	config  WindowConfig
+	shader  *pixelgl.Shader
 
 	// need to save these to correctly restore a fullscreen window
 	restore struct {
@@ -73,6 +72,8 @@ type Window struct {
 		scroll  Vec
 	}
 }
+
+var currentWindow *Window
 
 // NewWindow creates a new window with it's properties specified in the provided config.
 //
@@ -103,7 +104,11 @@ func NewWindow(config WindowConfig) (*Window, error) {
 		glfw.WindowHint(glfw.Maximized, bool2int[config.Maximized])
 		glfw.WindowHint(glfw.Samples, config.MSAASamples)
 
-		w.window, err = glfw.CreateWindow(int(config.Width), int(config.Height), config.Title, nil, nil)
+		var share *glfw.Window
+		if currentWindow != nil {
+			share = currentWindow.window
+		}
+		w.window, err = glfw.CreateWindow(int(config.Width), int(config.Height), config.Title, nil, share)
 		if err != nil {
 			return err
 		}
@@ -114,13 +119,11 @@ func NewWindow(config WindowConfig) (*Window, error) {
 		return nil, errors.Wrap(err, "creating window failed")
 	}
 
-	w.initInput()
+	pixelgl.Do(func() {
+		w.Begin()
+		defer w.End()
 
-	w.SetFullscreen(config.Fullscreen)
-
-	w.Do(func(pixelgl.Context) {
-		w.defaultShader, err = pixelgl.NewShader(
-			pixelgl.NoOpDoer,
+		w.shader, err = pixelgl.NewShader(
 			defaultVertexFormat,
 			defaultUniformFormat,
 			defaultVertexShader,
@@ -128,13 +131,20 @@ func NewWindow(config WindowConfig) (*Window, error) {
 		)
 
 		// default uniforms
-		w.defaultShader.SetUniformAttr(maskColorVec4, mgl32.Vec4{1, 1, 1, 1})
-		w.defaultShader.SetUniformAttr(transformMat3, mgl32.Ident3())
+		w.shader.Begin()
+		w.shader.SetUniformAttr(maskColorVec4, mgl32.Vec4{1, 1, 1, 1})
+		w.shader.SetUniformAttr(transformMat3, mgl32.Ident3())
+
+		// this is tricky, w.shader.End() is not needed here, because it will
+		// actually be ended by a deferred w.End() call
 	})
 	if err != nil {
 		w.Destroy()
 		return nil, errors.Wrap(err, "creating window failed")
 	}
+
+	w.initInput()
+	w.SetFullscreen(config.Fullscreen)
 
 	runtime.SetFinalizer(w, (*Window).Destroy)
 
@@ -150,37 +160,42 @@ func (w *Window) Destroy() {
 
 // Clear clears the window with a color.
 func (w *Window) Clear(c color.Color) {
-	w.Do(func(pixelgl.Context) {
-		pixelgl.DoNoBlock(func() {
-			c := NRGBAModel.Convert(c).(NRGBA)
-			gl.ClearColor(float32(c.R), float32(c.G), float32(c.B), float32(c.A))
-			gl.Clear(gl.COLOR_BUFFER_BIT)
-		})
+	pixelgl.DoNoBlock(func() {
+		w.Begin()
+		defer w.End()
+
+		c := NRGBAModel.Convert(c).(NRGBA)
+		gl.ClearColor(float32(c.R), float32(c.G), float32(c.B), float32(c.A))
+		gl.Clear(gl.COLOR_BUFFER_BIT)
 	})
 }
 
 // Update swaps buffers and polls events.
 func (w *Window) Update() {
-	w.Do(func(pixelgl.Context) {
-		pixelgl.Do(func() {
-			if w.config.VSync {
-				glfw.SwapInterval(1)
-			}
-			w.window.SwapBuffers()
-		})
+	pixelgl.Do(func() {
+		w.Begin()
+		defer w.End()
 
-		w.updateInput()
+		if w.config.VSync {
+			glfw.SwapInterval(1)
+		}
+		w.window.SwapBuffers()
+	})
 
-		pixelgl.Do(func() {
-			w, h := w.window.GetSize()
-			gl.Viewport(0, 0, int32(w), int32(h))
-		})
+	w.updateInput()
+
+	pixelgl.Do(func() {
+		w.Begin()
+		defer w.End()
+
+		w, h := w.window.GetSize()
+		gl.Viewport(0, 0, int32(w), int32(h))
 	})
 }
 
-// DefaultShader returns the default shader used by a window.
-func (w *Window) DefaultShader() *pixelgl.Shader {
-	return w.defaultShader
+// Shader returns the default shader used by a window.
+func (w *Window) Shader() *pixelgl.Shader {
+	return w.shader
 }
 
 // SetClosed sets the closed flag of a window.
@@ -327,33 +342,50 @@ func (w *Window) Restore() {
 	})
 }
 
-var currentWindow struct {
-	sync.Mutex
-	handler *Window
+// Begin makes the OpenGL context of a window current and binds it's shader.
+//
+// You usually do not need to use this method, however, you have to use it when you're
+// directly using this window's context (such as drawing on it using OpenGL).
+//
+// Note, that this method must be called inside the main OpenGL thread (pixelgl.Do/DoNoBlock/DoErr/DoVal).
+func (w *Window) Begin() {
+	if currentWindow != w {
+		w.window.MakeContextCurrent()
+		pixelgl.Init()
+		currentWindow = w
+	}
+	if w.shader != nil {
+		w.shader.Begin()
+	}
 }
 
-// Do makes the context of this window current, if it's not already, and executes sub.
-func (w *Window) Do(sub func(pixelgl.Context)) {
-	if !w.enabled {
-		currentWindow.Lock()
-		defer currentWindow.Unlock()
+// End unbinds the shader of a window.
+func (w *Window) End() {
+	if w.shader != nil {
+		w.shader.End()
+	}
+}
 
-		if currentWindow.handler != w {
-			pixelgl.Do(func() {
-				w.window.MakeContextCurrent()
-				pixelgl.Init()
-			})
-			currentWindow.handler = w
+// MakeVertexArray implements Target.
+func (w *Window) MakeVertexArray(vertices []map[pixelgl.Attr]interface{}) *pixelgl.VertexArray {
+	var va *pixelgl.VertexArray
+
+	pixelgl.Do(func() {
+		w.Begin()
+		defer w.End()
+
+		var err error
+		va, err = pixelgl.NewVertexArray(w.Shader(), len(vertices))
+		if err != nil {
+			panic(err)
 		}
-	}
 
-	w.enabled = true
-	if w.defaultShader != nil {
-		w.defaultShader.Do(sub)
-	} else {
-		sub(pixelgl.Context{})
-	}
-	w.enabled = false
+		va.Begin()
+		va.SetVertices(vertices)
+		va.End()
+	})
+
+	return va
 }
 
 var defaultVertexFormat = pixelgl.AttrFormat{

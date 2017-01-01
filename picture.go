@@ -24,16 +24,19 @@ func NewPicture(img image.Image, smooth bool) *Picture {
 	rgba := image.NewRGBA(image.Rect(0, 0, img.Bounds().Dx(), img.Bounds().Dy()))
 	draw.Draw(rgba, rgba.Bounds(), img, img.Bounds().Min, draw.Src)
 
-	texture, err := pixelgl.NewTexture(
-		pixelgl.NoOpDoer,
-		img.Bounds().Dx(),
-		img.Bounds().Dy(),
-		smooth,
-		rgba.Pix,
-	)
-	if err != nil {
-		panic(errors.Wrap(err, "failed to create picture"))
-	}
+	var texture *pixelgl.Texture
+	pixelgl.Do(func() {
+		var err error
+		texture, err = pixelgl.NewTexture(
+			img.Bounds().Dx(),
+			img.Bounds().Dy(),
+			smooth,
+			rgba.Pix,
+		)
+		if err != nil {
+			panic(errors.Wrap(err, "failed to create picture"))
+		}
+	})
 
 	return &Picture{
 		texture: texture,

@@ -9,72 +9,6 @@ import (
 	"github.com/pkg/errors"
 )
 
-// Drawer is anything that can be drawn. It's by no means a drawer inside your table.
-//
-// Drawer consists of a single methods: Draw. Draw methods takes any number of Transform
-// arguments. It applies these transforms in the reverse order and finally draws something
-// transformed by these transforms.
-//
-// Example:
-//
-//   // object is a drawer
-//   object.Draw(pixel.Position(pixel.V(100, 100).Rotate(math.Pi / 2)))
-//   camera := pixel.Camera(pixel.V(0, 0), pixel.V(500, 500), pixel.V(window.Size()))
-//   object.Draw(camera, pixel.Position(0).Scale(0.5))
-type Drawer interface {
-	Draw(t ...Transform)
-}
-
-// Group is used to effeciently handle a collection of objects with a common parent. Usually many
-// objects share a parent, using a group can significantly increase performance in these cases.
-//
-// To use a group, first, create a group and as it's parent use the common parent of the
-// collection of objects:
-//
-//   group := pixel.NewGroup(commonParent)
-//
-// Then, when creating the objects, use the group as their parent, instead of the original
-// common parent, but, don't forget to put everything into a With block, like this:
-//
-//   group.With(func() {
-//       object := newArbitratyObject(group, ...) // group is the parent of the object
-//   })
-//
-// When dealing with objects associated with a group, it's always necessary to wrap that into
-// a With block:
-//
-//   group.With(func() {
-//       for _, obj := range objectsWithCommonParent {
-//           // do something with obj
-//       }
-//   })
-//
-// That's all!
-type Group struct {
-	parent  pixelgl.Doer
-	context pixelgl.Context
-}
-
-// NewGroup creates a new group with the specified parent.
-func NewGroup(parent pixelgl.Doer) *Group {
-	return &Group{
-		parent: parent,
-	}
-}
-
-// With enables the parent of a group and executes sub.
-func (g *Group) With(sub func()) {
-	g.parent.Do(func(ctx pixelgl.Context) {
-		g.context = ctx
-		sub()
-	})
-}
-
-// Do just passes a cached context to sub.
-func (g *Group) Do(sub func(pixelgl.Context)) {
-	sub(g.context)
-}
-
 // Shape is a general drawable shape constructed from vertices.
 //
 // Vertices are specified in the vertex array of a shape. A shape can have a picture, a color
@@ -83,21 +17,21 @@ func (g *Group) Do(sub func(pixelgl.Context)) {
 // Usually you use this type only indirectly throught other specific shapes (sprites, polygons,
 // ...) embedding it.
 type Shape struct {
-	parent    pixelgl.Doer
 	picture   *Picture
 	color     color.Color
 	transform Transform
-	va        *pixelgl.VertexArray
+	vertices  []map[pixelgl.Attr]interface{}
+	vas       map[Target]*pixelgl.VertexArray
 }
 
 // NewShape creates a new shape with specified parent, picture, color, transform and vertex array.
-func NewShape(parent pixelgl.Doer, picture *Picture, c color.Color, transform Transform, va *pixelgl.VertexArray) *Shape {
+func NewShape(picture *Picture, c color.Color, transform Transform, vertices []map[pixelgl.Attr]interface{}) *Shape {
 	return &Shape{
-		parent:    parent,
 		picture:   picture,
 		color:     c,
 		transform: transform,
-		va:        va,
+		vertices:  vertices,
+		vas:       make(map[Target]*pixelgl.VertexArray),
 	}
 }
 
@@ -131,30 +65,45 @@ func (s *Shape) Transform() Transform {
 	return s.transform
 }
 
-// VertexArray changes the underlying vertex array of a shape.
-func (s *Shape) VertexArray() *pixelgl.VertexArray {
-	return s.va
+// Vertices returns the vertex attribute values of all vertices in a shape.
+//
+// Do not change!
+func (s *Shape) Vertices() []map[pixelgl.Attr]interface{} {
+	return s.vertices
 }
 
 // Draw draws a sprite transformed by the supplied transforms applied in the reverse order.
-func (s *Shape) Draw(t ...Transform) {
+func (s *Shape) Draw(target Target, t ...Transform) {
 	mat := mgl32.Ident3()
 	for i := range t {
 		mat = mat.Mul3(t[i].Mat())
 	}
 	mat = mat.Mul3(s.transform.Mat())
 
-	s.parent.Do(func(ctx pixelgl.Context) {
-		c := NRGBAModel.Convert(s.color).(NRGBA)
-		ctx.Shader().SetUniformAttr(maskColorVec4, mgl32.Vec4{float32(c.R), float32(c.G), float32(c.B), float32(c.A)})
-		ctx.Shader().SetUniformAttr(transformMat3, mat)
+	c := NRGBAModel.Convert(s.color).(NRGBA)
+
+	if s.vas[target] == nil {
+		s.vas[target] = target.MakeVertexArray(s.vertices)
+	}
+	va := s.vas[target]
+
+	pixelgl.Do(func() {
+		target.Begin()
+		defer target.End()
+
+		target.Shader().SetUniformAttr(maskColorVec4, mgl32.Vec4{float32(c.R), float32(c.G), float32(c.B), float32(c.A)})
+		target.Shader().SetUniformAttr(transformMat3, mat)
 
 		if s.picture != nil {
-			s.picture.Texture().Do(func(pixelgl.Context) {
-				s.va.Draw()
-			})
+			s.picture.Texture().Begin()
+			va.Begin()
+			va.Draw()
+			va.End()
+			s.picture.Texture().End()
 		} else {
-			s.va.Draw()
+			va.Begin()
+			va.Draw()
+			va.End()
 		}
 	})
 }
@@ -173,7 +122,7 @@ type MultiShape struct {
 // NewMultiShape creates a new multishape from several other shapes.
 //
 // If two of the supplied shapes have different pictures, this function panics.
-func NewMultiShape(parent pixelgl.Doer, shapes ...*Shape) *MultiShape {
+func NewMultiShape(shapes ...*Shape) *MultiShape {
 	var picture *Picture
 	for _, shape := range shapes {
 		if picture != nil && shape.Picture() != nil && shape.Picture().Texture().ID() != picture.Texture().ID() {
@@ -184,20 +133,9 @@ func NewMultiShape(parent pixelgl.Doer, shapes ...*Shape) *MultiShape {
 		}
 	}
 
-	var va *pixelgl.VertexArray
-
-	var indices []int
-	offset := 0
-	for _, shape := range shapes {
-		for _, i := range shape.va.Indices() {
-			indices = append(indices, offset+i)
-		}
-		offset += shape.VertexArray().NumVertices()
-	}
-
 	var vertices []map[pixelgl.Attr]interface{}
 	for _, shape := range shapes {
-		shapeVertices := shape.VertexArray().Vertices()
+		shapeVertices := shape.Vertices()
 
 		for vertex := range shapeVertices {
 			if pos, ok := shapeVertices[vertex][positionVec2]; ok {
@@ -221,22 +159,7 @@ func NewMultiShape(parent pixelgl.Doer, shapes ...*Shape) *MultiShape {
 		vertices = append(vertices, shapeVertices...)
 	}
 
-	parent.Do(func(ctx pixelgl.Context) {
-		var err error
-		va, err = pixelgl.NewVertexArray(
-			pixelgl.ContextHolder{Context: ctx},
-			ctx.Shader().VertexFormat(),
-			len(vertices),
-			indices,
-		)
-		if err != nil {
-			panic(errors.Wrap(err, "failed to create multishape"))
-		}
-	})
-
-	va.SetVertices(vertices)
-
-	return &MultiShape{NewShape(parent, picture, color.White, Position(0), va)}
+	return &MultiShape{NewShape(picture, color.White, Position(0), vertices)}
 }
 
 // Sprite is a picture that can be drawn on the screen. Optionally it can be color masked
@@ -252,25 +175,10 @@ type Sprite struct {
 
 // NewSprite creates a new sprite with the supplied picture. The sprite's size is the size of
 // the supplied picture.  If you want to change the sprite's size, change it's transform.
-func NewSprite(parent pixelgl.Doer, picture *Picture) *Sprite {
-	var va *pixelgl.VertexArray
-
-	parent.Do(func(ctx pixelgl.Context) {
-		var err error
-		va, err = pixelgl.NewVertexArray(
-			pixelgl.ContextHolder{Context: ctx},
-			ctx.Shader().VertexFormat(),
-			4,
-			[]int{0, 1, 2, 0, 2, 3},
-		)
-		if err != nil {
-			panic(errors.Wrap(err, "failed to create sprite"))
-		}
-	})
+func NewSprite(picture *Picture) *Sprite {
+	w, h := picture.Bounds().Size.XY()
 
 	vertices := make([]map[pixelgl.Attr]interface{}, 4)
-
-	w, h := picture.Bounds().Size.XY()
 	for i, p := range []Vec{V(0, 0), V(w, 0), V(w, h), V(0, h)} {
 		texCoord := V(
 			(picture.Bounds().X()+p.X())/float64(picture.Texture().Width()),
@@ -284,9 +192,16 @@ func NewSprite(parent pixelgl.Doer, picture *Picture) *Sprite {
 		}
 	}
 
-	va.SetVertices(vertices)
+	vertices = []map[pixelgl.Attr]interface{}{
+		vertices[0],
+		vertices[1],
+		vertices[2],
+		vertices[0],
+		vertices[2],
+		vertices[3],
+	}
 
-	return &Sprite{NewShape(parent, picture, color.White, Position(0), va)}
+	return &Sprite{NewShape(picture, color.White, Position(0), vertices)}
 }
 
 // LineColor a line shape (with sharp ends) filled with a single color.
@@ -296,26 +211,9 @@ type LineColor struct {
 	width float64
 }
 
-// NewLineColor creates a new line shape between points A and B filled with a single color. Parent
-// is an object that this shape belongs to, such as a window, or a graphics effect.
-func NewLineColor(parent pixelgl.Doer, c color.Color, a, b Vec, width float64) *LineColor {
-	var va *pixelgl.VertexArray
-
-	parent.Do(func(ctx pixelgl.Context) {
-		var err error
-		va, err = pixelgl.NewVertexArray(
-			pixelgl.ContextHolder{Context: ctx},
-			ctx.Shader().VertexFormat(),
-			4,
-			[]int{0, 1, 2, 1, 2, 3},
-		)
-		if err != nil {
-			panic(errors.Wrap(err, "failed to create line"))
-		}
-	})
-
+// NewLineColor creates a new line shape between points A and B filled with a single color.
+func NewLineColor(c color.Color, a, b Vec, width float64) *LineColor {
 	vertices := make([]map[pixelgl.Attr]interface{}, 4)
-
 	for i := 0; i < 4; i++ {
 		vertices[i] = map[pixelgl.Attr]interface{}{
 			colorVec4:    mgl32.Vec4{1, 1, 1, 1},
@@ -323,9 +221,16 @@ func NewLineColor(parent pixelgl.Doer, c color.Color, a, b Vec, width float64) *
 		}
 	}
 
-	va.SetVertices(vertices)
+	vertices = []map[pixelgl.Attr]interface{}{
+		vertices[0],
+		vertices[1],
+		vertices[2],
+		vertices[1],
+		vertices[2],
+		vertices[3],
+	}
 
-	lc := &LineColor{NewShape(parent, nil, c, Position(0), va), a, b, width}
+	lc := &LineColor{NewShape(nil, c, Position(0), vertices), a, b, width}
 	lc.setPoints()
 	return lc
 }
