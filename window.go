@@ -61,6 +61,7 @@ type Window struct {
 	window  *glfw.Window
 	config  WindowConfig
 	shader  *pixelgl.Shader
+	pic     *Picture
 
 	// need to save these to correctly restore a fullscreen window
 	restore struct {
@@ -120,8 +121,8 @@ func NewWindow(config WindowConfig) (*Window, error) {
 	}
 
 	pixelgl.Do(func() {
-		w.Begin()
-		defer w.End()
+		w.begin()
+		defer w.end()
 
 		w.shader, err = pixelgl.NewShader(
 			defaultVertexFormat,
@@ -129,6 +130,9 @@ func NewWindow(config WindowConfig) (*Window, error) {
 			defaultVertexShader,
 			defaultFragmentShader,
 		)
+		if err != nil {
+			panic(errors.Wrap(err, "NewWindow: failed to create shader"))
+		}
 
 		// default uniforms
 		w.shader.Begin()
@@ -161,8 +165,8 @@ func (w *Window) Destroy() {
 // Clear clears the window with a color.
 func (w *Window) Clear(c color.Color) {
 	pixelgl.DoNoBlock(func() {
-		w.Begin()
-		defer w.End()
+		w.begin()
+		defer w.end()
 
 		c := NRGBAModel.Convert(c).(NRGBA)
 		gl.ClearColor(float32(c.R), float32(c.G), float32(c.B), float32(c.A))
@@ -173,8 +177,8 @@ func (w *Window) Clear(c color.Color) {
 // Update swaps buffers and polls events.
 func (w *Window) Update() {
 	pixelgl.Do(func() {
-		w.Begin()
-		defer w.End()
+		w.begin()
+		defer w.end()
 
 		if w.config.VSync {
 			glfw.SwapInterval(1)
@@ -185,8 +189,8 @@ func (w *Window) Update() {
 	w.updateInput()
 
 	pixelgl.Do(func() {
-		w.Begin()
-		defer w.End()
+		w.begin()
+		defer w.end()
 
 		w, h := w.window.GetSize()
 		gl.Viewport(0, 0, int32(w), int32(h))
@@ -342,13 +346,10 @@ func (w *Window) Restore() {
 	})
 }
 
-// Begin makes the OpenGL context of a window current and binds it's shader.
-//
-// You usually do not need to use this method, however, you have to use it when you're
-// directly using this window's context (such as drawing on it using OpenGL).
+// begin makes the OpenGL context of a window current and binds it's shader.
 //
 // Note, that this method must be called inside the main OpenGL thread (pixelgl.Do/DoNoBlock/DoErr/DoVal).
-func (w *Window) Begin() {
+func (w *Window) begin() {
 	if currentWindow != w {
 		w.window.MakeContextCurrent()
 		pixelgl.Init()
@@ -359,39 +360,187 @@ func (w *Window) Begin() {
 	}
 }
 
-// End unbinds the shader of a window.
-func (w *Window) End() {
+// end unbinds the shader of a window.
+//
+// Note, that this method must be called inside the main OpenGL thread (pixelgl.Do/DoNoBlock/DoErr/DoVal).
+func (w *Window) end() {
 	if w.shader != nil {
 		w.shader.End()
 	}
 }
 
-// MakeVertexArray implements Target.
-func (w *Window) MakeVertexArray(vertices []map[pixelgl.Attr]interface{}) *pixelgl.VertexArray {
-	var va *pixelgl.VertexArray
+type windowTrianglesData []struct {
+	position Vec
+	color    NRGBA
+	texture  Vec
+}
+
+type windowTriangles struct {
+	w        *Window
+	va       *pixelgl.VertexArray
+	data     windowTrianglesData
+	attrData []map[pixelgl.Attr]interface{}
+	dirty    bool
+}
+
+func (wt *windowTriangles) flush() {
+	if !wt.dirty {
+		return
+	}
+	wt.dirty = false
+
+	if wt.va == nil || wt.va.NumVertices() != wt.Len() {
+		// reallocate vertex array
+		pixelgl.Do(func() {
+			var err error
+			wt.va, err = pixelgl.NewVertexArray(wt.w.shader, wt.Len())
+			if err != nil {
+				panic(errors.Wrap(err, "windowTriangles: failed to create vertex array"))
+			}
+		})
+	}
+
+	if wt.Len() > len(wt.attrData) {
+		wt.attrData = append(wt.attrData, make([]map[pixelgl.Attr]interface{}, wt.Len()-len(wt.attrData))...)
+	}
+	if wt.Len() < len(wt.attrData) {
+		wt.attrData = wt.attrData[:wt.Len()]
+	}
+
+	for i, v := range wt.data {
+		if wt.attrData[i] == nil {
+			wt.attrData[i] = make(map[pixelgl.Attr]interface{})
+		}
+		wt.attrData[i][positionVec2] = mgl32.Vec2{float32(v.position.X()), float32(v.position.Y())}
+		wt.attrData[i][colorVec4] = mgl32.Vec4{float32(v.color.R), float32(v.color.G), float32(v.color.B), float32(v.color.A)}
+		wt.attrData[i][textureVec2] = mgl32.Vec2{float32(v.texture.X()), float32(v.texture.Y())}
+	}
 
 	pixelgl.Do(func() {
-		w.Begin()
-		defer w.End()
-
-		var err error
-		va, err = pixelgl.NewVertexArray(w.Shader(), len(vertices))
-		if err != nil {
-			panic(err)
-		}
-
-		va.Begin()
-		va.SetVertices(vertices)
-		va.End()
+		wt.va.Begin()
+		wt.va.SetVertices(wt.attrData)
+		wt.va.End()
 	})
+}
 
-	return va
+func (wt *windowTriangles) Len() int {
+	return len(wt.data)
+}
+
+func (wt *windowTriangles) Draw() {
+	wt.flush()
+	pixelgl.DoNoBlock(func() {
+		wt.w.begin()
+		if wt.w.pic != nil {
+			wt.w.pic.Texture().Begin()
+		}
+		wt.va.Begin()
+		wt.va.Draw()
+		wt.va.End()
+		if wt.w.pic != nil {
+			wt.w.pic.Texture().End()
+		}
+		wt.w.end()
+	})
+}
+
+func (wt *windowTriangles) Update(t Triangles) {
+	wt.dirty = true
+
+	if t.Len() > wt.Len() {
+		newData := make(windowTrianglesData, t.Len())
+		// default attribute values
+		for i := range newData {
+			newData[i].color = NRGBA{R: 1, G: 1, B: 1, A: 1}
+			newData[i].texture = V(-1, -1)
+		}
+		wt.data = append(wt.data, newData...)
+	}
+	if t.Len() < wt.Len() {
+		wt.data = wt.data[:t.Len()]
+	}
+
+	if t, ok := t.(TrianglesPosition); ok {
+		for i := range wt.data {
+			wt.data[i].position = t.Position(i)
+		}
+	}
+	if t, ok := t.(TrianglesColor); ok {
+		for i := range wt.data {
+			wt.data[i].color = NRGBAModel.Convert(t.Color(i)).(NRGBA)
+		}
+	}
+	if t, ok := t.(TrianglesTexture); ok {
+		for i := range wt.data {
+			wt.data[i].texture = t.Texture(i)
+		}
+	}
+}
+
+func (wt *windowTriangles) Position(i int) Vec {
+	return wt.data[i].position
+}
+
+func (wt *windowTriangles) Color(i int) color.Color {
+	return wt.data[i].color
+}
+
+func (wt *windowTriangles) Texture(i int) Vec {
+	return wt.data[i].texture
+}
+
+// MakeTriangles generates a specialized copy of the supplied triangles that will draw onto this
+// Window.
+//
+// Window supports TrianglesPosition, TrianglesColor and TrianglesTexture.
+func (w *Window) MakeTriangles(t Triangles) Triangles {
+	wt := &windowTriangles{
+		w: w,
+	}
+	wt.Update(t)
+	return wt
+}
+
+// SetTransform sets a global transformation matrix for the Window.
+//
+// Transforms are applied right-to-left.
+func (w *Window) SetTransform(t ...Transform) {
+	mat := mgl32.Ident3()
+	for i := range t {
+		mat = mat.Mul3(t[i].Mat())
+	}
+
+	pixelgl.DoNoBlock(func() {
+		w.begin()
+		w.shader.SetUniformAttr(transformMat3, mat)
+		w.end()
+	})
+}
+
+// SetMaskColor sets a global mask color for the Window.
+func (w *Window) SetMaskColor(c color.Color) {
+	nrgba := NRGBAModel.Convert(c).(NRGBA)
+	r := float32(nrgba.R)
+	g := float32(nrgba.G)
+	b := float32(nrgba.B)
+	a := float32(nrgba.A)
+
+	pixelgl.DoNoBlock(func() {
+		w.begin()
+		w.shader.SetUniformAttr(maskColorVec4, mgl32.Vec4{r, g, b, a})
+		w.end()
+	})
+}
+
+// SetPicture sets a Picture that will be used in subsequent drawings onto the window.
+func (w *Window) SetPicture(p *Picture) {
+	w.pic = p
 }
 
 var defaultVertexFormat = pixelgl.AttrFormat{
 	"position": pixelgl.Vec2,
 	"color":    pixelgl.Vec4,
-	"texCoord": pixelgl.Vec2,
+	"texture":  pixelgl.Vec2,
 }
 
 var defaultUniformFormat = pixelgl.AttrFormat{
@@ -404,17 +553,17 @@ var defaultVertexShader = `
 
 in vec2 position;
 in vec4 color;
-in vec2 texCoord;
+in vec2 texture;
 
 out vec4 Color;
-out vec2 TexCoord;
+out vec2 Texture;
 
 uniform mat3 transform;
 
 void main() {
 	gl_Position = vec4((transform * vec3(position.x, position.y, 1.0)).xy, 0.0, 1.0);
 	Color = color;
-	TexCoord = texCoord;
+	Texture = texture;
 }
 `
 
@@ -422,7 +571,7 @@ var defaultFragmentShader = `
 #version 330 core
 
 in vec4 Color;
-in vec2 TexCoord;
+in vec2 Texture;
 
 out vec4 color;
 
@@ -430,10 +579,10 @@ uniform vec4 maskColor;
 uniform sampler2D tex;
 
 void main() {
-	if (TexCoord == vec2(-1, -1)) {
+	if (Texture == vec2(-1, -1)) {
 		color = maskColor * Color;
 	} else {
-		color = maskColor * Color * texture(tex, vec2(TexCoord.x, 1 - TexCoord.y));
+		color = maskColor * Color * texture(tex, vec2(Texture.x, 1 - Texture.y));
 	}
 }
 `
@@ -447,8 +596,8 @@ var (
 		Name: "color",
 		Type: pixelgl.Vec4,
 	}
-	texCoordVec2 = pixelgl.Attr{
-		Name: "texCoord",
+	textureVec2 = pixelgl.Attr{
+		Name: "texture",
 		Type: pixelgl.Vec2,
 	}
 	maskColorVec4 = pixelgl.Attr{
