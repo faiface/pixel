@@ -369,16 +369,10 @@ func (w *Window) end() {
 	}
 }
 
-type windowTrianglesData []struct {
-	position Vec
-	color    NRGBA
-	texture  Vec
-}
-
 type windowTriangles struct {
 	w        *Window
 	va       *pixelgl.VertexArray
-	data     windowTrianglesData
+	data     TrianglesData
 	attrData []map[pixelgl.Attr]interface{}
 	dirty    bool
 }
@@ -411,9 +405,12 @@ func (wt *windowTriangles) flush() {
 		if wt.attrData[i] == nil {
 			wt.attrData[i] = make(map[pixelgl.Attr]interface{})
 		}
-		wt.attrData[i][positionVec2] = mgl32.Vec2{float32(v.position.X()), float32(v.position.Y())}
-		wt.attrData[i][colorVec4] = mgl32.Vec4{float32(v.color.R), float32(v.color.G), float32(v.color.B), float32(v.color.A)}
-		wt.attrData[i][textureVec2] = mgl32.Vec2{float32(v.texture.X()), float32(v.texture.Y())}
+		p := v.Position
+		c := NRGBAModel.Convert(v.Color).(NRGBA)
+		t := v.Texture
+		wt.attrData[i][positionVec2] = mgl32.Vec2{float32(p.X()), float32(p.Y())}
+		wt.attrData[i][colorVec4] = mgl32.Vec4{float32(c.R), float32(c.G), float32(c.B), float32(c.A)}
+		wt.attrData[i][textureVec2] = mgl32.Vec2{float32(t.X()), float32(t.Y())}
 	}
 
 	pixelgl.Do(func() {
@@ -448,11 +445,11 @@ func (wt *windowTriangles) Update(t Triangles) {
 	wt.dirty = true
 
 	if t.Len() > wt.Len() {
-		newData := make(windowTrianglesData, t.Len())
+		newData := make(TrianglesData, t.Len())
 		// default attribute values
 		for i := range newData {
-			newData[i].color = NRGBA{R: 1, G: 1, B: 1, A: 1}
-			newData[i].texture = V(-1, -1)
+			newData[i].Color = NRGBA{R: 1, G: 1, B: 1, A: 1}
+			newData[i].Texture = V(-1, -1)
 		}
 		wt.data = append(wt.data, newData...)
 	}
@@ -460,33 +457,19 @@ func (wt *windowTriangles) Update(t Triangles) {
 		wt.data = wt.data[:t.Len()]
 	}
 
-	if t, ok := t.(TrianglesPosition); ok {
-		for i := range wt.data {
-			wt.data[i].position = t.Position(i)
-		}
-	}
-	if t, ok := t.(TrianglesColor); ok {
-		for i := range wt.data {
-			wt.data[i].color = NRGBAModel.Convert(t.Color(i)).(NRGBA)
-		}
-	}
-	if t, ok := t.(TrianglesTexture); ok {
-		for i := range wt.data {
-			wt.data[i].texture = t.Texture(i)
-		}
-	}
+	wt.data.Update(t)
 }
 
 func (wt *windowTriangles) Position(i int) Vec {
-	return wt.data[i].position
+	return wt.data.Position(i)
 }
 
 func (wt *windowTriangles) Color(i int) color.Color {
-	return wt.data[i].color
+	return wt.data.Color(i)
 }
 
 func (wt *windowTriangles) Texture(i int) Vec {
-	return wt.data[i].texture
+	return wt.data.Texture(i)
 }
 
 // MakeTriangles generates a specialized copy of the supplied triangles that will draw onto this
