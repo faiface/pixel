@@ -197,11 +197,6 @@ func (w *Window) Update() {
 	})
 }
 
-// Shader returns the default shader used by a window.
-func (w *Window) Shader() *pixelgl.Shader {
-	return w.shader
-}
-
 // SetClosed sets the closed flag of a window.
 //
 // This is usefull when overriding the user's attempt to close a window, or just to close a
