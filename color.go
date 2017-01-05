@@ -66,7 +66,9 @@ func (c NRGBA) RGBA() (r, g, b, a uint32) {
 }
 
 // NRGBAModel converts colors to NRGBA format.
-var NRGBAModel = color.ModelFunc(func(c color.Color) color.Color {
+var NRGBAModel = color.ModelFunc(nrgbaModel)
+
+func nrgbaModel(c color.Color) color.Color {
 	if c, ok := c.(NRGBA); ok {
 		return c
 	}
@@ -80,4 +82,4 @@ var NRGBAModel = color.ModelFunc(func(c color.Color) color.Color {
 		float64(b) / float64(a),
 		float64(a) / 0xffff,
 	}
-})
+}
