@@ -21,8 +21,13 @@ type Picture struct {
 // NewPicture creates a new picture from an image.Image.
 func NewPicture(img image.Image, smooth bool) *Picture {
 	// convert the image to RGBA format
-	rgba := image.NewRGBA(image.Rect(0, 0, img.Bounds().Dx(), img.Bounds().Dy()))
-	draw.Draw(rgba, rgba.Bounds(), img, img.Bounds().Min, draw.Src)
+	var rgba *image.RGBA
+	if img, ok := img.(*image.RGBA); ok {
+		rgba = img
+	} else {
+		rgba = image.NewRGBA(image.Rect(0, 0, img.Bounds().Dx(), img.Bounds().Dy()))
+		draw.Draw(rgba, rgba.Bounds(), img, img.Bounds().Min, draw.Src)
+	}
 
 	var texture *pixelgl.Texture
 	pixelgl.Do(func() {
