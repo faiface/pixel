@@ -18,9 +18,9 @@ type Target interface {
 	MakeTriangles(Triangles) Triangles
 
 	// These are the most basic Target "adjustment" methods.
+	SetPicture(*Picture)
 	SetTransform(...Transform)
 	SetMaskColor(color.Color)
-	SetPicture(*Picture)
 }
 
 // Triangles represents a list of vertices, where each three vertices form a triangle. (First,
