@@ -22,8 +22,8 @@ type Picture struct {
 func NewPicture(img image.Image, smooth bool) *Picture {
 	// convert the image to RGBA format
 	var rgba *image.RGBA
-	if img, ok := img.(*image.RGBA); ok {
-		rgba = img
+	if rgbaImg, ok := img.(*image.RGBA); ok {
+		rgba = rgbaImg
 	} else {
 		rgba = image.NewRGBA(image.Rect(0, 0, img.Bounds().Dx(), img.Bounds().Dy()))
 		draw.Draw(rgba, rgba.Bounds(), img, img.Bounds().Min, draw.Src)
