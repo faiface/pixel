@@ -401,7 +401,7 @@ func (wt *windowTriangles) flush() {
 			wt.attrData[i] = make(map[pixelgl.Attr]interface{})
 		}
 		p := v.Position
-		c := NRGBAModel.Convert(v.Color).(NRGBA)
+		c := v.Color
 		t := v.Texture
 		wt.attrData[i][positionVec2] = mgl32.Vec2{float32(p.X()), float32(p.Y())}
 		wt.attrData[i][colorVec4] = mgl32.Vec4{float32(c.R), float32(c.G), float32(c.B), float32(c.A)}
@@ -447,9 +447,6 @@ func (wt *windowTriangles) Update(t Triangles) {
 			newData[i].Texture = V(-1, -1)
 		}
 		wt.data = append(wt.data, newData...)
-	}
-	if t.Len() < wt.Len() {
-		wt.data = wt.data[:t.Len()]
 	}
 
 	wt.data.Update(t)
@@ -497,6 +494,9 @@ func (w *Window) SetTransform(t ...Transform) {
 
 // SetMaskColor sets a global mask color for the Window.
 func (w *Window) SetMaskColor(c color.Color) {
+	if c == nil {
+		c = NRGBA{1, 1, 1, 1}
+	}
 	nrgba := NRGBAModel.Convert(c).(NRGBA)
 	r := float32(nrgba.R)
 	g := float32(nrgba.G)
