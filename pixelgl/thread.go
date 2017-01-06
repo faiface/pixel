@@ -9,7 +9,10 @@ import (
 // Due to the limitations of OpenGL and operating systems, all OpenGL related calls must be
 // done from the main thread.
 
-var callQueue = make(chan func(), 32)
+var (
+	callQueue = make(chan func(), 8)
+	respChan  = make(chan interface{}, 4)
+)
 
 func init() {
 	runtime.LockOSThread()
@@ -65,12 +68,11 @@ func DoNoBlock(f func()) {
 //
 // All OpenGL calls must be done in the dedicated thread.
 func Do(f func()) {
-	done := make(chan struct{})
 	callQueue <- func() {
 		f()
-		close(done)
+		respChan <- struct{}{}
 	}
-	<-done
+	<-respChan
 }
 
 // DoErr executes a function inside the main OpenGL thread and returns an error to the called.
@@ -78,11 +80,14 @@ func Do(f func()) {
 //
 // All OpenGL calls must be done in the dedicated thread.
 func DoErr(f func() error) error {
-	err := make(chan error)
 	callQueue <- func() {
-		err <- f()
+		respChan <- f()
 	}
-	return <-err
+	err := <-respChan
+	if err != nil {
+		return err.(error)
+	}
+	return nil
 }
 
 // DoVal executes a function inside the main OpenGL thread and returns a value to the caller.
@@ -90,9 +95,8 @@ func DoErr(f func() error) error {
 //
 // All OpenGL calls must be done in the main thread.
 func DoVal(f func() interface{}) interface{} {
-	val := make(chan interface{})
 	callQueue <- func() {
-		val <- f()
+		respChan <- f()
 	}
-	return <-val
+	return <-respChan
 }
