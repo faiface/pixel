@@ -115,11 +115,6 @@ func (s *Shader) delete() {
 	})
 }
 
-// ID returns an OpenGL identifier of a shader program.
-func (s *Shader) ID() uint32 {
-	return s.program.obj
-}
-
 // VertexFormat returns the vertex attribute format of this shader. Do not change it.
 func (s *Shader) VertexFormat() AttrFormat {
 	return s.vertexFmt

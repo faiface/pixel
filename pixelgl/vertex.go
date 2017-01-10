@@ -2,29 +2,176 @@ package pixelgl
 
 import (
 	"runtime"
-	"unsafe"
 
 	"github.com/go-gl/gl/v3.3-core/gl"
 	"github.com/go-gl/mathgl/mgl32"
 	"github.com/pkg/errors"
 )
 
-// VertexArray is an OpenGL vertex array object that also holds it's own vertex buffer object.
-// From the user's points of view, VertexArray is an array of vertices that can be drawn.
-type VertexArray struct {
-	vao, vbo    binder
-	numVertices int
-	format      AttrFormat
-	stride      int
-	offset      map[string]int
+// VertexData holds data of one vertex stored in vertex attributes. The values must match attribute
+// types precisely. Here's the table of correct types (no other types are valid):
+//
+//   Attr{Type: Float}: float32
+//   Attr{Type: Vec2}:  mgl32.Vec2
+//   Attr{Type: Vec3}:  mgl32.Vec3
+//   Attr{Type: Vec4}:  mgl32.Vec4
+type VertexData map[Attr]interface{}
+
+// VertexSlice points to a portion of (or possibly whole) vertex array. It is used as a pointer,
+// contrary to Go's builtin slices. This is, so that append can be 'in-place'. That's for the good,
+// because Begin/End-ing a VertexSlice would become super confusing, if append returned a new
+// VertexSlice.
+//
+// It also implements all basic slice-like operations: appending, sub-slicing, etc.
+//
+// Note that you need to Begin a VertexSlice before getting or updating it's elements or drawing it.
+// After you're done with it, you need to End it.
+type VertexSlice struct {
+	va   *vertexArray
+	i, j int
 }
 
-// NewVertexArray creates a new empty vertex array.
+// MakeVertexSlice allocates a new vertex array with specified capacity and returns a VertexSlice
+// that points to it's first len elements.
 //
-// You cannot specify vertex attributes in this constructor, only their count. Use
-// SetVertexAttribute* methods to set the vertex attributes.
-func NewVertexArray(shader *Shader, numVertices int) (*VertexArray, error) {
-	va := &VertexArray{
+// Note, that a vertex array is specialized for a specific shader and can't be used with another
+// shader.
+func MakeVertexSlice(shader *Shader, len, cap int) *VertexSlice {
+	if len > cap {
+		panic("failed to make vertex slice: len > cap")
+	}
+	return &VertexSlice{
+		va: newVertexArray(shader, cap),
+		i:  0,
+		j:  len,
+	}
+}
+
+// VertexFormat returns the format of vertex attributes inside the underlying vertex array of this
+// VertexSlice.
+func (vs *VertexSlice) VertexFormat() AttrFormat {
+	return vs.va.format
+}
+
+// Len returns the length of the VertexSlice.
+func (vs *VertexSlice) Len() int {
+	return vs.j - vs.i
+}
+
+// Cap returns the capacity of an underlying vertex array.
+func (vs *VertexSlice) Cap() int {
+	return vs.va.cap - vs.i
+}
+
+// Slice returns a sub-slice of this VertexSlice covering the range [i, j) (relative to this
+// VertexSlice).
+//
+// Note, that the returned VertexSlice shares an underlying vertex array with the original
+// VertexSlice. Modifying the contents of one modifies corresponding contents of the other.
+func (vs *VertexSlice) Slice(i, j int) *VertexSlice {
+	if i < 0 || j < i || j > vs.va.cap {
+		panic("failed to slice vertex slice: index out of range")
+	}
+	return &VertexSlice{
+		va: vs.va,
+		i:  vs.i + i,
+		j:  vs.i + j,
+	}
+}
+
+// grow returns supplied vs with length changed to len. Allocates new underlying vertex array if
+// necessary. The original content is preserved.
+func (vs VertexSlice) grow(len int) VertexSlice {
+	if len <= vs.Cap() {
+		// capacity sufficient
+		return VertexSlice{
+			va: vs.va,
+			i:  vs.i,
+			j:  vs.i + len,
+		}
+	}
+
+	// grow the capacity
+	newCap := vs.Cap()
+	if newCap < 1024 {
+		newCap += newCap
+	} else {
+		newCap += newCap / 4
+	}
+	if newCap < len {
+		newCap = len
+	}
+	newVs := VertexSlice{
+		va: newVertexArray(vs.va.shader, newCap),
+		i:  0,
+		j:  len,
+	}
+	// preserve the original content
+	newVs.Begin()
+	newVs.Slice(0, vs.Len()).SetVertexData(vs.VertexData())
+	newVs.End()
+	return newVs
+}
+
+// Append adds supplied vertices to the end of the VertexSlice. If the capacity of the VertexSlice
+// is not sufficient, a new, larger underlying vertex array will be allocated. The content of the
+// original VertexSlice will be copied to the new underlying vertex array.
+//
+// The VertexSlice is appended 'in-place', contrary Go's builtin slices.
+func (vs *VertexSlice) Append(vertices ...VertexData) {
+	vs.End() // vs must have been Begin-ed before calling this method
+	*vs = vs.grow(vs.Len() + len(vertices))
+	vs.Begin()
+	vs.Slice(vs.Len()-len(vertices), vs.Len()).SetVertexData(vertices)
+}
+
+// SetVertexData sets the contents of the VertexSlice.
+//
+// If the length of vertices does not match the length of the VertexSlice, this methdo panics.
+func (vs *VertexSlice) SetVertexData(vertices []VertexData) {
+	if len(vertices) != vs.Len() {
+		panic("set vertex data: wrong length of vertices")
+	}
+	vs.va.setVertexData(vs.i, vs.j, vertices)
+}
+
+// VertexData returns the contents of the VertexSlice.
+func (vs *VertexSlice) VertexData() []VertexData {
+	return vs.va.vertexData(vs.i, vs.j)
+}
+
+// Draw draws the content of the VertexSlice.
+func (vs *VertexSlice) Draw() {
+	vs.va.draw(vs.i, vs.j)
+}
+
+// Begin binds the underlying vertex array. Calling this method is necessary before using the VertexSlice.
+func (vs *VertexSlice) Begin() {
+	vs.va.begin()
+}
+
+// End unbinds the underlying vertex array. Call this method when you're done with VertexSlice.
+func (vs *VertexSlice) End() {
+	vs.va.end()
+}
+
+type vertexArray struct {
+	vao, vbo binder
+	cap      int
+	format   AttrFormat
+	stride   int
+	offset   map[string]int
+	shader   *Shader
+}
+
+const vertexArrayMinCap = 4
+
+func newVertexArray(shader *Shader, cap int) *vertexArray {
+	if cap < vertexArrayMinCap {
+		cap = vertexArrayMinCap
+	}
+
+	va := &vertexArray{
 		vao: binder{
 			restoreLoc: gl.VERTEX_ARRAY_BINDING,
 			bindFunc: func(obj uint32) {
@@ -37,10 +184,11 @@ func NewVertexArray(shader *Shader, numVertices int) (*VertexArray, error) {
 				gl.BindBuffer(gl.ARRAY_BUFFER, obj)
 			},
 		},
-		numVertices: numVertices,
-		format:      shader.VertexFormat(),
-		stride:      shader.VertexFormat().Size(),
-		offset:      make(map[string]int),
+		cap:    cap,
+		format: shader.VertexFormat(),
+		stride: shader.VertexFormat().Size(),
+		offset: make(map[string]int),
+		shader: shader,
 	}
 
 	offset := 0
@@ -48,7 +196,7 @@ func NewVertexArray(shader *Shader, numVertices int) (*VertexArray, error) {
 		switch typ {
 		case Float, Vec2, Vec3, Vec4:
 		default:
-			return nil, errors.New("failed to create vertex array: invalid attribute type")
+			panic(errors.New("failed to create vertex array: invalid attribute type"))
 		}
 		va.offset[name] = offset
 		offset += typ.Size()
@@ -61,11 +209,11 @@ func NewVertexArray(shader *Shader, numVertices int) (*VertexArray, error) {
 	gl.GenBuffers(1, &va.vbo.obj)
 	defer va.vbo.bind().restore()
 
-	emptyData := make([]byte, numVertices*va.stride)
+	emptyData := make([]byte, cap*va.stride)
 	gl.BufferData(gl.ARRAY_BUFFER, len(emptyData), gl.Ptr(emptyData), gl.DYNAMIC_DRAW)
 
 	for name, typ := range va.format {
-		loc := gl.GetAttribLocation(shader.ID(), gl.Str(name+"\x00"))
+		loc := gl.GetAttribLocation(shader.program.obj, gl.Str(name+"\x00"))
 
 		var size int32
 		switch typ {
@@ -92,226 +240,41 @@ func NewVertexArray(shader *Shader, numVertices int) (*VertexArray, error) {
 
 	va.vao.restore()
 
-	runtime.SetFinalizer(va, (*VertexArray).delete)
+	runtime.SetFinalizer(va, (*vertexArray).delete)
 
-	return va, nil
+	return va
 }
 
-func (va *VertexArray) delete() {
+func (va *vertexArray) delete() {
 	DoNoBlock(func() {
 		gl.DeleteVertexArrays(1, &va.vao.obj)
 		gl.DeleteBuffers(1, &va.vbo.obj)
 	})
 }
 
-// ID returns an OpenGL identifier of a vertex array.
-func (va *VertexArray) ID() uint32 {
-	return va.vao.obj
+func (va *vertexArray) begin() {
+	va.vao.bind()
+	va.vbo.bind()
 }
 
-// NumVertices returns the number of vertices in a vertex array.
-func (va *VertexArray) NumVertices() int {
-	return va.numVertices
+func (va *vertexArray) end() {
+	va.vbo.restore()
+	va.vao.restore()
 }
 
-// VertexFormat returns the format of the vertices inside a vertex array.
-//
-// Do not change this format!
-func (va *VertexArray) VertexFormat() AttrFormat {
-	return va.format
+func (va *vertexArray) draw(i, j int) {
+	gl.DrawArrays(gl.TRIANGLES, int32(i), int32(i+j))
 }
 
-// Draw draws a vertex array.
-//
-// The vertex array must be bound before calling this method.
-func (va *VertexArray) Draw() {
-	gl.DrawArrays(gl.TRIANGLES, 0, int32(va.numVertices))
-}
-
-// SetVertexAttr sets the value of the specified vertex attribute of the specified vertex.
-//
-// If the vertex attribute does not exist, this method returns false. If the vertex is out of
-// range, this method panics.
-//
-// Supplied value must correspond to the type of the attribute. Correct types are these
-// (righ-hand is the type of the value):
-//   Attr{Type: Float}: float32
-//   Attr{Type: Vec2}:  mgl32.Vec2
-//   Attr{Type: Vec3}:  mgl32.Vec3
-//   Attr{Type: Vec4}:  mgl32.Vec4
-// No other types are supported.
-//
-// The vertex array must be bound before calling this method.
-func (va *VertexArray) SetVertexAttr(vertex int, attr Attr, value interface{}) (ok bool) {
-	if vertex < 0 || vertex >= va.numVertices {
-		panic("set vertex attr: invalid vertex index")
+func (va *vertexArray) setVertexData(i, j int, vertices []VertexData) {
+	if j-i == 0 {
+		// avoid setting 0 bytes of buffer data
+		return
 	}
 
-	if !va.format.Contains(attr) {
-		return false
-	}
+	data := make([]float32, (j-i)*va.stride/4)
 
-	offset := va.stride*vertex + va.offset[attr.Name]
-
-	switch attr.Type {
-	case Float:
-		value := value.(float32)
-		gl.BufferSubData(gl.ARRAY_BUFFER, offset, attr.Type.Size(), unsafe.Pointer(&value))
-	case Vec2:
-		value := value.(mgl32.Vec2)
-		gl.BufferSubData(gl.ARRAY_BUFFER, offset, attr.Type.Size(), unsafe.Pointer(&value))
-	case Vec3:
-		value := value.(mgl32.Vec3)
-		gl.BufferSubData(gl.ARRAY_BUFFER, offset, attr.Type.Size(), unsafe.Pointer(&value))
-	case Vec4:
-		value := value.(mgl32.Vec4)
-		gl.BufferSubData(gl.ARRAY_BUFFER, offset, attr.Type.Size(), unsafe.Pointer(&value))
-	default:
-		panic("set vertex attr: invalid attribute type")
-	}
-
-	return true
-}
-
-// VertexAttr returns the current value of the specified vertex attribute of the specified vertex.
-//
-// If the vertex attribute does not exist, this method returns nil and false. If the vertex is
-// out of range, this method panics.
-//
-// The type of the returned value follows the same rules as with SetVertexAttr.
-//
-// The vertex array must be bound before calling this method.
-func (va *VertexArray) VertexAttr(vertex int, attr Attr) (value interface{}, ok bool) {
-	if vertex < 0 || vertex >= va.numVertices {
-		panic("vertex attr: invalid vertex index")
-	}
-
-	if !va.format.Contains(attr) {
-		return nil, false
-	}
-
-	offset := va.stride*vertex + va.offset[attr.Name]
-
-	switch attr.Type {
-	case Float:
-		var data float32
-		gl.GetBufferSubData(gl.ARRAY_BUFFER, offset, attr.Type.Size(), unsafe.Pointer(&data))
-		value = data
-	case Vec2:
-		var data mgl32.Vec2
-		gl.GetBufferSubData(gl.ARRAY_BUFFER, offset, attr.Type.Size(), unsafe.Pointer(&data))
-		value = data
-	case Vec3:
-		var data mgl32.Vec3
-		gl.GetBufferSubData(gl.ARRAY_BUFFER, offset, attr.Type.Size(), unsafe.Pointer(&data))
-		value = data
-	case Vec4:
-		var data mgl32.Vec4
-		gl.GetBufferSubData(gl.ARRAY_BUFFER, offset, attr.Type.Size(), unsafe.Pointer(&data))
-		value = data
-	default:
-		panic("set vertex attr: invalid attribute type")
-	}
-
-	return value, true
-}
-
-// SetVertex sets values of the attributes specified in the supplied map. All other attributes
-// will be set to zero.
-//
-// Not existing attributes are silently skipped.
-//
-// The vertex array must be bound before calling this method.
-func (va *VertexArray) SetVertex(vertex int, values map[Attr]interface{}) {
-	if vertex < 0 || vertex >= va.numVertices {
-		panic("set vertex: invalid vertex index")
-	}
-
-	data := make([]float32, va.format.Size()/4)
-
-	for attr, value := range values {
-		if !va.format.Contains(attr) {
-			continue
-		}
-
-		offset := va.offset[attr.Name]
-
-		switch attr.Type {
-		case Float:
-			data[offset/4] = value.(float32)
-		case Vec2:
-			value := value.(mgl32.Vec2)
-			copy(data[offset/4:offset/4+attr.Type.Size()/4], value[:])
-		case Vec3:
-			value := value.(mgl32.Vec3)
-			copy(data[offset/4:offset/4+attr.Type.Size()/4], value[:])
-		case Vec4:
-			value := value.(mgl32.Vec4)
-			copy(data[offset/4:offset/4+attr.Type.Size()/4], value[:])
-		default:
-			panic("set vertex: invalid attribute type")
-		}
-	}
-
-	offset := va.stride * vertex
-	gl.BufferSubData(gl.ARRAY_BUFFER, offset, len(data)*4, gl.Ptr(data))
-}
-
-// Vertex returns values of all vertex attributes of the specified vertex in a map.
-//
-// The vertex array must be bound before calling this method.
-func (va *VertexArray) Vertex(vertex int) (values map[Attr]interface{}) {
-	if vertex < 0 || vertex >= va.numVertices {
-		panic("set vertex: invalid vertex index")
-	}
-
-	data := make([]float32, va.format.Size()/4)
-
-	offset := va.stride * vertex
-	gl.GetBufferSubData(gl.ARRAY_BUFFER, offset, len(data)*4, gl.Ptr(data))
-
-	values = make(map[Attr]interface{})
-
-	for name, typ := range va.format {
-		attr := Attr{name, typ}
-		offset := va.offset[attr.Name]
-
-		switch attr.Type {
-		case Float:
-			values[attr] = data[offset/4]
-		case Vec2:
-			var value mgl32.Vec2
-			copy(value[:], data[offset/4:offset/4+attr.Type.Size()/4])
-			values[attr] = value
-		case Vec3:
-			var value mgl32.Vec3
-			copy(value[:], data[offset/4:offset/4+attr.Type.Size()/4])
-			values[attr] = value
-		case Vec4:
-			var value mgl32.Vec4
-			copy(value[:], data[offset/4:offset/4+attr.Type.Size()/4])
-			values[attr] = value
-		}
-	}
-
-	return values
-}
-
-// SetVertices sets values of vertex attributes of all vertices as specified in the supplied
-// slice of maps. If the length of vertices does not match the number of vertices in the vertex
-// array, this method panics.
-//
-// Not existing attributes are silently skipped.
-//
-// The vertex array must be bound before calling this metod.
-func (va *VertexArray) SetVertices(vertices []map[Attr]interface{}) {
-	if len(vertices) != va.numVertices {
-		panic("set vertex array: wrong number of supplied vertices")
-	}
-
-	data := make([]float32, va.numVertices*va.format.Size()/4)
-
-	for vertex := range vertices {
+	for vertex := i; vertex < j; vertex++ {
 		for attr, value := range vertices[vertex] {
 			if !va.format.Contains(attr) {
 				continue
@@ -337,21 +300,22 @@ func (va *VertexArray) SetVertices(vertices []map[Attr]interface{}) {
 		}
 	}
 
-	gl.BufferSubData(gl.ARRAY_BUFFER, 0, len(data)*4, gl.Ptr(data))
+	gl.BufferSubData(gl.ARRAY_BUFFER, i*va.stride, len(data)*4, gl.Ptr(data))
 }
 
-// Vertices returns values of vertex attributes of all vertices in a vertex array in a slice
-// of maps.
-//
-// The vertex array must be bound before calling this metod.
-func (va *VertexArray) Vertices() (vertices []map[Attr]interface{}) {
-	data := make([]float32, va.numVertices*va.format.Size()/4)
+func (va *vertexArray) vertexData(i, j int) []VertexData {
+	if j-i == 0 {
+		// avoid getting 0 bytes of buffer data
+		return nil
+	}
 
-	gl.GetBufferSubData(gl.ARRAY_BUFFER, 0, len(data)*4, gl.Ptr(data))
+	data := make([]float32, (j-i)*va.stride/4)
 
-	vertices = make([]map[Attr]interface{}, va.numVertices)
+	gl.GetBufferSubData(gl.ARRAY_BUFFER, i*va.stride, len(data)*4, gl.Ptr(data))
 
-	for vertex := range vertices {
+	vertices := make([]VertexData, 0, (j - i))
+
+	for vertex := i; vertex < j; vertex++ {
 		values := make(map[Attr]interface{})
 
 		for name, typ := range va.format {
@@ -376,20 +340,8 @@ func (va *VertexArray) Vertices() (vertices []map[Attr]interface{}) {
 			}
 		}
 
-		vertices[vertex] = values
+		vertices = append(vertices, values)
 	}
 
 	return vertices
-}
-
-// Begin binds a vertex array. This is neccessary before using the vertex array.
-func (va *VertexArray) Begin() {
-	va.vao.bind()
-	va.vbo.bind()
-}
-
-// End unbinds a vertex array and restores the previous one.
-func (va *VertexArray) End() {
-	va.vbo.restore()
-	va.vao.restore()
 }

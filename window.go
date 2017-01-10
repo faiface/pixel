@@ -341,9 +341,7 @@ func (w *Window) Restore() {
 	})
 }
 
-// begin makes the OpenGL context of a window current and binds it's shader.
-//
-// Note, that this method must be called inside the main OpenGL thread (pixelgl.Do/DoNoBlock/DoErr/DoVal).
+// Note: must be called inside the main thread.
 func (w *Window) begin() {
 	if currentWindow != w {
 		w.window.MakeContextCurrent()
@@ -355,9 +353,7 @@ func (w *Window) begin() {
 	}
 }
 
-// end unbinds the shader of a window.
-//
-// Note, that this method must be called inside the main OpenGL thread (pixelgl.Do/DoNoBlock/DoErr/DoVal).
+// Note: must be called inside the main thread.
 func (w *Window) end() {
 	if w.shader != nil {
 		w.shader.End()
@@ -365,70 +361,24 @@ func (w *Window) end() {
 }
 
 type windowTriangles struct {
-	w        *Window
-	va       *pixelgl.VertexArray
-	data     TrianglesData
-	attrData []map[pixelgl.Attr]interface{}
-	dirty    bool
-}
-
-func (wt *windowTriangles) flush() {
-	if !wt.dirty {
-		return
-	}
-	wt.dirty = false
-
-	if wt.va == nil || wt.va.NumVertices() != wt.Len() {
-		// reallocate vertex array
-		pixelgl.Do(func() {
-			var err error
-			wt.va, err = pixelgl.NewVertexArray(wt.w.shader, wt.Len())
-			if err != nil {
-				panic(errors.Wrap(err, "windowTriangles: failed to create vertex array"))
-			}
-		})
-	}
-
-	if wt.Len() > len(wt.attrData) {
-		wt.attrData = append(wt.attrData, make([]map[pixelgl.Attr]interface{}, wt.Len()-len(wt.attrData))...)
-	}
-	if wt.Len() < len(wt.attrData) {
-		wt.attrData = wt.attrData[:wt.Len()]
-	}
-
-	for i, v := range wt.data {
-		if wt.attrData[i] == nil {
-			wt.attrData[i] = make(map[pixelgl.Attr]interface{})
-		}
-		p := v.Position
-		c := v.Color
-		t := v.Texture
-		wt.attrData[i][positionVec2] = mgl32.Vec2{float32(p.X()), float32(p.Y())}
-		wt.attrData[i][colorVec4] = mgl32.Vec4{float32(c.R), float32(c.G), float32(c.B), float32(c.A)}
-		wt.attrData[i][textureVec2] = mgl32.Vec2{float32(t.X()), float32(t.Y())}
-	}
-
-	pixelgl.Do(func() {
-		wt.va.Begin()
-		wt.va.SetVertices(wt.attrData)
-		wt.va.End()
-	})
+	w    *Window
+	vs   *pixelgl.VertexSlice
+	data []pixelgl.VertexData
 }
 
 func (wt *windowTriangles) Len() int {
-	return len(wt.data)
+	return wt.vs.Len()
 }
 
 func (wt *windowTriangles) Draw() {
-	wt.flush()
 	pixelgl.DoNoBlock(func() {
 		wt.w.begin()
 		if wt.w.pic != nil {
 			wt.w.pic.Texture().Begin()
 		}
-		wt.va.Begin()
-		wt.va.Draw()
-		wt.va.End()
+		wt.vs.Begin()
+		wt.vs.Draw()
+		wt.vs.End()
 		if wt.w.pic != nil {
 			wt.w.pic.Texture().End()
 		}
@@ -437,31 +387,83 @@ func (wt *windowTriangles) Draw() {
 }
 
 func (wt *windowTriangles) Update(t Triangles) {
-	wt.dirty = true
-
 	if t.Len() > wt.Len() {
-		newData := make(TrianglesData, t.Len())
-		// default attribute values
+		newData := make([]pixelgl.VertexData, t.Len()-wt.Len())
+		// default values
 		for i := range newData {
-			newData[i].Color = NRGBA{R: 1, G: 1, B: 1, A: 1}
-			newData[i].Texture = V(-1, -1)
+			newData[i] = make(pixelgl.VertexData)
+			newData[i][colorVec4] = mgl32.Vec4{1, 1, 1, 1}
+			newData[i][textureVec2] = mgl32.Vec2{-1, -1}
 		}
 		wt.data = append(wt.data, newData...)
 	}
+	if t.Len() < wt.Len() {
+		wt.data = wt.data[:t.Len()]
+	}
 
-	wt.data.Update(t)
+	if t, ok := t.(TrianglesPosition); ok {
+		for i := range wt.data {
+			pos := t.Position(i)
+			wt.data[i][positionVec2] = mgl32.Vec2{
+				float32(pos.X()),
+				float32(pos.Y()),
+			}
+		}
+	}
+	if t, ok := t.(TrianglesColor); ok {
+		for i := range wt.data {
+			col := NRGBAModel.Convert(t.Color(i)).(NRGBA)
+			wt.data[i][colorVec4] = mgl32.Vec4{
+				float32(col.R),
+				float32(col.G),
+				float32(col.B),
+				float32(col.A),
+			}
+		}
+	}
+	if t, ok := t.(TrianglesTexture); ok {
+		for i := range wt.data {
+			tex := t.Texture(i)
+			wt.data[i][textureVec2] = mgl32.Vec2{
+				float32(tex.X()),
+				float32(tex.Y()),
+			}
+		}
+	}
+
+	// submit data to vertex slice
+	data := wt.data // avoid race condition
+	pixelgl.DoNoBlock(func() {
+		wt.vs.Begin()
+		if len(wt.data) > wt.vs.Len() {
+			wt.vs.Append(make([]pixelgl.VertexData, len(data)-wt.vs.Len())...)
+		}
+		if len(wt.data) < wt.vs.Len() {
+			wt.vs = wt.vs.Slice(0, len(wt.data))
+		}
+		wt.vs.SetVertexData(wt.data)
+		wt.vs.End()
+	})
 }
 
 func (wt *windowTriangles) Position(i int) Vec {
-	return wt.data.Position(i)
+	v := wt.data[i][positionVec2].(mgl32.Vec2)
+	return V(float64(v.X()), float64(v.Y()))
 }
 
 func (wt *windowTriangles) Color(i int) color.Color {
-	return wt.data.Color(i)
+	c := wt.data[i][colorVec4].(mgl32.Vec4)
+	return NRGBA{
+		R: float64(c.X()),
+		G: float64(c.Y()),
+		B: float64(c.Z()),
+		A: float64(c.W()),
+	}
 }
 
 func (wt *windowTriangles) Texture(i int) Vec {
-	return wt.data.Texture(i)
+	t := wt.data[i][textureVec2].(mgl32.Vec2)
+	return V(float64(t.X()), float64(t.Y()))
 }
 
 // MakeTriangles generates a specialized copy of the supplied triangles that will draw onto this
@@ -470,7 +472,8 @@ func (wt *windowTriangles) Texture(i int) Vec {
 // Window supports TrianglesPosition, TrianglesColor and TrianglesTexture.
 func (w *Window) MakeTriangles(t Triangles) Triangles {
 	wt := &windowTriangles{
-		w: w,
+		w:  w,
+		vs: pixelgl.MakeVertexSlice(w.shader, 0, 0),
 	}
 	wt.Update(t)
 	return wt

@@ -9,7 +9,7 @@ import (
 // Color and Texture.
 type TrianglesData []struct {
 	Position Vec
-	Color    color.Color
+	Color    NRGBA
 	Texture  Vec
 }
 
@@ -40,11 +40,17 @@ func (td *TrianglesData) Update(t Triangles) {
 		return
 	}
 	if t, ok := t.(*TrianglesColorData); ok {
-		copy(*td, *(*TrianglesData)(t))
+		for i := range *td {
+			(*td)[i].Position = (*t)[i].Position
+			(*td)[i].Color = (*t)[i].Color
+		}
 		return
 	}
 	if t, ok := t.(*TrianglesTextureData); ok {
-		copy(*td, *(*TrianglesData)(t))
+		for i := range *td {
+			(*td)[i].Position = (*t)[i].Position
+			(*td)[i].Texture = (*t)[i].Texture
+		}
 		return
 	}
 
@@ -56,7 +62,7 @@ func (td *TrianglesData) Update(t Triangles) {
 	}
 	if t, ok := t.(TrianglesColor); ok {
 		for i := range *td {
-			(*td)[i].Color = t.Color(i)
+			(*td)[i].Color = NRGBAModel.Convert(t.Color(i)).(NRGBA)
 		}
 	}
 	if t, ok := t.(TrianglesTexture); ok {
@@ -180,4 +186,69 @@ func (td *TrianglesDrawer) Draw(target Target) {
 func (td *TrianglesDrawer) Update(t Triangles) {
 	td.dirty = true
 	td.Triangles.Update(t)
+}
+
+// Sprite is a picture, positioned somewhere, with an optional mask color.
+type Sprite struct {
+	td        TrianglesDrawer
+	pic       *Picture
+	transform []Transform
+	maskColor color.Color
+}
+
+// NewSprite creates a Sprite with the supplied Picture. The dimensions of the returned Sprite match
+// the dimensions of the Picture.
+func NewSprite(pic *Picture) *Sprite {
+	s := &Sprite{
+		td: TrianglesDrawer{Triangles: &TrianglesTextureData{}},
+	}
+	s.SetPicture(pic)
+	return s
+}
+
+// SetPicture changes the Picture of the Sprite and resizes it accordingly.
+func (s *Sprite) SetPicture(pic *Picture) {
+	w, h := pic.Bounds().Size.XY()
+	s.td.Update(&TrianglesTextureData{
+		{Position: V(0, 0), Texture: V(0, 0)},
+		{Position: V(w, 0), Texture: V(1, 0)},
+		{Position: V(w, h), Texture: V(1, 1)},
+		{Position: V(0, 0), Texture: V(0, 0)},
+		{Position: V(w, h), Texture: V(1, 1)},
+		{Position: V(0, h), Texture: V(0, 1)},
+	})
+	s.pic = pic
+}
+
+// Picture returns the current Picture of the Sprite.
+func (s *Sprite) Picture() *Picture {
+	return s.pic
+}
+
+// SetTransform sets a chain of Transforms that will be applied to this Sprite in reverse order.
+func (s *Sprite) SetTransform(t ...Transform) {
+	s.transform = t
+}
+
+// Transform returns the current chain of Transforms that this Sprite is transformed by.
+func (s *Sprite) Transform() []Transform {
+	return s.transform
+}
+
+// SetMaskColor changes the mask color of the Sprite.
+func (s *Sprite) SetMaskColor(c color.Color) {
+	s.maskColor = c
+}
+
+// MaskColor returns the current mask color of the Sprite.
+func (s *Sprite) MaskColor() color.Color {
+	return s.maskColor
+}
+
+// Draw draws the Sprite onto the provided Target.
+func (s *Sprite) Draw(target Target) {
+	target.SetPicture(s.pic)
+	target.SetTransform(s.transform...)
+	target.SetMaskColor(s.maskColor)
+	s.td.Draw(target)
 }
