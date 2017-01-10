@@ -379,20 +379,24 @@ func (wt *windowTriangles) Len() int {
 }
 
 func (wt *windowTriangles) Draw() {
+	pic := wt.w.pic // avoid
+	mat := wt.w.mat // race
+	col := wt.w.col // condition
+
 	pixelgl.DoNoBlock(func() {
 		wt.w.begin()
 
-		wt.w.shader.SetUniformAttr(transformMat3, wt.w.mat)
-		wt.w.shader.SetUniformAttr(maskColorVec4, wt.w.col)
+		wt.w.shader.SetUniformAttr(transformMat3, mat)
+		wt.w.shader.SetUniformAttr(maskColorVec4, col)
 
-		if wt.w.pic != nil {
-			wt.w.pic.Texture().Begin()
+		if pic != nil {
+			pic.Texture().Begin()
 		}
 		wt.vs.Begin()
 		wt.vs.Draw()
 		wt.vs.End()
-		if wt.w.pic != nil {
-			wt.w.pic.Texture().End()
+		if pic != nil {
+			pic.Texture().End()
 		}
 
 		wt.w.end()
