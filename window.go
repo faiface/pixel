@@ -12,9 +12,9 @@ import (
 	"github.com/pkg/errors"
 )
 
-// WindowConfig is convenience structure for specifying all possible properties of a window.
-// Properties are chosen in such a way, that you usually only need to set a few of them -
-// defaults (zeros) should usually be sensible.
+// WindowConfig is a structure for specifying all possible properties of a window. Properties are
+// chosen in such a way, that you usually only need to set a few of them - defaults (zeros) should
+// usually be sensible.
 //
 // Note that you always need to set the width and the height of a window.
 type WindowConfig struct {
