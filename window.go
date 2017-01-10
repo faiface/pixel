@@ -61,7 +61,11 @@ type Window struct {
 	window  *glfw.Window
 	config  WindowConfig
 	shader  *pixelgl.Shader
-	pic     *Picture
+
+	// Target stuff, Picture, transformation matrix and color
+	pic *Picture
+	mat mgl32.Mat3
+	col mgl32.Vec4
 
 	// need to save these to correctly restore a fullscreen window
 	restore struct {
@@ -149,6 +153,10 @@ func NewWindow(config WindowConfig) (*Window, error) {
 
 	w.initInput()
 	w.SetFullscreen(config.Fullscreen)
+
+	w.SetPicture(nil)
+	w.SetTransform()
+	w.SetMaskColor(NRGBA{1, 1, 1, 1})
 
 	runtime.SetFinalizer(w, (*Window).Destroy)
 
@@ -373,6 +381,10 @@ func (wt *windowTriangles) Len() int {
 func (wt *windowTriangles) Draw() {
 	pixelgl.DoNoBlock(func() {
 		wt.w.begin()
+
+		wt.w.shader.SetUniformAttr(transformMat3, wt.w.mat)
+		wt.w.shader.SetUniformAttr(maskColorVec4, wt.w.col)
+
 		if wt.w.pic != nil {
 			wt.w.pic.Texture().Begin()
 		}
@@ -382,6 +394,7 @@ func (wt *windowTriangles) Draw() {
 		if wt.w.pic != nil {
 			wt.w.pic.Texture().End()
 		}
+
 		wt.w.end()
 	})
 }
@@ -479,20 +492,19 @@ func (w *Window) MakeTriangles(t Triangles) Triangles {
 	return wt
 }
 
+// SetPicture sets a Picture that will be used in subsequent drawings onto the window.
+func (w *Window) SetPicture(p *Picture) {
+	w.pic = p
+}
+
 // SetTransform sets a global transformation matrix for the Window.
 //
 // Transforms are applied right-to-left.
 func (w *Window) SetTransform(t ...Transform) {
-	mat := mgl32.Ident3()
+	w.mat = mgl32.Ident3()
 	for i := range t {
-		mat = mat.Mul3(t[i].Mat())
+		w.mat = w.mat.Mul3(t[i].Mat())
 	}
-
-	pixelgl.DoNoBlock(func() {
-		w.begin()
-		w.shader.SetUniformAttr(transformMat3, mat)
-		w.end()
-	})
 }
 
 // SetMaskColor sets a global mask color for the Window.
@@ -505,17 +517,7 @@ func (w *Window) SetMaskColor(c color.Color) {
 	g := float32(nrgba.G)
 	b := float32(nrgba.B)
 	a := float32(nrgba.A)
-
-	pixelgl.DoNoBlock(func() {
-		w.begin()
-		w.shader.SetUniformAttr(maskColorVec4, mgl32.Vec4{r, g, b, a})
-		w.end()
-	})
-}
-
-// SetPicture sets a Picture that will be used in subsequent drawings onto the window.
-func (w *Window) SetPicture(p *Picture) {
-	w.pic = p
+	w.col = mgl32.Vec4{r, g, b, a}
 }
 
 var defaultVertexFormat = pixelgl.AttrFormat{
