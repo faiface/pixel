@@ -5,6 +5,15 @@ import (
 	"image/color"
 )
 
+// TrianglesContainer is an extension of Triangles that can accumulate Triangles inside of it using
+// the Append method.
+type TrianglesContainer interface {
+	Triangles
+
+	// Append adds supplied Triangles to the end of the TrianglesContainer.
+	Append(Triangles)
+}
+
 // TrianglesData specifies a list of Triangles vertices with three common properties: Position,
 // Color and Texture.
 type TrianglesData []struct {
@@ -72,6 +81,13 @@ func (td *TrianglesData) Update(t Triangles) {
 	}
 }
 
+// Append adds supplied Triangles to the end of the TrianglesData.
+func (td *TrianglesData) Append(t Triangles) {
+	newTd := make(TrianglesData, t.Len())
+	newTd.Update(t)
+	*td = append(*td, newTd...)
+}
+
 // Position returns the position property of i-th vertex.
 func (td *TrianglesData) Position(i int) Vec {
 	return (*td)[i].Position
@@ -105,6 +121,11 @@ func (td *TrianglesColorData) Update(t Triangles) {
 	(*TrianglesData)(td).Update(t)
 }
 
+// Append adds supplied Triangles to the end of the TrianglesColorData.
+func (td *TrianglesColorData) Append(t Triangles) {
+	(*TrianglesData)(td).Append(t)
+}
+
 // Position returns the position property of i-th vertex.
 func (td *TrianglesColorData) Position(i int) Vec {
 	return (*TrianglesData)(td).Position(i)
@@ -131,6 +152,11 @@ func (td *TrianglesTextureData) Draw() {
 // Update copies vertex properties from the supplied Triangles into this TrianglesTextureData.
 func (td *TrianglesTextureData) Update(t Triangles) {
 	(*TrianglesData)(td).Update(t)
+}
+
+// Append adds supplied Triangles to the end of the TrianglesTextureData.
+func (td *TrianglesTextureData) Append(t Triangles) {
+	(*TrianglesData)(td).Append(t)
 }
 
 // Position returns the position property of i-th vertex.
