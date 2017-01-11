@@ -44,6 +44,11 @@ type Triangles interface {
 	// If these Triangles and supplied Triangles have different lengths, these Triangles should
 	// be resized.
 	Update(Triangles)
+
+	// Append adds supplied Triangles to the end of these Triangles.
+	//
+	// Behavior regarding unsupported properties should be same as with Update.
+	Append(Triangles)
 }
 
 // Drawer is something that can be drawn onto any Target.

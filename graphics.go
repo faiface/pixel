@@ -5,15 +5,6 @@ import (
 	"image/color"
 )
 
-// TrianglesContainer is an extension of Triangles that can accumulate Triangles inside of it using
-// the Append method.
-type TrianglesContainer interface {
-	Triangles
-
-	// Append adds supplied Triangles to the end of the TrianglesContainer.
-	Append(Triangles)
-}
-
 // TrianglesData specifies a list of Triangles vertices with three common properties: Position,
 // Color and Texture.
 type TrianglesData []struct {

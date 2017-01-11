@@ -395,23 +395,9 @@ func (wt *windowTriangles) Draw() {
 	})
 }
 
-func (wt *windowTriangles) Update(t Triangles) {
-	if t.Len() > wt.Len() {
-		newData := make([]pixelgl.VertexData, t.Len()-wt.Len())
-		// default values
-		for i := range newData {
-			newData[i] = make(pixelgl.VertexData)
-			newData[i][colorVec4] = mgl32.Vec4{1, 1, 1, 1}
-			newData[i][textureVec2] = mgl32.Vec2{-1, -1}
-		}
-		wt.data = append(wt.data, newData...)
-	}
-	if t.Len() < wt.Len() {
-		wt.data = wt.data[:t.Len()]
-	}
-
+func (wt *windowTriangles) updateData(offset int, t Triangles) {
 	if t, ok := t.(TrianglesPosition); ok {
-		for i := range wt.data {
+		for i := offset; i < offset+t.Len(); i++ {
 			pos := t.Position(i)
 			wt.data[i][positionVec2] = mgl32.Vec2{
 				float32(pos.X()),
@@ -420,7 +406,7 @@ func (wt *windowTriangles) Update(t Triangles) {
 		}
 	}
 	if t, ok := t.(TrianglesColor); ok {
-		for i := range wt.data {
+		for i := offset; i < offset+t.Len(); i++ {
 			col := NRGBAModel.Convert(t.Color(i)).(NRGBA)
 			wt.data[i][colorVec4] = mgl32.Vec4{
 				float32(col.R),
@@ -431,7 +417,7 @@ func (wt *windowTriangles) Update(t Triangles) {
 		}
 	}
 	if t, ok := t.(TrianglesTexture); ok {
-		for i := range wt.data {
+		for i := offset; i < offset+t.Len(); i++ {
 			tex := t.Texture(i)
 			wt.data[i][textureVec2] = mgl32.Vec2{
 				float32(tex.X()),
@@ -439,8 +425,25 @@ func (wt *windowTriangles) Update(t Triangles) {
 			}
 		}
 	}
+}
 
-	// submit data to vertex slice
+func (wt *windowTriangles) resize(len int) {
+	if len > wt.Len() {
+		newData := make([]pixelgl.VertexData, len-wt.Len())
+		// default values
+		for i := range newData {
+			newData[i] = make(pixelgl.VertexData)
+			newData[i][colorVec4] = mgl32.Vec4{1, 1, 1, 1}
+			newData[i][textureVec2] = mgl32.Vec2{-1, -1}
+		}
+		wt.data = append(wt.data, newData...)
+	}
+	if len < wt.Len() {
+		wt.data = wt.data[:len]
+	}
+}
+
+func (wt *windowTriangles) submitData() {
 	data := wt.data // avoid race condition
 	pixelgl.DoNoBlock(func() {
 		wt.vs.Begin()
@@ -453,6 +456,18 @@ func (wt *windowTriangles) Update(t Triangles) {
 		wt.vs.SetVertexData(wt.data)
 		wt.vs.End()
 	})
+}
+
+func (wt *windowTriangles) Update(t Triangles) {
+	wt.resize(t.Len())
+	wt.updateData(0, t)
+	wt.submitData()
+}
+
+func (wt *windowTriangles) Append(t Triangles) {
+	wt.resize(wt.Len() + t.Len())
+	wt.updateData(wt.Len()-t.Len(), t)
+	wt.submitData()
 }
 
 func (wt *windowTriangles) Position(i int) Vec {
