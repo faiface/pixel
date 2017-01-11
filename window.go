@@ -367,7 +367,7 @@ type windowTriangles struct {
 }
 
 func (wt *windowTriangles) Len() int {
-	return wt.vs.Len()
+	return len(wt.data)
 }
 
 func (wt *windowTriangles) Draw() {
