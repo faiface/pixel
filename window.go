@@ -395,6 +395,22 @@ func (wt *windowTriangles) Draw() {
 	})
 }
 
+func (wt *windowTriangles) resize(len int) {
+	if len > wt.Len() {
+		newData := make([]pixelgl.VertexData, len-wt.Len())
+		// default values
+		for i := range newData {
+			newData[i] = make(pixelgl.VertexData)
+			newData[i][colorVec4] = mgl32.Vec4{1, 1, 1, 1}
+			newData[i][textureVec2] = mgl32.Vec2{-1, -1}
+		}
+		wt.data = append(wt.data, newData...)
+	}
+	if len < wt.Len() {
+		wt.data = wt.data[:len]
+	}
+}
+
 func (wt *windowTriangles) updateData(offset int, t Triangles) {
 	if t, ok := t.(TrianglesPosition); ok {
 		for i := offset; i < offset+t.Len(); i++ {
@@ -424,22 +440,6 @@ func (wt *windowTriangles) updateData(offset int, t Triangles) {
 				float32(tex.Y()),
 			}
 		}
-	}
-}
-
-func (wt *windowTriangles) resize(len int) {
-	if len > wt.Len() {
-		newData := make([]pixelgl.VertexData, len-wt.Len())
-		// default values
-		for i := range newData {
-			newData[i] = make(pixelgl.VertexData)
-			newData[i][colorVec4] = mgl32.Vec4{1, 1, 1, 1}
-			newData[i][textureVec2] = mgl32.Vec2{-1, -1}
-		}
-		wt.data = append(wt.data, newData...)
-	}
-	if len < wt.Len() {
-		wt.data = wt.data[:len]
 	}
 }
 
