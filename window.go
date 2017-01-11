@@ -126,7 +126,7 @@ func NewWindow(config WindowConfig) (*Window, error) {
 
 	pixelgl.Do(func() {
 		w.begin()
-		defer w.end()
+		w.end()
 
 		w.shader, err = pixelgl.NewShader(
 			defaultVertexFormat,
@@ -137,14 +137,6 @@ func NewWindow(config WindowConfig) (*Window, error) {
 		if err != nil {
 			panic(errors.Wrap(err, "NewWindow: failed to create shader"))
 		}
-
-		// default uniforms
-		w.shader.Begin()
-		w.shader.SetUniformAttr(maskColorVec4, mgl32.Vec4{1, 1, 1, 1})
-		w.shader.SetUniformAttr(transformMat3, mgl32.Ident3())
-
-		// this is tricky, w.shader.End() is not needed here, because it will
-		// actually be ended by a deferred w.End() call
 	})
 	if err != nil {
 		w.Destroy()
