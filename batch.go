@@ -52,9 +52,15 @@ func (b *Batch) MakeTriangles(t Triangles) Triangles {
 	}
 }
 
-// SetPicture does nothing, because the Picture of any Batch is fixed.
+// SetPicture only checks, whether the supplied Picture has the same underlying Picture as the fixed
+// Picture of this Batch. If that is not true, this method panics.
 func (b *Batch) SetPicture(p *Picture) {
-	// nothing, Batch has a fixed Picture
+	if p == nil {
+		return
+	}
+	if p.Texture() != b.pic.Texture() {
+		panic("batch: attempted to draw with a different Picture")
+	}
 }
 
 // SetTransform sets transforms used in the following draws onto the Batch.
