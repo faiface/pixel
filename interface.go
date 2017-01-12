@@ -49,6 +49,9 @@ type Triangles interface {
 	//
 	// Behavior regarding unsupported properties should be same as with Update.
 	Append(Triangles)
+
+	// Copy creates an exact independent copy of this Triangles (with the same underlying type).
+	Copy() Triangles
 }
 
 // Drawer is something that can be drawn onto any Target.

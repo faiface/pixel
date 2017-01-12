@@ -79,6 +79,13 @@ func (td *TrianglesData) Append(t Triangles) {
 	*td = append(*td, newTd...)
 }
 
+// Copy returns an exact independent copy of this TrianglesData.
+func (td *TrianglesData) Copy() Triangles {
+	copyTd := make(TrianglesData, td.Len())
+	copyTd.Update(td)
+	return &copyTd
+}
+
 // Position returns the position property of i-th vertex.
 func (td *TrianglesData) Position(i int) Vec {
 	return (*td)[i].Position
@@ -117,6 +124,11 @@ func (td *TrianglesColorData) Append(t Triangles) {
 	(*TrianglesData)(td).Append(t)
 }
 
+// Copy returns an exact independent copy of this TrianglesColorData.
+func (td *TrianglesColorData) Copy() Triangles {
+	return (*TrianglesColorData)((*TrianglesData)(td).Copy().(*TrianglesData))
+}
+
 // Position returns the position property of i-th vertex.
 func (td *TrianglesColorData) Position(i int) Vec {
 	return (*TrianglesData)(td).Position(i)
@@ -148,6 +160,11 @@ func (td *TrianglesTextureData) Update(t Triangles) {
 // Append adds supplied Triangles to the end of the TrianglesTextureData.
 func (td *TrianglesTextureData) Append(t Triangles) {
 	(*TrianglesData)(td).Append(t)
+}
+
+// Copy returns an exact independent copy of this TrianglesTextureData.
+func (td *TrianglesTextureData) Copy() Triangles {
+	return (*TrianglesTextureData)((*TrianglesData)(td).Copy().(*TrianglesData))
 }
 
 // Position returns the position property of i-th vertex.
@@ -198,11 +215,22 @@ func (td *TrianglesDrawer) Draw(target Target) {
 	tri.Draw()
 }
 
-// Update updates the wrapped Triangles with the supplied Triangles. Call only this method to
-// update the wrapped Triangles, otherwise the TrianglesDrawer will not work correctly.
+// Update updates the wrapped Triangles with the supplied Triangles.
+//
+// Call only this method to update the wrapped Triangles, otherwise the TrianglesDrawer will not
+// work correctly.
 func (td *TrianglesDrawer) Update(t Triangles) {
 	td.dirty = true
 	td.Triangles.Update(t)
+}
+
+// Append appends the supplied Triangles to the wrapped Triangles.
+//
+// Call only this method to append to the wrapped Triangles, otherwise the TrianglesDrawer will not
+// work correctly.
+func (td *TrianglesDrawer) Append(t Triangles) {
+	td.dirty = true
+	td.Triangles.Append(t)
 }
 
 // Sprite is a picture, positioned somewhere, with an optional mask color.

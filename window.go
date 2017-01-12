@@ -470,6 +470,15 @@ func (wt *windowTriangles) Append(t Triangles) {
 	wt.submitData()
 }
 
+func (wt *windowTriangles) Copy() Triangles {
+	copyWt := &windowTriangles{
+		w:  wt.w,
+		vs: pixelgl.MakeVertexSlice(wt.w.shader, 0, 0),
+	}
+	copyWt.Update(wt)
+	return copyWt
+}
+
 func (wt *windowTriangles) Position(i int) Vec {
 	v := wt.data[i][positionVec2].(mgl32.Vec2)
 	return V(float64(v.X()), float64(v.Y()))
@@ -512,10 +521,7 @@ func (w *Window) SetPicture(p *Picture) {
 //
 // Transforms are applied right-to-left.
 func (w *Window) SetTransform(t ...Transform) {
-	w.mat = mgl32.Ident3()
-	for i := range t {
-		w.mat = w.mat.Mul3(t[i].Mat())
-	}
+	w.mat = transformToMat(t...)
 }
 
 // SetMaskColor sets a global mask color for the Window.
