@@ -39,20 +39,6 @@ func (td *TrianglesData) Update(t Triangles) {
 		copy(*td, *t)
 		return
 	}
-	if t, ok := t.(*TrianglesColorData); ok {
-		for i := range *td {
-			(*td)[i].Position = (*t)[i].Position
-			(*td)[i].Color = (*t)[i].Color
-		}
-		return
-	}
-	if t, ok := t.(*TrianglesTextureData); ok {
-		for i := range *td {
-			(*td)[i].Position = (*t)[i].Position
-			(*td)[i].Texture = (*t)[i].Texture
-		}
-		return
-	}
 
 	// slow path manual copy
 	if t, ok := t.(TrianglesPosition); ok {
@@ -99,82 +85,6 @@ func (td *TrianglesData) Color(i int) color.Color {
 // Texture returns the texture property of i-th vertex.
 func (td *TrianglesData) Texture(i int) Vec {
 	return (*td)[i].Texture
-}
-
-// TrianglesColorData is same as TrianglesData, except is lacks Texture property.
-type TrianglesColorData TrianglesData
-
-// Len returns the number of vertices in TrianglesColorData.
-func (td *TrianglesColorData) Len() int {
-	return (*TrianglesData)(td).Len()
-}
-
-// Draw is unimplemented for TrianglesColorData and panics.
-func (td *TrianglesColorData) Draw() {
-	(*TrianglesData)(td).Draw()
-}
-
-// Update copies vertex properties from the supplied Triangles into this TrianglesColorData.
-func (td *TrianglesColorData) Update(t Triangles) {
-	(*TrianglesData)(td).Update(t)
-}
-
-// Append adds supplied Triangles to the end of the TrianglesColorData.
-func (td *TrianglesColorData) Append(t Triangles) {
-	(*TrianglesData)(td).Append(t)
-}
-
-// Copy returns an exact independent copy of this TrianglesColorData.
-func (td *TrianglesColorData) Copy() Triangles {
-	return (*TrianglesColorData)((*TrianglesData)(td).Copy().(*TrianglesData))
-}
-
-// Position returns the position property of i-th vertex.
-func (td *TrianglesColorData) Position(i int) Vec {
-	return (*TrianglesData)(td).Position(i)
-}
-
-// Color returns the color property of i-th vertex.
-func (td *TrianglesColorData) Color(i int) color.Color {
-	return (*TrianglesData)(td).Color(i)
-}
-
-// TrianglesTextureData is same as TrianglesData, except is lacks Color property.
-type TrianglesTextureData TrianglesData
-
-// Len returns the number of vertices in TrianglesTextureData.
-func (td *TrianglesTextureData) Len() int {
-	return (*TrianglesData)(td).Len()
-}
-
-// Draw is unimplemented for TrianglesTextureData and panics.
-func (td *TrianglesTextureData) Draw() {
-	(*TrianglesData)(td).Draw()
-}
-
-// Update copies vertex properties from the supplied Triangles into this TrianglesTextureData.
-func (td *TrianglesTextureData) Update(t Triangles) {
-	(*TrianglesData)(td).Update(t)
-}
-
-// Append adds supplied Triangles to the end of the TrianglesTextureData.
-func (td *TrianglesTextureData) Append(t Triangles) {
-	(*TrianglesData)(td).Append(t)
-}
-
-// Copy returns an exact independent copy of this TrianglesTextureData.
-func (td *TrianglesTextureData) Copy() Triangles {
-	return (*TrianglesTextureData)((*TrianglesData)(td).Copy().(*TrianglesData))
-}
-
-// Position returns the position property of i-th vertex.
-func (td *TrianglesTextureData) Position(i int) Vec {
-	return (*TrianglesData)(td).Position(i)
-}
-
-// Texture returns the texture property of i-th vertex.
-func (td *TrianglesTextureData) Texture(i int) Vec {
-	return (*TrianglesData)(td).Texture(i)
 }
 
 // TrianglesDrawer is a helper type that wraps Triangles and turns them into a Drawer.
@@ -245,7 +155,7 @@ type Sprite struct {
 // the dimensions of the Picture.
 func NewSprite(pic *Picture) *Sprite {
 	s := &Sprite{
-		td: TrianglesDrawer{Triangles: &TrianglesTextureData{}},
+		td: TrianglesDrawer{Triangles: &TrianglesData{}},
 	}
 	s.SetPicture(pic)
 	return s
@@ -254,13 +164,13 @@ func NewSprite(pic *Picture) *Sprite {
 // SetPicture changes the Picture of the Sprite and resizes it accordingly.
 func (s *Sprite) SetPicture(pic *Picture) {
 	w, h := pic.Bounds().Size.XY()
-	s.td.Update(&TrianglesTextureData{
-		{Position: V(0, 0), Texture: V(0, 0)},
-		{Position: V(w, 0), Texture: V(1, 0)},
-		{Position: V(w, h), Texture: V(1, 1)},
-		{Position: V(0, 0), Texture: V(0, 0)},
-		{Position: V(w, h), Texture: V(1, 1)},
-		{Position: V(0, h), Texture: V(0, 1)},
+	s.td.Update(&TrianglesData{
+		{Position: V(0, 0), Color: NRGBA{1, 1, 1, 1}, Texture: V(0, 0)},
+		{Position: V(w, 0), Color: NRGBA{1, 1, 1, 1}, Texture: V(1, 0)},
+		{Position: V(w, h), Color: NRGBA{1, 1, 1, 1}, Texture: V(1, 1)},
+		{Position: V(0, 0), Color: NRGBA{1, 1, 1, 1}, Texture: V(0, 0)},
+		{Position: V(w, h), Color: NRGBA{1, 1, 1, 1}, Texture: V(1, 1)},
+		{Position: V(0, h), Color: NRGBA{1, 1, 1, 1}, Texture: V(0, 1)},
 	})
 	s.pic = pic
 }
