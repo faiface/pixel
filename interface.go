@@ -60,12 +60,16 @@ type Drawer interface {
 }
 
 // TrianglesPosition specifies Triangles with Position property.
+//
+// Default value for a position is (0, 0).
 type TrianglesPosition interface {
 	Triangles
 	Position(i int) Vec
 }
 
 // TrianglesColor specifies Triangles with Color property.
+//
+// Default value for a color is the white color.
 type TrianglesColor interface {
 	Triangles
 	Color(i int) color.Color
@@ -74,6 +78,8 @@ type TrianglesColor interface {
 // TrianglesTexture specifies Triangles with Texture propery.
 //
 // Note that this represents texture coordinates, not an actual texture.
+//
+// Default value for a texture is (-1, -1), which means 'no texture'.
 type TrianglesTexture interface {
 	Triangles
 	Texture(i int) Vec
