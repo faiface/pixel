@@ -80,24 +80,24 @@ func (b *Batch) SetMaskColor(c color.Color) {
 type batchTriangles struct {
 	Triangles
 	trans Triangles
+	data  TrianglesData
 
 	batch *Batch
 }
 
 func (bt *batchTriangles) Draw() {
 	// need to apply transforms and mask color and picture bounds
-	trans := make(TrianglesData, bt.Len())
-	trans.Update(bt.Triangles)
-	for i := range trans {
+	bt.data.Update(bt.Triangles)
+	for i := range bt.data {
 		transPos := bt.batch.mat.Mul3x1(mgl32.Vec3{
-			float32(trans[i].Position.X()),
-			float32(trans[i].Position.Y()),
+			float32(bt.data[i].Position.X()),
+			float32(bt.data[i].Position.Y()),
 			1,
 		})
-		trans[i].Position = V(float64(transPos.X()), float64(transPos.Y()))
-		trans[i].Color = trans[i].Color.Mul(bt.batch.col)
+		bt.data[i].Position = V(float64(transPos.X()), float64(transPos.Y()))
+		bt.data[i].Color = bt.data[i].Color.Mul(bt.batch.col)
 		//TODO: texture
 	}
-	bt.trans.Update(&trans)
+	bt.trans.Update(&bt.data)
 	bt.batch.cont.Append(bt.trans)
 }
