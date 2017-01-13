@@ -1,21 +1,12 @@
 package pixelgl
 
 import (
+	"fmt"
 	"runtime"
 
 	"github.com/go-gl/gl/v3.3-core/gl"
-	"github.com/go-gl/mathgl/mgl32"
 	"github.com/pkg/errors"
 )
-
-// VertexData holds data of one vertex stored in vertex attributes. The values must match attribute
-// types precisely. Here's the table of correct types (no other types are valid):
-//
-//   Attr{Type: Float}: float32
-//   Attr{Type: Vec2}:  mgl32.Vec2
-//   Attr{Type: Vec3}:  mgl32.Vec3
-//   Attr{Type: Vec4}:  mgl32.Vec4
-type VertexData map[Attr]interface{}
 
 // VertexSlice points to a portion of (or possibly whole) vertex array. It is used as a pointer,
 // contrary to Go's builtin slices. This is, so that append can be 'in-place'. That's for the good,
@@ -51,6 +42,11 @@ func MakeVertexSlice(shader *Shader, len, cap int) *VertexSlice {
 // VertexSlice.
 func (vs *VertexSlice) VertexFormat() AttrFormat {
 	return vs.va.format
+}
+
+// Stride returns the number of float32 elements occupied by one vertex.
+func (vs *VertexSlice) Stride() int {
+	return vs.va.stride / 4
 }
 
 // Len returns the length of the VertexSlice.
@@ -117,26 +113,36 @@ func (vs VertexSlice) grow(len int) VertexSlice {
 // is not sufficient, a new, larger underlying vertex array will be allocated. The content of the
 // original VertexSlice will be copied to the new underlying vertex array.
 //
+// The data is in the same format as with SetVertexData.
+//
 // The VertexSlice is appended 'in-place', contrary Go's builtin slices.
-func (vs *VertexSlice) Append(vertices ...VertexData) {
+func (vs *VertexSlice) Append(data []float32) {
 	vs.End() // vs must have been Begin-ed before calling this method
-	*vs = vs.grow(vs.Len() + len(vertices))
+	*vs = vs.grow(vs.Len() + len(data)/vs.Stride())
 	vs.Begin()
-	vs.Slice(vs.Len()-len(vertices), vs.Len()).SetVertexData(vertices)
+	vs.Slice(vs.Len()-len(data)/vs.Stride(), vs.Len()).SetVertexData(data)
 }
 
 // SetVertexData sets the contents of the VertexSlice.
 //
+// The data is a slice of float32's, where each vertex attribute occupies a certain number of
+// elements. Namely, Float occupies 1, Vec2 occupies 2, Vec3 occupies 3 and Vec4 occupies 4. The
+// attribues in the data slice must be in the same order as in the vertex format of this Vertex
+// Slice.
+//
 // If the length of vertices does not match the length of the VertexSlice, this methdo panics.
-func (vs *VertexSlice) SetVertexData(vertices []VertexData) {
-	if len(vertices) != vs.Len() {
+func (vs *VertexSlice) SetVertexData(data []float32) {
+	if len(data)/vs.Stride() != vs.Len() {
+		fmt.Println(len(data)/vs.Stride(), vs.Len())
 		panic("set vertex data: wrong length of vertices")
 	}
-	vs.va.setVertexData(vs.i, vs.j, vertices)
+	vs.va.setVertexData(vs.i, vs.j, data)
 }
 
 // VertexData returns the contents of the VertexSlice.
-func (vs *VertexSlice) VertexData() []VertexData {
+//
+// The data is in the same format as with SetVertexData.
+func (vs *VertexSlice) VertexData() []float32 {
 	return vs.va.vertexData(vs.i, vs.j)
 }
 
@@ -160,7 +166,7 @@ type vertexArray struct {
 	cap      int
 	format   AttrFormat
 	stride   int
-	offset   map[string]int
+	offset   []int
 	shader   *Shader
 }
 
@@ -187,19 +193,19 @@ func newVertexArray(shader *Shader, cap int) *vertexArray {
 		cap:    cap,
 		format: shader.VertexFormat(),
 		stride: shader.VertexFormat().Size(),
-		offset: make(map[string]int),
+		offset: make([]int, len(shader.VertexFormat())),
 		shader: shader,
 	}
 
 	offset := 0
-	for name, typ := range va.format {
-		switch typ {
+	for i, attr := range va.format {
+		switch attr.Type {
 		case Float, Vec2, Vec3, Vec4:
 		default:
 			panic(errors.New("failed to create vertex array: invalid attribute type"))
 		}
-		va.offset[name] = offset
-		offset += typ.Size()
+		va.offset[i] = offset
+		offset += attr.Type.Size()
 	}
 
 	gl.GenVertexArrays(1, &va.vao.obj)
@@ -212,11 +218,11 @@ func newVertexArray(shader *Shader, cap int) *vertexArray {
 	emptyData := make([]byte, cap*va.stride)
 	gl.BufferData(gl.ARRAY_BUFFER, len(emptyData), gl.Ptr(emptyData), gl.DYNAMIC_DRAW)
 
-	for name, typ := range va.format {
-		loc := gl.GetAttribLocation(shader.program.obj, gl.Str(name+"\x00"))
+	for i, attr := range va.format {
+		loc := gl.GetAttribLocation(shader.program.obj, gl.Str(attr.Name+"\x00"))
 
 		var size int32
-		switch typ {
+		switch attr.Type {
 		case Float:
 			size = 1
 		case Vec2:
@@ -233,7 +239,7 @@ func newVertexArray(shader *Shader, cap int) *vertexArray {
 			gl.FLOAT,
 			false,
 			int32(va.stride),
-			gl.PtrOffset(va.offset[name]),
+			gl.PtrOffset(va.offset[i]),
 		)
 		gl.EnableVertexAttribArray(uint32(loc))
 	}
@@ -266,82 +272,20 @@ func (va *vertexArray) draw(i, j int) {
 	gl.DrawArrays(gl.TRIANGLES, int32(i), int32(i+j))
 }
 
-func (va *vertexArray) setVertexData(i, j int, vertices []VertexData) {
+func (va *vertexArray) setVertexData(i, j int, data []float32) {
 	if j-i == 0 {
 		// avoid setting 0 bytes of buffer data
 		return
 	}
-
-	data := make([]float32, (j-i)*va.stride/4)
-
-	for vertex := i; vertex < j; vertex++ {
-		for attr, value := range vertices[vertex] {
-			if !va.format.Contains(attr) {
-				continue
-			}
-
-			offset := va.stride*vertex + va.offset[attr.Name]
-
-			switch attr.Type {
-			case Float:
-				data[offset/4] = value.(float32)
-			case Vec2:
-				value := value.(mgl32.Vec2)
-				copy(data[offset/4:offset/4+attr.Type.Size()/4], value[:])
-			case Vec3:
-				value := value.(mgl32.Vec3)
-				copy(data[offset/4:offset/4+attr.Type.Size()/4], value[:])
-			case Vec4:
-				value := value.(mgl32.Vec4)
-				copy(data[offset/4:offset/4+attr.Type.Size()/4], value[:])
-			default:
-				panic("set vertex: invalid attribute type")
-			}
-		}
-	}
-
 	gl.BufferSubData(gl.ARRAY_BUFFER, i*va.stride, len(data)*4, gl.Ptr(data))
 }
 
-func (va *vertexArray) vertexData(i, j int) []VertexData {
+func (va *vertexArray) vertexData(i, j int) []float32 {
 	if j-i == 0 {
 		// avoid getting 0 bytes of buffer data
 		return nil
 	}
-
 	data := make([]float32, (j-i)*va.stride/4)
-
 	gl.GetBufferSubData(gl.ARRAY_BUFFER, i*va.stride, len(data)*4, gl.Ptr(data))
-
-	vertices := make([]VertexData, 0, (j - i))
-
-	for vertex := i; vertex < j; vertex++ {
-		values := make(map[Attr]interface{})
-
-		for name, typ := range va.format {
-			attr := Attr{name, typ}
-			offset := va.stride*vertex + va.offset[attr.Name]
-
-			switch attr.Type {
-			case Float:
-				values[attr] = data[offset/4]
-			case Vec2:
-				var value mgl32.Vec2
-				copy(value[:], data[offset/4:offset/4+attr.Type.Size()/4])
-				values[attr] = value
-			case Vec3:
-				var value mgl32.Vec3
-				copy(value[:], data[offset/4:offset/4+attr.Type.Size()/4])
-				values[attr] = value
-			case Vec4:
-				var value mgl32.Vec4
-				copy(value[:], data[offset/4:offset/4+attr.Type.Size()/4])
-				values[attr] = value
-			}
-		}
-
-		vertices = append(vertices, values)
-	}
-
-	return vertices
+	return data
 }

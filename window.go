@@ -363,11 +363,11 @@ func (w *Window) end() {
 type windowTriangles struct {
 	w    *Window
 	vs   *pixelgl.VertexSlice
-	data []pixelgl.VertexData
+	data []float32
 }
 
 func (wt *windowTriangles) Len() int {
-	return len(wt.data)
+	return len(wt.data) / wt.vs.Stride()
 }
 
 func (wt *windowTriangles) Draw() {
@@ -397,15 +397,14 @@ func (wt *windowTriangles) Draw() {
 
 func (wt *windowTriangles) resize(len int) {
 	if len > wt.Len() {
-		newData := make([]pixelgl.VertexData, len-wt.Len())
-		// default values
-		for i := range newData {
-			newData[i] = pixelgl.VertexData{
-				colorVec4:   mgl32.Vec4{1, 1, 1, 1},
-				textureVec2: mgl32.Vec2{-1, -1},
-			}
+		needAppend := len - wt.Len()
+		for i := 0; i < needAppend; i++ {
+			wt.data = append(wt.data,
+				0, 0,
+				1, 1, 1, 1,
+				-1, -1,
+			)
 		}
-		wt.data = append(wt.data, newData...)
 	}
 	if len < wt.Len() {
 		wt.data = wt.data[:len]
@@ -416,30 +415,24 @@ func (wt *windowTriangles) updateData(offset int, t Triangles) {
 	if t, ok := t.(TrianglesPosition); ok {
 		for i := offset; i < offset+t.Len(); i++ {
 			px, py := t.Position(i).XY()
-			wt.data[i][positionVec2] = mgl32.Vec2{
-				float32(px),
-				float32(py),
-			}
+			wt.data[i*wt.vs.Stride()+0] = float32(px)
+			wt.data[i*wt.vs.Stride()+1] = float32(py)
 		}
 	}
 	if t, ok := t.(TrianglesColor); ok {
 		for i := offset; i < offset+t.Len(); i++ {
 			col := t.Color(i)
-			wt.data[i][colorVec4] = mgl32.Vec4{
-				float32(col.R),
-				float32(col.G),
-				float32(col.B),
-				float32(col.A),
-			}
+			wt.data[i*wt.vs.Stride()+2] = float32(col.R)
+			wt.data[i*wt.vs.Stride()+3] = float32(col.G)
+			wt.data[i*wt.vs.Stride()+4] = float32(col.B)
+			wt.data[i*wt.vs.Stride()+5] = float32(col.A)
 		}
 	}
 	if t, ok := t.(TrianglesTexture); ok {
 		for i := offset; i < offset+t.Len(); i++ {
 			tx, ty := t.Texture(i).XY()
-			wt.data[i][textureVec2] = mgl32.Vec2{
-				float32(tx),
-				float32(ty),
-			}
+			wt.data[i*wt.vs.Stride()+6] = float32(tx)
+			wt.data[i*wt.vs.Stride()+7] = float32(ty)
 		}
 	}
 }
@@ -448,11 +441,12 @@ func (wt *windowTriangles) submitData() {
 	data := wt.data // avoid race condition
 	pixelgl.DoNoBlock(func() {
 		wt.vs.Begin()
-		if len(wt.data) > wt.vs.Len() {
-			wt.vs.Append(make([]pixelgl.VertexData, len(data)-wt.vs.Len())...)
+		dataLen := len(data) / wt.vs.Stride()
+		if dataLen > wt.vs.Len() {
+			wt.vs.Append(make([]float32, (dataLen-wt.vs.Len())*wt.vs.Stride()))
 		}
-		if len(wt.data) < wt.vs.Len() {
-			wt.vs = wt.vs.Slice(0, len(wt.data))
+		if dataLen < wt.vs.Len() {
+			wt.vs = wt.vs.Slice(0, dataLen)
 		}
 		wt.vs.SetVertexData(wt.data)
 		wt.vs.End()
@@ -481,23 +475,28 @@ func (wt *windowTriangles) Copy() Triangles {
 }
 
 func (wt *windowTriangles) Position(i int) Vec {
-	v := wt.data[i][positionVec2].(mgl32.Vec2)
-	return V(float64(v.X()), float64(v.Y()))
+	px := wt.data[i*wt.vs.Stride()+0]
+	py := wt.data[i*wt.vs.Stride()+1]
+	return V(float64(px), float64(py))
 }
 
 func (wt *windowTriangles) Color(i int) NRGBA {
-	c := wt.data[i][colorVec4].(mgl32.Vec4)
+	r := wt.data[i*wt.vs.Stride()+2]
+	g := wt.data[i*wt.vs.Stride()+3]
+	b := wt.data[i*wt.vs.Stride()+4]
+	a := wt.data[i*wt.vs.Stride()+5]
 	return NRGBA{
-		R: float64(c.X()),
-		G: float64(c.Y()),
-		B: float64(c.Z()),
-		A: float64(c.W()),
+		R: float64(r),
+		G: float64(g),
+		B: float64(b),
+		A: float64(a),
 	}
 }
 
 func (wt *windowTriangles) Texture(i int) Vec {
-	t := wt.data[i][textureVec2].(mgl32.Vec2)
-	return V(float64(t.X()), float64(t.Y()))
+	tx := wt.data[i*wt.vs.Stride()+6]
+	ty := wt.data[i*wt.vs.Stride()+7]
+	return V(float64(tx), float64(ty))
 }
 
 // MakeTriangles generates a specialized copy of the supplied triangles that will draw onto this
@@ -538,15 +537,26 @@ func (w *Window) SetMaskColor(c color.Color) {
 	w.col = mgl32.Vec4{r, g, b, a}
 }
 
+const (
+	positionVec2 int = iota
+	colorVec4
+	textureVec2
+)
+
 var defaultVertexFormat = pixelgl.AttrFormat{
-	"position": pixelgl.Vec2,
-	"color":    pixelgl.Vec4,
-	"texture":  pixelgl.Vec2,
+	positionVec2: {Name: "position", Type: pixelgl.Vec2},
+	colorVec4:    {Name: "color", Type: pixelgl.Vec4},
+	textureVec2:  {Name: "texture", Type: pixelgl.Vec2},
 }
 
+const (
+	maskColorVec4 int = iota
+	transformMat3
+)
+
 var defaultUniformFormat = pixelgl.AttrFormat{
-	"maskColor": pixelgl.Vec4,
-	"transform": pixelgl.Mat3,
+	{Name: "maskColor", Type: pixelgl.Vec4},
+	{Name: "transform", Type: pixelgl.Mat3},
 }
 
 var defaultVertexShader = `
@@ -587,26 +597,3 @@ void main() {
 	}
 }
 `
-
-var (
-	positionVec2 = pixelgl.Attr{
-		Name: "position",
-		Type: pixelgl.Vec2,
-	}
-	colorVec4 = pixelgl.Attr{
-		Name: "color",
-		Type: pixelgl.Vec4,
-	}
-	textureVec2 = pixelgl.Attr{
-		Name: "texture",
-		Type: pixelgl.Vec2,
-	}
-	maskColorVec4 = pixelgl.Attr{
-		Name: "maskColor",
-		Type: pixelgl.Vec4,
-	}
-	transformMat3 = pixelgl.Attr{
-		Name: "transform",
-		Type: pixelgl.Mat3,
-	}
-)

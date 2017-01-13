@@ -25,13 +25,14 @@ func (td *TrianglesData) Draw() {
 
 func (td *TrianglesData) resize(len int) {
 	if len > td.Len() {
-		newData := make(TrianglesData, len-td.Len())
-		// default values
-		for i := range newData {
-			newData[i].Color = NRGBA{1, 1, 1, 1}
-			newData[i].Texture = V(-1, -1)
+		needAppend := len - td.Len()
+		for i := 0; i < needAppend; i++ {
+			*td = append(*td, struct {
+				Position Vec
+				Color    NRGBA
+				Texture  Vec
+			}{V(0, 0), NRGBA{1, 1, 1, 1}, V(-1, -1)})
 		}
-		*td = append(*td, newData...)
 	}
 	if len < td.Len() {
 		*td = (*td)[:len]

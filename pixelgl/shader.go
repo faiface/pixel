@@ -13,7 +13,7 @@ type Shader struct {
 	program    binder
 	vertexFmt  AttrFormat
 	uniformFmt AttrFormat
-	uniforms   map[string]int32
+	uniformLoc []int32
 }
 
 // NewShader creates a new shader program from the specified vertex shader and fragment shader
@@ -31,7 +31,7 @@ func NewShader(vertexFmt, uniformFmt AttrFormat, vertexShader, fragmentShader st
 		},
 		vertexFmt:  vertexFmt,
 		uniformFmt: uniformFmt,
-		uniforms:   make(map[string]int32),
+		uniformLoc: make([]int32, len(uniformFmt)),
 	}
 
 	var vshader, fshader uint32
@@ -99,9 +99,9 @@ func NewShader(vertexFmt, uniformFmt AttrFormat, vertexShader, fragmentShader st
 	}
 
 	// uniforms
-	for name := range uniformFmt {
-		loc := gl.GetUniformLocation(shader.program.obj, gl.Str(name+"\x00"))
-		shader.uniforms[name] = loc
+	for i, uniform := range uniformFmt {
+		loc := gl.GetUniformLocation(shader.program.obj, gl.Str(uniform.Name+"\x00"))
+		shader.uniformLoc[i] = loc
 	}
 
 	runtime.SetFinalizer(shader, (*Shader).delete)
@@ -125,9 +125,10 @@ func (s *Shader) UniformFormat() AttrFormat {
 	return s.uniformFmt
 }
 
-// SetUniformAttr sets the value of a uniform attribute of a shader.
+// SetUniformAttr sets the value of a uniform attribute of a shader. The attribute is
+// specified by the index in the Shader's uniform format.
 //
-// If the attribute does not exist, this method returns false.
+// If the uniform attribute does not exist in the Shader, this method returns false.
 //
 // Supplied value must correspond to the type of the attribute. Correct types are these
 // (right-hand is the type of the value):
@@ -148,54 +149,54 @@ func (s *Shader) UniformFormat() AttrFormat {
 // No other types are supported.
 //
 // The shader must be bound before calling this method.
-func (s *Shader) SetUniformAttr(attr Attr, value interface{}) (ok bool) {
-	if !s.uniformFmt.Contains(attr) {
+func (s *Shader) SetUniformAttr(uniform int, value interface{}) (ok bool) {
+	if s.uniformLoc[uniform] < 0 {
 		return false
 	}
 
-	switch attr.Type {
+	switch s.uniformFmt[uniform].Type {
 	case Int:
 		value := value.(int32)
-		gl.Uniform1iv(s.uniforms[attr.Name], 1, &value)
+		gl.Uniform1iv(s.uniformLoc[uniform], 1, &value)
 	case Float:
 		value := value.(float32)
-		gl.Uniform1fv(s.uniforms[attr.Name], 1, &value)
+		gl.Uniform1fv(s.uniformLoc[uniform], 1, &value)
 	case Vec2:
 		value := value.(mgl32.Vec2)
-		gl.Uniform2fv(s.uniforms[attr.Name], 1, &value[0])
+		gl.Uniform2fv(s.uniformLoc[uniform], 1, &value[0])
 	case Vec3:
 		value := value.(mgl32.Vec3)
-		gl.Uniform3fv(s.uniforms[attr.Name], 1, &value[0])
+		gl.Uniform3fv(s.uniformLoc[uniform], 1, &value[0])
 	case Vec4:
 		value := value.(mgl32.Vec4)
-		gl.Uniform4fv(s.uniforms[attr.Name], 1, &value[0])
+		gl.Uniform4fv(s.uniformLoc[uniform], 1, &value[0])
 	case Mat2:
 		value := value.(mgl32.Mat2)
-		gl.UniformMatrix2fv(s.uniforms[attr.Name], 1, false, &value[0])
+		gl.UniformMatrix2fv(s.uniformLoc[uniform], 1, false, &value[0])
 	case Mat23:
 		value := value.(mgl32.Mat2x3)
-		gl.UniformMatrix2x3fv(s.uniforms[attr.Name], 1, false, &value[0])
+		gl.UniformMatrix2x3fv(s.uniformLoc[uniform], 1, false, &value[0])
 	case Mat24:
 		value := value.(mgl32.Mat2x4)
-		gl.UniformMatrix2x4fv(s.uniforms[attr.Name], 1, false, &value[0])
+		gl.UniformMatrix2x4fv(s.uniformLoc[uniform], 1, false, &value[0])
 	case Mat3:
 		value := value.(mgl32.Mat3)
-		gl.UniformMatrix3fv(s.uniforms[attr.Name], 1, false, &value[0])
+		gl.UniformMatrix3fv(s.uniformLoc[uniform], 1, false, &value[0])
 	case Mat32:
 		value := value.(mgl32.Mat3x2)
-		gl.UniformMatrix3x2fv(s.uniforms[attr.Name], 1, false, &value[0])
+		gl.UniformMatrix3x2fv(s.uniformLoc[uniform], 1, false, &value[0])
 	case Mat34:
 		value := value.(mgl32.Mat3x4)
-		gl.UniformMatrix3x4fv(s.uniforms[attr.Name], 1, false, &value[0])
+		gl.UniformMatrix3x4fv(s.uniformLoc[uniform], 1, false, &value[0])
 	case Mat4:
 		value := value.(mgl32.Mat4)
-		gl.UniformMatrix4fv(s.uniforms[attr.Name], 1, false, &value[0])
+		gl.UniformMatrix4fv(s.uniformLoc[uniform], 1, false, &value[0])
 	case Mat42:
 		value := value.(mgl32.Mat4x2)
-		gl.UniformMatrix4x2fv(s.uniforms[attr.Name], 1, false, &value[0])
+		gl.UniformMatrix4x2fv(s.uniformLoc[uniform], 1, false, &value[0])
 	case Mat43:
 		value := value.(mgl32.Mat4x3)
-		gl.UniformMatrix4x3fv(s.uniforms[attr.Name], 1, false, &value[0])
+		gl.UniformMatrix4x3fv(s.uniformLoc[uniform], 1, false, &value[0])
 	default:
 		panic("set uniform attr: invalid attribute type")
 	}
