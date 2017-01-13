@@ -414,10 +414,10 @@ func (wt *windowTriangles) resize(len int) {
 func (wt *windowTriangles) updateData(offset int, t Triangles) {
 	if t, ok := t.(TrianglesPosition); ok {
 		for i := offset; i < offset+t.Len(); i++ {
-			pos := t.Position(i)
+			px, py := t.Position(i).XY()
 			wt.data[i][positionVec2] = mgl32.Vec2{
-				float32(pos.X()),
-				float32(pos.Y()),
+				float32(px),
+				float32(py),
 			}
 		}
 	}
@@ -434,10 +434,10 @@ func (wt *windowTriangles) updateData(offset int, t Triangles) {
 	}
 	if t, ok := t.(TrianglesTexture); ok {
 		for i := offset; i < offset+t.Len(); i++ {
-			tex := t.Texture(i)
+			tx, ty := t.Texture(i).XY()
 			wt.data[i][textureVec2] = mgl32.Vec2{
-				float32(tex.X()),
-				float32(tex.Y()),
+				float32(tx),
+				float32(ty),
 			}
 		}
 	}
@@ -484,7 +484,7 @@ func (wt *windowTriangles) Position(i int) Vec {
 	return V(float64(v.X()), float64(v.Y()))
 }
 
-func (wt *windowTriangles) Color(i int) color.Color {
+func (wt *windowTriangles) Color(i int) NRGBA {
 	c := wt.data[i][colorVec4].(mgl32.Vec4)
 	return NRGBA{
 		R: float64(c.X()),
