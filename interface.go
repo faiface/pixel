@@ -72,7 +72,7 @@ type TrianglesPosition interface {
 // Default value for a color is the white color.
 type TrianglesColor interface {
 	Triangles
-	Color(i int) color.Color
+	Color(i int) NRGBA
 }
 
 // TrianglesTexture specifies Triangles with Texture propery.
