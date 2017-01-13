@@ -23,46 +23,58 @@ func (td *TrianglesData) Draw() {
 	panic(fmt.Errorf("%T.Draw: invalid operation", td))
 }
 
-// Update copies vertex properties from the supplied Triangles into this TrianglesData.
-//
-// TrianglesPosition, TrianglesColor and TrianglesTexture are supported.
-func (td *TrianglesData) Update(t Triangles) {
-	if t.Len() > td.Len() {
-		*td = append(*td, make(TrianglesData, t.Len()-td.Len())...)
+func (td *TrianglesData) resize(len int) {
+	if len > td.Len() {
+		newData := make(TrianglesData, len-td.Len())
+		// default values
+		for i := range newData {
+			newData[i].Color = NRGBA{1, 1, 1, 1}
+			newData[i].Texture = V(-1, -1)
+		}
+		*td = append(*td, newData...)
 	}
-	if t.Len() < td.Len() {
-		*td = (*td)[:t.Len()]
+	if len < td.Len() {
+		*td = (*td)[:len]
 	}
+}
 
+func (td *TrianglesData) updateData(offset int, t Triangles) {
 	// fast path optimization
 	if t, ok := t.(*TrianglesData); ok {
-		copy(*td, *t)
+		copy((*td)[offset:], *t)
 		return
 	}
 
 	// slow path manual copy
 	if t, ok := t.(TrianglesPosition); ok {
-		for i := range *td {
+		for i := offset; i < len(*td); i++ {
 			(*td)[i].Position = t.Position(i)
 		}
 	}
 	if t, ok := t.(TrianglesColor); ok {
-		for i := range *td {
-			(*td)[i].Color = NRGBAModel.Convert(t.Color(i)).(NRGBA)
+		for i := offset; i < len(*td); i++ {
+			(*td)[i].Color = t.Color(i)
 		}
 	}
 	if t, ok := t.(TrianglesTexture); ok {
-		for i := range *td {
+		for i := offset; i < len(*td); i++ {
 			(*td)[i].Texture = t.Texture(i)
 		}
 	}
 }
 
+// Update copies vertex properties from the supplied Triangles into this TrianglesData.
+//
+// TrianglesPosition, TrianglesColor and TrianglesTexture are supported.
+func (td *TrianglesData) Update(t Triangles) {
+	td.resize(t.Len())
+	td.updateData(0, t)
+}
+
 // Append adds supplied Triangles to the end of the TrianglesData.
 func (td *TrianglesData) Append(t Triangles) {
-	newTd := make(TrianglesData, t.Len())
-	newTd.Update(t)
-	*td = append(*td, newTd...)
+	td.resize(td.Len() + t.Len())
+	td.updateData(td.Len()-t.Len(), t)
 }
 
 // Copy returns an exact independent copy of this TrianglesData.

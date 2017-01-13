@@ -400,9 +400,10 @@ func (wt *windowTriangles) resize(len int) {
 		newData := make([]pixelgl.VertexData, len-wt.Len())
 		// default values
 		for i := range newData {
-			newData[i] = make(pixelgl.VertexData)
-			newData[i][colorVec4] = mgl32.Vec4{1, 1, 1, 1}
-			newData[i][textureVec2] = mgl32.Vec2{-1, -1}
+			newData[i] = pixelgl.VertexData{
+				colorVec4:   mgl32.Vec4{1, 1, 1, 1},
+				textureVec2: mgl32.Vec2{-1, -1},
+			}
 		}
 		wt.data = append(wt.data, newData...)
 	}
@@ -423,7 +424,7 @@ func (wt *windowTriangles) updateData(offset int, t Triangles) {
 	}
 	if t, ok := t.(TrianglesColor); ok {
 		for i := offset; i < offset+t.Len(); i++ {
-			col := NRGBAModel.Convert(t.Color(i)).(NRGBA)
+			col := t.Color(i)
 			wt.data[i][colorVec4] = mgl32.Vec4{
 				float32(col.R),
 				float32(col.G),
