@@ -12,7 +12,8 @@ import (
 // To put an object into a Batch, just draw it onto it:
 //   object.Draw(batch)
 type Batch struct {
-	cont TrianglesDrawer
+	cont   TrianglesDrawer
+	fixpic *Picture
 
 	pic *Picture
 	mat mgl32.Mat3
@@ -27,8 +28,8 @@ type Batch struct {
 // Note, that if the container does not support TrianglesColor, color masking will not work.
 func NewBatch(pic *Picture, container Triangles) *Batch {
 	return &Batch{
-		cont: TrianglesDrawer{Triangles: container},
-		pic:  pic,
+		cont:   TrianglesDrawer{Triangles: container},
+		fixpic: pic,
 	}
 }
 
@@ -39,7 +40,7 @@ func (b *Batch) Clear() {
 
 // Draw draws all objects that are currently in the Batch onto another Target.
 func (b *Batch) Draw(t Target) {
-	t.SetPicture(b.pic)
+	t.SetPicture(b.fixpic)
 	b.cont.Draw(t)
 }
 
@@ -52,15 +53,16 @@ func (b *Batch) MakeTriangles(t Triangles) Triangles {
 	}
 }
 
-// SetPicture only checks, whether the supplied Picture has the same underlying Picture as the fixed
-// Picture of this Batch. If that is not true, this method panics.
+// SetPicture sets the current Picture that will be used with the following draws. The underlying
+// Texture of this Picture must be same as the underlying Texture of the Batch's Picture.
 func (b *Batch) SetPicture(p *Picture) {
 	if p == nil {
 		return
 	}
-	if p.Texture() != b.pic.Texture() {
-		panic("batch: attempted to draw with a different Picture")
+	if p.Texture() != b.fixpic.Texture() {
+		panic("batch: attempted to draw with a different underlying Picture")
 	}
+	b.pic = p
 }
 
 // SetTransform sets transforms used in the following draws onto the Batch.
@@ -96,7 +98,9 @@ func (bt *batchTriangles) Draw() {
 		})
 		bt.data[i].Position = V(float64(transPos.X()), float64(transPos.Y()))
 		bt.data[i].Color = bt.data[i].Color.Mul(bt.batch.col)
-		//TODO: texture
+		if bt.batch.pic != nil && bt.data[i].Texture != V(-1, -1) {
+			bt.data[i].Texture = pictureBounds(bt.batch.pic, bt.data[i].Texture)
+		}
 	}
 	bt.trans.Update(&bt.data)
 	bt.batch.cont.Append(bt.trans)

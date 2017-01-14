@@ -66,6 +66,7 @@ type Window struct {
 	pic *Picture
 	mat mgl32.Mat3
 	col mgl32.Vec4
+	bnd mgl32.Vec4
 
 	// need to save these to correctly restore a fullscreen window
 	restore struct {
@@ -374,12 +375,14 @@ func (wt *windowTriangles) Draw() {
 	pic := wt.w.pic // avoid
 	mat := wt.w.mat // race
 	col := wt.w.col // condition
+	bnd := wt.w.bnd
 
 	pixelgl.DoNoBlock(func() {
 		wt.w.begin()
 
 		wt.w.shader.SetUniformAttr(transformMat3, mat)
 		wt.w.shader.SetUniformAttr(maskColorVec4, col)
+		wt.w.shader.SetUniformAttr(boundsVec4, bnd)
 
 		if pic != nil {
 			pic.Texture().Begin()
@@ -514,6 +517,14 @@ func (w *Window) MakeTriangles(t Triangles) Triangles {
 
 // SetPicture sets a Picture that will be used in subsequent drawings onto the window.
 func (w *Window) SetPicture(p *Picture) {
+	if p != nil {
+		min := pictureBounds(p, V(0, 0))
+		max := pictureBounds(p, V(1, 1))
+		w.bnd = mgl32.Vec4{
+			float32(min.X()), float32(min.Y()),
+			float32(max.X()), float32(max.Y()),
+		}
+	}
 	w.pic = p
 }
 
@@ -552,11 +563,13 @@ var defaultVertexFormat = pixelgl.AttrFormat{
 const (
 	maskColorVec4 int = iota
 	transformMat3
+	boundsVec4
 )
 
 var defaultUniformFormat = pixelgl.AttrFormat{
 	{Name: "maskColor", Type: pixelgl.Vec4},
 	{Name: "transform", Type: pixelgl.Mat3},
+	{Name: "bounds", Type: pixelgl.Vec4},
 }
 
 var defaultVertexShader = `
@@ -587,13 +600,20 @@ in vec2 Texture;
 out vec4 color;
 
 uniform vec4 maskColor;
+uniform vec4 bounds;
 uniform sampler2D tex;
 
 void main() {
+	vec2 boundsMin = bounds.xy;
+	vec2 boundsMax = bounds.zw;
+
+	float tx = boundsMin.x * (1 - Texture.x) + boundsMax.x * Texture.x;
+	float ty = boundsMin.y * (1 - Texture.y) + boundsMax.y * Texture.y;
+
 	if (Texture == vec2(-1, -1)) {
 		color = maskColor * Color;
 	} else {
-		color = maskColor * Color * texture(tex, vec2(Texture.x, 1 - Texture.y));
+		color = maskColor * Color * texture(tex, vec2(tx, 1 - ty));
 	}
 }
 `
