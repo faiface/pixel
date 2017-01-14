@@ -372,9 +372,10 @@ func (wt *windowTriangles) Len() int {
 }
 
 func (wt *windowTriangles) Draw() {
-	pic := wt.w.pic // avoid
-	mat := wt.w.mat // race
-	col := wt.w.col // condition
+	// avoid possible race condition
+	pic := wt.w.pic
+	mat := wt.w.mat
+	col := wt.w.col
 	bnd := wt.w.bnd
 
 	pixelgl.DoNoBlock(func() {
