@@ -12,10 +12,14 @@ type Texture struct {
 	width, height int
 }
 
-// NewTexture creates a new texture with the specified width and height.
-// The pixels must be a sequence of RGBA values.
-func NewTexture(width, height int, smooth bool, pixels []uint8) (*Texture, error) {
-	texture := &Texture{
+// NewTexture creates a new texture with the specified width and height with some initial
+// pixel values. The pixels must be a sequence of RGBA values.
+func NewTexture(width, height int, smooth bool, pixels []uint8) *Texture {
+	if len(pixels) != width*height*4 {
+		panic("failed to create new texture: wrong number of pixels")
+	}
+
+	tex := &Texture{
 		tex: binder{
 			restoreLoc: gl.TEXTURE_BINDING_2D,
 			bindFunc: func(obj uint32) {
@@ -26,10 +30,10 @@ func NewTexture(width, height int, smooth bool, pixels []uint8) (*Texture, error
 		height: height,
 	}
 
-	gl.GenTextures(1, &texture.tex.obj)
+	gl.GenTextures(1, &tex.tex.obj)
 
-	texture.Begin()
-	defer texture.End()
+	tex.Begin()
+	defer tex.End()
 
 	gl.TexImage2D(
 		gl.TEXTURE_2D,
@@ -56,9 +60,9 @@ func NewTexture(width, height int, smooth bool, pixels []uint8) (*Texture, error
 
 	gl.GenerateMipmap(gl.TEXTURE_2D)
 
-	runtime.SetFinalizer(texture, (*Texture).delete)
+	runtime.SetFinalizer(tex, (*Texture).delete)
 
-	return texture, nil
+	return tex
 }
 
 func (t *Texture) delete() {

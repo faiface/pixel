@@ -5,7 +5,6 @@ import (
 	"image/draw"
 
 	"github.com/faiface/pixel/pixelgl"
-	"github.com/pkg/errors"
 )
 
 // Picture is a raster picture. It is usually used with sprites.
@@ -31,16 +30,12 @@ func NewPicture(img image.Image, smooth bool) *Picture {
 
 	var texture *pixelgl.Texture
 	pixelgl.Do(func() {
-		var err error
-		texture, err = pixelgl.NewTexture(
+		texture = pixelgl.NewTexture(
 			img.Bounds().Dx(),
 			img.Bounds().Dy(),
 			smooth,
 			rgba.Pix,
 		)
-		if err != nil {
-			panic(errors.Wrap(err, "failed to create picture"))
-		}
 	})
 
 	return &Picture{
