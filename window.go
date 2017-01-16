@@ -6,7 +6,6 @@ import (
 	"runtime"
 
 	"github.com/faiface/pixel/pixelgl"
-	"github.com/go-gl/gl/v3.3-core/gl"
 	"github.com/go-gl/glfw/v3.2/glfw"
 	"github.com/go-gl/mathgl/mgl32"
 	"github.com/pkg/errors"
@@ -61,6 +60,9 @@ type Window struct {
 	window  *glfw.Window
 	config  WindowConfig
 	shader  *pixelgl.Shader
+
+	// cache
+	width, height float64
 
 	// Target stuff, Picture, transformation matrix and color
 	pic *Picture
@@ -170,8 +172,7 @@ func (w *Window) Clear(c color.Color) {
 		defer w.end()
 
 		c := NRGBAModel.Convert(c).(NRGBA)
-		gl.ClearColor(float32(c.R), float32(c.G), float32(c.B), float32(c.A))
-		gl.Clear(gl.COLOR_BUFFER_BIT)
+		pixelgl.Clear(float32(c.R), float32(c.G), float32(c.B), float32(c.A))
 	})
 }
 
@@ -179,23 +180,16 @@ func (w *Window) Clear(c color.Color) {
 func (w *Window) Update() {
 	pixelgl.Do(func() {
 		w.begin()
-		defer w.end()
-
 		if w.config.VSync {
 			glfw.SwapInterval(1)
 		}
 		w.window.SwapBuffers()
+		w.end()
 	})
 
 	w.updateInput()
 
-	pixelgl.Do(func() {
-		w.begin()
-		defer w.end()
-
-		w, h := w.window.GetSize()
-		gl.Viewport(0, 0, int32(w), int32(h))
-	})
+	w.width, w.height = w.Size()
 }
 
 // SetClosed sets the closed flag of a window.
@@ -352,6 +346,7 @@ func (w *Window) begin() {
 	if w.shader != nil {
 		w.shader.Begin()
 	}
+	pixelgl.Viewport(0, 0, int32(w.width), int32(w.height))
 }
 
 // Note: must be called inside the main thread.
