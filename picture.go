@@ -21,12 +21,12 @@ type Picture struct {
 // NewPicture creates a new picture from an image.Image.
 func NewPicture(img image.Image, smooth bool) *Picture {
 	// convert the image to NRGBA format
-	var rgba *image.NRGBA
-	if rgbaImg, ok := img.(*image.NRGBA); ok {
-		rgba = rgbaImg
+	var nrgba *image.NRGBA
+	if nrgbaImg, ok := img.(*image.NRGBA); ok {
+		nrgba = nrgbaImg
 	} else {
-		rgba = image.NewNRGBA(image.Rect(0, 0, img.Bounds().Dx(), img.Bounds().Dy()))
-		draw.Draw(rgba, rgba.Bounds(), img, img.Bounds().Min, draw.Src)
+		nrgba = image.NewNRGBA(image.Rect(0, 0, img.Bounds().Dx(), img.Bounds().Dy()))
+		draw.Draw(nrgba, nrgba.Bounds(), img, img.Bounds().Min, draw.Src)
 	}
 
 	var texture *pixelgl.Texture
@@ -35,7 +35,7 @@ func NewPicture(img image.Image, smooth bool) *Picture {
 			img.Bounds().Dx(),
 			img.Bounds().Dy(),
 			smooth,
-			rgba.Pix,
+			nrgba.Pix,
 		)
 	})
 
