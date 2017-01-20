@@ -367,14 +367,16 @@ func (w *Window) end() {
 	}
 }
 
-type windowTriangles struct {
-	w    *Window
-	vs   *pixelgl.VertexSlice
-	data []float32
+type trianglesPositionColorTexture interface {
+	Triangles
+	Position(i int) Vec
+	Color(i int) NRGBA
+	Texture(i int) Vec
 }
 
-func (wt *windowTriangles) Len() int {
-	return len(wt.data) / wt.vs.Stride()
+type windowTriangles struct {
+	w *Window
+	trianglesPositionColorTexture
 }
 
 func (wt *windowTriangles) Draw() {
@@ -394,9 +396,7 @@ func (wt *windowTriangles) Draw() {
 		if pic != nil {
 			pic.Texture().Begin()
 		}
-		wt.vs.Begin()
-		wt.vs.Draw()
-		wt.vs.End()
+		wt.trianglesPositionColorTexture.Draw()
 		if pic != nil {
 			pic.Texture().End()
 		}
@@ -405,120 +405,16 @@ func (wt *windowTriangles) Draw() {
 	})
 }
 
-func (wt *windowTriangles) resize(len int) {
-	if len > wt.Len() {
-		needAppend := len - wt.Len()
-		for i := 0; i < needAppend; i++ {
-			wt.data = append(wt.data,
-				0, 0,
-				1, 1, 1, 1,
-				-1, -1,
-			)
-		}
-	}
-	if len < wt.Len() {
-		wt.data = wt.data[:len]
-	}
-}
-
-func (wt *windowTriangles) updateData(offset int, t Triangles) {
-	if t, ok := t.(TrianglesPosition); ok {
-		for i := offset; i < offset+t.Len(); i++ {
-			px, py := t.Position(i).XY()
-			wt.data[i*wt.vs.Stride()+0] = float32(px)
-			wt.data[i*wt.vs.Stride()+1] = float32(py)
-		}
-	}
-	if t, ok := t.(TrianglesColor); ok {
-		for i := offset; i < offset+t.Len(); i++ {
-			col := t.Color(i)
-			wt.data[i*wt.vs.Stride()+2] = float32(col.R)
-			wt.data[i*wt.vs.Stride()+3] = float32(col.G)
-			wt.data[i*wt.vs.Stride()+4] = float32(col.B)
-			wt.data[i*wt.vs.Stride()+5] = float32(col.A)
-		}
-	}
-	if t, ok := t.(TrianglesTexture); ok {
-		for i := offset; i < offset+t.Len(); i++ {
-			tx, ty := t.Texture(i).XY()
-			wt.data[i*wt.vs.Stride()+6] = float32(tx)
-			wt.data[i*wt.vs.Stride()+7] = float32(ty)
-		}
-	}
-}
-
-func (wt *windowTriangles) submitData() {
-	data := wt.data // avoid race condition
-	mainthread.CallNonBlock(func() {
-		wt.vs.Begin()
-		dataLen := len(data) / wt.vs.Stride()
-		if dataLen > wt.vs.Len() {
-			wt.vs.Append(make([]float32, (dataLen-wt.vs.Len())*wt.vs.Stride()))
-		}
-		if dataLen < wt.vs.Len() {
-			wt.vs = wt.vs.Slice(0, dataLen)
-		}
-		wt.vs.SetVertexData(wt.data)
-		wt.vs.End()
-	})
-}
-
-func (wt *windowTriangles) Update(t Triangles) {
-	wt.resize(t.Len())
-	wt.updateData(0, t)
-	wt.submitData()
-}
-
-func (wt *windowTriangles) Append(t Triangles) {
-	wt.resize(wt.Len() + t.Len())
-	wt.updateData(wt.Len()-t.Len(), t)
-	wt.submitData()
-}
-
-func (wt *windowTriangles) Copy() Triangles {
-	copyWt := &windowTriangles{
-		w:  wt.w,
-		vs: pixelgl.MakeVertexSlice(wt.w.shader, 0, 0),
-	}
-	copyWt.Update(wt)
-	return copyWt
-}
-
-func (wt *windowTriangles) Position(i int) Vec {
-	px := wt.data[i*wt.vs.Stride()+0]
-	py := wt.data[i*wt.vs.Stride()+1]
-	return V(float64(px), float64(py))
-}
-
-func (wt *windowTriangles) Color(i int) NRGBA {
-	r := wt.data[i*wt.vs.Stride()+2]
-	g := wt.data[i*wt.vs.Stride()+3]
-	b := wt.data[i*wt.vs.Stride()+4]
-	a := wt.data[i*wt.vs.Stride()+5]
-	return NRGBA{
-		R: float64(r),
-		G: float64(g),
-		B: float64(b),
-		A: float64(a),
-	}
-}
-
-func (wt *windowTriangles) Texture(i int) Vec {
-	tx := wt.data[i*wt.vs.Stride()+6]
-	ty := wt.data[i*wt.vs.Stride()+7]
-	return V(float64(tx), float64(ty))
-}
-
 // MakeTriangles generates a specialized copy of the supplied triangles that will draw onto this
 // Window.
 //
 // Window supports TrianglesPosition, TrianglesColor and TrianglesTexture.
 func (w *Window) MakeTriangles(t Triangles) Triangles {
+	tpcs := NewGLTriangles(w.shader, t).(trianglesPositionColorTexture)
 	wt := &windowTriangles{
-		w:  w,
-		vs: pixelgl.MakeVertexSlice(w.shader, 0, 0),
+		w: w,
+		trianglesPositionColorTexture: tpcs,
 	}
-	wt.Update(t)
 	return wt
 }
 
