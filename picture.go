@@ -21,8 +21,9 @@ type Picture struct {
 // NewPicture creates a new picture from an image.Image.
 func NewPicture(img image.Image, smooth bool) *Picture {
 	// convert the image to NRGBA format
-	nrgba := image.NewNRGBA(image.Rect(0, 0, img.Bounds().Dx(), img.Bounds().Dy()))
-	draw.Draw(nrgba, nrgba.Bounds(), img, img.Bounds().Min, draw.Src)
+	bounds := img.Bounds()
+	nrgba := image.NewNRGBA(image.Rect(0, 0, bounds.Dx(), bounds.Dy()))
+	draw.Draw(nrgba, nrgba.Bounds(), img, bounds.Min, draw.Src)
 
 	var texture *pixelgl.Texture
 	mainthread.Call(func() {
