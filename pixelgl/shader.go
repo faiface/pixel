@@ -46,13 +46,14 @@ func NewShader(vertexFmt, uniformFmt AttrFormat, vertexShader, fragmentShader st
 		gl.ShaderSource(vshader, 1, src, &length)
 		gl.CompileShader(vshader)
 
-		var (
-			success int32
-			infoLog = make([]byte, 512)
-		)
+		var success int32
 		gl.GetShaderiv(vshader, gl.COMPILE_STATUS, &success)
-		if success == 0 {
-			gl.GetShaderInfoLog(vshader, int32(len(infoLog)), nil, &infoLog[0])
+		if success == gl.FALSE {
+			var logLen int32
+			gl.GetShaderiv(vshader, gl.INFO_LOG_LENGTH, &logLen)
+
+			infoLog := make([]byte, logLen)
+			gl.GetShaderInfoLog(vshader, logLen, nil, &infoLog[0])
 			return nil, fmt.Errorf("error compiling vertex shader: %s", string(infoLog))
 		}
 
@@ -68,13 +69,14 @@ func NewShader(vertexFmt, uniformFmt AttrFormat, vertexShader, fragmentShader st
 		gl.ShaderSource(fshader, 1, src, &length)
 		gl.CompileShader(fshader)
 
-		var (
-			success int32
-			infoLog = make([]byte, 512)
-		)
+		var success int32
 		gl.GetShaderiv(fshader, gl.COMPILE_STATUS, &success)
-		if success == 0 {
-			gl.GetShaderInfoLog(fshader, int32(len(infoLog)), nil, &infoLog[0])
+		if success == gl.FALSE {
+			var logLen int32
+			gl.GetShaderiv(fshader, gl.INFO_LOG_LENGTH, &logLen)
+
+			infoLog := make([]byte, logLen)
+			gl.GetShaderInfoLog(fshader, logLen, nil, &infoLog[0])
 			return nil, fmt.Errorf("error compiling fragment shader: %s", string(infoLog))
 		}
 
@@ -88,13 +90,14 @@ func NewShader(vertexFmt, uniformFmt AttrFormat, vertexShader, fragmentShader st
 		gl.AttachShader(shader.program.obj, fshader)
 		gl.LinkProgram(shader.program.obj)
 
-		var (
-			success int32
-			infoLog = make([]byte, 512)
-		)
+		var success int32
 		gl.GetProgramiv(shader.program.obj, gl.LINK_STATUS, &success)
-		if success == 0 {
-			gl.GetProgramInfoLog(shader.program.obj, int32(len(infoLog)), nil, &infoLog[0])
+		if success == gl.FALSE {
+			var logLen int32
+			gl.GetProgramiv(shader.program.obj, gl.INFO_LOG_LENGTH, &logLen)
+
+			infoLog := make([]byte, logLen)
+			gl.GetProgramInfoLog(shader.program.obj, logLen, nil, &infoLog[0])
 			return nil, fmt.Errorf("error linking shader program: %s", string(infoLog))
 		}
 	}
