@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"runtime"
 
+	"github.com/faiface/mainthread"
 	"github.com/go-gl/gl/v3.3-core/gl"
 	"github.com/go-gl/mathgl/mgl32"
 )
@@ -110,7 +111,7 @@ func NewShader(vertexFmt, uniformFmt AttrFormat, vertexShader, fragmentShader st
 }
 
 func (s *Shader) delete() {
-	DoNoBlock(func() {
+	mainthread.CallNonBlock(func() {
 		gl.DeleteProgram(s.program.obj)
 	})
 }

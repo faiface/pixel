@@ -1,7 +1,7 @@
 package pixel
 
 import (
-	"github.com/faiface/pixel/pixelgl"
+	"github.com/faiface/mainthread"
 	"github.com/go-gl/glfw/v3.2/glfw"
 )
 
@@ -23,7 +23,7 @@ func (w *Window) JustReleased(button Button) bool {
 // MousePosition returns the current mouse position relative to the window.
 func (w *Window) MousePosition() Vec {
 	var x, y, width, height float64
-	pixelgl.Do(func() {
+	mainthread.Call(func() {
 		x, y = w.window.GetCursorPos()
 		wi, hi := w.window.GetSize()
 		width, height = float64(wi), float64(hi)
@@ -187,7 +187,7 @@ const (
 )
 
 func (w *Window) initInput() {
-	pixelgl.Do(func() {
+	mainthread.Call(func() {
 		w.window.SetMouseButtonCallback(func(_ *glfw.Window, button glfw.MouseButton, action glfw.Action, mod glfw.ModifierKey) {
 			switch action {
 			case glfw.Press:
@@ -220,7 +220,7 @@ func (w *Window) updateInput() {
 	w.currInp.scroll -= w.tempInp.scroll
 
 	// get events (usually calls callbacks, but callbacks can be called outside too)
-	pixelgl.Do(func() {
+	mainthread.Call(func() {
 		glfw.PollEvents()
 	})
 

@@ -5,6 +5,7 @@ import (
 
 	"runtime"
 
+	"github.com/faiface/mainthread"
 	"github.com/faiface/pixel/pixelgl"
 	"github.com/go-gl/glfw/v3.2/glfw"
 	"github.com/go-gl/mathgl/mgl32"
@@ -79,6 +80,9 @@ type Window struct {
 		buttons [KeyLast + 1]bool
 		scroll  Vec
 	}
+
+	//DEBUG
+	Frame *pixelgl.Frame
 }
 
 var currentWindow *Window
@@ -94,7 +98,7 @@ func NewWindow(config WindowConfig) (*Window, error) {
 
 	w := &Window{config: config}
 
-	err := pixelgl.DoErr(func() error {
+	err := mainthread.CallErr(func() error {
 		err := glfw.Init()
 		if err != nil {
 			return err
@@ -127,7 +131,7 @@ func NewWindow(config WindowConfig) (*Window, error) {
 		return nil, errors.Wrap(err, "creating window failed")
 	}
 
-	pixelgl.Do(func() {
+	mainthread.Call(func() {
 		w.begin()
 		w.end()
 
@@ -160,25 +164,24 @@ func NewWindow(config WindowConfig) (*Window, error) {
 
 // Destroy destroys a window. The window can't be used any further.
 func (w *Window) Destroy() {
-	pixelgl.Do(func() {
+	mainthread.Call(func() {
 		w.window.Destroy()
 	})
 }
 
 // Clear clears the window with a color.
 func (w *Window) Clear(c color.Color) {
-	pixelgl.DoNoBlock(func() {
+	mainthread.CallNonBlock(func() {
 		w.begin()
-		defer w.end()
-
 		c := NRGBAModel.Convert(c).(NRGBA)
 		pixelgl.Clear(float32(c.R), float32(c.G), float32(c.B), float32(c.A))
+		w.end()
 	})
 }
 
 // Update swaps buffers and polls events.
 func (w *Window) Update() {
-	pixelgl.Do(func() {
+	mainthread.Call(func() {
 		w.begin()
 		if w.config.VSync {
 			glfw.SwapInterval(1)
@@ -197,7 +200,7 @@ func (w *Window) Update() {
 // This is usefull when overriding the user's attempt to close a window, or just to close a
 // window from within a program.
 func (w *Window) SetClosed(closed bool) {
-	pixelgl.Do(func() {
+	mainthread.Call(func() {
 		w.window.SetShouldClose(closed)
 	})
 }
@@ -206,14 +209,14 @@ func (w *Window) SetClosed(closed bool) {
 //
 // The closed flag is automatically set when a user attempts to close a window.
 func (w *Window) Closed() bool {
-	return pixelgl.DoVal(func() interface{} {
+	return mainthread.CallVal(func() interface{} {
 		return w.window.ShouldClose()
 	}).(bool)
 }
 
 // SetTitle changes the title of a window.
 func (w *Window) SetTitle(title string) {
-	pixelgl.Do(func() {
+	mainthread.Call(func() {
 		w.window.SetTitle(title)
 	})
 }
@@ -221,14 +224,14 @@ func (w *Window) SetTitle(title string) {
 // SetSize resizes a window to the specified size in pixels.  In case of a fullscreen window,
 // it changes the resolution of that window.
 func (w *Window) SetSize(width, height float64) {
-	pixelgl.Do(func() {
+	mainthread.Call(func() {
 		w.window.SetSize(int(width), int(height))
 	})
 }
 
 // Size returns the size of the client area of a window (the part you can draw on).
 func (w *Window) Size() (width, height float64) {
-	pixelgl.Do(func() {
+	mainthread.Call(func() {
 		wi, hi := w.window.GetSize()
 		width = float64(wi)
 		height = float64(hi)
@@ -238,14 +241,14 @@ func (w *Window) Size() (width, height float64) {
 
 // Show makes a window visible if it was hidden.
 func (w *Window) Show() {
-	pixelgl.Do(func() {
+	mainthread.Call(func() {
 		w.window.Show()
 	})
 }
 
 // Hide hides a window if it was visible.
 func (w *Window) Hide() {
-	pixelgl.Do(func() {
+	mainthread.Call(func() {
 		w.window.Hide()
 	})
 }
@@ -259,7 +262,7 @@ func (w *Window) Hide() {
 func (w *Window) SetFullscreen(monitor *Monitor) {
 	if w.Monitor() != monitor {
 		if monitor == nil {
-			pixelgl.Do(func() {
+			mainthread.Call(func() {
 				w.window.SetMonitor(
 					nil,
 					w.restore.xpos,
@@ -270,7 +273,7 @@ func (w *Window) SetFullscreen(monitor *Monitor) {
 				)
 			})
 		} else {
-			pixelgl.Do(func() {
+			mainthread.Call(func() {
 				w.restore.xpos, w.restore.ypos = w.window.GetPos()
 				w.restore.width, w.restore.height = w.window.GetSize()
 
@@ -297,7 +300,7 @@ func (w *Window) IsFullscreen() bool {
 // Monitor returns a monitor a fullscreen window is on. If the window is not fullscreen, this
 // function returns nil.
 func (w *Window) Monitor() *Monitor {
-	monitor := pixelgl.DoVal(func() interface{} {
+	monitor := mainthread.CallVal(func() interface{} {
 		return w.window.GetMonitor()
 	}).(*glfw.Monitor)
 	if monitor == nil {
@@ -310,28 +313,28 @@ func (w *Window) Monitor() *Monitor {
 
 // Focus brings a window to the front and sets input focus.
 func (w *Window) Focus() {
-	pixelgl.Do(func() {
+	mainthread.Call(func() {
 		w.window.Focus()
 	})
 }
 
 // Focused returns true if a window has input focus.
 func (w *Window) Focused() bool {
-	return pixelgl.DoVal(func() interface{} {
+	return mainthread.CallVal(func() interface{} {
 		return w.window.GetAttrib(glfw.Focused) == glfw.True
 	}).(bool)
 }
 
 // Maximize puts a windowed window to a maximized state.
 func (w *Window) Maximize() {
-	pixelgl.Do(func() {
+	mainthread.Call(func() {
 		w.window.Maximize()
 	})
 }
 
 // Restore restores a windowed window from a maximized state.
 func (w *Window) Restore() {
-	pixelgl.Do(func() {
+	mainthread.Call(func() {
 		w.window.Restore()
 	})
 }
@@ -346,11 +349,19 @@ func (w *Window) begin() {
 	if w.shader != nil {
 		w.shader.Begin()
 	}
-	pixelgl.Viewport(0, 0, int32(w.width), int32(w.height))
+	if w.Frame != nil {
+		w.Frame.Begin()
+		pixelgl.Viewport(0, 0, int32(w.Frame.Width()), int32(w.Frame.Height()))
+	} else {
+		pixelgl.Viewport(0, 0, int32(w.width), int32(w.height))
+	}
 }
 
 // Note: must be called inside the main thread.
 func (w *Window) end() {
+	if w.Frame != nil {
+		w.Frame.End()
+	}
 	if w.shader != nil {
 		w.shader.End()
 	}
@@ -373,7 +384,7 @@ func (wt *windowTriangles) Draw() {
 	col := wt.w.col
 	bnd := wt.w.bnd
 
-	pixelgl.DoNoBlock(func() {
+	mainthread.CallNonBlock(func() {
 		wt.w.begin()
 
 		wt.w.shader.SetUniformAttr(transformMat3, mat)
@@ -438,7 +449,7 @@ func (wt *windowTriangles) updateData(offset int, t Triangles) {
 
 func (wt *windowTriangles) submitData() {
 	data := wt.data // avoid race condition
-	pixelgl.DoNoBlock(func() {
+	mainthread.CallNonBlock(func() {
 		wt.vs.Begin()
 		dataLen := len(data) / wt.vs.Stride()
 		if dataLen > wt.vs.Len() {
@@ -603,12 +614,11 @@ void main() {
 	vec2 boundsMin = bounds.xy;
 	vec2 boundsMax = bounds.zw;
 
-	float tx = boundsMin.x * (1 - Texture.x) + boundsMax.x * Texture.x;
-	float ty = boundsMin.y * (1 - Texture.y) + boundsMax.y * Texture.y;
-
 	if (Texture == vec2(-1, -1)) {
 		color = maskColor * Color;
 	} else {
+		float tx = boundsMin.x * (1 - Texture.x) + boundsMax.x * Texture.x;
+		float ty = boundsMin.y * (1 - Texture.y) + boundsMax.y * Texture.y;
 		color = maskColor * Color * texture(tex, vec2(tx, 1 - ty));
 	}
 }

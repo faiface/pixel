@@ -4,6 +4,7 @@ import (
 	"image"
 	"image/draw"
 
+	"github.com/faiface/mainthread"
 	"github.com/faiface/pixel/pixelgl"
 )
 
@@ -29,7 +30,7 @@ func NewPicture(img image.Image, smooth bool) *Picture {
 	}
 
 	var texture *pixelgl.Texture
-	pixelgl.Do(func() {
+	mainthread.Call(func() {
 		texture = pixelgl.NewTexture(
 			img.Bounds().Dx(),
 			img.Bounds().Dy(),

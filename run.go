@@ -1,7 +1,7 @@
 package pixel
 
 import (
-	"github.com/faiface/pixel/pixelgl"
+	"github.com/faiface/mainthread"
 	"github.com/go-gl/glfw/v3.2/glfw"
 )
 
@@ -28,5 +28,5 @@ import (
 // function.
 func Run(run func()) {
 	defer glfw.Terminate()
-	pixelgl.Run(run)
+	mainthread.Run(run)
 }

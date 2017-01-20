@@ -3,6 +3,7 @@ package pixelgl
 import (
 	"runtime"
 
+	"github.com/faiface/mainthread"
 	"github.com/go-gl/gl/v3.3-core/gl"
 	"github.com/go-gl/mathgl/mgl32"
 )
@@ -67,7 +68,7 @@ func NewTexture(width, height int, smooth bool, pixels []uint8) *Texture {
 }
 
 func (t *Texture) delete() {
-	DoNoBlock(func() {
+	mainthread.CallNonBlock(func() {
 		gl.DeleteTextures(1, &t.tex.obj)
 	})
 }
