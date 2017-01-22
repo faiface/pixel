@@ -1,7 +1,6 @@
 package pixelgl
 
 import (
-	"fmt"
 	"runtime"
 
 	"github.com/faiface/mainthread"
@@ -113,7 +112,6 @@ func (t *Texture) Pixels(x, y, w, h int) []uint8 {
 	for i := 0; i < h; i++ {
 		row := pixels[(i+y)*t.width*4+x*4 : (i+y)*t.width*4+(x+w)*4]
 		subRow := subPixels[i*w*4 : (i+1)*w*4]
-		fmt.Println((i+y)*t.width*4+x*4, (i+y)*t.width*4+(x+w)*4)
 		copy(subRow, row)
 	}
 	return subPixels
