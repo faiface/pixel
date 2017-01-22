@@ -1,6 +1,7 @@
 package pixelgl
 
 import (
+	"fmt"
 	"runtime"
 
 	"github.com/faiface/mainthread"
@@ -100,22 +101,22 @@ func (t *Texture) SetPixels(x, y, w, h int, pixels []uint8) {
 
 // Pixels returns the content of a sub-region of the Texture as an RGBA byte sequence.
 func (t *Texture) Pixels(x, y, w, h int) []uint8 {
-	pixels := make([]uint8, w*h*4)
-	gl.GetTextureSubImage(
+	pixels := make([]uint8, t.width*t.height*4)
+	gl.GetTexImage(
 		gl.TEXTURE_2D,
-		0,
-		int32(x),
-		int32(y),
-		0,
-		int32(w),
-		int32(h),
 		0,
 		gl.RGBA,
 		gl.UNSIGNED_BYTE,
-		int32(len(pixels)),
 		gl.Ptr(pixels),
 	)
-	return pixels
+	subPixels := make([]uint8, w*h*4)
+	for i := 0; i < h; i++ {
+		row := pixels[(i+y)*t.width*4+x*4 : (i+y)*t.width*4+(x+w)*4]
+		subRow := subPixels[i*w*4 : (i+1)*w*4]
+		fmt.Println((i+y)*t.width*4+x*4, (i+y)*t.width*4+(x+w)*4)
+		copy(subRow, row)
+	}
+	return subPixels
 }
 
 // Begin binds a texture. This is necessary before using the texture.
