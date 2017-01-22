@@ -16,6 +16,9 @@ type Canvas struct {
 	f *pixelgl.Frame
 	s *pixelgl.Shader
 
+	copyVs *pixelgl.VertexSlice
+	smooth bool
+
 	pic *Picture
 	mat mgl32.Mat3
 	col mgl32.Vec4
@@ -24,7 +27,7 @@ type Canvas struct {
 
 // NewCanvas creates a new fully transparent Canvas with specified dimensions in pixels.
 func NewCanvas(width, height float64, smooth bool) *Canvas {
-	c := &Canvas{}
+	c := &Canvas{smooth: smooth}
 	mainthread.Call(func() {
 		var err error
 		c.f = pixelgl.NewFrame(int(width), int(height), smooth)
@@ -37,12 +40,51 @@ func NewCanvas(width, height float64, smooth bool) *Canvas {
 		if err != nil {
 			panic(errors.Wrap(err, "failed to create canvas"))
 		}
+
+		c.copyVs = pixelgl.MakeVertexSlice(c.s, 6, 6)
+		c.copyVs.Begin()
+		c.copyVs.SetVertexData([]float32{
+			-1, -1, 1, 1, 1, 1, 0, 0,
+			1, -1, 1, 1, 1, 1, 1, 0,
+			1, 1, 1, 1, 1, 1, 1, 1,
+			-1, -1, 1, 1, 1, 1, 0, 0,
+			1, 1, 1, 1, 1, 1, 1, 1,
+			-1, 1, 1, 1, 1, 1, 0, 1,
+		})
+		c.copyVs.End()
 	})
 	c.pic = nil
 	c.mat = mgl32.Ident3()
 	c.col = mgl32.Vec4{1, 1, 1, 1}
 	c.bnd = mgl32.Vec4{0, 0, 1, 1}
 	return c
+}
+
+// SetSize resizes the Canvas. The original content will be stretched to the new size.
+func (c *Canvas) SetSize(width, height float64) {
+	if V(width, height) == V(c.Size()) {
+		return
+	}
+	mainthread.Call(func() {
+		oldF := c.f
+		c.f = pixelgl.NewFrame(int(width), int(height), c.smooth)
+
+		c.f.Begin()
+		c.s.Begin()
+
+		c.s.SetUniformAttr(canvasTransformMat3, mgl32.Ident3())
+		c.s.SetUniformAttr(canvasMaskColorVec4, mgl32.Vec4{1, 1, 1, 1})
+		c.s.SetUniformAttr(canvasBoundsVec4, mgl32.Vec4{0, 0, 1, 1})
+
+		oldF.Texture().Begin()
+		c.copyVs.Begin()
+		c.copyVs.Draw()
+		c.copyVs.End()
+		oldF.Texture().End()
+
+		c.s.End()
+		c.f.End()
+	})
 }
 
 // Size returns the width and the height of the Canvas in pixels.
