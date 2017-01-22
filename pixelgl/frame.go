@@ -1,7 +1,6 @@
 package pixelgl
 
 import (
-	"fmt"
 	"runtime"
 
 	"github.com/faiface/mainthread"
@@ -29,7 +28,6 @@ func NewFrame(width, height int, smooth bool) *Frame {
 	}
 
 	gl.GenFramebuffers(1, &f.fb.obj)
-	fmt.Println(f.fb.obj)
 
 	f.tex = NewTexture(width, height, smooth, make([]uint8, width*height*4))
 
@@ -61,6 +59,7 @@ func (f *Frame) Height() int {
 // Begin binds the Frame. All draw operations will target this Frame until End is called.
 func (f *Frame) Begin() {
 	f.fb.bind()
+	gl.Viewport(0, 0, int32(f.width), int32(f.height))
 }
 
 // End unbinds the Frame. All draw operations will go to whatever was bound before this Frame.
