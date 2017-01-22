@@ -155,6 +155,8 @@ func NewWindow(config WindowConfig) (*Window, error) {
 
 	w.initInput()
 	w.SetFullscreen(config.Fullscreen)
+
+	w.canvas = NewCanvas(config.Width, config.Height, false)
 	w.Update()
 
 	runtime.SetFinalizer(w, (*Window).Destroy)
@@ -176,23 +178,7 @@ func (w *Window) Clear(c color.Color) {
 
 // Update swaps buffers and polls events.
 func (w *Window) Update() {
-	width, height := w.Size()
-	if w.canvas == nil || V(w.canvas.Size()) != V(width, height) {
-		oldCanvas := w.canvas
-		w.canvas = NewCanvas(width, height, false)
-		if oldCanvas != nil {
-			td := TrianglesDrawer{Triangles: &TrianglesData{
-				{Position: V(-1, -1), Color: NRGBA{1, 1, 1, 1}, Texture: V(0, 0)},
-				{Position: V(1, -1), Color: NRGBA{1, 1, 1, 1}, Texture: V(1, 0)},
-				{Position: V(1, 1), Color: NRGBA{1, 1, 1, 1}, Texture: V(1, 1)},
-				{Position: V(-1, -1), Color: NRGBA{1, 1, 1, 1}, Texture: V(0, 0)},
-				{Position: V(1, 1), Color: NRGBA{1, 1, 1, 1}, Texture: V(1, 1)},
-				{Position: V(-1, 1), Color: NRGBA{1, 1, 1, 1}, Texture: V(0, 1)},
-			}}
-			w.canvas.SetPicture(oldCanvas.Content())
-			td.Draw(w.canvas)
-		}
-	}
+	w.canvas.SetSize(w.Size())
 
 	mainthread.Call(func() {
 		w.begin()
