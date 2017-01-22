@@ -15,7 +15,7 @@ type Frame struct {
 	width, height int
 }
 
-// NewFrame creates a new fully transparent Frame with given dimensions.
+// NewFrame creates a new fully transparent Frame with given dimensions in pixels.
 func NewFrame(width, height int, smooth bool) *Frame {
 	f := &Frame{
 		fb: binder{
