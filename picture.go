@@ -25,6 +25,16 @@ func NewPicture(img image.Image, smooth bool) *Picture {
 	nrgba := image.NewNRGBA(image.Rect(0, 0, bounds.Dx(), bounds.Dy()))
 	draw.Draw(nrgba, nrgba.Bounds(), img, bounds.Min, draw.Src)
 
+	// flip the image vertically
+	tmp := make([]byte, nrgba.Stride)
+	for i, j := 0, bounds.Dy()-1; i < j; i, j = i+1, j-1 {
+		iSlice := nrgba.Pix[i*nrgba.Stride : (i+1)*nrgba.Stride]
+		jSlice := nrgba.Pix[j*nrgba.Stride : (j+1)*nrgba.Stride]
+		copy(tmp, iSlice)
+		copy(iSlice, jSlice)
+		copy(jSlice, tmp)
+	}
+
 	var texture *pixelgl.Texture
 	mainthread.Call(func() {
 		texture = pixelgl.NewTexture(
