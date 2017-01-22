@@ -54,20 +54,17 @@ func NewPicture(img image.Image, smooth bool) *Picture {
 // Image returns the content of the Picture as an image.NRGBA.
 func (p *Picture) Image() *image.NRGBA {
 	bounds := p.Bounds()
-	nrgba := image.NewNRGBA(image.Rect(
-		int(bounds.X()),
-		int(bounds.Y()),
-		int(bounds.X()+bounds.W()),
-		int(bounds.Y()+bounds.H()),
-	))
+	nrgba := image.NewNRGBA(image.Rect(0, 0, int(bounds.W()), int(bounds.H())))
 
 	mainthread.Call(func() {
+		p.texture.Begin()
 		nrgba.Pix = p.texture.Pixels(
 			int(bounds.X()),
 			int(bounds.Y()),
 			int(bounds.W()),
 			int(bounds.H()),
 		)
+		p.texture.End()
 	})
 
 	// flip the image vertically
