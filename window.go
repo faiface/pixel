@@ -8,7 +8,6 @@ import (
 	"github.com/faiface/mainthread"
 	"github.com/faiface/pixel/pixelgl"
 	"github.com/go-gl/glfw/v3.2/glfw"
-	"github.com/go-gl/mathgl/mgl32"
 	"github.com/pkg/errors"
 )
 
@@ -60,16 +59,10 @@ type Window struct {
 	enabled bool
 	window  *glfw.Window
 	config  WindowConfig
-	shader  *pixelgl.Shader
 
-	// cache
-	width, height float64
-
-	// Target stuff, Picture, transformation matrix and color
-	pic *Picture
-	mat mgl32.Mat3
-	col mgl32.Vec4
-	bnd mgl32.Vec4
+	canvas   *Canvas
+	canvasVs *pixelgl.VertexSlice
+	shader   *pixelgl.Shader
 
 	// need to save these to correctly restore a fullscreen window
 	restore struct {
@@ -80,9 +73,6 @@ type Window struct {
 		buttons [KeyLast + 1]bool
 		scroll  Vec
 	}
-
-	//DEBUG
-	Frame *pixelgl.Frame
 }
 
 var currentWindow *Window
@@ -120,10 +110,42 @@ func NewWindow(config WindowConfig) (*Window, error) {
 		if currentWindow != nil {
 			share = currentWindow.window
 		}
-		w.window, err = glfw.CreateWindow(int(config.Width), int(config.Height), config.Title, nil, share)
+		w.window, err = glfw.CreateWindow(
+			int(config.Width),
+			int(config.Height),
+			config.Title,
+			nil,
+			share,
+		)
 		if err != nil {
 			return err
 		}
+
+		// enter the OpenGL context
+		w.begin()
+		w.end()
+
+		w.shader, err = pixelgl.NewShader(
+			windowVertexFormat,
+			windowUniformFormat,
+			windowVertexShader,
+			windowFragmentShader,
+		)
+		if err != nil {
+			return err
+		}
+
+		w.canvasVs = pixelgl.MakeVertexSlice(w.shader, 6, 6)
+		w.canvasVs.Begin()
+		w.canvasVs.SetVertexData([]float32{
+			-1, -1, 0, 0,
+			1, -1, 1, 0,
+			1, 1, 1, 1,
+			-1, -1, 0, 0,
+			1, 1, 1, 1,
+			-1, 1, 0, 1,
+		})
+		w.canvasVs.End()
 
 		return nil
 	})
@@ -131,31 +153,9 @@ func NewWindow(config WindowConfig) (*Window, error) {
 		return nil, errors.Wrap(err, "creating window failed")
 	}
 
-	mainthread.Call(func() {
-		w.begin()
-		w.end()
-
-		w.shader, err = pixelgl.NewShader(
-			defaultVertexFormat,
-			defaultUniformFormat,
-			defaultVertexShader,
-			defaultFragmentShader,
-		)
-		if err != nil {
-			panic(errors.Wrap(err, "NewWindow: failed to create shader"))
-		}
-	})
-	if err != nil {
-		w.Destroy()
-		return nil, errors.Wrap(err, "creating window failed")
-	}
-
 	w.initInput()
 	w.SetFullscreen(config.Fullscreen)
-
-	w.SetPicture(nil)
-	w.SetTransform()
-	w.SetMaskColor(NRGBA{1, 1, 1, 1})
+	w.Update()
 
 	runtime.SetFinalizer(w, (*Window).Destroy)
 
@@ -171,18 +171,41 @@ func (w *Window) Destroy() {
 
 // Clear clears the window with a color.
 func (w *Window) Clear(c color.Color) {
-	mainthread.CallNonBlock(func() {
-		w.begin()
-		c := NRGBAModel.Convert(c).(NRGBA)
-		pixelgl.Clear(float32(c.R), float32(c.G), float32(c.B), float32(c.A))
-		w.end()
-	})
+	w.canvas.Clear(c)
 }
 
 // Update swaps buffers and polls events.
 func (w *Window) Update() {
+	width, height := w.Size()
+	if w.canvas == nil || V(w.canvas.Size()) != V(width, height) {
+		oldCanvas := w.canvas
+		w.canvas = NewCanvas(width, height, false)
+		if oldCanvas != nil {
+			td := TrianglesDrawer{Triangles: &TrianglesData{
+				{Position: V(-1, -1), Color: NRGBA{1, 1, 1, 1}, Texture: V(0, 0)},
+				{Position: V(1, -1), Color: NRGBA{1, 1, 1, 1}, Texture: V(1, 0)},
+				{Position: V(1, 1), Color: NRGBA{1, 1, 1, 1}, Texture: V(1, 1)},
+				{Position: V(-1, -1), Color: NRGBA{1, 1, 1, 1}, Texture: V(0, 0)},
+				{Position: V(1, 1), Color: NRGBA{1, 1, 1, 1}, Texture: V(1, 1)},
+				{Position: V(-1, 1), Color: NRGBA{1, 1, 1, 1}, Texture: V(0, 1)},
+			}}
+			w.canvas.SetPicture(oldCanvas.Content())
+			td.Draw(w.canvas)
+		}
+	}
+
 	mainthread.Call(func() {
 		w.begin()
+
+		pixelgl.Clear(0, 0, 0, 0)
+		w.shader.Begin()
+		w.canvas.f.Texture().Begin()
+		w.canvasVs.Begin()
+		w.canvasVs.Draw()
+		w.canvasVs.End()
+		w.canvas.f.Texture().End()
+		w.shader.End()
+
 		if w.config.VSync {
 			glfw.SwapInterval(1)
 		}
@@ -191,8 +214,6 @@ func (w *Window) Update() {
 	})
 
 	w.updateInput()
-
-	w.width, w.height = w.Size()
 }
 
 // SetClosed sets the closed flag of a window.
@@ -346,63 +367,11 @@ func (w *Window) begin() {
 		pixelgl.Init()
 		currentWindow = w
 	}
-	if w.shader != nil {
-		w.shader.Begin()
-	}
-	if w.Frame != nil {
-		w.Frame.Begin()
-		pixelgl.Viewport(0, 0, int32(w.Frame.Width()), int32(w.Frame.Height()))
-	} else {
-		pixelgl.Viewport(0, 0, int32(w.width), int32(w.height))
-	}
 }
 
 // Note: must be called inside the main thread.
 func (w *Window) end() {
-	if w.Frame != nil {
-		w.Frame.End()
-	}
-	if w.shader != nil {
-		w.shader.End()
-	}
-}
-
-type trianglesPositionColorTexture interface {
-	Triangles
-	Position(i int) Vec
-	Color(i int) NRGBA
-	Texture(i int) Vec
-}
-
-type windowTriangles struct {
-	w *Window
-	trianglesPositionColorTexture
-}
-
-func (wt *windowTriangles) Draw() {
-	// avoid possible race condition
-	pic := wt.w.pic
-	mat := wt.w.mat
-	col := wt.w.col
-	bnd := wt.w.bnd
-
-	mainthread.CallNonBlock(func() {
-		wt.w.begin()
-
-		wt.w.shader.SetUniformAttr(transformMat3, mat)
-		wt.w.shader.SetUniformAttr(maskColorVec4, col)
-		wt.w.shader.SetUniformAttr(boundsVec4, bnd)
-
-		if pic != nil {
-			pic.Texture().Begin()
-		}
-		wt.trianglesPositionColorTexture.Draw()
-		if pic != nil {
-			pic.Texture().End()
-		}
-
-		wt.w.end()
-	})
+	// nothing really
 }
 
 // MakeTriangles generates a specialized copy of the supplied triangles that will draw onto this
@@ -410,112 +379,62 @@ func (wt *windowTriangles) Draw() {
 //
 // Window supports TrianglesPosition, TrianglesColor and TrianglesTexture.
 func (w *Window) MakeTriangles(t Triangles) Triangles {
-	tpcs := NewGLTriangles(w.shader, t).(trianglesPositionColorTexture)
-	wt := &windowTriangles{
-		w: w,
-		trianglesPositionColorTexture: tpcs,
-	}
-	return wt
+	return w.canvas.MakeTriangles(t)
 }
 
 // SetPicture sets a Picture that will be used in subsequent drawings onto the window.
 func (w *Window) SetPicture(p *Picture) {
-	if p != nil {
-		min := pictureBounds(p, V(0, 0))
-		max := pictureBounds(p, V(1, 1))
-		w.bnd = mgl32.Vec4{
-			float32(min.X()), float32(min.Y()),
-			float32(max.X()), float32(max.Y()),
-		}
-	}
-	w.pic = p
+	w.canvas.SetPicture(p)
 }
 
 // SetTransform sets a global transformation matrix for the Window.
 //
 // Transforms are applied right-to-left.
 func (w *Window) SetTransform(t ...Transform) {
-	w.mat = transformToMat(t...)
+	w.canvas.SetTransform(t...)
 }
 
 // SetMaskColor sets a global mask color for the Window.
 func (w *Window) SetMaskColor(c color.Color) {
-	if c == nil {
-		c = NRGBA{1, 1, 1, 1}
-	}
-	nrgba := NRGBAModel.Convert(c).(NRGBA)
-	r := float32(nrgba.R)
-	g := float32(nrgba.G)
-	b := float32(nrgba.B)
-	a := float32(nrgba.A)
-	w.col = mgl32.Vec4{r, g, b, a}
+	w.canvas.SetMaskColor(c)
 }
 
 const (
-	positionVec2 int = iota
-	colorVec4
-	textureVec2
+	windowPositionVec2 = iota
+	windowTextureVec2
 )
 
-var defaultVertexFormat = pixelgl.AttrFormat{
-	positionVec2: {Name: "position", Type: pixelgl.Vec2},
-	colorVec4:    {Name: "color", Type: pixelgl.Vec4},
-	textureVec2:  {Name: "texture", Type: pixelgl.Vec2},
+var windowVertexFormat = pixelgl.AttrFormat{
+	windowPositionVec2: {Name: "position", Type: pixelgl.Vec2},
+	windowTextureVec2:  {Name: "texture", Type: pixelgl.Vec2},
 }
 
-const (
-	maskColorVec4 int = iota
-	transformMat3
-	boundsVec4
-)
+var windowUniformFormat = pixelgl.AttrFormat{}
 
-var defaultUniformFormat = pixelgl.AttrFormat{
-	{Name: "maskColor", Type: pixelgl.Vec4},
-	{Name: "transform", Type: pixelgl.Mat3},
-	{Name: "bounds", Type: pixelgl.Vec4},
-}
-
-var defaultVertexShader = `
+var windowVertexShader = `
 #version 330 core
 
 in vec2 position;
-in vec4 color;
 in vec2 texture;
 
-out vec4 Color;
 out vec2 Texture;
 
-uniform mat3 transform;
-
 void main() {
-	gl_Position = vec4((transform * vec3(position.x, position.y, 1.0)).xy, 0.0, 1.0);
-	Color = color;
+	gl_Position = vec4(position, 0.0, 1.0);
 	Texture = texture;
 }
 `
 
-var defaultFragmentShader = `
+var windowFragmentShader = `
 #version 330 core
 
-in vec4 Color;
 in vec2 Texture;
 
 out vec4 color;
 
-uniform vec4 maskColor;
-uniform vec4 bounds;
 uniform sampler2D tex;
 
 void main() {
-	vec2 boundsMin = bounds.xy;
-	vec2 boundsMax = bounds.zw;
-
-	if (Texture == vec2(-1, -1)) {
-		color = maskColor * Color;
-	} else {
-		float tx = boundsMin.x * (1 - Texture.x) + boundsMax.x * Texture.x;
-		float ty = boundsMin.y * (1 - Texture.y) + boundsMax.y * Texture.y;
-		color = maskColor * Color * texture(tex, vec2(tx, 1 - ty));
-	}
+	color = texture(tex, Texture);
 }
 `
