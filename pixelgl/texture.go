@@ -17,10 +17,6 @@ type Texture struct {
 // NewTexture creates a new texture with the specified width and height with some initial
 // pixel values. The pixels must be a sequence of RGBA values.
 func NewTexture(width, height int, smooth bool, pixels []uint8) *Texture {
-	if len(pixels) != width*height*4 {
-		panic("failed to create new texture: wrong number of pixels")
-	}
-
 	tex := &Texture{
 		tex: binder{
 			restoreLoc: gl.TEXTURE_BINDING_2D,
@@ -37,6 +33,7 @@ func NewTexture(width, height int, smooth bool, pixels []uint8) *Texture {
 	tex.Begin()
 	defer tex.End()
 
+	// initial data
 	gl.TexImage2D(
 		gl.TEXTURE_2D,
 		0,
@@ -81,6 +78,44 @@ func (t *Texture) Width() int {
 // Height returns the height of a texture in pixels.
 func (t *Texture) Height() int {
 	return t.height
+}
+
+// SetPixels sets the content of a sub-region of the Texture. Pixels must be an RGBA byte sequence.
+func (t *Texture) SetPixels(x, y, w, h int, pixels []uint8) {
+	if len(pixels) != w*h*4 {
+		panic("set pixels: wrong number of pixels")
+	}
+	gl.TexSubImage2D(
+		gl.TEXTURE_2D,
+		0,
+		int32(x),
+		int32(y),
+		int32(w),
+		int32(h),
+		gl.RGBA,
+		gl.UNSIGNED_BYTE,
+		gl.Ptr(pixels),
+	)
+}
+
+// Pixels returns the content of a sub-region of the Texture as an RGBA byte sequence.
+func (t *Texture) Pixels(x, y, w, h int) []uint8 {
+	pixels := make([]uint8, w*h*4)
+	gl.GetTextureSubImage(
+		gl.TEXTURE_2D,
+		0,
+		int32(x),
+		int32(y),
+		0,
+		int32(w),
+		int32(h),
+		0,
+		gl.RGBA,
+		gl.UNSIGNED_BYTE,
+		int32(len(pixels)),
+		gl.Ptr(pixels),
+	)
+	return pixels
 }
 
 // Begin binds a texture. This is necessary before using the texture.
