@@ -284,15 +284,15 @@ func (w *Window) SetFullscreen(monitor *Monitor) {
 				w.restore.xpos, w.restore.ypos = w.window.GetPos()
 				w.restore.width, w.restore.height = w.window.GetSize()
 
-				width, height := monitor.Size()
-				refreshRate := monitor.RefreshRate()
+				mode := monitor.monitor.GetVideoMode()
+
 				w.window.SetMonitor(
 					monitor.monitor,
 					0,
 					0,
-					int(width),
-					int(height),
-					int(refreshRate),
+					mode.Width,
+					mode.Height,
+					mode.RefreshRate,
 				)
 			})
 		}
