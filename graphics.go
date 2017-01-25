@@ -248,6 +248,8 @@ func (p *Polygon) Color() NRGBA {
 // count.
 //
 // This method is more effective, than creating a new Polygon with the given points.
+//
+// However, it is less expensive than using a transform on a Target.
 func (p *Polygon) SetPoints(points ...Vec) {
 	p.data.resize(len(points))
 	for i, pt := range points {
