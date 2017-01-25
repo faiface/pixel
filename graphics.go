@@ -198,8 +198,8 @@ func (s *Sprite) SetPicture(pic *Picture) {
 	}
 	w, h := pic.Bounds().Size.XY()
 	s.data[0].Position = V(0, 0)
-	s.data[2].Position = V(w, h)
 	s.data[1].Position = V(w, 0)
+	s.data[2].Position = V(w, h)
 	s.data[3].Position = V(0, 0)
 	s.data[4].Position = V(w, h)
 	s.data[5].Position = V(0, h)
