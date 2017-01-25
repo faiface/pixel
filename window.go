@@ -154,7 +154,7 @@ func NewWindow(config WindowConfig) (*Window, error) {
 	}
 
 	w.initInput()
-	w.SetFullscreen(config.Fullscreen)
+	w.SetMonitor(config.Fullscreen)
 
 	w.canvas = NewCanvas(config.Width, config.Height, false)
 	w.Update()
@@ -260,13 +260,13 @@ func (w *Window) Hide() {
 	})
 }
 
-// SetFullscreen sets a window fullscreen on a given monitor. If the monitor is nil, the window
+// SetMonitor sets a window fullscreen on a given monitor. If the monitor is nil, the window
 // will be resored to windowed instead.
 //
 // Note, that there is nothing about the resolution of the fullscreen window. The window is
 // automatically set to the monitor's resolution. If you want a different resolution, you need
 // to set it manually with SetSize method.
-func (w *Window) SetFullscreen(monitor *Monitor) {
+func (w *Window) SetMonitor(monitor *Monitor) {
 	if w.Monitor() != monitor {
 		if monitor == nil {
 			mainthread.Call(func() {
