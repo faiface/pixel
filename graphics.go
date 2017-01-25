@@ -187,7 +187,7 @@ func NewSprite(pic *Picture) *Sprite {
 func (s *Sprite) SetPicture(pic *Picture) {
 	oldPic := s.pic
 	s.pic = pic
-	if oldPic.Bounds().Size == pic.Bounds().Size {
+	if oldPic != nil && oldPic.Bounds().Size == pic.Bounds().Size {
 		return
 	}
 	w, h := pic.Bounds().Size.XY()
