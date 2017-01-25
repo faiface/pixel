@@ -22,7 +22,7 @@ type Transform struct {
 }
 
 // ZT stands for Zero-Transform. This Transform is a neutral Transform, does not change anything.
-var ZT = Transform{sca: V(1, 1)}
+var ZT = Transform{}.Scale(1)
 
 // Position returns a Zero-Transform with Position set to pos.
 func Position(pos Vec) Transform {
