@@ -166,8 +166,8 @@ func (td *TrianglesDrawer) Dirty() {
 // Sprite is a picture that can be drawn onto a Target. To change the position/rotation/scale of
 // the Sprite, use Target's SetTransform method.
 type Sprite struct {
-	td   TrianglesDrawer
 	data TrianglesData
+	td   TrianglesDrawer
 	pic  *Picture
 }
 
@@ -219,8 +219,8 @@ func (s *Sprite) Draw(t Target) {
 
 // Polygon is a convex polygon shape filled with a single color.
 type Polygon struct {
-	td   TrianglesDrawer
 	data TrianglesData
+	td   TrianglesDrawer
 	col  NRGBA
 }
 
