@@ -9,7 +9,7 @@ import (
 	"github.com/pkg/errors"
 )
 
-// Canvas is basically a Picture that you can draw on.
+// Canvas is basically a Picture that you can draw onto.
 //
 // Canvas supports TrianglesPosition, TrianglesColor and TrianglesTexture.
 type Canvas struct {
@@ -72,7 +72,7 @@ func NewCanvas(width, height float64, smooth bool) *Canvas {
 	return c
 }
 
-// SetSize resizes the Canvas. The original content will be stretched to the new size.
+// SetSize resizes the Canvas. The original content will be stretched to fit the new size.
 func (c *Canvas) SetSize(width, height float64) {
 	if V(width, height) == V(c.Size()) {
 		return
@@ -105,7 +105,8 @@ func (c *Canvas) Size() (width, height float64) {
 }
 
 // Content returns a Picture that contains the content of this Canvas. The returned Picture changes
-// as you draw onto the Canvas, so there is no real need to call this method more than once.
+// as you draw onto the Canvas, so there is no real need to call this method more than once (but it
+// might be beneficial to your code to do so).
 func (c *Canvas) Content() *Picture {
 	tex := c.f.Texture()
 	return &Picture{
@@ -114,7 +115,7 @@ func (c *Canvas) Content() *Picture {
 	}
 }
 
-// Clear fill the whole Canvas with on specified color.
+// Clear fills the whole Canvas with one specified color.
 func (c *Canvas) Clear(col color.Color) {
 	mainthread.CallNonBlock(func() {
 		c.f.Begin()

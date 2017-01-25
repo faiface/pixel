@@ -53,13 +53,11 @@ func (b *Batch) MakeTriangles(t Triangles) Triangles {
 	}
 }
 
-// SetPicture sets the current Picture that will be used with the following draws. The underlying
-// Texture of this Picture must be same as the underlying Texture of the Batch's Picture.
+// SetPicture sets the current Picture that will be used with the following draws. The original
+// Picture of this Picture (the one from which p was obtained by slicing) must be same as the
+// original Picture of the Batch's Picture.
 func (b *Batch) SetPicture(p *Picture) {
-	if p == nil {
-		return
-	}
-	if p.Texture() != b.fixpic.Texture() {
+	if p != nil && p.Texture() != b.fixpic.Texture() {
 		panic("batch: attempted to draw with a different underlying Picture")
 	}
 	b.pic = p

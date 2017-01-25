@@ -5,17 +5,17 @@ import (
 	"github.com/go-gl/glfw/v3.2/glfw"
 )
 
-// Pressed returns whether a button is currently pressed down.
+// Pressed returns whether button is currently pressed down.
 func (w *Window) Pressed(button Button) bool {
 	return w.currInp.buttons[button]
 }
 
-// JustPressed returns whether a button has just been pressed down.
+// JustPressed returns whether button has just been pressed down.
 func (w *Window) JustPressed(button Button) bool {
 	return w.currInp.buttons[button] && !w.prevInp.buttons[button]
 }
 
-// JustReleased returns whether a button has just been released up.
+// JustReleased returns whether button has just been released up.
 func (w *Window) JustReleased(button Button) bool {
 	return !w.currInp.buttons[button] && w.prevInp.buttons[button]
 }

@@ -6,7 +6,7 @@ import (
 )
 
 // Run is essentialy the "main" function of Pixel. It exists mainly due to the technical
-// limitations of OpenGL and operating systems, in short, all graphics and window manipulating
+// limitations of OpenGL and operating systems. In short, all graphics and window manipulating
 // calls must be done from the main thread. Run makes this possible.
 //
 // Call this function from the main function of your application. This is necessary, so that
@@ -24,7 +24,7 @@ import (
 //   }
 //
 // You can spawn any number of goroutines from you run function and interact with Pixel
-// concurrently.  The only condition is that the Run function must be called from your main
+// concurrently.  The only condition is that the Run function is be called from your main
 // function.
 func Run(run func()) {
 	defer glfw.Terminate()

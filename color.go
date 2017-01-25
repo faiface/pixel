@@ -52,7 +52,7 @@ func (c NRGBA) Scaled(scale float64) NRGBA {
 	}
 }
 
-// RGBA returns alpha-premultiplied red, green, blue and alpha components of a color.
+// RGBA returns alpha-premultiplied red, green, blue and alpha components of the NRGBA color.
 func (c NRGBA) RGBA() (r, g, b, a uint32) {
 	c.R = clamp(c.R, 0, 1)
 	c.G = clamp(c.G, 0, 1)

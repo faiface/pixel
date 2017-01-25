@@ -77,9 +77,9 @@ type Window struct {
 
 var currentWindow *Window
 
-// NewWindow creates a new window with it's properties specified in the provided config.
+// NewWindow creates a new Window with it's properties specified in the provided config.
 //
-// If window creation fails, an error is returned.
+// If Window creation fails, an error is returned (e.g. due to unavailable graphics device).
 func NewWindow(config WindowConfig) (*Window, error) {
 	bool2int := map[bool]int{
 		true:  glfw.True,
@@ -164,14 +164,14 @@ func NewWindow(config WindowConfig) (*Window, error) {
 	return w, nil
 }
 
-// Destroy destroys a window. The window can't be used any further.
+// Destroy destroys the Window. The Window can't be used any further.
 func (w *Window) Destroy() {
 	mainthread.Call(func() {
 		w.window.Destroy()
 	})
 }
 
-// Clear clears the window with a color.
+// Clear clears the Window with a color.
 func (w *Window) Clear(c color.Color) {
 	w.canvas.Clear(c)
 }
@@ -202,41 +202,41 @@ func (w *Window) Update() {
 	w.updateInput()
 }
 
-// SetClosed sets the closed flag of a window.
+// SetClosed sets the closed flag of the Window.
 //
-// This is usefull when overriding the user's attempt to close a window, or just to close a
-// window from within a program.
+// This is usefull when overriding the user's attempt to close the Window, or just to close the
+// Window from within the program.
 func (w *Window) SetClosed(closed bool) {
 	mainthread.Call(func() {
 		w.window.SetShouldClose(closed)
 	})
 }
 
-// Closed returns the closed flag of a window, which reports whether the window should be closed.
+// Closed returns the closed flag of the Window, which reports whether the Window should be closed.
 //
-// The closed flag is automatically set when a user attempts to close a window.
+// The closed flag is automatically set when a user attempts to close the Window.
 func (w *Window) Closed() bool {
 	return mainthread.CallVal(func() interface{} {
 		return w.window.ShouldClose()
 	}).(bool)
 }
 
-// SetTitle changes the title of a window.
+// SetTitle changes the title of the Window.
 func (w *Window) SetTitle(title string) {
 	mainthread.Call(func() {
 		w.window.SetTitle(title)
 	})
 }
 
-// SetSize resizes a window to the specified size in pixels.  In case of a fullscreen window,
-// it changes the resolution of that window.
+// SetSize resizes the client area of the Window to the specified size in pixels. In case of a
+// fullscreen Window, it changes the resolution of that Window.
 func (w *Window) SetSize(width, height float64) {
 	mainthread.Call(func() {
 		w.window.SetSize(int(width), int(height))
 	})
 }
 
-// Size returns the size of the client area of a window (the part you can draw on).
+// Size returns the size of the client area of the Window (the part you can draw on).
 func (w *Window) Size() (width, height float64) {
 	mainthread.Call(func() {
 		wi, hi := w.window.GetSize()
@@ -246,14 +246,14 @@ func (w *Window) Size() (width, height float64) {
 	return width, height
 }
 
-// Show makes a window visible if it was hidden.
+// Show makes the Window visible if it was hidden.
 func (w *Window) Show() {
 	mainthread.Call(func() {
 		w.window.Show()
 	})
 }
 
-// Hide hides a window if it was visible.
+// Hide hides the Window if it was visible.
 func (w *Window) Hide() {
 	mainthread.Call(func() {
 		w.window.Hide()
@@ -291,11 +291,11 @@ func (w *Window) setWindowed() {
 	})
 }
 
-// SetMonitor sets a window fullscreen on a given monitor. If the monitor is nil, the window
-// will be resored to windowed instead.
+// SetMonitor sets the Window fullscreen on the given Monitor. If the Monitor is nil, the Window
+// will be resored to windowed state instead.
 //
-// Note, that there is nothing about the resolution of the fullscreen window. The window is
-// automatically set to the monitor's resolution. If you want a different resolution, you need
+// Note, that there is nothing about the resolution of the fullscreen Window. The Window is
+// automatically set to the Monitor's resolution. If you want a different resolution, you need
 // to set it manually with SetSize method.
 func (w *Window) SetMonitor(monitor *Monitor) {
 	if w.Monitor() != monitor {
@@ -307,12 +307,12 @@ func (w *Window) SetMonitor(monitor *Monitor) {
 	}
 }
 
-// IsFullscreen returns true if the window is in the fullscreen mode.
+// IsFullscreen returns true if the Window is in fullscreen mode.
 func (w *Window) IsFullscreen() bool {
 	return w.Monitor() != nil
 }
 
-// Monitor returns a monitor a fullscreen window is on. If the window is not fullscreen, this
+// Monitor returns a monitor the Window is fullscreen is on. If the Window is not fullscreen, this
 // function returns nil.
 func (w *Window) Monitor() *Monitor {
 	monitor := mainthread.CallVal(func() interface{} {
@@ -326,28 +326,28 @@ func (w *Window) Monitor() *Monitor {
 	}
 }
 
-// Focus brings a window to the front and sets input focus.
+// Focus brings the Window to the front and sets input focus.
 func (w *Window) Focus() {
 	mainthread.Call(func() {
 		w.window.Focus()
 	})
 }
 
-// Focused returns true if a window has input focus.
+// Focused returns true if the Window has input focus.
 func (w *Window) Focused() bool {
 	return mainthread.CallVal(func() interface{} {
 		return w.window.GetAttrib(glfw.Focused) == glfw.True
 	}).(bool)
 }
 
-// Maximize puts a windowed window to a maximized state.
+// Maximize puts the Window window to the maximized state.
 func (w *Window) Maximize() {
 	mainthread.Call(func() {
 		w.window.Maximize()
 	})
 }
 
-// Restore restores a windowed window from a maximized state.
+// Restore restores the Window window from the maximized state.
 func (w *Window) Restore() {
 	mainthread.Call(func() {
 		w.window.Restore()
@@ -365,7 +365,7 @@ func (w *Window) begin() {
 
 // Note: must be called inside the main thread.
 func (w *Window) end() {
-	// nothing really
+	// nothing, really
 }
 
 // MakeTriangles generates a specialized copy of the supplied triangles that will draw onto this
@@ -376,7 +376,7 @@ func (w *Window) MakeTriangles(t Triangles) Triangles {
 	return w.canvas.MakeTriangles(t)
 }
 
-// SetPicture sets a Picture that will be used in subsequent drawings onto the window.
+// SetPicture sets a Picture that will be used in subsequent drawings onto the Window.
 func (w *Window) SetPicture(p *Picture) {
 	w.canvas.SetPicture(p)
 }

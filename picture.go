@@ -10,15 +10,15 @@ import (
 
 // Picture is a raster picture. It is usually used with sprites.
 //
-// A picture is created from an image.Image, that can be either loaded from a file, or
-// generated. After the creation a picture can be sliced (slicing creates a "sub-picture"
-// from a picture) into smaller pictures.
+// A Picture is created from an image.Image, that can be either loaded from a file, or
+// generated. After the creation, Pictures can be sliced (slicing creates a "sub-Picture"
+// from a Picture) into smaller Pictures.
 type Picture struct {
 	texture *pixelgl.Texture
 	bounds  Rect
 }
 
-// NewPicture creates a new picture from an image.Image.
+// NewPicture creates a new Picture from an image.Image.
 func NewPicture(img image.Image, smooth bool) *Picture {
 	// convert the image to NRGBA format
 	bounds := img.Bounds()
@@ -80,16 +80,16 @@ func (p *Picture) Image() *image.NRGBA {
 	return nrgba
 }
 
-// Texture returns a pointer to the underlying OpenGL texture of a picture.
+// Texture returns a pointer to the underlying OpenGL texture of the Picture.
 func (p *Picture) Texture() *pixelgl.Texture {
 	return p.texture
 }
 
-// Slice returns a picture within the supplied rectangle of the original picture. The original
-// and the sliced picture share the same texture.
+// Slice returns a Picture within the supplied rectangle of the original picture. The original
+// and the sliced Picture share the same texture.
 //
-// For example, suppose we have a 100x200 pixels picture. If we slice it with rectangle (50,
-// 100, 50, 100), we get the upper-right quadrant of the original picture.
+// For example, suppose we have a 100x200 pixels Picture. If we slice it with rectangle (50,
+// 100, 50, 100), we get the upper-right quadrant of the original Picture.
 func (p *Picture) Slice(slice Rect) *Picture {
 	return &Picture{
 		texture: p.texture,
@@ -97,9 +97,9 @@ func (p *Picture) Slice(slice Rect) *Picture {
 	}
 }
 
-// Bounds returns the bounding rectangle of this picture relative to the most original picture.
+// Bounds returns the bounding rectangle of this Picture relative to the most original picture.
 //
-// If the original picture gets sliced with the return value of this method, this picture will
+// If the original Picture was sliced with the return value of this method, this Picture would
 // be obtained.
 func (p *Picture) Bounds() Rect {
 	return p.bounds

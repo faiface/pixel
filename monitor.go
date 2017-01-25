@@ -31,7 +31,7 @@ func Monitors() []*Monitor {
 	return monitors
 }
 
-// Name returns a human-readable name of a monitor.
+// Name returns a human-readable name of the Monitor.
 func (m *Monitor) Name() string {
 	name := mainthread.CallVal(func() interface{} {
 		return m.monitor.GetName()
@@ -39,7 +39,7 @@ func (m *Monitor) Name() string {
 	return name
 }
 
-// PhysicalSize returns the size of the display area of a monitor in millimeters.
+// PhysicalSize returns the size of the display area of the Monitor in millimeters.
 func (m *Monitor) PhysicalSize() (width, height float64) {
 	var wi, hi int
 	mainthread.Call(func() {
@@ -50,7 +50,7 @@ func (m *Monitor) PhysicalSize() (width, height float64) {
 	return
 }
 
-// Position returns the position of the upper-left corner of a monitor in screen coordinates.
+// Position returns the position of the upper-left corner of the Monitor in screen coordinates.
 func (m *Monitor) Position() (x, y float64) {
 	var xi, yi int
 	mainthread.Call(func() {
@@ -61,7 +61,7 @@ func (m *Monitor) Position() (x, y float64) {
 	return
 }
 
-// Size returns the resolution of a monitor in pixels.
+// Size returns the resolution of the Monitor in pixels.
 func (m *Monitor) Size() (width, height float64) {
 	mode := mainthread.CallVal(func() interface{} {
 		return m.monitor.GetVideoMode()
@@ -71,7 +71,7 @@ func (m *Monitor) Size() (width, height float64) {
 	return
 }
 
-// BitDepth returns the number of bits per color of a monitor.
+// BitDepth returns the number of bits per color of the Monitor.
 func (m *Monitor) BitDepth() (red, green, blue int) {
 	mode := mainthread.CallVal(func() interface{} {
 		return m.monitor.GetVideoMode()
@@ -82,7 +82,7 @@ func (m *Monitor) BitDepth() (red, green, blue int) {
 	return
 }
 
-// RefreshRate returns the refresh frequency of a monitor in Hz (refreshes/second).
+// RefreshRate returns the refresh frequency of the Monitor in Hz (refreshes/second).
 func (m *Monitor) RefreshRate() (rate float64) {
 	mode := mainthread.CallVal(func() interface{} {
 		return m.monitor.GetVideoMode()
