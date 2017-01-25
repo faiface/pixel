@@ -58,6 +58,26 @@ func (gt *glTriangles) resize(len int) {
 }
 
 func (gt *glTriangles) updateData(offset int, t Triangles) {
+	// TrianglesData short path
+	if t, ok := t.(*TrianglesData); ok {
+		for i := offset; i < offset+t.Len(); i++ {
+			var (
+				px, py = (*t)[i].Position.XY()
+				col    = (*t)[i].Color
+				tx, ty = (*t)[i].Texture.XY()
+			)
+			gt.data[i*gt.vs.Stride()+0] = float32(px)
+			gt.data[i*gt.vs.Stride()+1] = float32(py)
+			gt.data[i*gt.vs.Stride()+2] = float32(col.R)
+			gt.data[i*gt.vs.Stride()+3] = float32(col.G)
+			gt.data[i*gt.vs.Stride()+4] = float32(col.B)
+			gt.data[i*gt.vs.Stride()+5] = float32(col.A)
+			gt.data[i*gt.vs.Stride()+6] = float32(tx)
+			gt.data[i*gt.vs.Stride()+7] = float32(ty)
+		}
+		return
+	}
+
 	if t, ok := t.(TrianglesPosition); ok {
 		for i := offset; i < offset+t.Len(); i++ {
 			px, py := t.Position(i).XY()
