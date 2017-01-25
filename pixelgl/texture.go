@@ -15,7 +15,7 @@ type Texture struct {
 }
 
 // NewTexture creates a new texture with the specified width and height with some initial
-// pixel values. The pixels must be a sequence of RGBA values.
+// pixel values. The pixels must be a sequence of RGBA values (one byte per component).
 func NewTexture(width, height int, smooth bool, pixels []uint8) *Texture {
 	tex := &Texture{
 		tex: binder{
@@ -70,12 +70,12 @@ func (t *Texture) delete() {
 	})
 }
 
-// Width returns the width of a texture in pixels.
+// Width returns the width of the Texture in pixels.
 func (t *Texture) Width() int {
 	return t.width
 }
 
-// Height returns the height of a texture in pixels.
+// Height returns the height of the Texture in pixels.
 func (t *Texture) Height() int {
 	return t.height
 }
@@ -117,12 +117,12 @@ func (t *Texture) Pixels(x, y, w, h int) []uint8 {
 	return subPixels
 }
 
-// Begin binds a texture. This is necessary before using the texture.
+// Begin binds the Texture. This is necessary before using the Texture.
 func (t *Texture) Begin() {
 	t.tex.bind()
 }
 
-// End unbinds a texture and restores the previous one.
+// End unbinds the Texture and restores the previous one.
 func (t *Texture) End() {
 	t.tex.restore()
 }

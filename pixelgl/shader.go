@@ -119,17 +119,17 @@ func (s *Shader) delete() {
 	})
 }
 
-// VertexFormat returns the vertex attribute format of this shader. Do not change it.
+// VertexFormat returns the vertex attribute format of this Shader. Do not change it.
 func (s *Shader) VertexFormat() AttrFormat {
 	return s.vertexFmt
 }
 
-// UniformFormat returns the uniform attribute format of this shader. Do not change it.
+// UniformFormat returns the uniform attribute format of this Shader. Do not change it.
 func (s *Shader) UniformFormat() AttrFormat {
 	return s.uniformFmt
 }
 
-// SetUniformAttr sets the value of a uniform attribute of a shader. The attribute is
+// SetUniformAttr sets the value of a uniform attribute of this Shader. The attribute is
 // specified by the index in the Shader's uniform format.
 //
 // If the uniform attribute does not exist in the Shader, this method returns false.
@@ -152,7 +152,7 @@ func (s *Shader) UniformFormat() AttrFormat {
 //   Attr{Type: Mat43}: mgl32.Mat4x3
 // No other types are supported.
 //
-// The shader must be bound before calling this method.
+// The Shader must be bound before calling this method.
 func (s *Shader) SetUniformAttr(uniform int, value interface{}) (ok bool) {
 	if s.uniformLoc[uniform] < 0 {
 		return false
@@ -208,12 +208,12 @@ func (s *Shader) SetUniformAttr(uniform int, value interface{}) (ok bool) {
 	return true
 }
 
-// Begin binds a shader program. This is necessary before using the shader.
+// Begin binds the Shader program. This is necessary before using the Shader.
 func (s *Shader) Begin() {
 	s.program.bind()
 }
 
-// End unbinds a shader program and restores the previous one.
+// End unbinds the Shader program and restores the previous one.
 func (s *Shader) End() {
 	s.program.restore()
 }

@@ -6,7 +6,7 @@ package pixelgl
 //   AttrFormat{{"position", Vec2}, {"color", Vec4}, {"texCoord": Vec2}}
 type AttrFormat []Attr
 
-// Size returns the total size of all attributes of an attribute format.
+// Size returns the total size of all attributes of the AttrFormat.
 func (af AttrFormat) Size() int {
 	total := 0
 	for _, attr := range af {
