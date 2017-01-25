@@ -260,6 +260,37 @@ func (w *Window) Hide() {
 	})
 }
 
+func (w *Window) setFullscreen(monitor *Monitor) {
+	mainthread.Call(func() {
+		w.restore.xpos, w.restore.ypos = w.window.GetPos()
+		w.restore.width, w.restore.height = w.window.GetSize()
+
+		mode := monitor.monitor.GetVideoMode()
+
+		w.window.SetMonitor(
+			monitor.monitor,
+			0,
+			0,
+			mode.Width,
+			mode.Height,
+			mode.RefreshRate,
+		)
+	})
+}
+
+func (w *Window) setWindowed() {
+	mainthread.Call(func() {
+		w.window.SetMonitor(
+			nil,
+			w.restore.xpos,
+			w.restore.ypos,
+			w.restore.width,
+			w.restore.height,
+			0,
+		)
+	})
+}
+
 // SetMonitor sets a window fullscreen on a given monitor. If the monitor is nil, the window
 // will be resored to windowed instead.
 //
@@ -268,33 +299,10 @@ func (w *Window) Hide() {
 // to set it manually with SetSize method.
 func (w *Window) SetMonitor(monitor *Monitor) {
 	if w.Monitor() != monitor {
-		if monitor == nil {
-			mainthread.Call(func() {
-				w.window.SetMonitor(
-					nil,
-					w.restore.xpos,
-					w.restore.ypos,
-					w.restore.width,
-					w.restore.height,
-					0,
-				)
-			})
+		if monitor != nil {
+			w.setFullscreen(monitor)
 		} else {
-			mainthread.Call(func() {
-				w.restore.xpos, w.restore.ypos = w.window.GetPos()
-				w.restore.width, w.restore.height = w.window.GetSize()
-
-				mode := monitor.monitor.GetVideoMode()
-
-				w.window.SetMonitor(
-					monitor.monitor,
-					0,
-					0,
-					mode.Width,
-					mode.Height,
-					mode.RefreshRate,
-				)
-			})
+			w.setWindowed()
 		}
 	}
 }
