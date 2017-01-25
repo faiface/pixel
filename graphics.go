@@ -156,29 +156,35 @@ func (td *TrianglesDrawer) Append(t Triangles) {
 	td.Triangles.Append(t)
 }
 
+// Dirty marks the underlying container as changed (dirty). If you, despite all warnings, updated
+// the underlying container in a way different from td.Update or td.Append, call Dirty and
+// everything will be fine :)
+func (td *TrianglesDrawer) Dirty() {
+	td.dirty = true
+}
+
 // Sprite is a picture that can be drawn onto a Target. To change the position/rotation/scale of
 // the Sprite, use Target's SetTransform method.
 type Sprite struct {
 	td   TrianglesDrawer
-	data *TrianglesData
+	data TrianglesData
 	pic  *Picture
 }
 
 // NewSprite creates a Sprite with the supplied Picture. The dimensions of the returned Sprite match
 // the dimensions of the Picture.
 func NewSprite(pic *Picture) *Sprite {
-	data := TrianglesData{
-		{Position: V(0, 0), Color: NRGBA{1, 1, 1, 1}, Texture: V(0, 0)},
-		{Position: V(0, 0), Color: NRGBA{1, 1, 1, 1}, Texture: V(1, 0)},
-		{Position: V(0, 0), Color: NRGBA{1, 1, 1, 1}, Texture: V(1, 1)},
-		{Position: V(0, 0), Color: NRGBA{1, 1, 1, 1}, Texture: V(0, 0)},
-		{Position: V(0, 0), Color: NRGBA{1, 1, 1, 1}, Texture: V(1, 1)},
-		{Position: V(0, 0), Color: NRGBA{1, 1, 1, 1}, Texture: V(0, 1)},
-	}
 	s := &Sprite{
-		td:   TrianglesDrawer{Triangles: &data},
-		data: &data,
+		data: TrianglesData{
+			{Position: V(0, 0), Color: NRGBA{1, 1, 1, 1}, Texture: V(0, 0)},
+			{Position: V(0, 0), Color: NRGBA{1, 1, 1, 1}, Texture: V(1, 0)},
+			{Position: V(0, 0), Color: NRGBA{1, 1, 1, 1}, Texture: V(1, 1)},
+			{Position: V(0, 0), Color: NRGBA{1, 1, 1, 1}, Texture: V(0, 0)},
+			{Position: V(0, 0), Color: NRGBA{1, 1, 1, 1}, Texture: V(1, 1)},
+			{Position: V(0, 0), Color: NRGBA{1, 1, 1, 1}, Texture: V(0, 1)},
+		},
 	}
+	s.td = TrianglesDrawer{Triangles: &s.data}
 	s.SetPicture(pic)
 	return s
 }
@@ -191,13 +197,13 @@ func (s *Sprite) SetPicture(pic *Picture) {
 		return
 	}
 	w, h := pic.Bounds().Size.XY()
-	(*s.data)[0].Position = V(0, 0)
-	(*s.data)[2].Position = V(w, h)
-	(*s.data)[1].Position = V(w, 0)
-	(*s.data)[3].Position = V(0, 0)
-	(*s.data)[4].Position = V(w, h)
-	(*s.data)[5].Position = V(0, h)
-	s.td.dirty = true
+	s.data[0].Position = V(0, 0)
+	s.data[2].Position = V(w, h)
+	s.data[1].Position = V(w, 0)
+	s.data[3].Position = V(0, 0)
+	s.data[4].Position = V(w, h)
+	s.data[5].Position = V(0, h)
+	s.td.Dirty()
 }
 
 // Picture returns the current Picture of the Sprite.
@@ -214,18 +220,17 @@ func (s *Sprite) Draw(t Target) {
 // Polygon is a convex polygon shape filled with a single color.
 type Polygon struct {
 	td   TrianglesDrawer
-	data *TrianglesData
+	data TrianglesData
 	col  NRGBA
 }
 
 // NewPolygon creates a Polygon with specified color and points. Points can be in clock-wise or
 // counter-clock-wise order, it doesn't matter. They should however form a convex polygon.
 func NewPolygon(c color.Color, points ...Vec) *Polygon {
-	data := make(TrianglesData, len(points))
 	p := &Polygon{
-		td:   TrianglesDrawer{Triangles: &data},
-		data: &data,
+		data: make(TrianglesData, len(points)),
 	}
+	p.td = TrianglesDrawer{Triangles: &p.data}
 	p.SetColor(c)
 	p.SetPoints(points...)
 	return p
@@ -237,11 +242,10 @@ func NewPolygon(c color.Color, points ...Vec) *Polygon {
 // a color mask on a Target, in such a case.
 func (p *Polygon) SetColor(c color.Color) {
 	p.col = NRGBAModel.Convert(c).(NRGBA)
-	for i := range *p.data {
-		(*p.data)[i].Color = p.col
+	for i := range p.data {
+		p.data[i].Color = p.col
 	}
-	// dirty stuff, need to update manually
-	p.td.dirty = true
+	p.td.Dirty()
 }
 
 // Color returns the current color of the Polygon.
@@ -258,19 +262,18 @@ func (p *Polygon) Color() NRGBA {
 func (p *Polygon) SetPoints(points ...Vec) {
 	p.data.resize(len(points))
 	for i, pt := range points {
-		(*p.data)[i].Position = pt
-		(*p.data)[i].Color = p.col
-		(*p.data)[i].Texture = V(-1, -1)
+		p.data[i].Position = pt
+		p.data[i].Color = p.col
+		p.data[i].Texture = V(-1, -1)
 	}
-	// dirty stuff
-	p.td.dirty = true
+	p.td.Dirty()
 }
 
 // Points returns a slice of points of the Polygon in the order they where supplied.
 func (p *Polygon) Points() []Vec {
 	points := make([]Vec, p.data.Len())
-	for i := range *p.data {
-		points[i] = (*p.data)[i].Position
+	for i := range p.data {
+		points[i] = p.data[i].Position
 	}
 	return points
 }
