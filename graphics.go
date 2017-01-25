@@ -1,6 +1,9 @@
 package pixel
 
-import "fmt"
+import (
+	"fmt"
+	"image/color"
+)
 
 // TrianglesData specifies a list of Triangles vertices with three common properties: Position,
 // Color and Texture.
@@ -164,7 +167,7 @@ type Sprite struct {
 // NewSprite creates a Sprite with the supplied Picture. The dimensions of the returned Sprite match
 // the dimensions of the Picture.
 func NewSprite(pic *Picture) *Sprite {
-	data := &TrianglesData{
+	data := TrianglesData{
 		{Position: V(0, 0), Color: NRGBA{1, 1, 1, 1}, Texture: V(0, 0)},
 		{Position: V(0, 0), Color: NRGBA{1, 1, 1, 1}, Texture: V(1, 0)},
 		{Position: V(0, 0), Color: NRGBA{1, 1, 1, 1}, Texture: V(1, 1)},
@@ -173,8 +176,8 @@ func NewSprite(pic *Picture) *Sprite {
 		{Position: V(0, 0), Color: NRGBA{1, 1, 1, 1}, Texture: V(0, 1)},
 	}
 	s := &Sprite{
-		td:   TrianglesDrawer{Triangles: data},
-		data: data,
+		td:   TrianglesDrawer{Triangles: &data},
+		data: &data,
 	}
 	s.SetPicture(pic)
 	return s
@@ -198,7 +201,75 @@ func (s *Sprite) Picture() *Picture {
 }
 
 // Draw draws the Sprite onto the provided Target.
-func (s *Sprite) Draw(target Target) {
-	target.SetPicture(s.pic)
-	s.td.Draw(target)
+func (s *Sprite) Draw(t Target) {
+	t.SetPicture(s.pic)
+	s.td.Draw(t)
+}
+
+// Polygon is a convex polygon shape filled with a single color.
+type Polygon struct {
+	td   TrianglesDrawer
+	data *TrianglesData
+	col  NRGBA
+}
+
+// NewPolygon creates a Polygon with specified color and points. Points can be in clock-wise or
+// counter-clock-wise order, it doesn't matter. They should however form a convex polygon.
+func NewPolygon(c color.Color, points ...Vec) *Polygon {
+	data := make(TrianglesData, len(points))
+	p := &Polygon{
+		td:   TrianglesDrawer{Triangles: &data},
+		data: &data,
+	}
+	p.SetColor(c)
+	p.SetPoints(points...)
+	return p
+}
+
+// SetColor changes the color of the Polygon.
+//
+// If the Polygon is very large, this method might end up being too expensive. Consider using
+// a color mask on a Target, in such a case.
+func (p *Polygon) SetColor(c color.Color) {
+	p.col = NRGBAModel.Convert(c).(NRGBA)
+	for i := range *p.data {
+		(*p.data)[i].Color = p.col
+	}
+	// dirty stuff, need to update manually
+	p.td.dirty = true
+}
+
+// Color returns the current color of the Polygon.
+func (p *Polygon) Color() NRGBA {
+	return p.col
+}
+
+// SetPoints sets the points of the Polygon. The number of points might differ from the original
+// count.
+//
+// This method is more effective, than creating a new Polygon with the given points.
+func (p *Polygon) SetPoints(points ...Vec) {
+	p.data.resize(len(points))
+	for i, pt := range points {
+		(*p.data)[i].Position = pt
+		(*p.data)[i].Color = p.col
+		(*p.data)[i].Texture = V(-1, -1)
+	}
+	// dirty stuff
+	p.td.dirty = true
+}
+
+// Points returns a slice of points of the Polygon in the order they where supplied.
+func (p *Polygon) Points() []Vec {
+	points := make([]Vec, p.data.Len())
+	for i := range *p.data {
+		points[i] = (*p.data)[i].Position
+	}
+	return points
+}
+
+// Draw draws the Polygon onto the Target.
+func (p *Polygon) Draw(t Target) {
+	t.SetPicture(nil)
+	p.td.Draw(t)
 }
