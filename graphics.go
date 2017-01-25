@@ -185,6 +185,11 @@ func NewSprite(pic *Picture) *Sprite {
 
 // SetPicture changes the Picture of the Sprite and resizes it accordingly.
 func (s *Sprite) SetPicture(pic *Picture) {
+	oldPic := s.pic
+	s.pic = pic
+	if oldPic.Bounds().Size == pic.Bounds().Size {
+		return
+	}
 	w, h := pic.Bounds().Size.XY()
 	(*s.data)[0].Position = V(0, 0)
 	(*s.data)[2].Position = V(w, h)
@@ -192,7 +197,7 @@ func (s *Sprite) SetPicture(pic *Picture) {
 	(*s.data)[3].Position = V(0, 0)
 	(*s.data)[4].Position = V(w, h)
 	(*s.data)[5].Position = V(0, h)
-	s.pic = pic
+	s.td.dirty = true
 }
 
 // Picture returns the current Picture of the Sprite.
