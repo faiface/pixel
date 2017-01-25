@@ -9,95 +9,139 @@ import "github.com/go-gl/mathgl/mgl32"
 // the scale factor is 2, the object becomes 2x bigger. Finally, all points are moved, so that
 // the original anchor is located precisely at the position.
 //
-// Create a Transform object with the Position function. This sets the position variable,
-// which is the most important. Then use methods, like Scale and Rotate to change scale,
-// rotation and achor. The order in which you apply these methods is irrelevant.
+// Create a Transform object with Position/Anchor/Rotation/... function. This sets the position
+// one of it's properties. Then use methods, like Scale and Rotate to change scale, rotation and
+// achor. The order in which you apply these methods is irrelevant.
 //
 //   pixel.Position(pixel.V(100, 100)).Rotate(math.Pi / 3).Scale(1.5)
+//
+// Also note, that no method changes the Transform. All simply return a new, changed Transform.
 type Transform struct {
 	pos, anc, sca Vec
 	rot           float64
 }
 
-// Position creates a Transformation object with specified position. Anchor is (0, 0), rotation
-// is 0 and scale is 1.
-func Position(position Vec) Transform {
-	return Transform{
-		pos: position,
-		sca: V(1, 1),
-	}
+// ZT stands for Zero-Transform. This Transform is a neutral Transform, does not change anything.
+var ZT = Transform{sca: V(1, 1)}
+
+// Position returns a Zero-Transform with Position set to pos.
+func Position(pos Vec) Transform {
+	return ZT.Position(pos)
 }
 
-// GetPosition returns the position of a transform.
-func (t Transform) GetPosition() Vec {
-	return t.pos
+// Anchor returns a Zero-Transform with Anchor set to anchor.
+func Anchor(anchor Vec) Transform {
+	return ZT.Anchor(anchor)
 }
 
-// GetAnchor returns the anchor of a transform.
-func (t Transform) GetAnchor() Vec {
-	return t.anc
+// Scale returns a Zero-Transform with Scale set to scale.
+func Scale(scale float64) Transform {
+	return ZT.Scale(scale)
 }
 
-// GetScale returns the scale (2 dimensional) of transform.
-func (t Transform) GetScale() Vec {
-	return t.sca
+// ScaleXY returns a Zero-Transform with ScaleXY set to scale.
+func ScaleXY(scale Vec) Transform {
+	return ZT.ScaleXY(scale)
 }
 
-// GetRotation returns the rotation of a transform (in radians).
-func (t Transform) GetRotation() float64 {
-	return t.rot
+// Rotation returns a Zero-Transform with Rotation set to angle (in radians).
+func Rotation(angle float64) Transform {
+	return ZT.Rotation(angle)
 }
 
-// Position sets position.
-func (t Transform) Position(position Vec) Transform {
-	t.pos = position
+// Position moves an object by the specified vector. A zero vector will end up precisely at pos.
+func (t Transform) Position(pos Vec) Transform {
+	t.pos = pos
 	return t
 }
 
-// Move adds delta to position.
-func (t Transform) Move(delta Vec) Transform {
+// AddPosition adds delta to the existing Position of this Transform.
+func (t Transform) AddPosition(delta Vec) Transform {
 	t.pos += delta
 	return t
 }
 
-// Anchor sets anchor. Anchor is the rotation center and will be moved to the position.
+// Anchor specifies the zero vector, point originally located at anchor will be treated as zero.
+// This affects Rotation and Position.
 func (t Transform) Anchor(anchor Vec) Transform {
 	t.anc = anchor
 	return t
 }
 
-// MoveAnchor adds delta to anchor.
-func (t Transform) MoveAnchor(delta Vec) Transform {
+// AddAnchor adds delta to the existing Anchor of this Transform.
+func (t Transform) AddAnchor(delta Vec) Transform {
 	t.anc += delta
 	return t
 }
 
-// Scale scales the transform by the supplied factor.
+// Scale specifies a factor by which an object will be scaled around it's Anchor.
 //
-// Note, that subsequent calls to this method accumulate the final scale factor. Scaling two
-// times by 2 is equivalent to scaling once by 4.
+// Same as:
+//   t.ScaleXY(pixel.V(scale, scale)).
 func (t Transform) Scale(scale float64) Transform {
-	t.sca = t.sca.Scaled(scale)
+	t.sca = V(scale, scale)
 	return t
 }
 
-// ScaleXY scales the transform by the supplied X and Y factor. Note, that scale is applied
-// before rotation.
+// MulScale multiplies the existing Scale of this Transform by factor.
 //
-// Note, that subsequent calls to this method accumulate the final scale factor. Scaling two
-// times by 2 is equivalent to scaling once by 4.
+// Same as:
+//   t.MulScaleXY(pixel.V(factor, factor)).
+func (t Transform) MulScale(factor float64) Transform {
+	t.sca = t.sca.Scaled(factor)
+	return t
+}
+
+// ScaleXY specifies a factor in each dimension, by which an object will be scaled around it's
+// Anchor.
 func (t Transform) ScaleXY(scale Vec) Transform {
-	t.sca = V(t.sca.X()*scale.X(), t.sca.Y()*scale.Y())
+	t.sca = scale
 	return t
 }
 
-// Rotate rotates the transform by the supplied angle in radians.
-//
-// Note, that subsequent calls to this method accumulate the final rotation. Rotating two times
-// by Pi/2 is equivalent to rotating once by Pi.
-func (t Transform) Rotate(angle float64) Transform {
-	t.rot += angle
+// MulScaleXY multiplies the existing ScaleXY of this Transform by factor, component-wise.
+func (t Transform) MulScaleXY(factor Vec) Transform {
+	t.sca = V(
+		t.sca.X()*factor.X(),
+		t.sca.Y()*factor.Y(),
+	)
 	return t
+}
+
+// Rotation specifies an angle by which an object will be rotated around it's Anchor.
+//
+// The angle is in radians.
+func (t Transform) Rotation(angle float64) Transform {
+	t.rot = angle
+	return t
+}
+
+// AddRotation adds delta to the existing Angle of this Transform.
+//
+// The delta is in radians.
+func (t Transform) AddRotation(delta float64) Transform {
+	t.rot += delta
+	return t
+}
+
+// GetPosition returns the Position of the Transform.
+func (t Transform) GetPosition() Vec {
+	return t.pos
+}
+
+// GetAnchor returns the Anchor of the Transform.
+func (t Transform) GetAnchor() Vec {
+	return t.anc
+}
+
+// GetScaleXY returns the ScaleXY of the Transform.
+func (t Transform) GetScaleXY() Vec {
+	return t.sca
+}
+
+// GetRotation returns the Rotation of the Transform.
+func (t Transform) GetRotation() float64 {
+	return t.rot
 }
 
 // Project transforms a vector by a transform.
@@ -142,5 +186,5 @@ func (t Transform) InvMat() mgl32.Mat3 {
 //
 // It is possible to apply additional rotations, scales and moves to the returned transform.
 func Camera(center, zoom, screenSize Vec) Transform {
-	return Position(0).Anchor(center).ScaleXY(2 * zoom).ScaleXY(V(1/screenSize.X(), 1/screenSize.Y()))
+	return Anchor(center).ScaleXY(2 * zoom).MulScaleXY(V(1/screenSize.X(), 1/screenSize.Y()))
 }
