@@ -19,6 +19,8 @@ type Canvas struct {
 	copyVs *pixelgl.VertexSlice
 	smooth bool
 
+	drawTd TrianglesDrawer
+
 	pic *Picture
 	mat mgl32.Mat3
 	col mgl32.Vec4
@@ -53,6 +55,16 @@ func NewCanvas(width, height float64, smooth bool) *Canvas {
 		})
 		c.copyVs.End()
 	})
+
+	c.drawTd = TrianglesDrawer{Triangles: &TrianglesData{
+		{Position: V(-1, -1), Color: NRGBA{1, 1, 1, 1}, Texture: V(0, 0)},
+		{Position: V(1, -1), Color: NRGBA{1, 1, 1, 1}, Texture: V(1, 0)},
+		{Position: V(1, 1), Color: NRGBA{1, 1, 1, 1}, Texture: V(1, 1)},
+		{Position: V(-1, -1), Color: NRGBA{1, 1, 1, 1}, Texture: V(0, 0)},
+		{Position: V(1, 1), Color: NRGBA{1, 1, 1, 1}, Texture: V(1, 1)},
+		{Position: V(-1, 1), Color: NRGBA{1, 1, 1, 1}, Texture: V(0, 1)},
+	}}
+
 	c.pic = nil
 	c.mat = mgl32.Ident3()
 	c.col = mgl32.Vec4{1, 1, 1, 1}
@@ -110,6 +122,13 @@ func (c *Canvas) Clear(col color.Color) {
 		pixelgl.Clear(float32(col.R), float32(col.G), float32(col.B), float32(col.A))
 		c.f.End()
 	})
+}
+
+// Draw draws the content of the Canvas onto another Target. If no transform is applied, the content
+// is fully stretched to fit the Target.
+func (c *Canvas) Draw(t Target) {
+	t.SetPicture(c.Content())
+	c.drawTd.Draw(t)
 }
 
 // MakeTriangles returns Triangles that draw onto this Canvas.

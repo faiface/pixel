@@ -1,9 +1,6 @@
 package pixel
 
-import (
-	"fmt"
-	"image/color"
-)
+import "fmt"
 
 // TrianglesData specifies a list of Triangles vertices with three common properties: Position,
 // Color and Texture.
@@ -156,12 +153,11 @@ func (td *TrianglesDrawer) Append(t Triangles) {
 	td.Triangles.Append(t)
 }
 
-// Sprite is a picture, positioned somewhere, with an optional mask color.
+// Sprite is a picture that can be drawn onto a Target. To change the position/rotation/scale of
+// the Sprite, use Target's SetTransform method.
 type Sprite struct {
-	td        TrianglesDrawer
-	pic       *Picture
-	transform []Transform
-	maskColor color.Color
+	td  TrianglesDrawer
+	pic *Picture
 }
 
 // NewSprite creates a Sprite with the supplied Picture. The dimensions of the returned Sprite match
@@ -193,30 +189,8 @@ func (s *Sprite) Picture() *Picture {
 	return s.pic
 }
 
-// SetTransform sets a chain of Transforms that will be applied to this Sprite in reverse order.
-func (s *Sprite) SetTransform(t ...Transform) {
-	s.transform = t
-}
-
-// Transform returns the current chain of Transforms that this Sprite is transformed by.
-func (s *Sprite) Transform() []Transform {
-	return s.transform
-}
-
-// SetMaskColor changes the mask color of the Sprite.
-func (s *Sprite) SetMaskColor(c color.Color) {
-	s.maskColor = c
-}
-
-// MaskColor returns the current mask color of the Sprite.
-func (s *Sprite) MaskColor() color.Color {
-	return s.maskColor
-}
-
 // Draw draws the Sprite onto the provided Target.
 func (s *Sprite) Draw(target Target) {
 	target.SetPicture(s.pic)
-	target.SetTransform(s.transform...)
-	target.SetMaskColor(s.maskColor)
 	s.td.Draw(target)
 }
