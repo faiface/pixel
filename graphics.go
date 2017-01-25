@@ -156,15 +156,25 @@ func (td *TrianglesDrawer) Append(t Triangles) {
 // Sprite is a picture that can be drawn onto a Target. To change the position/rotation/scale of
 // the Sprite, use Target's SetTransform method.
 type Sprite struct {
-	td  TrianglesDrawer
-	pic *Picture
+	td   TrianglesDrawer
+	data *TrianglesData
+	pic  *Picture
 }
 
 // NewSprite creates a Sprite with the supplied Picture. The dimensions of the returned Sprite match
 // the dimensions of the Picture.
 func NewSprite(pic *Picture) *Sprite {
+	data := &TrianglesData{
+		{Position: V(0, 0), Color: NRGBA{1, 1, 1, 1}, Texture: V(0, 0)},
+		{Position: V(0, 0), Color: NRGBA{1, 1, 1, 1}, Texture: V(1, 0)},
+		{Position: V(0, 0), Color: NRGBA{1, 1, 1, 1}, Texture: V(1, 1)},
+		{Position: V(0, 0), Color: NRGBA{1, 1, 1, 1}, Texture: V(0, 0)},
+		{Position: V(0, 0), Color: NRGBA{1, 1, 1, 1}, Texture: V(1, 1)},
+		{Position: V(0, 0), Color: NRGBA{1, 1, 1, 1}, Texture: V(0, 1)},
+	}
 	s := &Sprite{
-		td: TrianglesDrawer{Triangles: &TrianglesData{}},
+		td:   TrianglesDrawer{Triangles: data},
+		data: data,
 	}
 	s.SetPicture(pic)
 	return s
@@ -173,14 +183,12 @@ func NewSprite(pic *Picture) *Sprite {
 // SetPicture changes the Picture of the Sprite and resizes it accordingly.
 func (s *Sprite) SetPicture(pic *Picture) {
 	w, h := pic.Bounds().Size.XY()
-	s.td.Update(&TrianglesData{
-		{Position: V(0, 0), Color: NRGBA{1, 1, 1, 1}, Texture: V(0, 0)},
-		{Position: V(w, 0), Color: NRGBA{1, 1, 1, 1}, Texture: V(1, 0)},
-		{Position: V(w, h), Color: NRGBA{1, 1, 1, 1}, Texture: V(1, 1)},
-		{Position: V(0, 0), Color: NRGBA{1, 1, 1, 1}, Texture: V(0, 0)},
-		{Position: V(w, h), Color: NRGBA{1, 1, 1, 1}, Texture: V(1, 1)},
-		{Position: V(0, h), Color: NRGBA{1, 1, 1, 1}, Texture: V(0, 1)},
-	})
+	(*s.data)[0].Position = V(0, 0)
+	(*s.data)[2].Position = V(w, h)
+	(*s.data)[1].Position = V(w, 0)
+	(*s.data)[3].Position = V(0, 0)
+	(*s.data)[4].Position = V(w, h)
+	(*s.data)[5].Position = V(0, h)
 	s.pic = pic
 }
 
