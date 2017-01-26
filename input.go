@@ -186,8 +186,8 @@ const (
 	KeyLast         = Button(glfw.KeyLast)
 )
 
-// Name returns a human-readable string describing the Button.
-func (b Button) Name() string {
+// String returns a human-readable string describing the Button.
+func (b Button) String() string {
 	name, ok := buttonNames[b]
 	if !ok {
 		return "Invalid"
