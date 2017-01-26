@@ -108,11 +108,7 @@ func (c *Canvas) Size() (width, height float64) {
 // as you draw onto the Canvas, so there is no real need to call this method more than once (but it
 // might be beneficial to your code to do so).
 func (c *Canvas) Content() *Picture {
-	tex := c.f.Texture()
-	return &Picture{
-		texture: tex,
-		bounds:  R(0, 0, float64(tex.Width()), float64(tex.Height())),
-	}
+	return PictureFromTexture(c.f.Texture())
 }
 
 // Clear fills the whole Canvas with one specified color.

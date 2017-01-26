@@ -14,8 +14,8 @@ import (
 // generated. After the creation, Pictures can be sliced (slicing creates a "sub-Picture"
 // from a Picture) into smaller Pictures.
 type Picture struct {
-	texture *pixelgl.Texture
-	bounds  Rect
+	tex    *pixelgl.Texture
+	bounds Rect
 }
 
 // NewPicture creates a new Picture from an image.Image.
@@ -35,9 +35,9 @@ func NewPicture(img image.Image, smooth bool) *Picture {
 		copy(jSlice, tmp)
 	}
 
-	var texture *pixelgl.Texture
+	var tex *pixelgl.Texture
 	mainthread.Call(func() {
-		texture = pixelgl.NewTexture(
+		tex = pixelgl.NewTexture(
 			img.Bounds().Dx(),
 			img.Bounds().Dy(),
 			smooth,
@@ -45,9 +45,14 @@ func NewPicture(img image.Image, smooth bool) *Picture {
 		)
 	})
 
+	return PictureFromTexture(tex)
+}
+
+// PictureFromTexture returns a new Picture that spans the whole supplied Texture.
+func PictureFromTexture(tex *pixelgl.Texture) *Picture {
 	return &Picture{
-		texture: texture,
-		bounds:  R(0, 0, float64(texture.Width()), float64(texture.Height())),
+		tex:    tex,
+		bounds: R(0, 0, float64(tex.Width()), float64(tex.Height())),
 	}
 }
 
@@ -57,14 +62,14 @@ func (p *Picture) Image() *image.NRGBA {
 	nrgba := image.NewNRGBA(image.Rect(0, 0, int(bounds.W()), int(bounds.H())))
 
 	mainthread.Call(func() {
-		p.texture.Begin()
-		nrgba.Pix = p.texture.Pixels(
+		p.tex.Begin()
+		nrgba.Pix = p.tex.Pixels(
 			int(bounds.X()),
 			int(bounds.Y()),
 			int(bounds.W()),
 			int(bounds.H()),
 		)
-		p.texture.End()
+		p.tex.End()
 	})
 
 	// flip the image vertically
@@ -82,7 +87,7 @@ func (p *Picture) Image() *image.NRGBA {
 
 // Texture returns a pointer to the underlying OpenGL texture of the Picture.
 func (p *Picture) Texture() *pixelgl.Texture {
-	return p.texture
+	return p.tex
 }
 
 // Slice returns a Picture within the supplied rectangle of the original picture. The original
@@ -92,8 +97,8 @@ func (p *Picture) Texture() *pixelgl.Texture {
 // 100, 50, 100), we get the upper-right quadrant of the original Picture.
 func (p *Picture) Slice(slice Rect) *Picture {
 	return &Picture{
-		texture: p.texture,
-		bounds:  Rect{p.bounds.Pos + slice.Pos, slice.Size},
+		tex:    p.tex,
+		bounds: Rect{p.bounds.Pos + slice.Pos, slice.Size},
 	}
 }
 
