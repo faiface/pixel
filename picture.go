@@ -57,6 +57,8 @@ func PictureFromTexture(tex *pixelgl.Texture) *Picture {
 }
 
 // Image returns the content of the Picture as an image.NRGBA.
+//
+// Note, that this operation can be rather expensive.
 func (p *Picture) Image() *image.NRGBA {
 	bounds := p.Bounds()
 	nrgba := image.NewNRGBA(image.Rect(0, 0, int(bounds.W()), int(bounds.H())))
