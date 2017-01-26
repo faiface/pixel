@@ -23,7 +23,11 @@ func (td *TrianglesData) Draw() {
 	panic(fmt.Errorf("%T.Draw: invalid operation", td))
 }
 
-func (td *TrianglesData) resize(len int) {
+// SetLen resizes TrianglesData to len, while keeping the original content.
+//
+// If len is greater than TrianglesData's current length, the new data is filled with default
+// values ((0, 0), white, (-1, -1)).
+func (td *TrianglesData) SetLen(len int) {
 	if len > td.Len() {
 		needAppend := len - td.Len()
 		for i := 0; i < needAppend; i++ {
@@ -68,13 +72,13 @@ func (td *TrianglesData) updateData(offset int, t Triangles) {
 //
 // TrianglesPosition, TrianglesColor and TrianglesTexture are supported.
 func (td *TrianglesData) Update(t Triangles) {
-	td.resize(t.Len())
+	td.SetLen(t.Len())
 	td.updateData(0, t)
 }
 
 // Append adds supplied Triangles to the end of the TrianglesData.
 func (td *TrianglesData) Append(t Triangles) {
-	td.resize(td.Len() + t.Len())
+	td.SetLen(td.Len() + t.Len())
 	td.updateData(td.Len()-t.Len(), t)
 }
 
@@ -260,11 +264,10 @@ func (p *Polygon) Color() NRGBA {
 //
 // However, it is less expensive than using a transform on a Target.
 func (p *Polygon) SetPoints(points ...Vec) {
-	p.data.resize(len(points))
+	p.data.SetLen(len(points))
 	for i, pt := range points {
 		p.data[i].Position = pt
 		p.data[i].Color = p.col
-		p.data[i].Texture = V(-1, -1)
 	}
 	p.td.Dirty()
 }
