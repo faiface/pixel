@@ -3,6 +3,7 @@ package pixel
 import (
 	"github.com/faiface/mainthread"
 	"github.com/go-gl/glfw/v3.2/glfw"
+	"github.com/pkg/errors"
 )
 
 // Run is essentialy the "main" function of Pixel. It exists mainly due to the technical
@@ -27,6 +28,10 @@ import (
 // concurrently.  The only condition is that the Run function is be called from your main
 // function.
 func Run(run func()) {
+	err := glfw.Init()
+	if err != nil {
+		panic(errors.Wrap(err, "failed to initialize GLFW"))
+	}
 	defer glfw.Terminate()
 	mainthread.Run(run)
 }
