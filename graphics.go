@@ -13,16 +13,6 @@ type TrianglesData []struct {
 	Texture  Vec
 }
 
-// Len returns the number of vertices in TrianglesData.
-func (td *TrianglesData) Len() int {
-	return len(*td)
-}
-
-// Draw is unimplemented for TrianglesData and panics.
-func (td *TrianglesData) Draw() {
-	panic(fmt.Errorf("%T.Draw: invalid operation", td))
-}
-
 // SetLen resizes TrianglesData to len, while keeping the original content.
 //
 // If len is greater than TrianglesData's current length, the new data is filled with default
@@ -41,6 +31,16 @@ func (td *TrianglesData) SetLen(len int) {
 	if len < td.Len() {
 		*td = (*td)[:len]
 	}
+}
+
+// Len returns the number of vertices in TrianglesData.
+func (td *TrianglesData) Len() int {
+	return len(*td)
+}
+
+// Draw is unimplemented for TrianglesData and panics.
+func (td *TrianglesData) Draw() {
+	panic(fmt.Errorf("%T.Draw: invalid operation", td))
 }
 
 func (td *TrianglesData) updateData(offset int, t Triangles) {
