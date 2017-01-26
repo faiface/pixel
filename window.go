@@ -89,10 +89,7 @@ func NewWindow(config WindowConfig) (*Window, error) {
 	w := &Window{config: config}
 
 	err := mainthread.CallErr(func() error {
-		err := glfw.Init()
-		if err != nil {
-			return err
-		}
+		var err error
 
 		glfw.WindowHint(glfw.ContextVersionMajor, 3)
 		glfw.WindowHint(glfw.ContextVersionMinor, 3)
