@@ -119,12 +119,7 @@ func (gt *glTriangles) submitData() {
 	mainthread.CallNonBlock(func() {
 		gt.vs.Begin()
 		dataLen := len(data) / gt.vs.Stride()
-		if dataLen > gt.vs.Len() {
-			gt.vs.Append(make([]float32, (dataLen-gt.vs.Len())*gt.vs.Stride()))
-		}
-		if dataLen < gt.vs.Len() {
-			gt.vs = gt.vs.Slice(0, dataLen)
-		}
+		gt.vs.SetLen(dataLen)
 		gt.vs.SetVertexData(gt.data)
 		gt.vs.End()
 	})

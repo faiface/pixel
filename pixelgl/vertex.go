@@ -50,7 +50,7 @@ func (vs *VertexSlice) Stride() int {
 	return vs.va.stride / 4
 }
 
-// Len returns the length of the VertexSlice.
+// Len returns the length of the VertexSlice (number of vertices).
 func (vs *VertexSlice) Len() int {
 	return vs.j - vs.i
 }
@@ -60,20 +60,11 @@ func (vs *VertexSlice) Cap() int {
 	return vs.va.cap - vs.i
 }
 
-// Slice returns a sub-slice of this VertexSlice covering the range [i, j) (relative to this
-// VertexSlice).
-//
-// Note, that the returned VertexSlice shares an underlying vertex array with the original
-// VertexSlice. Modifying the contents of one modifies corresponding contents of the other.
-func (vs *VertexSlice) Slice(i, j int) *VertexSlice {
-	if i < 0 || j < i || j > vs.va.cap {
-		panic("failed to slice vertex slice: index out of range")
-	}
-	return &VertexSlice{
-		va: vs.va,
-		i:  vs.i + i,
-		j:  vs.i + j,
-	}
+// SetLen resizes the VertexSlice to length len.
+func (vs *VertexSlice) SetLen(len int) {
+	vs.End() // vs must have been Begin-ed before calling this method
+	*vs = vs.grow(len)
+	vs.Begin()
 }
 
 // grow returns supplied vs with length changed to len. Allocates new underlying vertex array if
@@ -110,18 +101,20 @@ func (vs VertexSlice) grow(len int) VertexSlice {
 	return newVs
 }
 
-// Append adds supplied vertices to the end of the VertexSlice. If the capacity of the VertexSlice
-// is not sufficient, a new, larger underlying vertex array will be allocated. The content of the
-// original VertexSlice will be copied to the new underlying vertex array.
+// Slice returns a sub-slice of this VertexSlice covering the range [i, j) (relative to this
+// VertexSlice).
 //
-// The data is in the same format as with SetVertexData.
-//
-// The VertexSlice is appended 'in-place', contrary Go's builtin slices.
-func (vs *VertexSlice) Append(data []float32) {
-	vs.End() // vs must have been Begin-ed before calling this method
-	*vs = vs.grow(vs.Len() + len(data)/vs.Stride())
-	vs.Begin()
-	vs.Slice(vs.Len()-len(data)/vs.Stride(), vs.Len()).SetVertexData(data)
+// Note, that the returned VertexSlice shares an underlying vertex array with the original
+// VertexSlice. Modifying the contents of one modifies corresponding contents of the other.
+func (vs *VertexSlice) Slice(i, j int) *VertexSlice {
+	if i < 0 || j < i || j > vs.va.cap {
+		panic("failed to slice vertex slice: index out of range")
+	}
+	return &VertexSlice{
+		va: vs.va,
+		i:  vs.i + i,
+		j:  vs.i + j,
+	}
 }
 
 // SetVertexData sets the contents of the VertexSlice.
