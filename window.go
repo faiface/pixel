@@ -369,7 +369,7 @@ func (w *Window) end() {
 // Window.
 //
 // Window supports TrianglesPosition, TrianglesColor and TrianglesTexture.
-func (w *Window) MakeTriangles(t Triangles) Triangles {
+func (w *Window) MakeTriangles(t Triangles) TargetTriangles {
 	return w.canvas.MakeTriangles(t)
 }
 

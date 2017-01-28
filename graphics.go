@@ -13,6 +13,21 @@ type TrianglesData []struct {
 	Texture  Vec
 }
 
+// MakeTrianglesData creates TrianglesData of length len initialized with default property values.
+//
+// Prefer this function to make(TrianglesData, len), because make zeros them, while this function
+// does a correct intialization.
+func MakeTrianglesData(len int) TrianglesData {
+	td := TrianglesData{}
+	td.SetLen(len)
+	return td
+}
+
+// Len returns the number of vertices in TrianglesData.
+func (td *TrianglesData) Len() int {
+	return len(*td)
+}
+
 // SetLen resizes TrianglesData to len, while keeping the original content.
 //
 // If len is greater than TrianglesData's current length, the new data is filled with default
@@ -33,36 +48,32 @@ func (td *TrianglesData) SetLen(len int) {
 	}
 }
 
-// Len returns the number of vertices in TrianglesData.
-func (td *TrianglesData) Len() int {
-	return len(*td)
+// Slice returns a sub-Triangles of this TrianglesData.
+func (td *TrianglesData) Slice(i, j int) Triangles {
+	s := TrianglesData((*td)[i:j])
+	return &s
 }
 
-// Draw is unimplemented for TrianglesData and panics.
-func (td *TrianglesData) Draw() {
-	panic(fmt.Errorf("%T.Draw: invalid operation", td))
-}
-
-func (td *TrianglesData) updateData(offset int, t Triangles) {
+func (td *TrianglesData) updateData(t Triangles) {
 	// fast path optimization
 	if t, ok := t.(*TrianglesData); ok {
-		copy((*td)[offset:], *t)
+		copy(*td, *t)
 		return
 	}
 
 	// slow path manual copy
 	if t, ok := t.(TrianglesPosition); ok {
-		for i := offset; i < len(*td); i++ {
+		for i := range *td {
 			(*td)[i].Position = t.Position(i)
 		}
 	}
 	if t, ok := t.(TrianglesColor); ok {
-		for i := offset; i < len(*td); i++ {
+		for i := range *td {
 			(*td)[i].Color = t.Color(i)
 		}
 	}
 	if t, ok := t.(TrianglesTexture); ok {
-		for i := offset; i < len(*td); i++ {
+		for i := range *td {
 			(*td)[i].Texture = t.Texture(i)
 		}
 	}
@@ -72,19 +83,16 @@ func (td *TrianglesData) updateData(offset int, t Triangles) {
 //
 // TrianglesPosition, TrianglesColor and TrianglesTexture are supported.
 func (td *TrianglesData) Update(t Triangles) {
-	td.SetLen(t.Len())
-	td.updateData(0, t)
-}
-
-// Append adds supplied Triangles to the end of the TrianglesData.
-func (td *TrianglesData) Append(t Triangles) {
-	td.SetLen(td.Len() + t.Len())
-	td.updateData(td.Len()-t.Len(), t)
+	if td.Len() != t.Len() {
+		panic(fmt.Errorf("%T.Update: invalid triangles length", td))
+	}
+	td.updateData(t)
 }
 
 // Copy returns an exact independent copy of this TrianglesData.
 func (td *TrianglesData) Copy() Triangles {
-	copyTd := make(TrianglesData, td.Len())
+	copyTd := TrianglesData{}
+	copyTd.SetLen(td.Len())
 	copyTd.Update(td)
 	return &copyTd
 }
@@ -111,7 +119,7 @@ func (td *TrianglesData) Texture(i int) Vec {
 type TrianglesDrawer struct {
 	Triangles
 
-	tris  map[Target]Triangles
+	tris  map[Target]TargetTriangles
 	dirty bool
 }
 
@@ -129,7 +137,7 @@ func (td *TrianglesDrawer) flush() {
 // Draw draws the wrapped Triangles onto the provided Target.
 func (td *TrianglesDrawer) Draw(target Target) {
 	if td.tris == nil {
-		td.tris = make(map[Target]Triangles)
+		td.tris = make(map[Target]TargetTriangles)
 	}
 
 	td.flush()
@@ -142,27 +150,8 @@ func (td *TrianglesDrawer) Draw(target Target) {
 	tri.Draw()
 }
 
-// Update updates the wrapped Triangles with the supplied Triangles.
-//
-// Call only this method to update the wrapped Triangles, otherwise the TrianglesDrawer will not
-// work correctly.
-func (td *TrianglesDrawer) Update(t Triangles) {
-	td.dirty = true
-	td.Triangles.Update(t)
-}
-
-// Append appends the supplied Triangles to the wrapped Triangles.
-//
-// Call only this method to append to the wrapped Triangles, otherwise the TrianglesDrawer will not
-// work correctly.
-func (td *TrianglesDrawer) Append(t Triangles) {
-	td.dirty = true
-	td.Triangles.Append(t)
-}
-
-// Dirty marks the underlying container as changed (dirty). If you, despite all warnings, updated
-// the underlying container in a way different from td.Update or td.Append, call Dirty and
-// everything will be fine :)
+// Dirty marks the underlying container as changed (dirty). Always call this when you change the
+// underlying Triangles (by Update, SetLen, etc.).
 func (td *TrianglesDrawer) Dirty() {
 	td.dirty = true
 }
@@ -232,7 +221,7 @@ type Polygon struct {
 // counter-clock-wise order, it doesn't matter. They should however form a convex polygon.
 func NewPolygon(c color.Color, points ...Vec) *Polygon {
 	p := &Polygon{
-		data: make(TrianglesData, len(points)),
+		data: TrianglesData{},
 	}
 	p.td = TrianglesDrawer{Triangles: &p.data}
 	p.SetColor(c)

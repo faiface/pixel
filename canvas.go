@@ -129,11 +129,11 @@ func (c *Canvas) Draw(t Target) {
 }
 
 // MakeTriangles returns Triangles that draw onto this Canvas.
-func (c *Canvas) MakeTriangles(t Triangles) Triangles {
-	tpcs := NewGLTriangles(c.s, t).(trianglesPositionColorTexture)
+func (c *Canvas) MakeTriangles(t Triangles) TargetTriangles {
+	gt := NewGLTriangles(c.s, t).(*glTriangles)
 	return &canvasTriangles{
-		c: c,
-		trianglesPositionColorTexture: tpcs,
+		c:           c,
+		glTriangles: gt,
 	}
 }
 
@@ -170,16 +170,9 @@ func (c *Canvas) SetMaskColor(col color.Color) {
 	c.col = mgl32.Vec4{r, g, b, a}
 }
 
-type trianglesPositionColorTexture interface {
-	Triangles
-	Position(i int) Vec
-	Color(i int) NRGBA
-	Texture(i int) Vec
-}
-
 type canvasTriangles struct {
 	c *Canvas
-	trianglesPositionColorTexture
+	*glTriangles
 }
 
 func (ct *canvasTriangles) Draw() {
@@ -199,10 +192,10 @@ func (ct *canvasTriangles) Draw() {
 
 		if pic != nil {
 			pic.Texture().Begin()
-			ct.trianglesPositionColorTexture.Draw()
+			ct.glTriangles.Draw()
 			pic.Texture().End()
 		} else {
-			ct.trianglesPositionColorTexture.Draw()
+			ct.glTriangles.Draw()
 		}
 
 		ct.c.s.End()

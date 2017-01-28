@@ -35,7 +35,8 @@ func NewBatch(pic *Picture, container Triangles) *Batch {
 
 // Clear removes all objects from the Batch.
 func (b *Batch) Clear() {
-	b.cont.Update(&TrianglesData{})
+	b.cont.SetLen(0)
+	b.cont.Dirty()
 }
 
 // Draw draws all objects that are currently in the Batch onto another Target.
@@ -45,10 +46,11 @@ func (b *Batch) Draw(t Target) {
 }
 
 // MakeTriangles returns a specialized copy of the provided Triangles, that draws onto this Batch.
-func (b *Batch) MakeTriangles(t Triangles) Triangles {
+func (b *Batch) MakeTriangles(t Triangles) TargetTriangles {
 	return &batchTriangles{
 		Triangles: t.Copy(),
 		trans:     t.Copy(),
+		data:      MakeTrianglesData(t.Len()),
 		batch:     b,
 	}
 }
@@ -101,5 +103,9 @@ func (bt *batchTriangles) Draw() {
 		}
 	}
 	bt.trans.Update(&bt.data)
-	bt.batch.cont.Append(bt.trans)
+
+	cont := bt.batch.cont
+	cont.SetLen(cont.Len() + bt.trans.Len())
+	cont.Slice(cont.Len()-bt.trans.Len(), cont.Len()).Update(bt.trans)
+	cont.Dirty()
 }

@@ -1,6 +1,8 @@
 package pixel
 
 import (
+	"fmt"
+
 	"github.com/faiface/mainthread"
 	"github.com/faiface/pixel/pixelgl"
 )
@@ -13,7 +15,7 @@ import (
 // Draw method simply draws the underlying pixelgl.VertexSlice. It needs to be called in the main
 // thread manually. Also, you need to take care of additional Target initialization or setting of
 // uniform attributes.
-func NewGLTriangles(shader *pixelgl.Shader, t Triangles) Triangles {
+func NewGLTriangles(shader *pixelgl.Shader, t Triangles) TargetTriangles {
 	var gt *glTriangles
 	mainthread.Call(func() {
 		gt = &glTriangles{
@@ -21,6 +23,7 @@ func NewGLTriangles(shader *pixelgl.Shader, t Triangles) Triangles {
 			shader: shader,
 		}
 	})
+	gt.SetLen(t.Len())
 	gt.Update(t)
 	return gt
 }
@@ -35,13 +38,7 @@ func (gt *glTriangles) Len() int {
 	return len(gt.data) / gt.vs.Stride()
 }
 
-func (gt *glTriangles) Draw() {
-	gt.vs.Begin()
-	gt.vs.Draw()
-	gt.vs.End()
-}
-
-func (gt *glTriangles) resize(len int) {
+func (gt *glTriangles) SetLen(len int) {
 	if len > gt.Len() {
 		needAppend := len - gt.Len()
 		for i := 0; i < needAppend; i++ {
@@ -57,10 +54,24 @@ func (gt *glTriangles) resize(len int) {
 	}
 }
 
-func (gt *glTriangles) updateData(offset int, t Triangles) {
+func (gt *glTriangles) Slice(i, j int) Triangles {
+	return &glTriangles{
+		vs:     gt.vs.Slice(i, j),
+		data:   gt.data[i*gt.vs.Stride() : j*gt.vs.Stride()],
+		shader: gt.shader,
+	}
+}
+
+func (gt *glTriangles) updateData(t Triangles) {
+	// glTriangles short path
+	if t, ok := t.(*glTriangles); ok {
+		copy(gt.data, t.data)
+		return
+	}
+
 	// TrianglesData short path
 	if t, ok := t.(*TrianglesData); ok {
-		for i := offset; i < offset+t.Len(); i++ {
+		for i := 0; i < gt.Len(); i++ {
 			var (
 				px, py = (*t)[i].Position.XY()
 				col    = (*t)[i].Color
@@ -79,14 +90,14 @@ func (gt *glTriangles) updateData(offset int, t Triangles) {
 	}
 
 	if t, ok := t.(TrianglesPosition); ok {
-		for i := offset; i < offset+t.Len(); i++ {
+		for i := 0; i < gt.Len(); i++ {
 			px, py := t.Position(i).XY()
 			gt.data[i*gt.vs.Stride()+0] = float32(px)
 			gt.data[i*gt.vs.Stride()+1] = float32(py)
 		}
 	}
 	if t, ok := t.(TrianglesColor); ok {
-		for i := offset; i < offset+t.Len(); i++ {
+		for i := 0; i < gt.Len(); i++ {
 			col := t.Color(i)
 			gt.data[i*gt.vs.Stride()+2] = float32(col.R)
 			gt.data[i*gt.vs.Stride()+3] = float32(col.G)
@@ -95,7 +106,7 @@ func (gt *glTriangles) updateData(offset int, t Triangles) {
 		}
 	}
 	if t, ok := t.(TrianglesTexture); ok {
-		for i := offset; i < offset+t.Len(); i++ {
+		for i := 0; i < gt.Len(); i++ {
 			tx, ty := t.Texture(i).XY()
 			gt.data[i*gt.vs.Stride()+6] = float32(tx)
 			gt.data[i*gt.vs.Stride()+7] = float32(ty)
@@ -120,19 +131,21 @@ func (gt *glTriangles) submitData() {
 }
 
 func (gt *glTriangles) Update(t Triangles) {
-	gt.resize(t.Len())
-	gt.updateData(0, t)
-	gt.submitData()
-}
-
-func (gt *glTriangles) Append(t Triangles) {
-	gt.resize(gt.Len() + t.Len())
-	gt.updateData(gt.Len()-t.Len(), t)
+	if gt.Len() != t.Len() {
+		panic(fmt.Errorf("%T.Update: invalid triangles len", gt))
+	}
+	gt.updateData(t)
 	gt.submitData()
 }
 
 func (gt *glTriangles) Copy() Triangles {
 	return NewGLTriangles(gt.shader, gt)
+}
+
+func (gt *glTriangles) Draw() {
+	gt.vs.Begin()
+	gt.vs.Draw()
+	gt.vs.End()
 }
 
 func (gt *glTriangles) Position(i int) Vec {
