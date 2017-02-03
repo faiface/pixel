@@ -130,6 +130,7 @@ func (td *TrianglesDrawer) flush() {
 	td.dirty = false
 
 	for _, t := range td.tris {
+		t.SetLen(td.Len())
 		t.Update(td.Triangles)
 	}
 }

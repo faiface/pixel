@@ -10,7 +10,7 @@ import (
 // NewGLTriangles returns OpenGL triangles implemented using pixelgl.VertexSlice. A few notes.
 //
 // Triangles returned from this function support TrianglesPosition, TrianglesColor and
-// TrianglesTexture. If you need to support more, you can "override" Update and Append method.
+// TrianglesTexture. If you need to support more, you can "override" SetLen and Update method.
 //
 // Draw method simply draws the underlying pixelgl.VertexSlice. It needs to be called in the main
 // thread manually. Also, you need to take care of additional Target initialization or setting of
