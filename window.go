@@ -56,7 +56,6 @@ type WindowConfig struct {
 
 // Window is a window handler. Use this type to manipulate a window (input, drawing, ...).
 type Window struct {
-	enabled bool
 	window  *glfw.Window
 	config  WindowConfig
 
