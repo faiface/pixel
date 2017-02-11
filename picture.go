@@ -4,8 +4,8 @@ import (
 	"image"
 	"image/draw"
 
+	"github.com/faiface/glhf"
 	"github.com/faiface/mainthread"
-	"github.com/faiface/pixel/pixelgl"
 )
 
 // Picture is a raster picture. It is usually used with sprites.
@@ -14,7 +14,7 @@ import (
 // generated. After the creation, Pictures can be sliced (slicing creates a "sub-Picture"
 // from a Picture) into smaller Pictures.
 type Picture struct {
-	tex    *pixelgl.Texture
+	tex    *glhf.Texture
 	bounds Rect
 }
 
@@ -35,9 +35,9 @@ func NewPicture(img image.Image, smooth bool) *Picture {
 		copy(jSlice, tmp)
 	}
 
-	var tex *pixelgl.Texture
+	var tex *glhf.Texture
 	mainthread.Call(func() {
-		tex = pixelgl.NewTexture(
+		tex = glhf.NewTexture(
 			img.Bounds().Dx(),
 			img.Bounds().Dy(),
 			smooth,
@@ -49,7 +49,7 @@ func NewPicture(img image.Image, smooth bool) *Picture {
 }
 
 // PictureFromTexture returns a new Picture that spans the whole supplied Texture.
-func PictureFromTexture(tex *pixelgl.Texture) *Picture {
+func PictureFromTexture(tex *glhf.Texture) *Picture {
 	return &Picture{
 		tex:    tex,
 		bounds: R(0, 0, float64(tex.Width()), float64(tex.Height())),
@@ -88,7 +88,7 @@ func (p *Picture) Image() *image.NRGBA {
 }
 
 // Texture returns a pointer to the underlying OpenGL texture of the Picture.
-func (p *Picture) Texture() *pixelgl.Texture {
+func (p *Picture) Texture() *glhf.Texture {
 	return p.tex
 }
 

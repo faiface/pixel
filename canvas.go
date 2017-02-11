@@ -3,8 +3,8 @@ package pixel
 import (
 	"image/color"
 
+	"github.com/faiface/glhf"
 	"github.com/faiface/mainthread"
-	"github.com/faiface/pixel/pixelgl"
 	"github.com/go-gl/mathgl/mgl32"
 	"github.com/pkg/errors"
 )
@@ -13,10 +13,10 @@ import (
 //
 // Canvas supports TrianglesPosition, TrianglesColor and TrianglesTexture.
 type Canvas struct {
-	f *pixelgl.Frame
-	s *pixelgl.Shader
+	f *glhf.Frame
+	s *glhf.Shader
 
-	copyVs *pixelgl.VertexSlice
+	copyVs *glhf.VertexSlice
 	smooth bool
 
 	drawTd TrianglesDrawer
@@ -32,8 +32,8 @@ func NewCanvas(width, height float64, smooth bool) *Canvas {
 	c := &Canvas{smooth: smooth}
 	mainthread.Call(func() {
 		var err error
-		c.f = pixelgl.NewFrame(int(width), int(height), smooth)
-		c.s, err = pixelgl.NewShader(
+		c.f = glhf.NewFrame(int(width), int(height), smooth)
+		c.s, err = glhf.NewShader(
 			canvasVertexFormat,
 			canvasUniformFormat,
 			canvasVertexShader,
@@ -43,7 +43,7 @@ func NewCanvas(width, height float64, smooth bool) *Canvas {
 			panic(errors.Wrap(err, "failed to create canvas"))
 		}
 
-		c.copyVs = pixelgl.MakeVertexSlice(c.s, 6, 6)
+		c.copyVs = glhf.MakeVertexSlice(c.s, 6, 6)
 		c.copyVs.Begin()
 		c.copyVs.SetVertexData([]float32{
 			-1, -1, 1, 1, 1, 1, 0, 0,
@@ -79,7 +79,7 @@ func (c *Canvas) SetSize(width, height float64) {
 	}
 	mainthread.Call(func() {
 		oldF := c.f
-		c.f = pixelgl.NewFrame(int(width), int(height), c.smooth)
+		c.f = glhf.NewFrame(int(width), int(height), c.smooth)
 
 		c.f.Begin()
 		c.s.Begin()
@@ -116,7 +116,7 @@ func (c *Canvas) Clear(col color.Color) {
 	mainthread.CallNonBlock(func() {
 		c.f.Begin()
 		col := NRGBAModel.Convert(col).(NRGBA)
-		pixelgl.Clear(float32(col.R), float32(col.G), float32(col.B), float32(col.A))
+		glhf.Clear(float32(col.R), float32(col.G), float32(col.B), float32(col.A))
 		c.f.End()
 	})
 }
@@ -209,10 +209,10 @@ const (
 	canvasTextureVec2
 )
 
-var canvasVertexFormat = pixelgl.AttrFormat{
-	canvasPositionVec2: {Name: "position", Type: pixelgl.Vec2},
-	canvasColorVec4:    {Name: "color", Type: pixelgl.Vec4},
-	canvasTextureVec2:  {Name: "texture", Type: pixelgl.Vec2},
+var canvasVertexFormat = glhf.AttrFormat{
+	canvasPositionVec2: {Name: "position", Type: glhf.Vec2},
+	canvasColorVec4:    {Name: "color", Type: glhf.Vec4},
+	canvasTextureVec2:  {Name: "texture", Type: glhf.Vec2},
 }
 
 const (
@@ -221,10 +221,10 @@ const (
 	canvasBoundsVec4
 )
 
-var canvasUniformFormat = pixelgl.AttrFormat{
-	{Name: "maskColor", Type: pixelgl.Vec4},
-	{Name: "transform", Type: pixelgl.Mat3},
-	{Name: "bounds", Type: pixelgl.Vec4},
+var canvasUniformFormat = glhf.AttrFormat{
+	{Name: "maskColor", Type: glhf.Vec4},
+	{Name: "transform", Type: glhf.Mat3},
+	{Name: "bounds", Type: glhf.Vec4},
 }
 
 var canvasVertexShader = `

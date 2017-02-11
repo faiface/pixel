@@ -5,8 +5,8 @@ import (
 
 	"runtime"
 
+	"github.com/faiface/glhf"
 	"github.com/faiface/mainthread"
-	"github.com/faiface/pixel/pixelgl"
 	"github.com/go-gl/glfw/v3.2/glfw"
 	"github.com/pkg/errors"
 )
@@ -56,12 +56,12 @@ type WindowConfig struct {
 
 // Window is a window handler. Use this type to manipulate a window (input, drawing, ...).
 type Window struct {
-	window  *glfw.Window
-	config  WindowConfig
+	window *glfw.Window
+	config WindowConfig
 
 	canvas   *Canvas
-	canvasVs *pixelgl.VertexSlice
-	shader   *pixelgl.Shader
+	canvasVs *glhf.VertexSlice
+	shader   *glhf.Shader
 
 	// need to save these to correctly restore a fullscreen window
 	restore struct {
@@ -121,7 +121,7 @@ func NewWindow(config WindowConfig) (*Window, error) {
 		w.begin()
 		w.end()
 
-		w.shader, err = pixelgl.NewShader(
+		w.shader, err = glhf.NewShader(
 			windowVertexFormat,
 			windowUniformFormat,
 			windowVertexShader,
@@ -131,7 +131,7 @@ func NewWindow(config WindowConfig) (*Window, error) {
 			return err
 		}
 
-		w.canvasVs = pixelgl.MakeVertexSlice(w.shader, 6, 6)
+		w.canvasVs = glhf.MakeVertexSlice(w.shader, 6, 6)
 		w.canvasVs.Begin()
 		w.canvasVs.SetVertexData([]float32{
 			-1, -1, 0, 0,
@@ -179,7 +179,7 @@ func (w *Window) Update() {
 	mainthread.Call(func() {
 		w.begin()
 
-		pixelgl.Clear(0, 0, 0, 0)
+		glhf.Clear(0, 0, 0, 0)
 		w.shader.Begin()
 		w.canvas.f.Texture().Begin()
 		w.canvasVs.Begin()
@@ -354,7 +354,7 @@ func (w *Window) Restore() {
 func (w *Window) begin() {
 	if currentWindow != w {
 		w.window.MakeContextCurrent()
-		pixelgl.Init()
+		glhf.Init()
 		currentWindow = w
 	}
 }
@@ -394,12 +394,12 @@ const (
 	windowTextureVec2
 )
 
-var windowVertexFormat = pixelgl.AttrFormat{
-	windowPositionVec2: {Name: "position", Type: pixelgl.Vec2},
-	windowTextureVec2:  {Name: "texture", Type: pixelgl.Vec2},
+var windowVertexFormat = glhf.AttrFormat{
+	windowPositionVec2: {Name: "position", Type: glhf.Vec2},
+	windowTextureVec2:  {Name: "texture", Type: glhf.Vec2},
 }
 
-var windowUniformFormat = pixelgl.AttrFormat{}
+var windowUniformFormat = glhf.AttrFormat{}
 
 var windowVertexShader = `
 #version 330 core

@@ -254,9 +254,13 @@ func (p *Polygon) Color() NRGBA {
 //
 // However, it is less expensive than using a transform on a Target.
 func (p *Polygon) SetPoints(points ...Vec) {
-	p.data.SetLen(len(points))
-	for i, pt := range points {
-		p.data[i].Position = pt
+	p.data.SetLen(3 * (len(points) - 2))
+	for i := 2; i < len(points); i++ {
+		p.data[(i-2)*3+0].Position = points[0]
+		p.data[(i-2)*3+1].Position = points[i-1]
+		p.data[(i-2)*3+2].Position = points[i]
+	}
+	for i := range p.data {
 		p.data[i].Color = p.col
 	}
 	p.td.Dirty()

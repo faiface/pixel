@@ -3,23 +3,23 @@ package pixel
 import (
 	"fmt"
 
+	"github.com/faiface/glhf"
 	"github.com/faiface/mainthread"
-	"github.com/faiface/pixel/pixelgl"
 )
 
-// NewGLTriangles returns OpenGL triangles implemented using pixelgl.VertexSlice. A few notes.
+// NewGLTriangles returns OpenGL triangles implemented using glhf.VertexSlice. A few notes.
 //
 // Triangles returned from this function support TrianglesPosition, TrianglesColor and
 // TrianglesTexture. If you need to support more, you can "override" SetLen and Update method.
 //
-// Draw method simply draws the underlying pixelgl.VertexSlice. It needs to be called in the main
+// Draw method simply draws the underlying glhf.VertexSlice. It needs to be called in the main
 // thread manually. Also, you need to take care of additional Target initialization or setting of
 // uniform attributes.
-func NewGLTriangles(shader *pixelgl.Shader, t Triangles) TargetTriangles {
+func NewGLTriangles(shader *glhf.Shader, t Triangles) TargetTriangles {
 	var gt *glTriangles
 	mainthread.Call(func() {
 		gt = &glTriangles{
-			vs:     pixelgl.MakeVertexSlice(shader, 0, t.Len()),
+			vs:     glhf.MakeVertexSlice(shader, 0, t.Len()),
 			shader: shader,
 		}
 	})
@@ -29,9 +29,9 @@ func NewGLTriangles(shader *pixelgl.Shader, t Triangles) TargetTriangles {
 }
 
 type glTriangles struct {
-	vs     *pixelgl.VertexSlice
+	vs     *glhf.VertexSlice
 	data   []float32
-	shader *pixelgl.Shader
+	shader *glhf.Shader
 }
 
 func (gt *glTriangles) Len() int {
