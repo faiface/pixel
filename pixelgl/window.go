@@ -1,4 +1,4 @@
-package pixel
+package pixelgl
 
 import (
 	"image/color"
@@ -7,6 +7,7 @@ import (
 
 	"github.com/faiface/glhf"
 	"github.com/faiface/mainthread"
+	"github.com/faiface/pixel"
 	"github.com/go-gl/glfw/v3.2/glfw"
 	"github.com/pkg/errors"
 )
@@ -70,7 +71,7 @@ type Window struct {
 
 	prevInp, tempInp, currInp struct {
 		buttons [KeyLast + 1]bool
-		scroll  Vec
+		scroll  pixel.Vec
 	}
 }
 
@@ -368,19 +369,19 @@ func (w *Window) end() {
 // Window.
 //
 // Window supports TrianglesPosition, TrianglesColor and TrianglesTexture.
-func (w *Window) MakeTriangles(t Triangles) TargetTriangles {
+func (w *Window) MakeTriangles(t pixel.Triangles) pixel.TargetTriangles {
 	return w.canvas.MakeTriangles(t)
 }
 
 // SetPicture sets a Picture that will be used in subsequent drawings onto the Window.
-func (w *Window) SetPicture(p *Picture) {
+func (w *Window) SetPicture(p *pixel.Picture) {
 	w.canvas.SetPicture(p)
 }
 
 // SetTransform sets a global transformation matrix for the Window.
 //
 // Transforms are applied right-to-left.
-func (w *Window) SetTransform(t ...Transform) {
+func (w *Window) SetTransform(t ...pixel.Transform) {
 	w.canvas.SetTransform(t...)
 }
 

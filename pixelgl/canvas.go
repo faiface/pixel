@@ -1,10 +1,11 @@
-package pixel
+package pixelgl
 
 import (
 	"image/color"
 
 	"github.com/faiface/glhf"
 	"github.com/faiface/mainthread"
+	"github.com/faiface/pixel"
 	"github.com/go-gl/mathgl/mgl32"
 	"github.com/pkg/errors"
 )
@@ -19,9 +20,9 @@ type Canvas struct {
 	copyVs *glhf.VertexSlice
 	smooth bool
 
-	drawTd TrianglesDrawer
+	drawTd pixel.TrianglesDrawer
 
-	pic *Picture
+	pic *pixel.Picture
 	mat mgl32.Mat3
 	col mgl32.Vec4
 	bnd mgl32.Vec4
@@ -56,13 +57,14 @@ func NewCanvas(width, height float64, smooth bool) *Canvas {
 		c.copyVs.End()
 	})
 
-	c.drawTd = TrianglesDrawer{Triangles: &TrianglesData{
-		{Position: V(-1, -1), Color: NRGBA{1, 1, 1, 1}, Texture: V(0, 0)},
-		{Position: V(1, -1), Color: NRGBA{1, 1, 1, 1}, Texture: V(1, 0)},
-		{Position: V(1, 1), Color: NRGBA{1, 1, 1, 1}, Texture: V(1, 1)},
-		{Position: V(-1, -1), Color: NRGBA{1, 1, 1, 1}, Texture: V(0, 0)},
-		{Position: V(1, 1), Color: NRGBA{1, 1, 1, 1}, Texture: V(1, 1)},
-		{Position: V(-1, 1), Color: NRGBA{1, 1, 1, 1}, Texture: V(0, 1)},
+	white := pixel.NRGBA{R: 1, G: 1, B: 1, A: 1}
+	c.drawTd = pixel.TrianglesDrawer{Triangles: &pixel.TrianglesData{
+		{Position: pixel.V(-1, -1), Color: white, Texture: pixel.V(0, 0)},
+		{Position: pixel.V(1, -1), Color: white, Texture: pixel.V(1, 0)},
+		{Position: pixel.V(1, 1), Color: white, Texture: pixel.V(1, 1)},
+		{Position: pixel.V(-1, -1), Color: white, Texture: pixel.V(0, 0)},
+		{Position: pixel.V(1, 1), Color: white, Texture: pixel.V(1, 1)},
+		{Position: pixel.V(-1, 1), Color: white, Texture: pixel.V(0, 1)},
 	}}
 
 	c.pic = nil
@@ -74,7 +76,7 @@ func NewCanvas(width, height float64, smooth bool) *Canvas {
 
 // SetSize resizes the Canvas. The original content will be stretched to fit the new size.
 func (c *Canvas) SetSize(width, height float64) {
-	if V(width, height) == V(c.Size()) {
+	if pixel.V(width, height) == pixel.V(c.Size()) {
 		return
 	}
 	mainthread.Call(func() {
@@ -107,15 +109,15 @@ func (c *Canvas) Size() (width, height float64) {
 // Content returns a Picture that contains the content of this Canvas. The returned Picture changes
 // as you draw onto the Canvas, so there is no real need to call this method more than once (but it
 // might be beneficial to your code to do so).
-func (c *Canvas) Content() *Picture {
-	return PictureFromTexture(c.f.Texture())
+func (c *Canvas) Content() *pixel.Picture {
+	return pixel.PictureFromTexture(c.f.Texture())
 }
 
 // Clear fills the whole Canvas with one specified color.
 func (c *Canvas) Clear(col color.Color) {
 	mainthread.CallNonBlock(func() {
 		c.f.Begin()
-		col := NRGBAModel.Convert(col).(NRGBA)
+		col := pixel.NRGBAModel.Convert(col).(pixel.NRGBA)
 		glhf.Clear(float32(col.R), float32(col.G), float32(col.B), float32(col.A))
 		c.f.End()
 	})
@@ -123,13 +125,13 @@ func (c *Canvas) Clear(col color.Color) {
 
 // Draw draws the content of the Canvas onto another Target. If no transform is applied, the content
 // is fully stretched to fit the Target.
-func (c *Canvas) Draw(t Target) {
+func (c *Canvas) Draw(t pixel.Target) {
 	t.SetPicture(c.Content())
 	c.drawTd.Draw(t)
 }
 
 // MakeTriangles returns Triangles that draw onto this Canvas.
-func (c *Canvas) MakeTriangles(t Triangles) TargetTriangles {
+func (c *Canvas) MakeTriangles(t pixel.Triangles) pixel.TargetTriangles {
 	gt := NewGLTriangles(c.s, t).(*glTriangles)
 	return &canvasTriangles{
 		c:           c,
@@ -140,10 +142,10 @@ func (c *Canvas) MakeTriangles(t Triangles) TargetTriangles {
 // SetPicture sets a Picture that will be used in further draw operations.
 //
 // This does not set the Picture that this Canvas draws onto, don't confuse it.
-func (c *Canvas) SetPicture(p *Picture) {
+func (c *Canvas) SetPicture(p *pixel.Picture) {
 	if p != nil {
-		min := pictureBounds(p, V(0, 0))
-		max := pictureBounds(p, V(1, 1))
+		min := pictureBounds(p, pixel.V(0, 0))
+		max := pictureBounds(p, pixel.V(1, 1))
 		c.bnd = mgl32.Vec4{
 			float32(min.X()), float32(min.Y()),
 			float32(max.X()), float32(max.Y()),
@@ -153,16 +155,16 @@ func (c *Canvas) SetPicture(p *Picture) {
 }
 
 // SetTransform sets the transformations used in further draw operations.
-func (c *Canvas) SetTransform(t ...Transform) {
+func (c *Canvas) SetTransform(t ...pixel.Transform) {
 	c.mat = transformToMat(t...)
 }
 
 // SetMaskColor sets the mask color used in further draw operations.
 func (c *Canvas) SetMaskColor(col color.Color) {
 	if col == nil {
-		col = NRGBA{1, 1, 1, 1}
+		col = pixel.NRGBA{R: 1, G: 1, B: 1, A: 1}
 	}
-	nrgba := NRGBAModel.Convert(col).(NRGBA)
+	nrgba := pixel.NRGBAModel.Convert(col).(pixel.NRGBA)
 	r := float32(nrgba.R)
 	g := float32(nrgba.G)
 	b := float32(nrgba.B)

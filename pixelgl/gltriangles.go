@@ -1,10 +1,11 @@
-package pixel
+package pixelgl
 
 import (
 	"fmt"
 
 	"github.com/faiface/glhf"
 	"github.com/faiface/mainthread"
+	"github.com/faiface/pixel"
 )
 
 // NewGLTriangles returns OpenGL triangles implemented using glhf.VertexSlice. A few notes.
@@ -15,7 +16,7 @@ import (
 // Draw method simply draws the underlying glhf.VertexSlice. It needs to be called in the main
 // thread manually. Also, you need to take care of additional Target initialization or setting of
 // uniform attributes.
-func NewGLTriangles(shader *glhf.Shader, t Triangles) TargetTriangles {
+func NewGLTriangles(shader *glhf.Shader, t pixel.Triangles) pixel.TargetTriangles {
 	var gt *glTriangles
 	mainthread.Call(func() {
 		gt = &glTriangles{
@@ -54,7 +55,7 @@ func (gt *glTriangles) SetLen(len int) {
 	}
 }
 
-func (gt *glTriangles) Slice(i, j int) Triangles {
+func (gt *glTriangles) Slice(i, j int) pixel.Triangles {
 	return &glTriangles{
 		vs:     gt.vs.Slice(i, j),
 		data:   gt.data[i*gt.vs.Stride() : j*gt.vs.Stride()],
@@ -62,7 +63,7 @@ func (gt *glTriangles) Slice(i, j int) Triangles {
 	}
 }
 
-func (gt *glTriangles) updateData(t Triangles) {
+func (gt *glTriangles) updateData(t pixel.Triangles) {
 	// glTriangles short path
 	if t, ok := t.(*glTriangles); ok {
 		copy(gt.data, t.data)
@@ -70,7 +71,7 @@ func (gt *glTriangles) updateData(t Triangles) {
 	}
 
 	// TrianglesData short path
-	if t, ok := t.(*TrianglesData); ok {
+	if t, ok := t.(*pixel.TrianglesData); ok {
 		for i := 0; i < gt.Len(); i++ {
 			var (
 				px, py = (*t)[i].Position.XY()
@@ -89,14 +90,14 @@ func (gt *glTriangles) updateData(t Triangles) {
 		return
 	}
 
-	if t, ok := t.(TrianglesPosition); ok {
+	if t, ok := t.(pixel.TrianglesPosition); ok {
 		for i := 0; i < gt.Len(); i++ {
 			px, py := t.Position(i).XY()
 			gt.data[i*gt.vs.Stride()+0] = float32(px)
 			gt.data[i*gt.vs.Stride()+1] = float32(py)
 		}
 	}
-	if t, ok := t.(TrianglesColor); ok {
+	if t, ok := t.(pixel.TrianglesColor); ok {
 		for i := 0; i < gt.Len(); i++ {
 			col := t.Color(i)
 			gt.data[i*gt.vs.Stride()+2] = float32(col.R)
@@ -105,7 +106,7 @@ func (gt *glTriangles) updateData(t Triangles) {
 			gt.data[i*gt.vs.Stride()+5] = float32(col.A)
 		}
 	}
-	if t, ok := t.(TrianglesTexture); ok {
+	if t, ok := t.(pixel.TrianglesTexture); ok {
 		for i := 0; i < gt.Len(); i++ {
 			tx, ty := t.Texture(i).XY()
 			gt.data[i*gt.vs.Stride()+6] = float32(tx)
@@ -125,7 +126,7 @@ func (gt *glTriangles) submitData() {
 	})
 }
 
-func (gt *glTriangles) Update(t Triangles) {
+func (gt *glTriangles) Update(t pixel.Triangles) {
 	if gt.Len() != t.Len() {
 		panic(fmt.Errorf("%T.Update: invalid triangles len", gt))
 	}
@@ -133,7 +134,7 @@ func (gt *glTriangles) Update(t Triangles) {
 	gt.submitData()
 }
 
-func (gt *glTriangles) Copy() Triangles {
+func (gt *glTriangles) Copy() pixel.Triangles {
 	return NewGLTriangles(gt.shader, gt)
 }
 
@@ -143,18 +144,18 @@ func (gt *glTriangles) Draw() {
 	gt.vs.End()
 }
 
-func (gt *glTriangles) Position(i int) Vec {
+func (gt *glTriangles) Position(i int) pixel.Vec {
 	px := gt.data[i*gt.vs.Stride()+0]
 	py := gt.data[i*gt.vs.Stride()+1]
-	return V(float64(px), float64(py))
+	return pixel.V(float64(px), float64(py))
 }
 
-func (gt *glTriangles) Color(i int) NRGBA {
+func (gt *glTriangles) Color(i int) pixel.NRGBA {
 	r := gt.data[i*gt.vs.Stride()+2]
 	g := gt.data[i*gt.vs.Stride()+3]
 	b := gt.data[i*gt.vs.Stride()+4]
 	a := gt.data[i*gt.vs.Stride()+5]
-	return NRGBA{
+	return pixel.NRGBA{
 		R: float64(r),
 		G: float64(g),
 		B: float64(b),
@@ -162,8 +163,8 @@ func (gt *glTriangles) Color(i int) NRGBA {
 	}
 }
 
-func (gt *glTriangles) Texture(i int) Vec {
+func (gt *glTriangles) Texture(i int) pixel.Vec {
 	tx := gt.data[i*gt.vs.Stride()+6]
 	ty := gt.data[i*gt.vs.Stride()+7]
-	return V(float64(tx), float64(ty))
+	return pixel.V(float64(tx), float64(ty))
 }

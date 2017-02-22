@@ -1,4 +1,4 @@
-package pixel
+package pixelgl
 
 import (
 	"github.com/faiface/mainthread"

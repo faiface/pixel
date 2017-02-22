@@ -1,7 +1,8 @@
-package pixel
+package pixelgl
 
 import (
 	"github.com/faiface/mainthread"
+	"github.com/faiface/pixel"
 	"github.com/go-gl/glfw/v3.2/glfw"
 )
 
@@ -21,7 +22,7 @@ func (w *Window) JustReleased(button Button) bool {
 }
 
 // MousePosition returns the current mouse position relative to the window.
-func (w *Window) MousePosition() Vec {
+func (w *Window) MousePosition() pixel.Vec {
 	var x, y, width, height float64
 	mainthread.Call(func() {
 		x, y = w.window.GetCursorPos()
@@ -33,11 +34,11 @@ func (w *Window) MousePosition() Vec {
 	x = (x - width/2) / (width / 2)
 	y = (height/2 - y) / (height / 2)
 
-	return V(x, y)
+	return pixel.V(x, y)
 }
 
 // MouseScroll returns the scroll amount (in both axis) since the last call to Window.Update.
-func (w *Window) MouseScroll() Vec {
+func (w *Window) MouseScroll() pixel.Vec {
 	return w.currInp.scroll
 }
 
@@ -348,7 +349,7 @@ func (w *Window) initInput() {
 		})
 
 		w.window.SetScrollCallback(func(_ *glfw.Window, xoff, yoff float64) {
-			w.currInp.scroll += V(xoff, yoff)
+			w.currInp.scroll += pixel.V(xoff, yoff)
 		})
 	})
 }
