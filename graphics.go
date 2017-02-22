@@ -162,12 +162,12 @@ func (td *TrianglesDrawer) Dirty() {
 type Sprite struct {
 	data TrianglesData
 	td   TrianglesDrawer
-	pic  *Picture
+	pic  *GLPicture
 }
 
 // NewSprite creates a Sprite with the supplied Picture. The dimensions of the returned Sprite match
 // the dimensions of the Picture.
-func NewSprite(pic *Picture) *Sprite {
+func NewSprite(pic *GLPicture) *Sprite {
 	s := &Sprite{
 		data: TrianglesData{
 			{Position: V(0, 0), Color: NRGBA{1, 1, 1, 1}, Texture: V(0, 0)},
@@ -184,7 +184,7 @@ func NewSprite(pic *Picture) *Sprite {
 }
 
 // SetPicture changes the Picture of the Sprite and resizes it accordingly.
-func (s *Sprite) SetPicture(pic *Picture) {
+func (s *Sprite) SetPicture(pic *GLPicture) {
 	oldPic := s.pic
 	s.pic = pic
 	if oldPic != nil && oldPic.Bounds().Size == pic.Bounds().Size {
@@ -201,7 +201,7 @@ func (s *Sprite) SetPicture(pic *Picture) {
 }
 
 // Picture returns the current Picture of the Sprite.
-func (s *Sprite) Picture() *Picture {
+func (s *Sprite) Picture() *GLPicture {
 	return s.pic
 }
 

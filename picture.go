@@ -8,18 +8,18 @@ import (
 	"github.com/faiface/mainthread"
 )
 
-// Picture is a raster picture. It is usually used with sprites.
+// GLPicture is a raster picture. It is usually used with sprites.
 //
-// A Picture is created from an image.Image, that can be either loaded from a file, or
-// generated. After the creation, Pictures can be sliced (slicing creates a "sub-Picture"
-// from a Picture) into smaller Pictures.
-type Picture struct {
+// A GLPicture is created from an image.Image, that can be either loaded from a file, or
+// generated. After the creation, Pictures can be sliced (slicing creates a "sub-GLPicture"
+// from a GLPicture) into smaller Pictures.
+type GLPicture struct {
 	tex    *glhf.Texture
 	bounds Rect
 }
 
 // NewPicture creates a new Picture from an image.Image.
-func NewPicture(img image.Image, smooth bool) *Picture {
+func NewPicture(img image.Image, smooth bool) *GLPicture {
 	// convert the image to NRGBA format
 	bounds := img.Bounds()
 	nrgba := image.NewNRGBA(image.Rect(0, 0, bounds.Dx(), bounds.Dy()))
@@ -49,8 +49,8 @@ func NewPicture(img image.Image, smooth bool) *Picture {
 }
 
 // PictureFromTexture returns a new Picture that spans the whole supplied Texture.
-func PictureFromTexture(tex *glhf.Texture) *Picture {
-	return &Picture{
+func PictureFromTexture(tex *glhf.Texture) *GLPicture {
+	return &GLPicture{
 		tex:    tex,
 		bounds: R(0, 0, float64(tex.Width()), float64(tex.Height())),
 	}
@@ -59,7 +59,7 @@ func PictureFromTexture(tex *glhf.Texture) *Picture {
 // Image returns the content of the Picture as an image.NRGBA.
 //
 // Note, that this operation can be rather expensive.
-func (p *Picture) Image() *image.NRGBA {
+func (p *GLPicture) Image() *image.NRGBA {
 	bounds := p.Bounds()
 	nrgba := image.NewNRGBA(image.Rect(0, 0, int(bounds.W()), int(bounds.H())))
 
@@ -88,7 +88,7 @@ func (p *Picture) Image() *image.NRGBA {
 }
 
 // Texture returns a pointer to the underlying OpenGL texture of the Picture.
-func (p *Picture) Texture() *glhf.Texture {
+func (p *GLPicture) Texture() *glhf.Texture {
 	return p.tex
 }
 
@@ -97,8 +97,8 @@ func (p *Picture) Texture() *glhf.Texture {
 //
 // For example, suppose we have a 100x200 pixels Picture. If we slice it with rectangle (50,
 // 100, 50, 100), we get the upper-right quadrant of the original Picture.
-func (p *Picture) Slice(slice Rect) *Picture {
-	return &Picture{
+func (p *GLPicture) Slice(slice Rect) *GLPicture {
+	return &GLPicture{
 		tex:    p.tex,
 		bounds: Rect{p.bounds.Pos + slice.Pos, slice.Size},
 	}
@@ -108,6 +108,6 @@ func (p *Picture) Slice(slice Rect) *Picture {
 //
 // If the original Picture was sliced with the return value of this method, this Picture would
 // be obtained.
-func (p *Picture) Bounds() Rect {
+func (p *GLPicture) Bounds() Rect {
 	return p.bounds
 }

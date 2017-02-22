@@ -22,7 +22,7 @@ type Canvas struct {
 
 	drawTd pixel.TrianglesDrawer
 
-	pic *pixel.Picture
+	pic *pixel.GLPicture
 	mat mgl32.Mat3
 	col mgl32.Vec4
 	bnd mgl32.Vec4
@@ -109,7 +109,7 @@ func (c *Canvas) Size() (width, height float64) {
 // Content returns a Picture that contains the content of this Canvas. The returned Picture changes
 // as you draw onto the Canvas, so there is no real need to call this method more than once (but it
 // might be beneficial to your code to do so).
-func (c *Canvas) Content() *pixel.Picture {
+func (c *Canvas) Content() *pixel.GLPicture {
 	return pixel.PictureFromTexture(c.f.Texture())
 }
 
@@ -142,7 +142,7 @@ func (c *Canvas) MakeTriangles(t pixel.Triangles) pixel.TargetTriangles {
 // SetPicture sets a Picture that will be used in further draw operations.
 //
 // This does not set the Picture that this Canvas draws onto, don't confuse it.
-func (c *Canvas) SetPicture(p *pixel.Picture) {
+func (c *Canvas) SetPicture(p *pixel.GLPicture) {
 	if p != nil {
 		min := pictureBounds(p, pixel.V(0, 0))
 		max := pictureBounds(p, pixel.V(1, 1))

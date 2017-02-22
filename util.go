@@ -31,7 +31,7 @@ func transformToMat(t ...Transform) mgl32.Mat3 {
 	return mat
 }
 
-func pictureBounds(p *Picture, v Vec) Vec {
+func pictureBounds(p *GLPicture, v Vec) Vec {
 	w, h := float64(p.Texture().Width()), float64(p.Texture().Height())
 	a := p.Bounds().Pos
 	b := p.Bounds().Pos + p.Bounds().Size

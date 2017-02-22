@@ -374,7 +374,7 @@ func (w *Window) MakeTriangles(t pixel.Triangles) pixel.TargetTriangles {
 }
 
 // SetPicture sets a Picture that will be used in subsequent drawings onto the Window.
-func (w *Window) SetPicture(p *pixel.Picture) {
+func (w *Window) SetPicture(p *pixel.GLPicture) {
 	w.canvas.SetPicture(p)
 }
 

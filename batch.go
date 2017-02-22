@@ -13,9 +13,9 @@ import (
 //   object.Draw(batch)
 type Batch struct {
 	cont   TrianglesDrawer
-	fixpic *Picture
+	fixpic *GLPicture
 
-	pic *Picture
+	pic *GLPicture
 	mat mgl32.Mat3
 	col NRGBA
 }
@@ -26,7 +26,7 @@ type Batch struct {
 // properties, that the supplied container supports.
 //
 // Note, that if the container does not support TrianglesColor, color masking will not work.
-func NewBatch(pic *Picture, container Triangles) *Batch {
+func NewBatch(pic *GLPicture, container Triangles) *Batch {
 	return &Batch{
 		cont:   TrianglesDrawer{Triangles: container},
 		fixpic: pic,
@@ -58,7 +58,7 @@ func (b *Batch) MakeTriangles(t Triangles) TargetTriangles {
 // SetPicture sets the current Picture that will be used with the following draws. The original
 // Picture of this Picture (the one from which p was obtained by slicing) must be same as the
 // original Picture of the Batch's Picture.
-func (b *Batch) SetPicture(p *Picture) {
+func (b *Batch) SetPicture(p *GLPicture) {
 	if p != nil && p.Texture() != b.fixpic.Texture() {
 		panic("batch: attempted to draw with a different underlying Picture")
 	}
