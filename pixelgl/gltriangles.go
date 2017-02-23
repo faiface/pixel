@@ -76,7 +76,7 @@ func (gt *glTriangles) updateData(t pixel.Triangles) {
 			var (
 				px, py = (*t)[i].Position.XY()
 				col    = (*t)[i].Color
-				tx, ty = (*t)[i].Texture.XY()
+				tx, ty = (*t)[i].Picture.XY()
 			)
 			gt.data[i*gt.vs.Stride()+0] = float32(px)
 			gt.data[i*gt.vs.Stride()+1] = float32(py)
@@ -106,9 +106,9 @@ func (gt *glTriangles) updateData(t pixel.Triangles) {
 			gt.data[i*gt.vs.Stride()+5] = float32(col.A)
 		}
 	}
-	if t, ok := t.(pixel.TrianglesTexture); ok {
+	if t, ok := t.(pixel.TrianglesPicture); ok {
 		for i := 0; i < gt.Len(); i++ {
-			tx, ty := t.Texture(i).XY()
+			tx, ty := t.Picture(i).XY()
 			gt.data[i*gt.vs.Stride()+6] = float32(tx)
 			gt.data[i*gt.vs.Stride()+7] = float32(ty)
 		}

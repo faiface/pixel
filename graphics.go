@@ -10,7 +10,7 @@ import (
 type TrianglesData []struct {
 	Position Vec
 	Color    NRGBA
-	Texture  Vec
+	Picture  Vec
 }
 
 // MakeTrianglesData creates TrianglesData of length len initialized with default property values.
@@ -39,7 +39,7 @@ func (td *TrianglesData) SetLen(len int) {
 			*td = append(*td, struct {
 				Position Vec
 				Color    NRGBA
-				Texture  Vec
+				Picture  Vec
 			}{V(0, 0), NRGBA{1, 1, 1, 1}, V(-1, -1)})
 		}
 	}
@@ -72,9 +72,9 @@ func (td *TrianglesData) updateData(t Triangles) {
 			(*td)[i].Color = t.Color(i)
 		}
 	}
-	if t, ok := t.(TrianglesTexture); ok {
+	if t, ok := t.(TrianglesPicture); ok {
 		for i := range *td {
-			(*td)[i].Texture = t.Texture(i)
+			(*td)[i].Picture = t.Picture(i)
 		}
 	}
 }
@@ -107,54 +107,9 @@ func (td *TrianglesData) Color(i int) NRGBA {
 	return (*td)[i].Color
 }
 
-// Texture returns the texture property of i-th vertex.
-func (td *TrianglesData) Texture(i int) Vec {
-	return (*td)[i].Texture
-}
-
-// TrianglesDrawer is a helper type that wraps Triangles and turns them into a Drawer.
-//
-// It does so by creating a separate Triangles instance for each Target. The instances are
-// correctly updated alongside the wrapped Triangles.
-type TrianglesDrawer struct {
-	Triangles
-
-	tris  map[Target]TargetTriangles
-	dirty bool
-}
-
-func (td *TrianglesDrawer) flush() {
-	if !td.dirty {
-		return
-	}
-	td.dirty = false
-
-	for _, t := range td.tris {
-		t.SetLen(td.Len())
-		t.Update(td.Triangles)
-	}
-}
-
-// Draw draws the wrapped Triangles onto the provided Target.
-func (td *TrianglesDrawer) Draw(target Target) {
-	if td.tris == nil {
-		td.tris = make(map[Target]TargetTriangles)
-	}
-
-	td.flush()
-
-	tri := td.tris[target]
-	if tri == nil {
-		tri = target.MakeTriangles(td.Triangles)
-		td.tris[target] = tri
-	}
-	tri.Draw()
-}
-
-// Dirty marks the underlying container as changed (dirty). Always call this when you change the
-// underlying Triangles (by Update, SetLen, etc.).
-func (td *TrianglesDrawer) Dirty() {
-	td.dirty = true
+// Picture returns the picture property of i-th vertex.
+func (td *TrianglesData) Picture(i int) Vec {
+	return (*td)[i].Picture
 }
 
 // Sprite is a picture that can be drawn onto a Target. To change the position/rotation/scale of
@@ -170,12 +125,12 @@ type Sprite struct {
 func NewSprite(pic *GLPicture) *Sprite {
 	s := &Sprite{
 		data: TrianglesData{
-			{Position: V(0, 0), Color: NRGBA{1, 1, 1, 1}, Texture: V(0, 0)},
-			{Position: V(0, 0), Color: NRGBA{1, 1, 1, 1}, Texture: V(1, 0)},
-			{Position: V(0, 0), Color: NRGBA{1, 1, 1, 1}, Texture: V(1, 1)},
-			{Position: V(0, 0), Color: NRGBA{1, 1, 1, 1}, Texture: V(0, 0)},
-			{Position: V(0, 0), Color: NRGBA{1, 1, 1, 1}, Texture: V(1, 1)},
-			{Position: V(0, 0), Color: NRGBA{1, 1, 1, 1}, Texture: V(0, 1)},
+			{Position: V(0, 0), Color: NRGBA{1, 1, 1, 1}, Picture: V(0, 0)},
+			{Position: V(0, 0), Color: NRGBA{1, 1, 1, 1}, Picture: V(1, 0)},
+			{Position: V(0, 0), Color: NRGBA{1, 1, 1, 1}, Picture: V(1, 1)},
+			{Position: V(0, 0), Color: NRGBA{1, 1, 1, 1}, Picture: V(0, 0)},
+			{Position: V(0, 0), Color: NRGBA{1, 1, 1, 1}, Picture: V(1, 1)},
+			{Position: V(0, 0), Color: NRGBA{1, 1, 1, 1}, Picture: V(0, 1)},
 		},
 	}
 	s.td = TrianglesDrawer{Triangles: &s.data}
@@ -207,7 +162,6 @@ func (s *Sprite) Picture() *GLPicture {
 
 // Draw draws the Sprite onto the provided Target.
 func (s *Sprite) Draw(t Target) {
-	t.SetPicture(s.pic)
 	s.td.Draw(t)
 }
 
@@ -277,6 +231,5 @@ func (p *Polygon) Points() []Vec {
 
 // Draw draws the Polygon onto the Target.
 func (p *Polygon) Draw(t Target) {
-	t.SetPicture(nil)
 	p.td.Draw(t)
 }

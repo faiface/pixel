@@ -41,7 +41,6 @@ func (b *Batch) Clear() {
 
 // Draw draws all objects that are currently in the Batch onto another Target.
 func (b *Batch) Draw(t Target) {
-	t.SetPicture(b.fixpic)
 	b.cont.Draw(t)
 }
 
@@ -98,8 +97,8 @@ func (bt *batchTriangles) Draw() {
 		})
 		bt.data[i].Position = V(float64(transPos.X()), float64(transPos.Y()))
 		bt.data[i].Color = bt.data[i].Color.Mul(bt.batch.col)
-		if bt.batch.pic != nil && bt.data[i].Texture != V(-1, -1) {
-			bt.data[i].Texture = pictureBounds(bt.batch.pic, bt.data[i].Texture)
+		if bt.batch.pic != nil && bt.data[i].Picture != V(-1, -1) {
+			bt.data[i].Picture = pictureBounds(bt.batch.pic, bt.data[i].Picture)
 		}
 	}
 	bt.trans.Update(&bt.data)

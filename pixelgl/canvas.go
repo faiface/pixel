@@ -59,12 +59,12 @@ func NewCanvas(width, height float64, smooth bool) *Canvas {
 
 	white := pixel.NRGBA{R: 1, G: 1, B: 1, A: 1}
 	c.drawTd = pixel.TrianglesDrawer{Triangles: &pixel.TrianglesData{
-		{Position: pixel.V(-1, -1), Color: white, Texture: pixel.V(0, 0)},
-		{Position: pixel.V(1, -1), Color: white, Texture: pixel.V(1, 0)},
-		{Position: pixel.V(1, 1), Color: white, Texture: pixel.V(1, 1)},
-		{Position: pixel.V(-1, -1), Color: white, Texture: pixel.V(0, 0)},
-		{Position: pixel.V(1, 1), Color: white, Texture: pixel.V(1, 1)},
-		{Position: pixel.V(-1, 1), Color: white, Texture: pixel.V(0, 1)},
+		{Position: pixel.V(-1, -1), Color: white, Picture: pixel.V(0, 0)},
+		{Position: pixel.V(1, -1), Color: white, Picture: pixel.V(1, 0)},
+		{Position: pixel.V(1, 1), Color: white, Picture: pixel.V(1, 1)},
+		{Position: pixel.V(-1, -1), Color: white, Picture: pixel.V(0, 0)},
+		{Position: pixel.V(1, 1), Color: white, Picture: pixel.V(1, 1)},
+		{Position: pixel.V(-1, 1), Color: white, Picture: pixel.V(0, 1)},
 	}}
 
 	c.pic = nil
@@ -126,7 +126,6 @@ func (c *Canvas) Clear(col color.Color) {
 // Draw draws the content of the Canvas onto another Target. If no transform is applied, the content
 // is fully stretched to fit the Target.
 func (c *Canvas) Draw(t pixel.Target) {
-	t.SetPicture(c.Content())
 	c.drawTd.Draw(t)
 }
 
