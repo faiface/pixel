@@ -2,6 +2,7 @@ package pixel
 
 import (
 	"image/color"
+	"math"
 
 	"github.com/go-gl/mathgl/mgl32"
 )
@@ -12,13 +13,13 @@ import (
 // To put an object into a Batch, just draw it onto it:
 //   object.Draw(batch)
 type Batch struct {
-	cont   TrianglesDrawer
-	fixpic *GLPicture
+	cont Drawer
 
-	pic *GLPicture
 	mat mgl32.Mat3
 	col NRGBA
 }
+
+var _ BasicTarget = (*Batch)(nil)
 
 // NewBatch creates an empty Batch with the specified Picture and container.
 //
@@ -26,16 +27,15 @@ type Batch struct {
 // properties, that the supplied container supports.
 //
 // Note, that if the container does not support TrianglesColor, color masking will not work.
-func NewBatch(pic *GLPicture, container Triangles) *Batch {
+func NewBatch(container Triangles, pic Picture) *Batch {
 	return &Batch{
-		cont:   TrianglesDrawer{Triangles: container},
-		fixpic: pic,
+		cont: Drawer{Triangles: container, Picture: pic},
 	}
 }
 
 // Clear removes all objects from the Batch.
 func (b *Batch) Clear() {
-	b.cont.SetLen(0)
+	b.cont.Triangles.SetLen(0)
 	b.cont.Dirty()
 }
 
@@ -44,33 +44,13 @@ func (b *Batch) Draw(t Target) {
 	b.cont.Draw(t)
 }
 
-// MakeTriangles returns a specialized copy of the provided Triangles, that draws onto this Batch.
-func (b *Batch) MakeTriangles(t Triangles) TargetTriangles {
-	return &batchTriangles{
-		Triangles: t.Copy(),
-		trans:     t.Copy(),
-		data:      MakeTrianglesData(t.Len()),
-		batch:     b,
-	}
-}
-
-// SetPicture sets the current Picture that will be used with the following draws. The original
-// Picture of this Picture (the one from which p was obtained by slicing) must be same as the
-// original Picture of the Batch's Picture.
-func (b *Batch) SetPicture(p *GLPicture) {
-	if p != nil && p.Texture() != b.fixpic.Texture() {
-		panic("batch: attempted to draw with a different underlying Picture")
-	}
-	b.pic = p
-}
-
 // SetTransform sets transforms used in the following draws onto the Batch.
 func (b *Batch) SetTransform(t ...Transform) {
 	b.mat = transformToMat(t...)
 }
 
-// SetMaskColor sets a mask color used in the following draws onto the Batch.
-func (b *Batch) SetMaskColor(c color.Color) {
+// SetColorMask sets a mask color used in the following draws onto the Batch.
+func (b *Batch) SetColorMask(c color.Color) {
 	if c == nil {
 		b.col = NRGBA{1, 1, 1, 1}
 		return
@@ -78,33 +58,69 @@ func (b *Batch) SetMaskColor(c color.Color) {
 	b.col = NRGBAModel.Convert(c).(NRGBA)
 }
 
+// MakeTriangles returns a specialized copy of the provided Triangles that draws onto this Batch.
+func (b *Batch) MakeTriangles(t Triangles) TargetTriangles {
+	bt := &batchTriangles{
+		Triangles: t.Copy(),
+		orig:      MakeTrianglesData(t.Len()),
+		trans:     MakeTrianglesData(t.Len()),
+		b:         b,
+	}
+	bt.orig.Update(t)
+	bt.trans.Update(&bt.orig)
+	return bt
+}
+
+// MakePicture returns a specialized copy of the provided Picture that draws onto this Batch.
+func (b *Batch) MakePicture(p Picture) TargetPicture {
+	return &batchPicture{
+		Picture: p,
+	}
+}
+
 type batchTriangles struct {
 	Triangles
-	trans Triangles
-	data  TrianglesData
+	orig, trans TrianglesData
 
-	batch *Batch
+	b *Batch
+}
+
+func (bt *batchTriangles) draw(bp *batchPicture) {
+	for i := range bt.trans {
+		transPos := bt.b.mat.Mul3x1(mgl32.Vec3{
+			float32(bt.orig[i].Position.X()),
+			float32(bt.orig[i].Position.Y()),
+			1,
+		})
+		bt.trans[i].Position = V(float64(transPos.X()), float64(transPos.Y()))
+		bt.trans[i].Color = bt.orig[i].Color.Mul(bt.b.col)
+		if bp == nil {
+			bt.trans[i].Picture = V(math.Inf(+1), math.Inf(+1))
+		}
+	}
+
+	bt.Triangles.Update(&bt.trans)
+
+	cont := bt.b.cont.Triangles
+	cont.SetLen(cont.Len() + bt.Triangles.Len())
+	cont.Slice(cont.Len()-bt.Triangles.Len(), cont.Len()).Update(bt.Triangles)
+	bt.b.cont.Dirty()
 }
 
 func (bt *batchTriangles) Draw() {
-	// need to apply transforms and mask color and picture bounds
-	bt.data.Update(bt.Triangles)
-	for i := range bt.data {
-		transPos := bt.batch.mat.Mul3x1(mgl32.Vec3{
-			float32(bt.data[i].Position.X()),
-			float32(bt.data[i].Position.Y()),
-			1,
-		})
-		bt.data[i].Position = V(float64(transPos.X()), float64(transPos.Y()))
-		bt.data[i].Color = bt.data[i].Color.Mul(bt.batch.col)
-		if bt.batch.pic != nil && bt.data[i].Picture != V(-1, -1) {
-			bt.data[i].Picture = pictureBounds(bt.batch.pic, bt.data[i].Picture)
-		}
-	}
-	bt.trans.Update(&bt.data)
+	bt.draw(nil)
+}
 
-	cont := bt.batch.cont
-	cont.SetLen(cont.Len() + bt.trans.Len())
-	cont.Slice(cont.Len()-bt.trans.Len(), cont.Len()).Update(bt.trans)
-	cont.Dirty()
+type batchPicture struct {
+	Picture
+}
+
+func (bp *batchPicture) Slice(r Rect) Picture {
+	return &batchPicture{
+		Picture: bp.Picture.Slice(r),
+	}
+}
+
+func (bp *batchPicture) Draw(t TargetTriangles) {
+	t.(*batchTriangles).draw(bp)
 }
