@@ -129,5 +129,6 @@ type TargetPicture interface {
 //
 // Positions outside the Picture's Bounds must return opaque white (NRGBA{R: 1, G: 1, B:1, A: 1}).
 type PictureColor interface {
+	Picture
 	Color(at Vec) NRGBA
 }
