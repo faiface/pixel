@@ -2,21 +2,33 @@ package pixelgl
 
 import (
 	"fmt"
+	"math"
 
 	"github.com/faiface/glhf"
 	"github.com/faiface/mainthread"
 	"github.com/faiface/pixel"
 )
 
-// NewGLTriangles returns OpenGL triangles implemented using glhf.VertexSlice. A few notes.
+// GLTriangles are OpenGL triangles implemented using glhf.VertexSlice.
 //
 // Triangles returned from this function support TrianglesPosition, TrianglesColor and
 // TrianglesTexture. If you need to support more, you can "override" SetLen and Update method.
+type GLTriangles struct {
+	vs     *glhf.VertexSlice
+	data   []float32
+	shader *glhf.Shader
+}
+
+var (
+	_ pixel.TrianglesPosition = (*GLTriangles)(nil)
+	_ pixel.TrianglesColor    = (*GLTriangles)(nil)
+	_ pixel.TrianglesPicture  = (*GLTriangles)(nil)
+)
+
+// NewGLTriangles returns GLTriangles initialized with the data from the supplied Triangles.
 //
-// Draw method simply draws the underlying glhf.VertexSlice. It needs to be called in the main
-// thread manually. Also, you need to take care of additional Target initialization or setting of
-// uniform attributes.
-func NewGLTriangles(shader *glhf.Shader, t pixel.Triangles) pixel.TargetTriangles {
+// Only draw the Triangles using the provided Shader.
+func NewGLTriangles(shader *glhf.Shader, t pixel.Triangles) *GLTriangles {
 	var gt *glTriangles
 	mainthread.Call(func() {
 		gt = &glTriangles{
@@ -29,24 +41,32 @@ func NewGLTriangles(shader *glhf.Shader, t pixel.Triangles) pixel.TargetTriangle
 	return gt
 }
 
-type glTriangles struct {
-	vs     *glhf.VertexSlice
-	data   []float32
-	shader *glhf.Shader
+// VertexSlice returns the VertexSlice of this GLTriangles.
+//
+// You can use it to draw them.
+func (gt *GLTriangles) VertexSlice() *glhf.VertexSlice {
+	return gt.vs
 }
 
-func (gt *glTriangles) Len() int {
+// Shader returns the GLTriangles's associated shader.
+func (gt *GLTriangles) Shader() *glhf.Shader {
+	return gt.shader
+}
+
+// Len returns the number of vertices.
+func (gt *GLTriangles) Len() int {
 	return len(gt.data) / gt.vs.Stride()
 }
 
-func (gt *glTriangles) SetLen(len int) {
+// SetLen efficiently resizes GLTriangles to len.
+func (gt *GLTriangles) SetLen(len int) {
 	if len > gt.Len() {
 		needAppend := len - gt.Len()
 		for i := 0; i < needAppend; i++ {
 			gt.data = append(gt.data,
 				0, 0,
 				1, 1, 1, 1,
-				-1, -1,
+				float32(math.Inf(+1)), float32(math.Inf(+1)),
 			)
 		}
 	}
@@ -55,7 +75,8 @@ func (gt *glTriangles) SetLen(len int) {
 	}
 }
 
-func (gt *glTriangles) Slice(i, j int) pixel.Triangles {
+// Slice returns a sub-Triangles of this GLTriangles in range [i, j).
+func (gt *GLTriangles) Slice(i, j int) pixel.Triangles {
 	return &glTriangles{
 		vs:     gt.vs.Slice(i, j),
 		data:   gt.data[i*gt.vs.Stride() : j*gt.vs.Stride()],
@@ -63,7 +84,7 @@ func (gt *glTriangles) Slice(i, j int) pixel.Triangles {
 	}
 }
 
-func (gt *glTriangles) updateData(t pixel.Triangles) {
+func (gt *GLTriangles) updateData(t pixel.Triangles) {
 	// glTriangles short path
 	if t, ok := t.(*glTriangles); ok {
 		copy(gt.data, t.data)
@@ -115,7 +136,7 @@ func (gt *glTriangles) updateData(t pixel.Triangles) {
 	}
 }
 
-func (gt *glTriangles) submitData() {
+func (gt *GLTriangles) submitData() {
 	data := gt.data // avoid race condition
 	mainthread.CallNonBlock(func() {
 		gt.vs.Begin()
@@ -126,7 +147,10 @@ func (gt *glTriangles) submitData() {
 	})
 }
 
-func (gt *glTriangles) Update(t pixel.Triangles) {
+// Update copies vertex properties from the supplied Triangles into this GLTriangles.
+//
+// The two Triangles (gt and t) must be of the same len.
+func (gt *GLTriangles) Update(t pixel.Triangles) {
 	if gt.Len() != t.Len() {
 		panic(fmt.Errorf("%T.Update: invalid triangles len", gt))
 	}
@@ -134,23 +158,22 @@ func (gt *glTriangles) Update(t pixel.Triangles) {
 	gt.submitData()
 }
 
-func (gt *glTriangles) Copy() pixel.Triangles {
+// Copy returns an independent copy of this GLTriangles.
+//
+// The returned Triangles are GLTriangles as the underlying type.
+func (gt *GLTriangles) Copy() pixel.Triangles {
 	return NewGLTriangles(gt.shader, gt)
 }
 
-func (gt *glTriangles) Draw() {
-	gt.vs.Begin()
-	gt.vs.Draw()
-	gt.vs.End()
-}
-
-func (gt *glTriangles) Position(i int) pixel.Vec {
+// Position returns the Position property of the i-th vertex.
+func (gt *GLTriangles) Position(i int) pixel.Vec {
 	px := gt.data[i*gt.vs.Stride()+0]
 	py := gt.data[i*gt.vs.Stride()+1]
 	return pixel.V(float64(px), float64(py))
 }
 
-func (gt *glTriangles) Color(i int) pixel.NRGBA {
+// Color returns the Color property of the i-th vertex.
+func (gt *GLTriangles) Color(i int) pixel.NRGBA {
 	r := gt.data[i*gt.vs.Stride()+2]
 	g := gt.data[i*gt.vs.Stride()+3]
 	b := gt.data[i*gt.vs.Stride()+4]
@@ -163,7 +186,8 @@ func (gt *glTriangles) Color(i int) pixel.NRGBA {
 	}
 }
 
-func (gt *glTriangles) Texture(i int) pixel.Vec {
+// Picture returns the Picture property of the i-th vertex.
+func (gt *GLTriangles) Picture(i int) pixel.Vec {
 	tx := gt.data[i*gt.vs.Stride()+6]
 	ty := gt.data[i*gt.vs.Stride()+7]
 	return pixel.V(float64(tx), float64(ty))
