@@ -12,9 +12,10 @@ type Monitor struct {
 
 // PrimaryMonitor returns the main monitor (usually the one with the taskbar and stuff).
 func PrimaryMonitor() *Monitor {
-	monitor := mainthread.CallVal(func() interface{} {
-		return glfw.GetPrimaryMonitor()
-	}).(*glfw.Monitor)
+	var monitor *glfw.Monitor
+	mainthread.Call(func() {
+		monitor = glfw.GetPrimaryMonitor()
+	})
 	return &Monitor{
 		monitor: monitor,
 	}
@@ -33,9 +34,10 @@ func Monitors() []*Monitor {
 
 // Name returns a human-readable name of the Monitor.
 func (m *Monitor) Name() string {
-	name := mainthread.CallVal(func() interface{} {
-		return m.monitor.GetName()
-	}).(string)
+	var name string
+	mainthread.Call(func() {
+		name = m.monitor.GetName()
+	})
 	return name
 }
 
@@ -63,9 +65,10 @@ func (m *Monitor) Position() (x, y float64) {
 
 // Size returns the resolution of the Monitor in pixels.
 func (m *Monitor) Size() (width, height float64) {
-	mode := mainthread.CallVal(func() interface{} {
-		return m.monitor.GetVideoMode()
-	}).(*glfw.VidMode)
+	var mode *glfw.VidMode
+	mainthread.Call(func() {
+		mode = m.monitor.GetVideoMode()
+	})
 	width = float64(mode.Width)
 	height = float64(mode.Height)
 	return
@@ -73,9 +76,10 @@ func (m *Monitor) Size() (width, height float64) {
 
 // BitDepth returns the number of bits per color of the Monitor.
 func (m *Monitor) BitDepth() (red, green, blue int) {
-	mode := mainthread.CallVal(func() interface{} {
-		return m.monitor.GetVideoMode()
-	}).(*glfw.VidMode)
+	var mode *glfw.VidMode
+	mainthread.Call(func() {
+		mode = m.monitor.GetVideoMode()
+	})
 	red = mode.RedBits
 	green = mode.GreenBits
 	blue = mode.BlueBits
@@ -84,9 +88,10 @@ func (m *Monitor) BitDepth() (red, green, blue int) {
 
 // RefreshRate returns the refresh frequency of the Monitor in Hz (refreshes/second).
 func (m *Monitor) RefreshRate() (rate float64) {
-	mode := mainthread.CallVal(func() interface{} {
-		return m.monitor.GetVideoMode()
-	}).(*glfw.VidMode)
+	var mode *glfw.VidMode
+	mainthread.Call(func() {
+		mode = m.monitor.GetVideoMode()
+	})
 	rate = float64(mode.RefreshRate)
 	return
 }
