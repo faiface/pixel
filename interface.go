@@ -6,8 +6,6 @@ import "image/color"
 //
 // You can notice, that there are no "drawing" methods in a Target. That's because all drawing
 // happens indirectly through Triangles instance generated via MakeTriangles method.
-//
-// If no transforms are applied, the drawing area of a Target is the rectangle (-1, -1, +1, +1).
 type Target interface {
 	// MakeTriangles generates a specialized copy of the provided Triangles.
 	//
