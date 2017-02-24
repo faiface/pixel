@@ -116,13 +116,12 @@ func (td *TrianglesData) Picture(i int) Vec {
 // the Sprite, use Target's SetTransform method.
 type Sprite struct {
 	data TrianglesData
-	td   TrianglesDrawer
-	pic  *GLPicture
+	d    Drawer
 }
 
 // NewSprite creates a Sprite with the supplied Picture. The dimensions of the returned Sprite match
 // the dimensions of the Picture.
-func NewSprite(pic *GLPicture) *Sprite {
+func NewSprite(pic Picture) *Sprite {
 	s := &Sprite{
 		data: TrianglesData{
 			{Position: V(0, 0), Color: NRGBA{1, 1, 1, 1}, Picture: V(0, 0)},
@@ -133,15 +132,15 @@ func NewSprite(pic *GLPicture) *Sprite {
 			{Position: V(0, 0), Color: NRGBA{1, 1, 1, 1}, Picture: V(0, 1)},
 		},
 	}
-	s.td = TrianglesDrawer{Triangles: &s.data}
+	s.d = Drawer{Triangles: &s.data}
 	s.SetPicture(pic)
 	return s
 }
 
 // SetPicture changes the Picture of the Sprite and resizes it accordingly.
-func (s *Sprite) SetPicture(pic *GLPicture) {
-	oldPic := s.pic
-	s.pic = pic
+func (s *Sprite) SetPicture(pic Picture) {
+	oldPic := s.d.Picture
+	s.d.Picture = pic
 	if oldPic != nil && oldPic.Bounds().Size == pic.Bounds().Size {
 		return
 	}
@@ -152,23 +151,23 @@ func (s *Sprite) SetPicture(pic *GLPicture) {
 	s.data[3].Position = V(0, 0)
 	s.data[4].Position = V(w, h)
 	s.data[5].Position = V(0, h)
-	s.td.Dirty()
+	s.d.Dirty()
 }
 
 // Picture returns the current Picture of the Sprite.
-func (s *Sprite) Picture() *GLPicture {
-	return s.pic
+func (s *Sprite) Picture() Picture {
+	return s.d.Picture
 }
 
 // Draw draws the Sprite onto the provided Target.
 func (s *Sprite) Draw(t Target) {
-	s.td.Draw(t)
+	s.d.Draw(t)
 }
 
 // Polygon is a convex polygon shape filled with a single color.
 type Polygon struct {
 	data TrianglesData
-	td   TrianglesDrawer
+	d    Drawer
 	col  NRGBA
 }
 
@@ -178,7 +177,7 @@ func NewPolygon(c color.Color, points ...Vec) *Polygon {
 	p := &Polygon{
 		data: TrianglesData{},
 	}
-	p.td = TrianglesDrawer{Triangles: &p.data}
+	p.d = Drawer{Triangles: &p.data}
 	p.SetColor(c)
 	p.SetPoints(points...)
 	return p
@@ -193,7 +192,7 @@ func (p *Polygon) SetColor(c color.Color) {
 	for i := range p.data {
 		p.data[i].Color = p.col
 	}
-	p.td.Dirty()
+	p.d.Dirty()
 }
 
 // Color returns the current color of the Polygon.
@@ -217,7 +216,7 @@ func (p *Polygon) SetPoints(points ...Vec) {
 	for i := range p.data {
 		p.data[i].Color = p.col
 	}
-	p.td.Dirty()
+	p.d.Dirty()
 }
 
 // Points returns a slice of points of the Polygon in the order they where supplied.
@@ -231,5 +230,5 @@ func (p *Polygon) Points() []Vec {
 
 // Draw draws the Polygon onto the Target.
 func (p *Polygon) Draw(t Target) {
-	p.td.Draw(t)
+	p.d.Draw(t)
 }
