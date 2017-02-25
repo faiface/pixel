@@ -151,3 +151,9 @@ func (r Rect) XYWH() (x, y, w, h float64) {
 func (r Rect) Center() Vec {
 	return r.Pos + r.Size.Scaled(0.5)
 }
+
+// Contains checks whether a vector u is contained within this Rect (including it's borders).
+func (r Rect) Contains(u Vec) bool {
+	min, max := r.Pos, r.Pos+r.Size
+	return min.X() <= u.X() && u.X() <= max.X() && min.Y() <= u.Y() && u.Y() <= max.Y()
+}
