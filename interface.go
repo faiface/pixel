@@ -127,7 +127,7 @@ type TargetPicture interface {
 // PictureColor specifies Picture with Color property, so that every position inside the Picture's
 // Bounds has a color.
 //
-// Positions outside the Picture's Bounds must return opaque white (NRGBA{R: 1, G: 1, B:1, A: 1}).
+// Positions outside the Picture's Bounds must return transparent black (NRGBA{R: 0, G: 0, B: 0, A: 0}).
 type PictureColor interface {
 	Picture
 	Color(at Vec) NRGBA
