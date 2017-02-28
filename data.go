@@ -200,9 +200,12 @@ func PictureDataFromPicture(pic Picture) PictureData {
 	pd := MakePictureData(bounds)
 
 	if pic, ok := pic.(PictureColor); ok {
-		for y := bounds.Pos.Y(); y < bounds.Pos.Y()+bounds.Size.Y(); y++ {
-			for x := bounds.Pos.X(); x < bounds.Pos.X()+bounds.Size.X(); x++ {
-				at := V(x, y)
+		for y := math.Floor(bounds.Pos.Y()); y < bounds.Pos.Y()+bounds.Size.Y(); y++ {
+			for x := math.Floor(bounds.Pos.X()); x < bounds.Pos.X()+bounds.Size.X(); x++ {
+				at := V(
+					math.Max(x, bounds.Pos.X()),
+					math.Max(y, bounds.Pos.Y()),
+				)
 				pd.SetColor(at, pic.Color(at))
 			}
 		}
