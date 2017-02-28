@@ -202,6 +202,7 @@ func PictureDataFromPicture(pic Picture) PictureData {
 	if pic, ok := pic.(PictureColor); ok {
 		for y := math.Floor(bounds.Pos.Y()); y < bounds.Pos.Y()+bounds.Size.Y(); y++ {
 			for x := math.Floor(bounds.Pos.X()); x < bounds.Pos.X()+bounds.Size.X(); x++ {
+				// this together with the Floor is a trick to get all of the pixels
 				at := V(
 					math.Max(x, bounds.Pos.X()),
 					math.Max(y, bounds.Pos.Y()),
