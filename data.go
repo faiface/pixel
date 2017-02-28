@@ -215,7 +215,6 @@ func PictureDataFromPicture(pic Picture) PictureData {
 //
 // The resulting image.NRGBA's Bounds will be equivalent of the PictureData's Bounds.
 func (pd PictureData) Image() *image.NRGBA {
-	fmt.Println(pd.Rect.Pos + pd.Rect.Size)
 	bounds := image.Rect(
 		int(math.Floor(pd.Rect.Pos.X())),
 		int(math.Floor(pd.Rect.Pos.Y())),
@@ -223,7 +222,6 @@ func (pd PictureData) Image() *image.NRGBA {
 		int(math.Ceil(pd.Rect.Pos.Y()+pd.Rect.Size.Y())),
 	)
 	nrgba := image.NewNRGBA(bounds)
-	fmt.Println(nrgba.Rect)
 
 	i := 0
 	for y := bounds.Min.Y; y < bounds.Max.Y; y++ {
@@ -238,8 +236,6 @@ func (pd PictureData) Image() *image.NRGBA {
 	}
 
 	verticalFlip(nrgba)
-
-	fmt.Println(len(nrgba.Pix) / 4)
 
 	return nrgba
 }
