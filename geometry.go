@@ -97,9 +97,9 @@ func (u Vec) Cross(v Vec) float64 {
 	return u.X()*v.Y() - v.X()*u.Y()
 }
 
-// Apply applies the function f to both x and y components of the vector u and returns the modified
+// Map applies the function f to both x and y components of the vector u and returns the modified
 // vector.
-func (u Vec) Apply(f func(float64) float64) Vec {
+func (u Vec) Map(f func(float64) float64) Vec {
 	return V(
 		f(u.X()),
 		f(u.Y()),
