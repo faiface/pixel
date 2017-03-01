@@ -160,11 +160,13 @@ func verticalFlip(nrgba *image.NRGBA) {
 //
 // The resulting PictureData's Bounds will be the equivalent of the supplied image.Image's Bounds.
 func PictureDataFromImage(img image.Image) PictureData {
-	nrgba := image.NewNRGBA(image.Rect(
-		0, 0,
-		img.Bounds().Dx(), img.Bounds().Dy(),
-	))
-	draw.Draw(nrgba, nrgba.Bounds(), img, img.Bounds().Min, draw.Src)
+	var nrgba *image.NRGBA
+	if img, ok := img.(*image.NRGBA); ok {
+		nrgba = img
+	} else {
+		nrgba = image.NewNRGBA(img.Bounds())
+		draw.Draw(nrgba, nrgba.Bounds(), img, img.Bounds().Min, draw.Src)
+	}
 
 	verticalFlip(nrgba)
 
