@@ -106,6 +106,15 @@ func (u Vec) Map(f func(float64) float64) Vec {
 	)
 }
 
+// Lerp returns a linear interpolation between vectors a and b.
+//
+// This function basically returns a point along the line between a and b and t chooses which point.
+// If t is 0, then a will be returned, if t is 1, b will be returned. Anything between 0 and 1 will
+// return the appropriate point between a and b and so on.
+func Lerp(a, b Vec, t float64) Vec {
+	return a.Scaled(1-t) + b.Scaled(t)
+}
+
 // Rect is a 2D rectangle aligned with the axes of the coordinate system. It has a position
 // and a size.
 //
