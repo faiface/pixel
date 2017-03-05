@@ -68,7 +68,7 @@ func (b *Batch) MakeTriangles(t Triangles) TargetTriangles {
 		b:         b,
 	}
 	bt.orig.Update(t)
-	bt.trans.Update(&bt.orig)
+	bt.trans.Update(bt.orig)
 	return bt
 }
 
@@ -82,26 +82,26 @@ func (b *Batch) MakePicture(p Picture) TargetPicture {
 
 type batchTriangles struct {
 	Triangles
-	orig, trans TrianglesData
+	orig, trans *TrianglesData
 
 	b *Batch
 }
 
 func (bt *batchTriangles) draw(bp *batchPicture) {
-	for i := range bt.trans {
+	for i := range *bt.trans {
 		transPos := bt.b.mat.Mul3x1(mgl32.Vec3{
-			float32(bt.orig[i].Position.X()),
-			float32(bt.orig[i].Position.Y()),
+			float32((*bt.orig)[i].Position.X()),
+			float32((*bt.orig)[i].Position.Y()),
 			1,
 		})
-		bt.trans[i].Position = V(float64(transPos.X()), float64(transPos.Y()))
-		bt.trans[i].Color = bt.orig[i].Color.Mul(bt.b.col)
+		(*bt.trans)[i].Position = V(float64(transPos.X()), float64(transPos.Y()))
+		(*bt.trans)[i].Color = (*bt.orig)[i].Color.Mul(bt.b.col)
 		if bp == nil {
-			bt.trans[i].Picture = V(math.Inf(+1), math.Inf(+1))
+			(*bt.trans)[i].Picture = V(math.Inf(+1), math.Inf(+1))
 		}
 	}
 
-	bt.Triangles.Update(&bt.trans)
+	bt.Triangles.Update(bt.trans)
 
 	cont := bt.b.cont.Triangles
 	cont.SetLen(cont.Len() + bt.Triangles.Len())

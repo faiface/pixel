@@ -21,8 +21,8 @@ type TrianglesData []struct {
 //
 // Prefer this function to make(TrianglesData, len), because make zeros them, while this function
 // does a correct intialization.
-func MakeTrianglesData(len int) TrianglesData {
-	td := TrianglesData{}
+func MakeTrianglesData(len int) *TrianglesData {
+	td := &TrianglesData{}
 	td.SetLen(len)
 	return td
 }
@@ -132,10 +132,10 @@ type PictureData struct {
 }
 
 // MakePictureData creates a zero-initialized PictureData covering the given rectangle.
-func MakePictureData(rect Rect) PictureData {
+func MakePictureData(rect Rect) *PictureData {
 	w := int(math.Ceil(rect.Pos.X()+rect.Size.X())) - int(math.Floor(rect.Pos.X()))
 	h := int(math.Ceil(rect.Pos.Y()+rect.Size.Y())) - int(math.Floor(rect.Pos.Y()))
-	pd := PictureData{
+	pd := &PictureData{
 		Stride: w,
 		Rect:   rect,
 	}
@@ -161,7 +161,7 @@ func verticalFlip(nrgba *image.NRGBA) {
 // PictureDataFromImage converts an image.Image into PictureData.
 //
 // The resulting PictureData's Bounds will be the equivalent of the supplied image.Image's Bounds.
-func PictureDataFromImage(img image.Image) PictureData {
+func PictureDataFromImage(img image.Image) *PictureData {
 	var nrgba *image.NRGBA
 	if nrgbaImg, ok := img.(*image.NRGBA); ok {
 		nrgba = nrgbaImg
@@ -195,9 +195,9 @@ func PictureDataFromImage(img image.Image) PictureData {
 // lossy, because PictureData works with unit-sized pixels).
 //
 // Bounds are preserved.
-func PictureDataFromPicture(pic Picture) PictureData {
+func PictureDataFromPicture(pic Picture) *PictureData {
 	if pd, ok := pic.(*PictureData); ok {
-		return *pd
+		return pd
 	}
 
 	bounds := pic.Bounds()
