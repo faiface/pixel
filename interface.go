@@ -97,7 +97,7 @@ type TrianglesColor interface {
 // Note that this represents picture coordinates, not an actual picture.
 type TrianglesPicture interface {
 	Triangles
-	Picture(i int) Vec
+	Picture(i int) (pic Vec, ok bool)
 }
 
 // Picture represents a rectangular area of raster data, such as a color. It has Bounds which
