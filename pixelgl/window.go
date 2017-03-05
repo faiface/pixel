@@ -2,7 +2,7 @@ package pixelgl
 
 import (
 	"image/color"
-
+	"math"
 	"runtime"
 
 	"github.com/faiface/glhf"
@@ -16,16 +16,13 @@ import (
 // chosen in such a way, that you usually only need to set a few of them - defaults (zeros) should
 // usually be sensible.
 //
-// Note that you always need to set the width and the height of a window.
+// Note that you always need to set the Bounds of the Window.
 type WindowConfig struct {
-	// Title at the top of a window.
+	// Title at the top of the Window
 	Title string
 
-	// Width of a window in pixels.
-	Width float64
-
-	// Height of a window in pixels.
-	Height float64
+	// Bounds specify the bounds of the Window in pixels.
+	Bounds pixel.Rect
 
 	// If set to nil, a window will be windowed. Otherwise it will be fullscreen on the
 	// specified monitor.
@@ -46,23 +43,22 @@ type WindowConfig struct {
 	// Whether a window is maximized.
 	Maximized bool
 
-	// VSync (vertical synchronization) synchronizes window's framerate with the framerate
-	// of the monitor.
+	// VSync (vertical synchronization) synchronizes window's framerate with the framerate of
+	// the monitor.
 	VSync bool
 
-	// Number of samples for multi-sample anti-aliasing (edge-smoothing).  Usual values
-	// are 0, 2, 4, 8 (powers of 2 and not much more than this).
+	// Number of samples for multi-sample anti-aliasing (edge-smoothing). Usual values are 0, 2,
+	// 4, 8 (powers of 2 and not much more than this).
 	MSAASamples int
 }
 
 // Window is a window handler. Use this type to manipulate a window (input, drawing, ...).
 type Window struct {
 	window *glfw.Window
-	config WindowConfig
 
-	canvas   *Canvas
-	canvasVs *glhf.VertexSlice
-	shader   *glhf.Shader
+	bounds pixel.Rect
+	canvas *Canvas
+	vsync  bool
 
 	// need to save these to correctly restore a fullscreen window
 	restore struct {
@@ -80,13 +76,15 @@ var currentWindow *Window
 // NewWindow creates a new Window with it's properties specified in the provided config.
 //
 // If Window creation fails, an error is returned (e.g. due to unavailable graphics device).
-func NewWindow(config WindowConfig) (*Window, error) {
+func NewWindow(cfg WindowConfig) (*Window, error) {
 	bool2int := map[bool]int{
 		true:  glfw.True,
 		false: glfw.False,
 	}
 
-	w := &Window{config: config}
+	w := &Window{
+		bounds: cfg.Bounds,
+	}
 
 	err := mainthread.CallErr(func() error {
 		var err error
@@ -96,21 +94,22 @@ func NewWindow(config WindowConfig) (*Window, error) {
 		glfw.WindowHint(glfw.OpenGLProfile, glfw.OpenGLCoreProfile)
 		glfw.WindowHint(glfw.OpenGLForwardCompatible, glfw.True)
 
-		glfw.WindowHint(glfw.Resizable, bool2int[config.Resizable])
-		glfw.WindowHint(glfw.Visible, bool2int[!config.Hidden])
-		glfw.WindowHint(glfw.Decorated, bool2int[!config.Undecorated])
-		glfw.WindowHint(glfw.Focused, bool2int[!config.Unfocused])
-		glfw.WindowHint(glfw.Maximized, bool2int[config.Maximized])
-		glfw.WindowHint(glfw.Samples, config.MSAASamples)
+		glfw.WindowHint(glfw.Resizable, bool2int[cfg.Resizable])
+		glfw.WindowHint(glfw.Visible, bool2int[!cfg.Hidden])
+		glfw.WindowHint(glfw.Decorated, bool2int[!cfg.Undecorated])
+		glfw.WindowHint(glfw.Focused, bool2int[!cfg.Unfocused])
+		glfw.WindowHint(glfw.Maximized, bool2int[cfg.Maximized])
+		glfw.WindowHint(glfw.Samples, cfg.MSAASamples)
 
 		var share *glfw.Window
 		if currentWindow != nil {
 			share = currentWindow.window
 		}
+		_, _, width, height := discreteBounds(cfg.Bounds)
 		w.window, err = glfw.CreateWindow(
-			int(config.Width),
-			int(config.Height),
-			config.Title,
+			width,
+			height,
+			cfg.Title,
 			nil,
 			share,
 		)
@@ -122,38 +121,18 @@ func NewWindow(config WindowConfig) (*Window, error) {
 		w.begin()
 		w.end()
 
-		w.shader, err = glhf.NewShader(
-			windowVertexFormat,
-			windowUniformFormat,
-			windowVertexShader,
-			windowFragmentShader,
-		)
-		if err != nil {
-			return err
-		}
-
-		w.canvasVs = glhf.MakeVertexSlice(w.shader, 6, 6)
-		w.canvasVs.Begin()
-		w.canvasVs.SetVertexData([]float32{
-			-1, -1, 0, 0,
-			1, -1, 1, 0,
-			1, 1, 1, 1,
-			-1, -1, 0, 0,
-			1, 1, 1, 1,
-			-1, 1, 0, 1,
-		})
-		w.canvasVs.End()
-
 		return nil
 	})
 	if err != nil {
 		return nil, errors.Wrap(err, "creating window failed")
 	}
 
-	w.initInput()
-	w.SetMonitor(config.Fullscreen)
+	w.SetVSync(cfg.VSync)
 
-	w.canvas = NewCanvas(config.Width, config.Height, false)
+	w.initInput()
+	w.SetMonitor(cfg.Fullscreen)
+
+	w.canvas = NewCanvas(cfg.Bounds, false)
 	w.Update()
 
 	runtime.SetFinalizer(w, (*Window).Destroy)
@@ -168,29 +147,40 @@ func (w *Window) Destroy() {
 	})
 }
 
-// Clear clears the Window with a color.
-func (w *Window) Clear(c color.Color) {
-	w.canvas.Clear(c)
-}
-
 // Update swaps buffers and polls events.
 func (w *Window) Update() {
-	w.canvas.SetSize(w.Size())
+	mainthread.Call(func() {
+		wi, hi := w.window.GetSize()
+		w.bounds.Size = pixel.V(float64(wi), float64(hi))
+		// fractional positions end up covering more pixels with less size
+		if w.bounds.X() != math.Floor(w.bounds.X()) {
+			w.bounds.Size -= pixel.V(1, 0)
+		}
+		if w.bounds.Y() != math.Floor(w.bounds.Y()) {
+			w.bounds.Size -= pixel.V(0, 1)
+		}
+	})
+
+	w.canvas.SetBounds(w.Bounds())
 
 	mainthread.Call(func() {
 		w.begin()
 
-		glhf.Clear(0, 0, 0, 0)
-		w.shader.Begin()
-		w.canvas.f.Texture().Begin()
-		w.canvasVs.Begin()
-		w.canvasVs.Draw()
-		w.canvasVs.End()
-		w.canvas.f.Texture().End()
-		w.shader.End()
+		glhf.Bounds(0, 0, w.canvas.f.Width(), w.canvas.f.Height())
 
-		if w.config.VSync {
+		glhf.Clear(0, 0, 0, 0)
+		w.canvas.f.Begin()
+		w.canvas.f.Blit(
+			nil,
+			0, 0, w.canvas.f.Width(), w.canvas.f.Height(),
+			0, 0, w.canvas.f.Width(), w.canvas.f.Height(),
+		)
+		w.canvas.f.End()
+
+		if w.vsync {
 			glfw.SwapInterval(1)
+		} else {
+			glfw.SwapInterval(0)
 		}
 		w.window.SwapBuffers()
 		w.end()
@@ -225,22 +215,19 @@ func (w *Window) SetTitle(title string) {
 	})
 }
 
-// SetSize resizes the client area of the Window to the specified size in pixels. In case of a
-// fullscreen Window, it changes the resolution of that Window.
-func (w *Window) SetSize(width, height float64) {
+// SetBounds sets the bounds of the Window in pixels. Bounds can be fractional, but the size will be
+// changed in the next Update to a real possible size of the Window.
+func (w *Window) SetBounds(bounds pixel.Rect) {
+	w.bounds = bounds
 	mainthread.Call(func() {
-		w.window.SetSize(int(width), int(height))
+		_, _, width, height := discreteBounds(bounds)
+		w.window.SetSize(width, height)
 	})
 }
 
-// Size returns the size of the client area of the Window (the part you can draw on).
-func (w *Window) Size() (width, height float64) {
-	mainthread.Call(func() {
-		wi, hi := w.window.GetSize()
-		width = float64(wi)
-		height = float64(hi)
-	})
-	return width, height
+// Bounds returns the current bounds of the Window.
+func (w *Window) Bounds() pixel.Rect {
+	return w.bounds
 }
 
 // Show makes the Window visible if it was hidden.
@@ -351,6 +338,16 @@ func (w *Window) Restore() {
 	})
 }
 
+// SetVSync sets whether the Window should synchronize with the monitor refresh rate.
+func (w *Window) SetVSync(vsync bool) {
+	w.vsync = vsync
+}
+
+// VSync returns whether the Window is set to synchronize with the monitor refresh rate.
+func (w *Window) VSync() bool {
+	return w.vsync
+}
+
 // Note: must be called inside the main thread.
 func (w *Window) begin() {
 	if currentWindow != w {
@@ -365,7 +362,7 @@ func (w *Window) end() {
 	// nothing, really
 }
 
-// MakeTriangles generates a specialized copy of the supplied triangles that will draw onto this
+// MakeTriangles generates a specialized copy of the supplied Triangles that will draw onto this
 // Window.
 //
 // Window supports TrianglesPosition, TrianglesColor and TrianglesTexture.
@@ -373,9 +370,11 @@ func (w *Window) MakeTriangles(t pixel.Triangles) pixel.TargetTriangles {
 	return w.canvas.MakeTriangles(t)
 }
 
-// SetPicture sets a Picture that will be used in subsequent drawings onto the Window.
-func (w *Window) SetPicture(p *pixel.GLPicture) {
-	w.canvas.SetPicture(p)
+// MakePicture generates a specialized copy of the supplied Picture that will draw onto this Window.
+//
+// Window support PictureColor.
+func (w *Window) MakePicture(p pixel.Picture) pixel.TargetPicture {
+	return w.canvas.MakePicture(p)
 }
 
 // SetTransform sets a global transformation matrix for the Window.
@@ -385,47 +384,24 @@ func (w *Window) SetTransform(t ...pixel.Transform) {
 	w.canvas.SetTransform(t...)
 }
 
-// SetMaskColor sets a global mask color for the Window.
-func (w *Window) SetMaskColor(c color.Color) {
-	w.canvas.SetMaskColor(c)
+// SetColorMask sets a global color mask for the Window.
+func (w *Window) SetColorMask(c color.Color) {
+	w.canvas.SetColorMask(c)
 }
 
-const (
-	windowPositionVec2 = iota
-	windowTextureVec2
-)
-
-var windowVertexFormat = glhf.AttrFormat{
-	windowPositionVec2: {Name: "position", Type: glhf.Vec2},
-	windowTextureVec2:  {Name: "texture", Type: glhf.Vec2},
+// SetSmooth sets whether the stretched Pictures drawn onto this Window should be drawn smooth or
+// pixely.
+func (w *Window) SetSmooth(smooth bool) {
+	w.canvas.SetSmooth(smooth)
 }
 
-var windowUniformFormat = glhf.AttrFormat{}
-
-var windowVertexShader = `
-#version 330 core
-
-in vec2 position;
-in vec2 texture;
-
-out vec2 Texture;
-
-void main() {
-	gl_Position = vec4(position, 0.0, 1.0);
-	Texture = texture;
+// Smooth returns whether the stretched Pictures drawn onto this Window are set to be drawn smooth
+// or pixely.
+func (w *Window) Smooth() bool {
+	return w.canvas.Smooth()
 }
-`
 
-var windowFragmentShader = `
-#version 330 core
-
-in vec2 Texture;
-
-out vec4 color;
-
-uniform sampler2D tex;
-
-void main() {
-	color = texture(tex, Texture);
+// Clear clears the Window with a color.
+func (w *Window) Clear(c color.Color) {
+	w.canvas.Clear(c)
 }
-`

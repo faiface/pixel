@@ -1,6 +1,7 @@
 package pixelgl
 
 import (
+	"fmt"
 	"image/color"
 
 	"github.com/faiface/glhf"
@@ -10,30 +11,33 @@ import (
 	"github.com/pkg/errors"
 )
 
-// Canvas is basically a Picture that you can draw onto.
+//TODO: make Canvas a Picture
+
+// Canvas is an off-screen rectangular BasicTarget that you can draw onto.
 //
-// Canvas supports TrianglesPosition, TrianglesColor and TrianglesTexture.
+// It supports TrianglesPosition, TrianglesColor, TrianglesPicture and PictureColor.
 type Canvas struct {
 	f *glhf.Frame
 	s *glhf.Shader
 
-	copyVs *glhf.VertexSlice
+	bounds pixel.Rect
 	smooth bool
 
-	drawTd pixel.TrianglesDrawer
-
-	pic *pixel.GLPicture
 	mat mgl32.Mat3
 	col mgl32.Vec4
-	bnd mgl32.Vec4
 }
 
-// NewCanvas creates a new fully transparent Canvas with specified dimensions in pixels.
-func NewCanvas(width, height float64, smooth bool) *Canvas {
-	c := &Canvas{smooth: smooth}
+// NewCanvas creates a new empty, fully transparent Canvas with given bounds. If the smooth flag
+// set, then stretched Pictures will be smoothed and will not be drawn pixely onto this Canvas.
+func NewCanvas(bounds pixel.Rect, smooth bool) *Canvas {
+	c := &Canvas{
+		smooth: smooth,
+		mat:    mgl32.Ident3(),
+		col:    mgl32.Vec4{1, 1, 1, 1},
+	}
+
 	mainthread.Call(func() {
 		var err error
-		c.f = glhf.NewFrame(int(width), int(height), smooth)
 		c.s, err = glhf.NewShader(
 			canvasVertexFormat,
 			canvasUniformFormat,
@@ -41,162 +45,179 @@ func NewCanvas(width, height float64, smooth bool) *Canvas {
 			canvasFragmentShader,
 		)
 		if err != nil {
-			panic(errors.Wrap(err, "failed to create canvas"))
+			panic(errors.Wrap(err, "failed to create Canvas, there's a bug in the shader"))
 		}
-
-		c.copyVs = glhf.MakeVertexSlice(c.s, 6, 6)
-		c.copyVs.Begin()
-		c.copyVs.SetVertexData([]float32{
-			-1, -1, 1, 1, 1, 1, 0, 0,
-			1, -1, 1, 1, 1, 1, 1, 0,
-			1, 1, 1, 1, 1, 1, 1, 1,
-			-1, -1, 1, 1, 1, 1, 0, 0,
-			1, 1, 1, 1, 1, 1, 1, 1,
-			-1, 1, 1, 1, 1, 1, 0, 1,
-		})
-		c.copyVs.End()
 	})
 
-	white := pixel.NRGBA{R: 1, G: 1, B: 1, A: 1}
-	c.drawTd = pixel.TrianglesDrawer{Triangles: &pixel.TrianglesData{
-		{Position: pixel.V(-1, -1), Color: white, Picture: pixel.V(0, 0)},
-		{Position: pixel.V(1, -1), Color: white, Picture: pixel.V(1, 0)},
-		{Position: pixel.V(1, 1), Color: white, Picture: pixel.V(1, 1)},
-		{Position: pixel.V(-1, -1), Color: white, Picture: pixel.V(0, 0)},
-		{Position: pixel.V(1, 1), Color: white, Picture: pixel.V(1, 1)},
-		{Position: pixel.V(-1, 1), Color: white, Picture: pixel.V(0, 1)},
-	}}
+	c.SetBounds(bounds)
 
-	c.pic = nil
-	c.mat = mgl32.Ident3()
-	c.col = mgl32.Vec4{1, 1, 1, 1}
-	c.bnd = mgl32.Vec4{0, 0, 1, 1}
 	return c
 }
 
-// SetSize resizes the Canvas. The original content will be stretched to fit the new size.
-func (c *Canvas) SetSize(width, height float64) {
-	if pixel.V(width, height) == pixel.V(c.Size()) {
-		return
-	}
-	mainthread.Call(func() {
-		oldF := c.f
-		c.f = glhf.NewFrame(int(width), int(height), c.smooth)
-
-		c.f.Begin()
-		c.s.Begin()
-
-		c.s.SetUniformAttr(canvasTransformMat3, mgl32.Ident3())
-		c.s.SetUniformAttr(canvasMaskColorVec4, mgl32.Vec4{1, 1, 1, 1})
-		c.s.SetUniformAttr(canvasBoundsVec4, mgl32.Vec4{0, 0, 1, 1})
-
-		oldF.Texture().Begin()
-		c.copyVs.Begin()
-		c.copyVs.Draw()
-		c.copyVs.End()
-		oldF.Texture().End()
-
-		c.s.End()
-		c.f.End()
-	})
-}
-
-// Size returns the width and the height of the Canvas in pixels.
-func (c *Canvas) Size() (width, height float64) {
-	return float64(c.f.Width()), float64(c.f.Height())
-}
-
-// Content returns a Picture that contains the content of this Canvas. The returned Picture changes
-// as you draw onto the Canvas, so there is no real need to call this method more than once (but it
-// might be beneficial to your code to do so).
-func (c *Canvas) Content() *pixel.GLPicture {
-	return pixel.PictureFromTexture(c.f.Texture())
-}
-
-// Clear fills the whole Canvas with one specified color.
-func (c *Canvas) Clear(col color.Color) {
-	mainthread.CallNonBlock(func() {
-		c.f.Begin()
-		col := pixel.NRGBAModel.Convert(col).(pixel.NRGBA)
-		glhf.Clear(float32(col.R), float32(col.G), float32(col.B), float32(col.A))
-		c.f.End()
-	})
-}
-
-// Draw draws the content of the Canvas onto another Target. If no transform is applied, the content
-// is fully stretched to fit the Target.
-func (c *Canvas) Draw(t pixel.Target) {
-	c.drawTd.Draw(t)
-}
-
-// MakeTriangles returns Triangles that draw onto this Canvas.
-func (c *Canvas) MakeTriangles(t pixel.Triangles) pixel.TargetTriangles {
-	gt := NewGLTriangles(c.s, t).(*glTriangles)
-	return &canvasTriangles{
-		c:           c,
-		glTriangles: gt,
-	}
-}
-
-// SetPicture sets a Picture that will be used in further draw operations.
+// MakeTriangles creates a specialized copy of the supplied Triangles that draws onto this Canvas.
 //
-// This does not set the Picture that this Canvas draws onto, don't confuse it.
-func (c *Canvas) SetPicture(p *pixel.GLPicture) {
-	if p != nil {
-		min := pictureBounds(p, pixel.V(0, 0))
-		max := pictureBounds(p, pixel.V(1, 1))
-		c.bnd = mgl32.Vec4{
-			float32(min.X()), float32(min.Y()),
-			float32(max.X()), float32(max.Y()),
-		}
+// TrianglesPosition, TrianglesColor and TrianglesPicture are supported.
+func (c *Canvas) MakeTriangles(t pixel.Triangles) pixel.TargetTriangles {
+	return &canvasTriangles{
+		GLTriangles: NewGLTriangles(c.s, t),
+		c:           c,
 	}
-	c.pic = p
 }
 
-// SetTransform sets the transformations used in further draw operations.
+// MakePicture create a specialized copy of the supplied Picture that draws onto this Canvas.
+//
+// PictureColor is supported.
+func (c *Canvas) MakePicture(p pixel.Picture) pixel.TargetPicture {
+	pd := pixel.PictureDataFromPicture(p)
+	pixels := make([]uint8, 4*len(pd.Pix))
+	for i := range pd.Pix {
+		pixels[i*4+0] = uint8(pd.Pix[i].R * 255)
+		pixels[i*4+1] = uint8(pd.Pix[i].G * 255)
+		pixels[i*4+2] = uint8(pd.Pix[i].B * 255)
+		pixels[i*4+3] = uint8(pd.Pix[i].A * 255)
+	}
+
+	var tex *glhf.Texture
+	mainthread.Call(func() {
+		tex = glhf.NewTexture(pd.Stride, len(pd.Pix)/pd.Stride, c.smooth, pixels)
+	})
+
+	return &canvasPicture{
+		tex:    tex,
+		bounds: pd.Rect,
+		c:      c,
+	}
+}
+
+// SetTransform sets a set of Transforms that every position in triangles will be put through.
 func (c *Canvas) SetTransform(t ...pixel.Transform) {
 	c.mat = transformToMat(t...)
 }
 
-// SetMaskColor sets the mask color used in further draw operations.
-func (c *Canvas) SetMaskColor(col color.Color) {
-	if col == nil {
-		col = pixel.NRGBA{R: 1, G: 1, B: 1, A: 1}
+// SetColorMask sets a color that every color in triangles or a picture will be multiplied by.
+func (c *Canvas) SetColorMask(col color.Color) {
+	nrgba := pixel.NRGBA{R: 1, G: 1, B: 1, A: 1}
+	if col != nil {
+		nrgba = pixel.NRGBAModel.Convert(col).(pixel.NRGBA)
 	}
-	nrgba := pixel.NRGBAModel.Convert(col).(pixel.NRGBA)
-	r := float32(nrgba.R)
-	g := float32(nrgba.G)
-	b := float32(nrgba.B)
-	a := float32(nrgba.A)
-	c.col = mgl32.Vec4{r, g, b, a}
+	c.col = mgl32.Vec4{
+		float32(nrgba.R),
+		float32(nrgba.G),
+		float32(nrgba.B),
+		float32(nrgba.A),
+	}
+}
+
+// SetBounds resizes the Canvas to the new bounds. Old content will be preserved.
+func (c *Canvas) SetBounds(bounds pixel.Rect) {
+	if c.Bounds() == bounds {
+		return
+	}
+
+	mainthread.Call(func() {
+		oldF := c.f
+
+		_, _, w, h := discreteBounds(bounds)
+		c.f = glhf.NewFrame(w, h, c.smooth)
+
+		// preserve old content
+		if oldF != nil {
+			relBounds := c.bounds
+			relBounds.Pos -= bounds.Pos
+			ox, oy, ow, oh := discreteBounds(relBounds)
+			oldF.Blit(
+				c.f,
+				ox, oy, ox+ow, oy+oh,
+				ox, oy, ox+ow, oy+oh,
+			)
+		}
+
+		c.s.Begin()
+		orig := bounds.Center()
+		c.s.SetUniformAttr(canvasOrig, mgl32.Vec2{
+			float32(orig.X()),
+			float32(orig.Y()),
+		})
+		c.s.SetUniformAttr(canvasSize, mgl32.Vec2{
+			float32(w),
+			float32(h),
+		})
+		c.s.End()
+	})
+	c.bounds = bounds
+}
+
+// Bounds returns the rectangular bounds of the Canvas.
+func (c *Canvas) Bounds() pixel.Rect {
+	return c.bounds
+}
+
+// SetSmooth sets whether the stretched Pictures drawn onto this Canvas should be drawn smooth or
+// pixely.
+func (c *Canvas) SetSmooth(smooth bool) {
+	c.smooth = smooth
+}
+
+// Smooth returns whether the stretched Pictures drawn onto this Canvas are set to be drawn smooth
+// or pixely.
+func (c *Canvas) Smooth() bool {
+	return c.smooth
+}
+
+// Clear fill the whole Canvas with a single color.
+func (c *Canvas) Clear(color color.Color) {
+	nrgba := pixel.NRGBAModel.Convert(color).(pixel.NRGBA)
+	mainthread.CallNonBlock(func() {
+		c.f.Begin()
+		glhf.Clear(
+			float32(nrgba.R),
+			float32(nrgba.G),
+			float32(nrgba.B),
+			float32(nrgba.A),
+		)
+		c.f.End()
+	})
 }
 
 type canvasTriangles struct {
+	*GLTriangles
+
 	c *Canvas
-	*glTriangles
 }
 
-func (ct *canvasTriangles) Draw() {
-	// avoid possible race condition
-	pic := ct.c.pic
+func (ct *canvasTriangles) draw(cp *canvasPicture) {
+	// save the current state vars to avoid race condition
 	mat := ct.c.mat
 	col := ct.c.col
-	bnd := ct.c.bnd
 
 	mainthread.CallNonBlock(func() {
 		ct.c.f.Begin()
 		ct.c.s.Begin()
 
-		ct.c.s.SetUniformAttr(canvasTransformMat3, mat)
-		ct.c.s.SetUniformAttr(canvasMaskColorVec4, col)
-		ct.c.s.SetUniformAttr(canvasBoundsVec4, bnd)
+		ct.c.s.SetUniformAttr(canvasTransform, mat)
+		ct.c.s.SetUniformAttr(canvasColorMask, col)
 
-		if pic != nil {
-			pic.Texture().Begin()
-			ct.glTriangles.Draw()
-			pic.Texture().End()
+		if cp == nil {
+			ct.vs.Begin()
+			ct.vs.Draw()
+			ct.vs.End()
 		} else {
-			ct.glTriangles.Draw()
+			cp.tex.Begin()
+
+			ct.c.s.SetUniformAttr(canvasTexSize, mgl32.Vec2{
+				float32(cp.tex.Width()),
+				float32(cp.tex.Height()),
+			})
+
+			if cp.tex.Smooth() != ct.c.smooth {
+				cp.tex.SetSmooth(ct.c.smooth)
+			}
+
+			ct.vs.Begin()
+			ct.vs.Draw()
+			ct.vs.End()
+
+			cp.tex.End()
 		}
 
 		ct.c.s.End()
@@ -204,28 +225,64 @@ func (ct *canvasTriangles) Draw() {
 	})
 }
 
-const (
-	canvasPositionVec2 int = iota
-	canvasColorVec4
-	canvasTextureVec2
-)
+func (ct *canvasTriangles) Draw() {
+	ct.draw(nil)
+}
 
-var canvasVertexFormat = glhf.AttrFormat{
-	canvasPositionVec2: {Name: "position", Type: glhf.Vec2},
-	canvasColorVec4:    {Name: "color", Type: glhf.Vec4},
-	canvasTextureVec2:  {Name: "texture", Type: glhf.Vec2},
+type canvasPicture struct {
+	tex    *glhf.Texture
+	bounds pixel.Rect
+
+	c *Canvas
+}
+
+func (cp *canvasPicture) Bounds() pixel.Rect {
+	return cp.bounds
+}
+
+func (cp *canvasPicture) Slice(r pixel.Rect) pixel.Picture {
+	return &canvasPicture{
+		bounds: r,
+		c:      cp.c,
+	}
+}
+
+func (cp *canvasPicture) Draw(t pixel.TargetTriangles) {
+	ct := t.(*canvasTriangles)
+	if cp.c != ct.c {
+		panic(fmt.Errorf("%T.Draw: TargetTriangles generated by different Canvas", cp))
+	}
+	ct.draw(cp)
 }
 
 const (
-	canvasMaskColorVec4 int = iota
-	canvasTransformMat3
-	canvasBoundsVec4
+	canvasPosition int = iota
+	canvasColor
+	canvasTexture
+	canvasIntensity
+)
+
+var canvasVertexFormat = glhf.AttrFormat{
+	canvasPosition:  {Name: "position", Type: glhf.Vec2},
+	canvasColor:     {Name: "color", Type: glhf.Vec4},
+	canvasTexture:   {Name: "texture", Type: glhf.Vec2},
+	canvasIntensity: {Name: "intensity", Type: glhf.Float},
+}
+
+const (
+	canvasTransform int = iota
+	canvasColorMask
+	canvasTexSize
+	canvasOrig
+	canvasSize
 )
 
 var canvasUniformFormat = glhf.AttrFormat{
-	{Name: "maskColor", Type: glhf.Vec4},
-	{Name: "transform", Type: glhf.Mat3},
-	{Name: "bounds", Type: glhf.Vec4},
+	canvasTransform: {Name: "transform", Type: glhf.Mat3},
+	canvasColorMask: {Name: "colorMask", Type: glhf.Vec4},
+	canvasTexSize:   {Name: "texSize", Type: glhf.Vec2},
+	canvasOrig:      {Name: "orig", Type: glhf.Vec2},
+	canvasSize:      {Name: "size", Type: glhf.Vec2},
 }
 
 var canvasVertexShader = `
@@ -234,16 +291,23 @@ var canvasVertexShader = `
 in vec2 position;
 in vec4 color;
 in vec2 texture;
+in float intensity;
 
 out vec4 Color;
 out vec2 Texture;
+out float Intensity;
 
 uniform mat3 transform;
+uniform vec2 orig;
+uniform vec2 size;
 
 void main() {
-	gl_Position = vec4((transform * vec3(position.x, position.y, 1.0)).xy, 0.0, 1.0);
+	vec2 transPos = (transform * vec3(position, 1.0)).xy;
+	vec2 normPos = (transPos - orig) / (size/2);
+	gl_Position = vec4(normPos, 0.0, 1.0);
 	Color = color;
 	Texture = texture;
+	Intensity = intensity;
 }
 `
 
@@ -252,23 +316,22 @@ var canvasFragmentShader = `
 
 in vec4 Color;
 in vec2 Texture;
+in float Intensity;
 
 out vec4 color;
 
-uniform vec4 maskColor;
-uniform vec4 bounds;
+uniform vec4 colorMask;
+uniform vec2 texSize;
 uniform sampler2D tex;
 
 void main() {
-	vec2 boundsMin = bounds.xy;
-	vec2 boundsMax = bounds.zw;
-
-	if (Texture == vec2(-1, -1)) {
-		color = maskColor * Color;
+	if (Intensity == 0) {
+		color = colorMask * Color;
 	} else {
-		float tx = boundsMin.x * (1 - Texture.x) + boundsMax.x * Texture.x;
-		float ty = boundsMin.y * (1 - Texture.y) + boundsMax.y * Texture.y;
-		color = maskColor * Color * texture(tex, vec2(tx, ty));
+		vec2 t = Texture / texSize;
+		color = vec4(0, 0, 0, 0);
+		color += (1 - Intensity) * colorMask * Color;
+		color += Intensity * colorMask * Color * texture(tex, t);
 	}
 }
 `

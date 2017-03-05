@@ -2,7 +2,6 @@ package pixelgl
 
 import (
 	"fmt"
-	"math"
 
 	"github.com/faiface/glhf"
 	"github.com/faiface/mainthread"
@@ -29,9 +28,9 @@ var (
 //
 // Only draw the Triangles using the provided Shader.
 func NewGLTriangles(shader *glhf.Shader, t pixel.Triangles) *GLTriangles {
-	var gt *glTriangles
+	var gt *GLTriangles
 	mainthread.Call(func() {
-		gt = &glTriangles{
+		gt = &GLTriangles{
 			vs:     glhf.MakeVertexSlice(shader, 0, t.Len()),
 			shader: shader,
 		}
@@ -66,7 +65,8 @@ func (gt *GLTriangles) SetLen(len int) {
 			gt.data = append(gt.data,
 				0, 0,
 				1, 1, 1, 1,
-				float32(math.Inf(+1)), float32(math.Inf(+1)),
+				0, 0,
+				0,
 			)
 		}
 	}
@@ -77,7 +77,7 @@ func (gt *GLTriangles) SetLen(len int) {
 
 // Slice returns a sub-Triangles of this GLTriangles in range [i, j).
 func (gt *GLTriangles) Slice(i, j int) pixel.Triangles {
-	return &glTriangles{
+	return &GLTriangles{
 		vs:     gt.vs.Slice(i, j),
 		data:   gt.data[i*gt.vs.Stride() : j*gt.vs.Stride()],
 		shader: gt.shader,
@@ -86,7 +86,7 @@ func (gt *GLTriangles) Slice(i, j int) pixel.Triangles {
 
 func (gt *GLTriangles) updateData(t pixel.Triangles) {
 	// glTriangles short path
-	if t, ok := t.(*glTriangles); ok {
+	if t, ok := t.(*GLTriangles); ok {
 		copy(gt.data, t.data)
 		return
 	}
@@ -98,6 +98,7 @@ func (gt *GLTriangles) updateData(t pixel.Triangles) {
 				px, py = (*t)[i].Position.XY()
 				col    = (*t)[i].Color
 				tx, ty = (*t)[i].Picture.XY()
+				in     = (*t)[i].Intensity
 			)
 			gt.data[i*gt.vs.Stride()+0] = float32(px)
 			gt.data[i*gt.vs.Stride()+1] = float32(py)
@@ -107,6 +108,7 @@ func (gt *GLTriangles) updateData(t pixel.Triangles) {
 			gt.data[i*gt.vs.Stride()+5] = float32(col.A)
 			gt.data[i*gt.vs.Stride()+6] = float32(tx)
 			gt.data[i*gt.vs.Stride()+7] = float32(ty)
+			gt.data[i*gt.vs.Stride()+8] = float32(in)
 		}
 		return
 	}
@@ -129,15 +131,16 @@ func (gt *GLTriangles) updateData(t pixel.Triangles) {
 	}
 	if t, ok := t.(pixel.TrianglesPicture); ok {
 		for i := 0; i < gt.Len(); i++ {
-			tx, ty := t.Picture(i).XY()
-			gt.data[i*gt.vs.Stride()+6] = float32(tx)
-			gt.data[i*gt.vs.Stride()+7] = float32(ty)
+			pic, intensity := t.Picture(i)
+			gt.data[i*gt.vs.Stride()+6] = float32(pic.X())
+			gt.data[i*gt.vs.Stride()+7] = float32(pic.Y())
+			gt.data[i*gt.vs.Stride()+8] = float32(intensity)
 		}
 	}
 }
 
 func (gt *GLTriangles) submitData() {
-	data := gt.data // avoid race condition
+	data := append([]float32{}, gt.data...) // avoid race condition
 	mainthread.CallNonBlock(func() {
 		gt.vs.Begin()
 		dataLen := len(data) / gt.vs.Stride()
@@ -187,8 +190,9 @@ func (gt *GLTriangles) Color(i int) pixel.NRGBA {
 }
 
 // Picture returns the Picture property of the i-th vertex.
-func (gt *GLTriangles) Picture(i int) pixel.Vec {
+func (gt *GLTriangles) Picture(i int) (pic pixel.Vec, intensity float64) {
 	tx := gt.data[i*gt.vs.Stride()+6]
 	ty := gt.data[i*gt.vs.Stride()+7]
-	return pixel.V(float64(tx), float64(ty))
+	intensity = float64(gt.data[i*gt.vs.Stride()+8])
+	return pixel.V(float64(tx), float64(ty)), intensity
 }

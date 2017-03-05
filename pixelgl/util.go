@@ -1,30 +1,11 @@
 package pixelgl
 
 import (
+	"math"
+
 	"github.com/faiface/pixel"
 	"github.com/go-gl/mathgl/mgl32"
 )
-
-func clamp(x, low, high float64) float64 {
-	if x < low {
-		return low
-	}
-	if x > high {
-		return high
-	}
-	return x
-}
-
-func lerp(x float64, a, b pixel.Vec) pixel.Vec {
-	return a.Scaled(1-x) + b.Scaled(x)
-}
-
-func lerp2d(x, a, b pixel.Vec) pixel.Vec {
-	return pixel.V(
-		lerp(x.X(), a, b).X(),
-		lerp(x.Y(), a, b).Y(),
-	)
-}
 
 func transformToMat(t ...pixel.Transform) mgl32.Mat3 {
 	mat := mgl32.Ident3()
@@ -34,10 +15,10 @@ func transformToMat(t ...pixel.Transform) mgl32.Mat3 {
 	return mat
 }
 
-func pictureBounds(p *pixel.GLPicture, v pixel.Vec) pixel.Vec {
-	w, h := float64(p.Texture().Width()), float64(p.Texture().Height())
-	a := p.Bounds().Pos
-	b := p.Bounds().Pos + p.Bounds().Size
-	u := lerp2d(v, a, b)
-	return pixel.V(u.X()/w, u.Y()/h)
+func discreteBounds(bounds pixel.Rect) (x, y, w, h int) {
+	x0 := int(math.Floor(bounds.Pos.X()))
+	y0 := int(math.Floor(bounds.Pos.Y()))
+	x1 := int(math.Ceil(bounds.Pos.X() + bounds.Size.X()))
+	y1 := int(math.Ceil(bounds.Pos.Y() + bounds.Size.Y()))
+	return x0, y0, x1 - x0, y1 - y0
 }
