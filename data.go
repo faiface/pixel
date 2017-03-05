@@ -196,8 +196,8 @@ func PictureDataFromImage(img image.Image) PictureData {
 //
 // Bounds are preserved.
 func PictureDataFromPicture(pic Picture) PictureData {
-	if pd, ok := pic.(PictureData); ok {
-		return pd
+	if pd, ok := pic.(*PictureData); ok {
+		return *pd
 	}
 
 	bounds := pic.Bounds()
@@ -222,7 +222,7 @@ func PictureDataFromPicture(pic Picture) PictureData {
 // Image converts PictureData into an image.NRGBA.
 //
 // The resulting image.NRGBA's Bounds will be equivalent of the PictureData's Bounds.
-func (pd PictureData) Image() *image.NRGBA {
+func (pd *PictureData) Image() *image.NRGBA {
 	bounds := image.Rect(
 		int(math.Floor(pd.Rect.Pos.X())),
 		int(math.Floor(pd.Rect.Pos.Y())),
@@ -248,20 +248,20 @@ func (pd PictureData) Image() *image.NRGBA {
 	return nrgba
 }
 
-func (pd PictureData) offset(at Vec) int {
+func (pd *PictureData) offset(at Vec) int {
 	at -= pd.Rect.Pos
 	x, y := int(at.X()), int(at.Y())
 	return y*pd.Stride + x
 }
 
 // Bounds returns the bounds of this PictureData.
-func (pd PictureData) Bounds() Rect {
+func (pd *PictureData) Bounds() Rect {
 	return pd.Rect
 }
 
 // Slice returns a sub-Picture of this PictureData inside the supplied rectangle.
-func (pd PictureData) Slice(r Rect) Picture {
-	return PictureData{
+func (pd *PictureData) Slice(r Rect) Picture {
+	return &PictureData{
 		Pix:    pd.Pix[pd.offset(r.Pos):],
 		Stride: pd.Stride,
 		Rect:   r,
@@ -269,7 +269,7 @@ func (pd PictureData) Slice(r Rect) Picture {
 }
 
 // Color returns the color located at the given position.
-func (pd PictureData) Color(at Vec) NRGBA {
+func (pd *PictureData) Color(at Vec) NRGBA {
 	if !pd.Rect.Contains(at) {
 		return NRGBA{0, 0, 0, 0}
 	}
@@ -277,7 +277,7 @@ func (pd PictureData) Color(at Vec) NRGBA {
 }
 
 // SetColor changes the color located at the given position.
-func (pd PictureData) SetColor(at Vec, color color.Color) {
+func (pd *PictureData) SetColor(at Vec, color color.Color) {
 	if !pd.Rect.Contains(at) {
 		return
 	}
