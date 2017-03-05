@@ -11,10 +11,10 @@ import (
 // TrianglesData specifies a list of Triangles vertices with three common properties: Position,
 // Color and Texture.
 type TrianglesData []struct {
-	Position   Vec
-	Color      NRGBA
-	Picture    Vec
-	HasPicture bool
+	Position  Vec
+	Color     NRGBA
+	Picture   Vec
+	Intensity float64
 }
 
 // MakeTrianglesData creates TrianglesData of length len initialized with default property values.
@@ -41,11 +41,11 @@ func (td *TrianglesData) SetLen(len int) {
 		needAppend := len - td.Len()
 		for i := 0; i < needAppend; i++ {
 			*td = append(*td, struct {
-				Position   Vec
-				Color      NRGBA
-				Picture    Vec
-				HasPicture bool
-			}{V(0, 0), NRGBA{1, 1, 1, 1}, V(0, 0), false})
+				Position  Vec
+				Color     NRGBA
+				Picture   Vec
+				Intensity float64
+			}{V(0, 0), NRGBA{1, 1, 1, 1}, V(0, 0), 0})
 		}
 	}
 	if len < td.Len() {
@@ -79,7 +79,7 @@ func (td *TrianglesData) updateData(t Triangles) {
 	}
 	if t, ok := t.(TrianglesPicture); ok {
 		for i := range *td {
-			(*td)[i].Picture, (*td)[i].HasPicture = t.Picture(i)
+			(*td)[i].Picture, (*td)[i].Intensity = t.Picture(i)
 		}
 	}
 }
@@ -113,8 +113,8 @@ func (td *TrianglesData) Color(i int) NRGBA {
 }
 
 // Picture returns the picture property of i-th vertex.
-func (td *TrianglesData) Picture(i int) (pic Vec, ok bool) {
-	return (*td)[i].Picture, (*td)[i].HasPicture
+func (td *TrianglesData) Picture(i int) (pic Vec, intensity float64) {
+	return (*td)[i].Picture, (*td)[i].Intensity
 }
 
 // PictureData specifies an in-memory rectangular area of NRGBA pixels and implements Picture and
