@@ -77,11 +77,12 @@ func (d *Drawer) Draw(t Target) {
 		return
 	}
 
-	pic := d.pics[targetPicturePair{t, d.Picture}]
+	pic := d.pics[targetPicturePair{t, d.Picture.Original()}]
 	if pic == nil {
-		pic = t.MakePicture(d.Picture)
-		d.pics[targetPicturePair{t, d.Picture}] = pic
+		pic = t.MakePicture(d.Picture.Original())
+		d.pics[targetPicturePair{t, d.Picture.Original()}] = pic
 	}
+	pic = pic.Slice(d.Picture.Bounds()).(TargetPicture)
 
 	pic.Draw(tri)
 }

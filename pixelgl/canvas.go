@@ -69,6 +69,17 @@ func (c *Canvas) MakeTriangles(t pixel.Triangles) pixel.TargetTriangles {
 //
 // PictureColor is supported.
 func (c *Canvas) MakePicture(p pixel.Picture) pixel.TargetPicture {
+	if cp, ok := p.(*canvasPicture); ok {
+		return &canvasPicture{
+			tex:      cp.tex,
+			orig:     cp.orig,
+			size:     cp.size,
+			bounds:   cp.bounds,
+			original: cp.original,
+			c:        c,
+		}
+	}
+
 	bounds := p.Bounds()
 	bx, by, bw, bh := discreteBounds(bounds)
 
@@ -94,13 +105,15 @@ func (c *Canvas) MakePicture(p pixel.Picture) pixel.TargetPicture {
 		tex = glhf.NewTexture(bw, bh, c.smooth, pixels)
 	})
 
-	return &canvasPicture{
+	cp := &canvasPicture{
 		tex:    tex,
 		orig:   pixel.V(float64(bx), float64(by)),
 		size:   pixel.V(float64(bw), float64(bh)),
 		bounds: bounds,
 		c:      c,
 	}
+	cp.original = cp
+	return cp
 }
 
 // SetTransform sets a set of Transforms that every position in triangles will be put through.
@@ -258,7 +271,8 @@ type canvasPicture struct {
 	orig, size pixel.Vec
 	bounds     pixel.Rect
 
-	c *Canvas
+	original *canvasPicture
+	c        *Canvas
 }
 
 func (cp *canvasPicture) Bounds() pixel.Rect {
@@ -267,11 +281,17 @@ func (cp *canvasPicture) Bounds() pixel.Rect {
 
 func (cp *canvasPicture) Slice(r pixel.Rect) pixel.Picture {
 	return &canvasPicture{
-		orig:   cp.orig,
-		size:   cp.size,
-		bounds: r,
-		c:      cp.c,
+		tex:      cp.tex,
+		orig:     cp.orig,
+		size:     cp.size,
+		bounds:   r,
+		original: cp.original,
+		c:        cp.c,
 	}
+}
+
+func (cp *canvasPicture) Original() pixel.Picture {
+	return cp.original
 }
 
 func (cp *canvasPicture) Draw(t pixel.TargetTriangles) {
