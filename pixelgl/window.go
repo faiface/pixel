@@ -377,11 +377,9 @@ func (w *Window) MakePicture(p pixel.Picture) pixel.TargetPicture {
 	return w.canvas.MakePicture(p)
 }
 
-// SetTransform sets a global transformation matrix for the Window.
-//
-// Transforms are applied right-to-left.
-func (w *Window) SetTransform(t ...pixel.Transform) {
-	w.canvas.SetTransform(t...)
+// SetMatrix sets a Matrix that every point will be projected by.
+func (w *Window) SetMatrix(m pixel.Matrix) {
+	w.canvas.SetMatrix(m)
 }
 
 // SetColorMask sets a global color mask for the Window.

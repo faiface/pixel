@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"math"
 	"math/cmplx"
+
+	"github.com/go-gl/mathgl/mgl64"
 )
 
 // Vec is a 2D vector type. It is unusually implemented as complex128 for convenience. Since
@@ -174,4 +176,64 @@ func (r Rect) Center() Vec {
 func (r Rect) Contains(u Vec) bool {
 	min, max := r.Pos, r.Pos+r.Size
 	return min.X() <= u.X() && u.X() <= max.X() && min.Y() <= u.Y() && u.Y() <= max.Y()
+}
+
+// Matrix is a 3x3 transformation matrix that can be used for all kinds of spacial transforms, such
+// as movement, scaling and rotations.
+//
+// Matrix has a handful of useful methods, each of which adds a transformation to the matrix. For
+// example:
+//
+//   pixel.ZM.Move(pixel.V(100, 200)).Rotate(0, math.Pi/2)
+//
+// This code creates a Matrix that first moves everything by 100 units horizontaly and 200 units
+// vertically and then rotates everything by 90 degrees around the origin.
+type Matrix [9]float64
+
+// ZM stands for Zero-Matrix which is the identity matrix. Does nothing, no transformation.
+var ZM = Matrix(mgl64.Ident3())
+
+// Move moves everything by the delta vector.
+func (m Matrix) Move(delta Vec) Matrix {
+	m3 := mgl64.Mat3(m)
+	m3 = mgl64.Translate2D(delta.XY()).Mul3(m3)
+	return Matrix(m3)
+}
+
+// ScaleXY scales everything around a given point by the scale factor in each axis respectively.
+func (m Matrix) ScaleXY(around Vec, scale Vec) Matrix {
+	m3 := mgl64.Mat3(m)
+	m3 = mgl64.Translate2D((-around).XY()).Mul3(m3)
+	m3 = mgl64.Scale2D(scale.XY()).Mul3(m3)
+	m3 = mgl64.Translate2D(around.XY()).Mul3(m3)
+	return Matrix(m3)
+}
+
+// Scale scales everything around a given point by the scale factor.
+func (m Matrix) Scale(around Vec, scale float64) Matrix {
+	return m.ScaleXY(around, V(scale, scale))
+}
+
+// Rotate rotates everything around a given point by the given angle in radians.
+func (m Matrix) Rotate(around Vec, angle float64) Matrix {
+	m3 := mgl64.Mat3(m)
+	m3 = mgl64.Translate2D((-around).XY()).Mul3(m3)
+	m3 = mgl64.Rotate3DZ(angle).Mul3(m3)
+	m3 = mgl64.Translate2D(around.XY()).Mul3(m3)
+	return Matrix(m3)
+}
+
+// Project applies all transformations added to the Matrix to a vector u and returns the result.
+func (m Matrix) Project(u Vec) Vec {
+	m3 := mgl64.Mat3(m)
+	proj := m3.Mul3x1(mgl64.Vec3{u.X(), u.Y(), 1})
+	return V(proj.X(), proj.Y())
+}
+
+// Unproject does the inverse operation to Project.
+func (m Matrix) Unproject(u Vec) Vec {
+	m3 := mgl64.Mat3(m)
+	inv := m3.Inv()
+	unproj := inv.Mul3x1(mgl64.Vec3{u.X(), u.Y(), 1})
+	return V(unproj.X(), unproj.Y())
 }

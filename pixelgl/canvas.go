@@ -116,9 +116,11 @@ func (c *Canvas) MakePicture(p pixel.Picture) pixel.TargetPicture {
 	return cp
 }
 
-// SetTransform sets a set of Transforms that every position in triangles will be put through.
-func (c *Canvas) SetTransform(t ...pixel.Transform) {
-	c.mat = transformToMat(t...)
+// SetMatrix sets a Matrix that every point will be projected by.
+func (c *Canvas) SetMatrix(m pixel.Matrix) {
+	for i := range m {
+		c.mat[i] = float32(m[i])
+	}
 }
 
 // SetColorMask sets a color that every color in triangles or a picture will be multiplied by.

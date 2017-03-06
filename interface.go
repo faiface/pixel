@@ -29,11 +29,10 @@ type Target interface {
 type BasicTarget interface {
 	Target
 
-	// SetTransform sets a Transform that transforms the TrianglesPosition property of all
-	// Triangles.
-	SetTransform(...Transform)
+	// SetMatrix sets a Matrix that every point will be projected by.
+	SetMatrix(Matrix)
 
-	// SetMColorMask sets a color that will be multiplied with the TrianglesColor property of all
+	// SetColorMask sets a color that will be multiplied with the TrianglesColor property of all
 	// Triangles.
 	SetColorMask(color.Color)
 }
