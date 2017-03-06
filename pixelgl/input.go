@@ -30,11 +30,10 @@ func (w *Window) MousePosition() pixel.Vec {
 		width, height = float64(wi), float64(hi)
 	})
 
-	// transform to OpenGL coordinates
-	x = (x - width/2) / (width / 2)
-	y = (height/2 - y) / (height / 2)
-
-	return pixel.V(x, y)
+	return pixel.V(
+		x/width*w.bounds.W()+w.bounds.X(),
+		(height-y)/height*w.bounds.H()+w.bounds.Y(),
+	)
 }
 
 // MouseScroll returns the scroll amount (in both axis) since the last call to Window.Update.
