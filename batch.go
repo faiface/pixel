@@ -99,9 +99,6 @@ func (bt *batchTriangles) draw(bp *batchPicture) {
 		(*bt.trans)[i].Color = (*bt.orig)[i].Color.Mul(bt.b.col)
 		(*bt.trans)[i].Picture = (*bt.orig)[i].Picture
 		(*bt.trans)[i].Intensity = (*bt.orig)[i].Intensity
-		if bp == nil {
-			(*bt.trans)[i].Intensity = 0
-		}
 	}
 
 	bt.Triangles.Update(bt.trans)
