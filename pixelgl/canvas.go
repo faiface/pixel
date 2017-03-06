@@ -96,6 +96,8 @@ func (c *Canvas) MakePicture(p pixel.Picture) pixel.TargetPicture {
 
 	return &canvasPicture{
 		tex:    tex,
+		orig:   pixel.V(float64(bx), float64(by)),
+		size:   pixel.V(float64(bw), float64(bh)),
 		bounds: bounds,
 		c:      c,
 	}
@@ -216,9 +218,19 @@ func (ct *canvasTriangles) draw(cp *canvasPicture) {
 		} else {
 			cp.tex.Begin()
 
+			ct.c.s.SetUniformAttr(canvasTexOrig, mgl32.Vec2{
+				float32(cp.orig.X()),
+				float32(cp.orig.Y()),
+			})
 			ct.c.s.SetUniformAttr(canvasTexSize, mgl32.Vec2{
-				float32(cp.tex.Width()),
-				float32(cp.tex.Height()),
+				float32(cp.size.X()),
+				float32(cp.size.Y()),
+			})
+			ct.c.s.SetUniformAttr(canvasTexBounds, mgl32.Vec4{
+				float32(cp.bounds.X()),
+				float32(cp.bounds.Y()),
+				float32(cp.bounds.W()),
+				float32(cp.bounds.H()),
 			})
 
 			if cp.tex.Smooth() != ct.c.smooth {
@@ -242,8 +254,9 @@ func (ct *canvasTriangles) Draw() {
 }
 
 type canvasPicture struct {
-	tex    *glhf.Texture
-	bounds pixel.Rect
+	tex        *glhf.Texture
+	orig, size pixel.Vec
+	bounds     pixel.Rect
 
 	c *Canvas
 }
@@ -254,6 +267,8 @@ func (cp *canvasPicture) Bounds() pixel.Rect {
 
 func (cp *canvasPicture) Slice(r pixel.Rect) pixel.Picture {
 	return &canvasPicture{
+		orig:   cp.orig,
+		size:   cp.size,
 		bounds: r,
 		c:      cp.c,
 	}
@@ -284,7 +299,10 @@ var canvasVertexFormat = glhf.AttrFormat{
 const (
 	canvasTransform int = iota
 	canvasColorMask
+	canvasTexOrig
 	canvasTexSize
+	canvasTexBounds
+	canvasTexSubBounds
 	canvasOrig
 	canvasSize
 )
@@ -292,7 +310,9 @@ const (
 var canvasUniformFormat = glhf.AttrFormat{
 	canvasTransform: {Name: "transform", Type: glhf.Mat3},
 	canvasColorMask: {Name: "colorMask", Type: glhf.Vec4},
+	canvasTexOrig:   {Name: "texOrig", Type: glhf.Vec2},
 	canvasTexSize:   {Name: "texSize", Type: glhf.Vec2},
+	canvasTexBounds: {Name: "texBounds", Type: glhf.Vec4},
 	canvasOrig:      {Name: "orig", Type: glhf.Vec2},
 	canvasSize:      {Name: "size", Type: glhf.Vec2},
 }
@@ -333,17 +353,26 @@ in float Intensity;
 out vec4 color;
 
 uniform vec4 colorMask;
+uniform vec2 texOrig;
 uniform vec2 texSize;
+uniform vec4 texBounds;
 uniform sampler2D tex;
 
 void main() {
 	if (Intensity == 0) {
 		color = colorMask * Color;
 	} else {
-		vec2 t = Texture / texSize;
 		color = vec4(0, 0, 0, 0);
 		color += (1 - Intensity) * colorMask * Color;
-		color += Intensity * colorMask * Color * texture(tex, t);
+
+		float bx = texBounds.x;
+		float by = texBounds.y;
+		float bw = texBounds.z;
+		float bh = texBounds.w;
+		if (bx <= Texture.x && Texture.x <= bx + bw && by <= Texture.y && Texture.y <= by + bh) {
+			vec2 t = (Texture - texOrig) / texSize;
+			color += Intensity * colorMask * Color * texture(tex, t);
+		}
 	}
 }
 `
