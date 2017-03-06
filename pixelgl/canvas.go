@@ -21,11 +21,13 @@ type Canvas struct {
 	f *glhf.Frame
 	s *glhf.Shader
 
-	bounds pixel.Rect
 	smooth bool
 
 	mat mgl32.Mat3
 	col mgl32.Vec4
+
+	borders pixel.Rect
+	bounds  pixel.Rect
 }
 
 // NewCanvas creates a new empty, fully transparent Canvas with given bounds. If the smooth flag
@@ -70,14 +72,10 @@ func (c *Canvas) MakeTriangles(t pixel.Triangles) pixel.TargetTriangles {
 // PictureColor is supported.
 func (c *Canvas) MakePicture(p pixel.Picture) pixel.TargetPicture {
 	if cp, ok := p.(*canvasPicture); ok {
-		return &canvasPicture{
-			tex:      cp.tex,
-			orig:     cp.orig,
-			size:     cp.size,
-			bounds:   cp.bounds,
-			original: cp.original,
-			c:        c,
-		}
+		tp := new(canvasPicture)
+		*tp = *cp
+		tp.c = c
+		return tp
 	}
 
 	bounds := p.Bounds()
@@ -106,13 +104,15 @@ func (c *Canvas) MakePicture(p pixel.Picture) pixel.TargetPicture {
 	})
 
 	cp := &canvasPicture{
-		tex:    tex,
-		orig:   pixel.V(float64(bx), float64(by)),
-		size:   pixel.V(float64(bw), float64(bh)),
+		tex: tex,
+		borders: pixel.R(
+			float64(bx), float64(by),
+			float64(bw), float64(bh),
+		),
 		bounds: bounds,
 		c:      c,
 	}
-	cp.original = cp
+	cp.orig = cp
 	return cp
 }
 
@@ -160,19 +160,8 @@ func (c *Canvas) SetBounds(bounds pixel.Rect) {
 				ox, oy, ox+ow, oy+oh,
 			)
 		}
-
-		c.s.Begin()
-		orig := bounds.Center()
-		c.s.SetUniformAttr(canvasOrig, mgl32.Vec2{
-			float32(orig.X()),
-			float32(orig.Y()),
-		})
-		c.s.SetUniformAttr(canvasSize, mgl32.Vec2{
-			float32(w),
-			float32(h),
-		})
-		c.s.End()
 	})
+	c.borders = bounds
 	c.bounds = bounds
 }
 
@@ -220,9 +209,16 @@ func (ct *canvasTriangles) draw(cp *canvasPicture) {
 	col := ct.c.col
 
 	mainthread.CallNonBlock(func() {
+		glhf.Bounds(0, 0, ct.c.f.Width(), ct.c.f.Height())
 		ct.c.f.Begin()
 		ct.c.s.Begin()
 
+		ct.c.s.SetUniformAttr(canvasBounds, mgl32.Vec4{
+			float32(cp.c.bounds.X()),
+			float32(cp.c.bounds.Y()),
+			float32(cp.c.bounds.W()),
+			float32(cp.c.bounds.H()),
+		})
 		ct.c.s.SetUniformAttr(canvasTransform, mat)
 		ct.c.s.SetUniformAttr(canvasColorMask, col)
 
@@ -233,13 +229,11 @@ func (ct *canvasTriangles) draw(cp *canvasPicture) {
 		} else {
 			cp.tex.Begin()
 
-			ct.c.s.SetUniformAttr(canvasTexOrig, mgl32.Vec2{
-				float32(cp.orig.X()),
-				float32(cp.orig.Y()),
-			})
-			ct.c.s.SetUniformAttr(canvasTexSize, mgl32.Vec2{
-				float32(cp.size.X()),
-				float32(cp.size.Y()),
+			ct.c.s.SetUniformAttr(canvasTexBorders, mgl32.Vec4{
+				float32(cp.borders.X()),
+				float32(cp.borders.Y()),
+				float32(cp.borders.W()),
+				float32(cp.borders.H()),
 			})
 			ct.c.s.SetUniformAttr(canvasTexBounds, mgl32.Vec4{
 				float32(cp.bounds.X()),
@@ -269,12 +263,12 @@ func (ct *canvasTriangles) Draw() {
 }
 
 type canvasPicture struct {
-	tex        *glhf.Texture
-	orig, size pixel.Vec
-	bounds     pixel.Rect
+	tex     *glhf.Texture
+	borders pixel.Rect
+	bounds  pixel.Rect
 
-	original *canvasPicture
-	c        *Canvas
+	orig *canvasPicture
+	c    *Canvas
 }
 
 func (cp *canvasPicture) Bounds() pixel.Rect {
@@ -282,18 +276,14 @@ func (cp *canvasPicture) Bounds() pixel.Rect {
 }
 
 func (cp *canvasPicture) Slice(r pixel.Rect) pixel.Picture {
-	return &canvasPicture{
-		tex:      cp.tex,
-		orig:     cp.orig,
-		size:     cp.size,
-		bounds:   r,
-		original: cp.original,
-		c:        cp.c,
-	}
+	sp := new(canvasPicture)
+	*sp = *cp
+	sp.bounds = r
+	return sp
 }
 
 func (cp *canvasPicture) Original() pixel.Picture {
-	return cp.original
+	return cp.orig
 }
 
 func (cp *canvasPicture) Draw(t pixel.TargetTriangles) {
@@ -321,22 +311,17 @@ var canvasVertexFormat = glhf.AttrFormat{
 const (
 	canvasTransform int = iota
 	canvasColorMask
-	canvasTexOrig
-	canvasTexSize
+	canvasBounds
+	canvasTexBorders
 	canvasTexBounds
-	canvasTexSubBounds
-	canvasOrig
-	canvasSize
 )
 
 var canvasUniformFormat = glhf.AttrFormat{
-	canvasTransform: {Name: "transform", Type: glhf.Mat3},
-	canvasColorMask: {Name: "colorMask", Type: glhf.Vec4},
-	canvasTexOrig:   {Name: "texOrig", Type: glhf.Vec2},
-	canvasTexSize:   {Name: "texSize", Type: glhf.Vec2},
-	canvasTexBounds: {Name: "texBounds", Type: glhf.Vec4},
-	canvasOrig:      {Name: "orig", Type: glhf.Vec2},
-	canvasSize:      {Name: "size", Type: glhf.Vec2},
+	canvasTransform:  {Name: "transform", Type: glhf.Mat3},
+	canvasColorMask:  {Name: "colorMask", Type: glhf.Vec4},
+	canvasBounds:     {Name: "bounds", Type: glhf.Vec4},
+	canvasTexBorders: {Name: "texBorders", Type: glhf.Vec4},
+	canvasTexBounds:  {Name: "texBounds", Type: glhf.Vec4},
 }
 
 var canvasVertexShader = `
@@ -352,12 +337,11 @@ out vec2 Texture;
 out float Intensity;
 
 uniform mat3 transform;
-uniform vec2 orig;
-uniform vec2 size;
+uniform vec4 bounds;
 
 void main() {
 	vec2 transPos = (transform * vec3(position, 1.0)).xy;
-	vec2 normPos = (transPos - orig) / (size/2);
+	vec2 normPos = 2 * (transPos - bounds.xy) / (bounds.zw) - vec2(1, 1);
 	gl_Position = vec4(normPos, 0.0, 1.0);
 	Color = color;
 	Texture = texture;
@@ -375,8 +359,7 @@ in float Intensity;
 out vec4 color;
 
 uniform vec4 colorMask;
-uniform vec2 texOrig;
-uniform vec2 texSize;
+uniform vec4 texBorders;
 uniform vec4 texBounds;
 uniform sampler2D tex;
 
@@ -392,7 +375,7 @@ void main() {
 		float bw = texBounds.z;
 		float bh = texBounds.w;
 		if (bx <= Texture.x && Texture.x <= bx + bw && by <= Texture.y && Texture.y <= by + bh) {
-			vec2 t = (Texture - texOrig) / texSize;
+			vec2 t = (Texture - texBorders.xy) / texBorders.zw;
 			color += Intensity * colorMask * Color * texture(tex, t);
 		}
 	}
