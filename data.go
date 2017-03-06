@@ -249,7 +249,7 @@ func (pd *PictureData) Image() *image.NRGBA {
 }
 
 func (pd *PictureData) offset(at Vec) int {
-	at -= pd.Rect.Pos
+	at -= pd.Rect.Pos.Map(math.Floor)
 	x, y := int(at.X()), int(at.Y())
 	return y*pd.Stride + x
 }

@@ -3,6 +3,7 @@ package pixelgl
 import (
 	"fmt"
 	"image/color"
+	"math"
 
 	"github.com/faiface/glhf"
 	"github.com/faiface/mainthread"
@@ -68,23 +69,34 @@ func (c *Canvas) MakeTriangles(t pixel.Triangles) pixel.TargetTriangles {
 //
 // PictureColor is supported.
 func (c *Canvas) MakePicture(p pixel.Picture) pixel.TargetPicture {
-	pd := pixel.PictureDataFromPicture(p)
-	pixels := make([]uint8, 4*len(pd.Pix))
-	for i := range pd.Pix {
-		pixels[i*4+0] = uint8(pd.Pix[i].R * 255)
-		pixels[i*4+1] = uint8(pd.Pix[i].G * 255)
-		pixels[i*4+2] = uint8(pd.Pix[i].B * 255)
-		pixels[i*4+3] = uint8(pd.Pix[i].A * 255)
+	bounds := p.Bounds()
+	bx, by, bw, bh := discreteBounds(bounds)
+
+	pixels := make([]uint8, 4*bw*bh)
+	if p, ok := p.(pixel.PictureColor); ok {
+		for y := 0; y < bh; y++ {
+			for x := 0; x < bw; x++ {
+				at := pixel.V(
+					math.Max(float64(bx+x), bounds.Pos.X()),
+					math.Max(float64(by+y), bounds.Pos.Y()),
+				)
+				color := p.Color(at)
+				pixels[(y*bw+x)*4+0] = uint8(color.R * 255)
+				pixels[(y*bw+x)*4+1] = uint8(color.G * 255)
+				pixels[(y*bw+x)*4+2] = uint8(color.B * 255)
+				pixels[(y*bw+x)*4+3] = uint8(color.A * 255)
+			}
+		}
 	}
 
 	var tex *glhf.Texture
 	mainthread.Call(func() {
-		tex = glhf.NewTexture(pd.Stride, len(pd.Pix)/pd.Stride, c.smooth, pixels)
+		tex = glhf.NewTexture(bw, bh, c.smooth, pixels)
 	})
 
 	return &canvasPicture{
 		tex:    tex,
-		bounds: pd.Rect,
+		bounds: bounds,
 		c:      c,
 	}
 }
