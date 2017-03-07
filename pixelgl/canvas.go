@@ -12,8 +12,6 @@ import (
 	"github.com/pkg/errors"
 )
 
-//TODO: make Canvas a Picture
-
 // Canvas is an off-screen rectangular BasicTarget that you can draw onto.
 //
 // It supports TrianglesPosition, TrianglesColor, TrianglesPicture and PictureColor.
@@ -26,8 +24,11 @@ type Canvas struct {
 	mat mgl32.Mat3
 	col mgl32.Vec4
 
-	borders pixel.Rect
-	bounds  pixel.Rect
+	pixels []uint8
+	dirty  bool
+
+	bounds pixel.Rect
+	orig   *Canvas
 }
 
 // NewCanvas creates a new empty, fully transparent Canvas with given bounds. If the smooth flag
@@ -38,6 +39,7 @@ func NewCanvas(bounds pixel.Rect, smooth bool) *Canvas {
 		mat:    mgl32.Ident3(),
 		col:    mgl32.Vec4{1, 1, 1, 1},
 	}
+	c.orig = c
 
 	mainthread.Call(func() {
 		var err error
@@ -79,7 +81,7 @@ func (c *Canvas) MakePicture(p pixel.Picture) pixel.TargetPicture {
 	}
 
 	bounds := p.Bounds()
-	bx, by, bw, bh := discreteBounds(bounds)
+	bx, by, bw, bh := intBounds(bounds)
 
 	pixels := make([]uint8, 4*bw*bh)
 	if p, ok := p.(pixel.PictureColor); ok {
@@ -138,6 +140,9 @@ func (c *Canvas) SetColorMask(col color.Color) {
 }
 
 // SetBounds resizes the Canvas to the new bounds. Old content will be preserved.
+//
+// If this Canvas was created using Slice-ing, then the relation between this Canvas and it's
+// Original is unspecified (but Original will always return valid stuff).
 func (c *Canvas) SetBounds(bounds pixel.Rect) {
 	if c.Bounds() == bounds {
 		return
@@ -146,14 +151,14 @@ func (c *Canvas) SetBounds(bounds pixel.Rect) {
 	mainthread.Call(func() {
 		oldF := c.f
 
-		_, _, w, h := discreteBounds(bounds)
+		_, _, w, h := intBounds(bounds)
 		c.f = glhf.NewFrame(w, h, c.smooth)
 
 		// preserve old content
 		if oldF != nil {
 			relBounds := c.bounds
 			relBounds.Pos -= bounds.Pos
-			ox, oy, ow, oh := discreteBounds(relBounds)
+			ox, oy, ow, oh := intBounds(relBounds)
 			oldF.Blit(
 				c.f,
 				ox, oy, ox+ow, oy+oh,
@@ -161,8 +166,10 @@ func (c *Canvas) SetBounds(bounds pixel.Rect) {
 			)
 		}
 	})
-	c.borders = bounds
+
 	c.bounds = bounds
+	c.orig = c // detach from the Original
+	c.dirty = true
 }
 
 // Bounds returns the rectangular bounds of the Canvas.
@@ -182,10 +189,22 @@ func (c *Canvas) Smooth() bool {
 	return c.smooth
 }
 
+// must be manually called inside mainthread
+func (c *Canvas) setGlhfBounds() {
+	bounds := c.bounds
+	bounds.Pos -= c.orig.bounds.Pos
+	bx, by, bw, bh := intBounds(bounds)
+	glhf.Bounds(bx, by, bw, bh)
+}
+
 // Clear fill the whole Canvas with a single color.
 func (c *Canvas) Clear(color color.Color) {
+	c.orig.dirty = true
+
 	nrgba := pixel.NRGBAModel.Convert(color).(pixel.NRGBA)
+
 	mainthread.CallNonBlock(func() {
+		c.setGlhfBounds()
 		c.f.Begin()
 		glhf.Clear(
 			float32(nrgba.R),
@@ -197,6 +216,49 @@ func (c *Canvas) Clear(color color.Color) {
 	})
 }
 
+// Slice returns a sub-Canvas with the specified Bounds.
+//
+// The returned value is *Canvas, the type of the return value is a general pixel.Picture just so
+// that Canvas implements pixel.Picture interface.
+func (c *Canvas) Slice(bounds pixel.Rect) pixel.Picture {
+	sc := new(Canvas)
+	*sc = *c
+	sc.bounds = bounds
+	return sc
+}
+
+// Original returns the most original Canvas that this Canvas was created from using Slice-ing.
+//
+// The returned value is *Canvas, the type of the return value is a general pixel.Picture just so
+// that Canvas implements pixel.Picture interface.
+func (c *Canvas) Original() pixel.Picture {
+	return c.orig
+}
+
+// Color returns the color of the pixel over the given position inside the Canvas.
+func (c *Canvas) Color(at pixel.Vec) pixel.NRGBA {
+	if c.orig.dirty {
+		mainthread.Call(func() {
+			c.f.Texture.Begin()
+			c.orig.pixels = c.f.Texture.Pixels(0, 0, c.f.Texture.Width(), c.f.Texture.Height())
+			c.f.Texture.End()
+		})
+		c.orig.dirty = false
+	}
+	if !c.bounds.Contains(at) {
+		return pixel.NRGBA{}
+	}
+	bx, by, bw, _ := intBounds(c.orig.bounds)
+	x, y := int(at.X())-bx, int(at.Y())-by
+	off := y*bw + x
+	return pixel.NRGBA{
+		R: float64(c.orig.pixels[off*4+0]) / 255,
+		G: float64(c.orig.pixels[off*4+1]) / 255,
+		B: float64(c.orig.pixels[off*4+2]) / 255,
+		A: float64(c.orig.pixels[off*4+3]) / 255,
+	}
+}
+
 type canvasTriangles struct {
 	*GLTriangles
 
@@ -204,24 +266,22 @@ type canvasTriangles struct {
 }
 
 func (ct *canvasTriangles) draw(cp *canvasPicture) {
+	ct.c.orig.dirty = true
+
 	// save the current state vars to avoid race condition
 	mat := ct.c.mat
 	col := ct.c.col
 
 	mainthread.CallNonBlock(func() {
-		bounds := ct.c.bounds
-		bounds.Pos -= ct.c.borders.Pos
-		bx, by, bw, bh := discreteBounds(bounds)
-		glhf.Bounds(bx, by, bw, bh)
-
+		ct.c.setGlhfBounds()
 		ct.c.f.Begin()
 		ct.c.s.Begin()
 
 		ct.c.s.SetUniformAttr(canvasBounds, mgl32.Vec4{
-			float32(cp.c.bounds.X()),
-			float32(cp.c.bounds.Y()),
-			float32(cp.c.bounds.W()),
-			float32(cp.c.bounds.H()),
+			float32(ct.c.bounds.X()),
+			float32(ct.c.bounds.Y()),
+			float32(ct.c.bounds.W()),
+			float32(ct.c.bounds.H()),
 		})
 		ct.c.s.SetUniformAttr(canvasTransform, mat)
 		ct.c.s.SetUniformAttr(canvasColorMask, col)
@@ -341,11 +401,12 @@ out vec2 Texture;
 out float Intensity;
 
 uniform mat3 transform;
+uniform vec4 borders;
 uniform vec4 bounds;
 
 void main() {
 	vec2 transPos = (transform * vec3(position, 1.0)).xy;
-	vec2 normPos = 2 * (transPos - bounds.xy) / (bounds.zw) - vec2(1, 1);
+	vec2 normPos = (transPos - bounds.xy) / (bounds.zw) * 2 - vec2(1, 1);
 	gl_Position = vec4(normPos, 0.0, 1.0);
 	Color = color;
 	Texture = texture;

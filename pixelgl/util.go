@@ -6,7 +6,7 @@ import (
 	"github.com/faiface/pixel"
 )
 
-func discreteBounds(bounds pixel.Rect) (x, y, w, h int) {
+func intBounds(bounds pixel.Rect) (x, y, w, h int) {
 	x0 := int(math.Floor(bounds.Pos.X()))
 	y0 := int(math.Floor(bounds.Pos.Y()))
 	x1 := int(math.Ceil(bounds.Pos.X() + bounds.Size.X()))

@@ -105,7 +105,7 @@ func NewWindow(cfg WindowConfig) (*Window, error) {
 		if currentWindow != nil {
 			share = currentWindow.window
 		}
-		_, _, width, height := discreteBounds(cfg.Bounds)
+		_, _, width, height := intBounds(cfg.Bounds)
 		w.window, err = glfw.CreateWindow(
 			width,
 			height,
@@ -166,14 +166,14 @@ func (w *Window) Update() {
 	mainthread.Call(func() {
 		w.begin()
 
-		glhf.Bounds(0, 0, w.canvas.f.Width(), w.canvas.f.Height())
+		glhf.Bounds(0, 0, w.canvas.f.Texture.Width(), w.canvas.f.Texture.Height())
 
 		glhf.Clear(0, 0, 0, 0)
 		w.canvas.f.Begin()
 		w.canvas.f.Blit(
 			nil,
-			0, 0, w.canvas.f.Width(), w.canvas.f.Height(),
-			0, 0, w.canvas.f.Width(), w.canvas.f.Height(),
+			0, 0, w.canvas.f.Texture.Width(), w.canvas.f.Texture.Height(),
+			0, 0, w.canvas.f.Texture.Width(), w.canvas.f.Texture.Height(),
 		)
 		w.canvas.f.End()
 
@@ -220,7 +220,7 @@ func (w *Window) SetTitle(title string) {
 func (w *Window) SetBounds(bounds pixel.Rect) {
 	w.bounds = bounds
 	mainthread.Call(func() {
-		_, _, width, height := discreteBounds(bounds)
+		_, _, width, height := intBounds(bounds)
 		w.window.SetSize(width, height)
 	})
 }
