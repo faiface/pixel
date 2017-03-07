@@ -107,6 +107,8 @@ type Picture interface {
 	Bounds() Rect
 
 	// Slice returns a sub-Picture with specified Bounds.
+	//
+	// A result Slice-ing outside the original Bounds is unspecified.
 	Slice(Rect) Picture
 
 	// Original returns the most original Picture (may be itself) that this Picture was created
