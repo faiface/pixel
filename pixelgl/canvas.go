@@ -86,6 +86,8 @@ func (c *Canvas) MakePicture(p pixel.Picture) pixel.TargetPicture {
 		tp.dst = c
 		return tp
 	}
+
+	// Canvas special case
 	if canvas, ok := p.(*Canvas); ok {
 		return &canvasCanvasPicture{
 			src:    canvas,
