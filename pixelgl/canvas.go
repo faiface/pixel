@@ -209,7 +209,11 @@ func (ct *canvasTriangles) draw(cp *canvasPicture) {
 	col := ct.c.col
 
 	mainthread.CallNonBlock(func() {
-		glhf.Bounds(0, 0, ct.c.f.Width(), ct.c.f.Height())
+		bounds := ct.c.bounds
+		bounds.Pos -= ct.c.borders.Pos
+		bx, by, bw, bh := discreteBounds(bounds)
+		glhf.Bounds(bx, by, bw, bh)
+
 		ct.c.f.Begin()
 		ct.c.s.Begin()
 
