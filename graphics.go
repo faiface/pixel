@@ -20,6 +20,13 @@ func NewSprite(pic Picture) *Sprite {
 // SetPicture changes the Sprite's Picture. The new Picture may have a different size, everything
 // works.
 func (s *Sprite) SetPicture(pic Picture) {
+	oldPic := s.d.Picture
+	s.d.Picture = pic
+
+	if oldPic.Bounds() == pic.Bounds() {
+		return
+	}
+
 	var (
 		bounds     = pic.Bounds()
 		center     = bounds.Center()
@@ -41,7 +48,6 @@ func (s *Sprite) SetPicture(pic Picture) {
 	}
 
 	s.d.Dirty()
-	s.d.Picture = pic
 }
 
 // Picture returns the current Sprite's Picture.
