@@ -23,7 +23,7 @@ func (s *Sprite) SetPicture(pic Picture) {
 	oldPic := s.d.Picture
 	s.d.Picture = pic
 
-	if oldPic.Bounds() == pic.Bounds() {
+	if oldPic != nil && oldPic.Bounds() == pic.Bounds() {
 		return
 	}
 
