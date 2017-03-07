@@ -26,12 +26,14 @@ func (s *Sprite) SetPicture(pic Picture) {
 		horizontal = V(bounds.W()/2, 0)
 		vertical   = V(0, bounds.H()/2)
 	)
+
 	(*s.tri)[0].Position = -horizontal - vertical
 	(*s.tri)[1].Position = +horizontal - vertical
 	(*s.tri)[2].Position = +horizontal + vertical
 	(*s.tri)[3].Position = -horizontal - vertical
 	(*s.tri)[4].Position = +horizontal + vertical
 	(*s.tri)[5].Position = -horizontal + vertical
+
 	for i := range *s.tri {
 		(*s.tri)[i].Color = NRGBA{1, 1, 1, 1}
 		(*s.tri)[i].Picture = center + (*s.tri)[i].Position
