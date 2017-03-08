@@ -122,7 +122,8 @@ func (c *Canvas) MakePicture(p pixel.Picture) pixel.TargetPicture {
 	})
 
 	cp := &canvasPicture{
-		tex: tex,
+		tex:    tex,
+		pixels: pixels,
 		borders: pixel.R(
 			float64(bx), float64(by),
 			float64(bw), float64(bh),
@@ -353,6 +354,7 @@ func (ct *canvasTriangles) Draw() {
 
 type canvasPicture struct {
 	tex     *glhf.Texture
+	pixels  []uint8
 	borders pixel.Rect
 	bounds  pixel.Rect
 
@@ -373,6 +375,21 @@ func (cp *canvasPicture) Slice(r pixel.Rect) pixel.Picture {
 
 func (cp *canvasPicture) Original() pixel.Picture {
 	return cp.orig
+}
+
+func (cp *canvasPicture) Color(at pixel.Vec) pixel.NRGBA {
+	if !cp.bounds.Contains(at) {
+		return pixel.NRGBA{}
+	}
+	bx, by, bw, _ := intBounds(cp.borders)
+	x, y := int(at.X())-bx, int(at.Y())-by
+	off := y*bw + x
+	return pixel.NRGBA{
+		R: float64(cp.pixels[off*4+0]) / 255,
+		G: float64(cp.pixels[off*4+1]) / 255,
+		B: float64(cp.pixels[off*4+2]) / 255,
+		A: float64(cp.pixels[off*4+3]) / 255,
+	}
 }
 
 func (cp *canvasPicture) Draw(t pixel.TargetTriangles) {
@@ -402,6 +419,13 @@ func (ccp *canvasCanvasPicture) Slice(r pixel.Rect) pixel.Picture {
 
 func (ccp *canvasCanvasPicture) Original() pixel.Picture {
 	return ccp.orig
+}
+
+func (ccp *canvasCanvasPicture) Color(at pixel.Vec) pixel.NRGBA {
+	if !ccp.bounds.Contains(at) {
+		return pixel.NRGBA{}
+	}
+	return ccp.src.Color(at)
 }
 
 func (ccp *canvasCanvasPicture) Draw(t pixel.TargetTriangles) {
