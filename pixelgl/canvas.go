@@ -159,8 +159,7 @@ func (c *Canvas) SetColorMask(col color.Color) {
 
 // SetBounds resizes the Canvas to the new bounds. Old content will be preserved.
 //
-// If this Canvas was created using Slice-ing, then the relation between this Canvas and it's
-// Original is unspecified (but Original will always return valid stuff).
+// If the new Bounds fit into the Original capacity bounds, no new Canvas will be allocated.
 func (c *Canvas) SetBounds(bounds pixel.Rect) {
 	c.bounds = bounds
 
