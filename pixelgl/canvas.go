@@ -164,7 +164,9 @@ func (c *Canvas) SetBounds(bounds pixel.Rect) {
 	c.bounds = bounds
 
 	// if this bounds fit into the original bounds, no need to reallocate
-	if c.orig.borders.Contains(bounds.Pos) && c.orig.borders.Contains(bounds.Pos+bounds.Size) {
+	borX, borY, borW, borH := intBounds(c.orig.borders)
+	bndX, bndY, bndW, bndH := intBounds(bounds)
+	if borX <= bndX && bndX+bndW <= borX+borW && borY <= bndY && bndY+bndH <= borY+borH {
 		return
 	}
 
