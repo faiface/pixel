@@ -2,8 +2,9 @@ package pixel
 
 // Sprite is a drawable Picture. It's always anchored by the center of it's Picture.
 type Sprite struct {
-	tri *TrianglesData
-	d   Drawer
+	tri    *TrianglesData
+	bounds Rect
+	d      Drawer
 }
 
 // NewSprite creates a Sprite from the supplied Picture.
@@ -20,18 +21,17 @@ func NewSprite(pic Picture) *Sprite {
 // SetPicture changes the Sprite's Picture. The new Picture may have a different size, everything
 // works.
 func (s *Sprite) SetPicture(pic Picture) {
-	oldPic := s.d.Picture
 	s.d.Picture = pic
 
-	if oldPic != nil && oldPic.Bounds() == pic.Bounds() {
+	if s.bounds == pic.Bounds() {
 		return
 	}
+	s.bounds = pic.Bounds()
 
 	var (
-		bounds     = pic.Bounds()
-		center     = bounds.Center()
-		horizontal = V(bounds.W()/2, 0)
-		vertical   = V(0, bounds.H()/2)
+		center     = s.bounds.Center()
+		horizontal = V(s.bounds.W()/2, 0)
+		vertical   = V(0, s.bounds.H()/2)
 	)
 
 	(*s.tri)[0].Position = -horizontal - vertical
