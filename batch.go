@@ -30,6 +30,8 @@ var _ BasicTarget = (*Batch)(nil)
 func NewBatch(container Triangles, pic Picture) *Batch {
 	return &Batch{
 		cont: Drawer{Triangles: container, Picture: pic},
+		mat:  ZM,
+		col:  NRGBA{1, 1, 1, 1},
 	}
 }
 
@@ -127,6 +129,7 @@ func (bp *batchPicture) Slice(r Rect) Picture {
 	return &batchPicture{
 		Picture: bp.Picture.Slice(r),
 		orig:    bp.orig,
+		dst:     bp.dst,
 	}
 }
 
