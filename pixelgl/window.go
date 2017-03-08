@@ -46,10 +46,6 @@ type WindowConfig struct {
 	// VSync (vertical synchronization) synchronizes window's framerate with the framerate of
 	// the monitor.
 	VSync bool
-
-	// Number of samples for multi-sample anti-aliasing (edge-smoothing). Usual values are 0, 2,
-	// 4, 8 (powers of 2 and not much more than this).
-	MSAASamples int
 }
 
 // Window is a window handler. Use this type to manipulate a window (input, drawing, ...).
@@ -99,7 +95,6 @@ func NewWindow(cfg WindowConfig) (*Window, error) {
 		glfw.WindowHint(glfw.Decorated, bool2int[!cfg.Undecorated])
 		glfw.WindowHint(glfw.Focused, bool2int[!cfg.Unfocused])
 		glfw.WindowHint(glfw.Maximized, bool2int[cfg.Maximized])
-		glfw.WindowHint(glfw.Samples, cfg.MSAASamples)
 
 		var share *glfw.Window
 		if currentWindow != nil {
