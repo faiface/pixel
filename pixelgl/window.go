@@ -62,6 +62,7 @@ type Window struct {
 	}
 
 	prevInp, tempInp, currInp struct {
+		mouse   pixel.Vec
 		buttons [KeyLast + 1]bool
 		scroll  pixel.Vec
 	}

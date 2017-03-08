@@ -23,17 +23,7 @@ func (w *Window) JustReleased(button Button) bool {
 
 // MousePosition returns the current mouse position relative to the window.
 func (w *Window) MousePosition() pixel.Vec {
-	var x, y, width, height float64
-	mainthread.Call(func() {
-		x, y = w.window.GetCursorPos()
-		wi, hi := w.window.GetSize()
-		width, height = float64(wi), float64(hi)
-	})
-
-	return pixel.V(
-		x/width*w.bounds.W()+w.bounds.X(),
-		(height-y)/height*w.bounds.H()+w.bounds.Y(),
-	)
+	return w.currInp.mouse
 }
 
 // MouseScroll returns the scroll amount (in both axis) since the last call to Window.Update.
@@ -363,6 +353,15 @@ func (w *Window) updateInput() {
 	// get events (usually calls callbacks, but callbacks can be called outside too)
 	mainthread.Call(func() {
 		glfw.PollEvents()
+
+		x, y := w.window.GetCursorPos()
+		wi, hi := w.window.GetSize()
+		width, height := float64(wi), float64(hi)
+
+		w.currInp.mouse = pixel.V(
+			x/width*w.bounds.W()+w.bounds.X(),
+			(height-y)/height*w.bounds.H()+w.bounds.Y(),
+		)
 	})
 
 	// cache current state to temp (so that if there are callbacks outside this function,
