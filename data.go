@@ -89,7 +89,7 @@ func (td *TrianglesData) updateData(t Triangles) {
 // TrianglesPosition, TrianglesColor and TrianglesTexture are supported.
 func (td *TrianglesData) Update(t Triangles) {
 	if td.Len() != t.Len() {
-		panic(fmt.Errorf("%T.Update: invalid triangles length", td))
+		panic(fmt.Errorf("(%T).Update: invalid triangles length", td))
 	}
 	td.updateData(t)
 }

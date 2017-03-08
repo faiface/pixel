@@ -155,7 +155,7 @@ func (gt *GLTriangles) submitData() {
 // The two Triangles (gt and t) must be of the same len.
 func (gt *GLTriangles) Update(t pixel.Triangles) {
 	if gt.Len() != t.Len() {
-		panic(fmt.Errorf("%T.Update: invalid triangles len", gt))
+		panic(fmt.Errorf("(%T).Update: invalid triangles len", gt))
 	}
 	gt.updateData(t)
 	gt.submitData()
