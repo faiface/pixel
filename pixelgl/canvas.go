@@ -219,6 +219,14 @@ func (c *Canvas) Clear(color color.Color) {
 
 	nrgba := pixel.NRGBAModel.Convert(color).(pixel.NRGBA)
 
+	// color masking
+	nrgba = nrgba.Mul(pixel.NRGBA{
+		R: float64(c.col[0]),
+		G: float64(c.col[1]),
+		B: float64(c.col[2]),
+		A: float64(c.col[3]),
+	})
+
 	mainthread.CallNonBlock(func() {
 		c.setGlhfBounds()
 		c.f.Begin()
