@@ -361,10 +361,14 @@ func (w *Window) updateInput() {
 		wi, hi := w.window.GetSize()
 		width, height := float64(wi), float64(hi)
 
-		w.currInp.mouse = pixel.V(
+		mouse := pixel.V(
 			x/width*w.bounds.W()+w.bounds.X(),
 			(height-y)/height*w.bounds.H()+w.bounds.Y(),
 		)
+
+		if w.bounds.Contains(mouse) {
+			w.currInp.mouse = mouse
+		}
 	})
 
 	// cache current state to temp (so that if there are callbacks outside this function,
