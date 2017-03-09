@@ -329,6 +329,9 @@ func (w *Window) initInput() {
 		})
 
 		w.window.SetKeyCallback(func(_ *glfw.Window, key glfw.Key, scancode int, action glfw.Action, mods glfw.ModifierKey) {
+			if key == glfw.KeyUnknown {
+				return
+			}
 			switch action {
 			case glfw.Press:
 				w.currInp.buttons[Button(key)] = true
