@@ -71,7 +71,7 @@ func (gt *GLTriangles) SetLen(len int) {
 		}
 	}
 	if len < gt.Len() {
-		gt.data = gt.data[:len]
+		gt.data = gt.data[:len*gt.vs.Stride()]
 	}
 }
 
