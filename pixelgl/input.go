@@ -366,6 +366,7 @@ func (w *Window) updateInput() {
 			(height-y)/height*w.bounds.H()+w.bounds.Y(),
 		)
 
+		//TODO: do something else, this is not entirely rock solid
 		if w.bounds.Contains(mouse) {
 			w.currInp.mouse = mouse
 		}
