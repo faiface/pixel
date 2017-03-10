@@ -188,8 +188,6 @@ func (im *IM) SetColorMask(color color.Color) {
 
 // FillConvexPolygon takes all points Pushed into the IM's queue and fills the convex polygon formed
 // by them.
-//
-// It empties the queue after.
 func (im *IM) FillConvexPolygon() {
 	points := im.points
 	im.points = nil
@@ -223,10 +221,18 @@ func (im *IM) FillConvexPolygon() {
 	im.d.Dirty()
 }
 
-// FillEllipseArc draws an ellipse arc around each point in the IM's queue. Low and high angles are
-// in radians.
-//
-// It empties the queue after.
+// FillCircle draws a filled circle around each point in the IM's queue.
+func (im *IM) FillCircle(radius float64) {
+	im.FillEllipse(V(radius, radius))
+}
+
+// FillEllipse draws a filled ellipse around each point in the IM's queue.
+func (im *IM) FillEllipse(radius Vec) {
+	im.FillEllipseArc(radius, 0, 2*math.Pi)
+}
+
+// FillEllipseArc draws a filled ellipse arc around each point in the IM's queue. Low and high
+// angles are in radians.
 func (im *IM) FillEllipseArc(radius Vec, low, high float64) {
 	points := im.points
 	im.points = nil
