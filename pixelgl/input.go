@@ -340,6 +340,13 @@ func (w *Window) initInput() {
 			}
 		})
 
+		w.window.SetCursorPosCallback(func(_ *glfw.Window, x, y float64) {
+			w.currInp.mouse = pixel.V(
+				x+w.bounds.X(),
+				(w.bounds.H()-y)+w.bounds.Y(),
+			)
+		})
+
 		w.window.SetScrollCallback(func(_ *glfw.Window, xoff, yoff float64) {
 			w.currInp.scroll += pixel.V(xoff, yoff)
 		})
@@ -356,20 +363,6 @@ func (w *Window) updateInput() {
 	// get events (usually calls callbacks, but callbacks can be called outside too)
 	mainthread.Call(func() {
 		glfw.PollEvents()
-
-		x, y := w.window.GetCursorPos()
-		wi, hi := w.window.GetSize()
-		width, height := float64(wi), float64(hi)
-
-		mouse := pixel.V(
-			x/width*w.bounds.W()+w.bounds.X(),
-			(height-y)/height*w.bounds.H()+w.bounds.Y(),
-		)
-
-		//TODO: do something else, this is not entirely rock solid
-		if w.bounds.Contains(mouse) {
-			w.currInp.mouse = mouse
-		}
 	})
 
 	// cache current state to temp (so that if there are callbacks outside this function,
