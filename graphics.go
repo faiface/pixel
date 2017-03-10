@@ -223,7 +223,12 @@ func (im *IM) FillConvexPolygon() {
 
 // FillCircle draws a filled circle around each point in the IM's queue.
 func (im *IM) FillCircle(radius float64) {
-	im.FillEllipse(V(radius, radius))
+	im.FillEllipseArc(V(radius, radius), 0, 2*math.Pi)
+}
+
+// FillCircleArc draws a filled circle arc around each point in the IM's queue.
+func (im *IM) FillCircleArc(radius, low, high float64) {
+	im.FillEllipseArc(V(radius, radius), low, high)
 }
 
 // FillEllipse draws a filled ellipse around each point in the IM's queue.
@@ -259,4 +264,8 @@ func (im *IM) FillEllipseArc(radius Vec, low, high float64) {
 		im.Push(im.tmp[:int(num)+1]...)
 		im.FillConvexPolygon()
 	}
+}
+
+func (im *IM) Line() {
+
 }
