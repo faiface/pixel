@@ -79,10 +79,10 @@ type IM struct {
 }
 
 type point struct {
-	position  Vec
-	color     NRGBA
-	picture   Vec
-	intensity float64
+	pos       Vec
+	col       NRGBA
+	pic       Vec
+	in        float64
 	width     float64
 	precision int
 	endshape  EndShape
@@ -130,25 +130,25 @@ func (im *IM) Draw(t Target) {
 func (im *IM) Push(pts ...Vec) {
 	point := im.opts
 	for _, pt := range pts {
-		point.position = im.matrix.Project(pt)
-		point.color = im.mask.Mul(im.opts.color)
+		point.pos = im.matrix.Project(pt)
+		point.col = im.mask.Mul(im.opts.col)
 		im.points = append(im.points, point)
 	}
 }
 
 // Color sets the color of the next Pushed points.
 func (im *IM) Color(color color.Color) {
-	im.opts.color = NRGBAModel.Convert(color).(NRGBA)
+	im.opts.col = NRGBAModel.Convert(color).(NRGBA)
 }
 
 // Picture sets the Picture coordinates of the next Pushed points.
 func (im *IM) Picture(pic Vec) {
-	im.opts.picture = pic
+	im.opts.pic = pic
 }
 
 // Intensity sets the picture Intensity of the next Pushed points.
 func (im *IM) Intensity(in float64) {
-	im.opts.intensity = in
+	im.opts.in = in
 }
 
 // Width sets the with property of the next Pushed points.
@@ -200,20 +200,20 @@ func (im *IM) FillConvexPolygon() {
 	im.tri.SetLen(im.tri.Len() + 3*(len(points)-2))
 
 	for j := 1; j+1 < len(points); j++ {
-		(*im.tri)[i].Position = points[0].position
-		(*im.tri)[i].Color = points[0].color
-		(*im.tri)[i].Picture = points[0].picture
-		(*im.tri)[i].Intensity = points[0].intensity
+		(*im.tri)[i].Position = points[0].pos
+		(*im.tri)[i].Color = points[0].col
+		(*im.tri)[i].Picture = points[0].pic
+		(*im.tri)[i].Intensity = points[0].in
 
-		(*im.tri)[i+1].Position = points[j].position
-		(*im.tri)[i+1].Color = points[j].color
-		(*im.tri)[i+1].Picture = points[j].picture
-		(*im.tri)[i+1].Intensity = points[j].intensity
+		(*im.tri)[i+1].Position = points[j].pos
+		(*im.tri)[i+1].Color = points[j].col
+		(*im.tri)[i+1].Picture = points[j].pic
+		(*im.tri)[i+1].Intensity = points[j].in
 
-		(*im.tri)[i+2].Position = points[j+1].position
-		(*im.tri)[i+2].Color = points[j+1].color
-		(*im.tri)[i+2].Picture = points[j+1].picture
-		(*im.tri)[i+2].Intensity = points[j+1].intensity
+		(*im.tri)[i+2].Position = points[j+1].pos
+		(*im.tri)[i+2].Color = points[j+1].col
+		(*im.tri)[i+2].Picture = points[j+1].pic
+		(*im.tri)[i+2].Intensity = points[j+1].in
 
 		i += 3
 	}
@@ -248,14 +248,14 @@ func (im *IM) FillEllipseArc(radius Vec, low, high float64) {
 	}
 
 	for _, pt := range points {
-		im.Push(pt.position) // center
+		im.Push(pt.pos) // center
 
 		num := math.Ceil(math.Abs(high-low) / (2 * math.Pi) * float64(pt.precision))
 		delta := (high - low) / num
 		for i := range im.tmp[:int(num)+1] {
 			angle := low + float64(i)*delta
 			sin, cos := math.Sincos(angle)
-			im.tmp[i] = pt.position + V(
+			im.tmp[i] = pt.pos + V(
 				radius.X()*cos,
 				radius.Y()*sin,
 			)
@@ -264,8 +264,4 @@ func (im *IM) FillEllipseArc(radius Vec, low, high float64) {
 		im.Push(im.tmp[:int(num)+1]...)
 		im.FillConvexPolygon()
 	}
-}
-
-func (im *IM) Line() {
-
 }

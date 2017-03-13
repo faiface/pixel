@@ -134,8 +134,8 @@ type PictureData struct {
 
 // MakePictureData creates a zero-initialized PictureData covering the given rectangle.
 func MakePictureData(rect Rect) *PictureData {
-	w := int(math.Ceil(rect.Pos.X()+rect.Size.X())) - int(math.Floor(rect.Pos.X()))
-	h := int(math.Ceil(rect.Pos.Y()+rect.Size.Y())) - int(math.Floor(rect.Pos.Y()))
+	w := int(math.Ceil(rect.Max.X())) - int(math.Floor(rect.Min.X()))
+	h := int(math.Ceil(rect.Max.Y())) - int(math.Floor(rect.Min.Y()))
 	pd := &PictureData{
 		Stride: w,
 		Rect:   rect,
@@ -206,12 +206,12 @@ func PictureDataFromPicture(pic Picture) *PictureData {
 	pd := MakePictureData(bounds)
 
 	if pic, ok := pic.(PictureColor); ok {
-		for y := math.Floor(bounds.Pos.Y()); y < bounds.Pos.Y()+bounds.Size.Y(); y++ {
-			for x := math.Floor(bounds.Pos.X()); x < bounds.Pos.X()+bounds.Size.X(); x++ {
+		for y := math.Floor(bounds.Min.Y()); y < bounds.Max.Y(); y++ {
+			for x := math.Floor(bounds.Min.X()); x < bounds.Max.X(); x++ {
 				// this together with the Floor is a trick to get all of the pixels
 				at := V(
-					math.Max(x, bounds.Pos.X()),
-					math.Max(y, bounds.Pos.Y()),
+					math.Max(x, bounds.Min.X()),
+					math.Max(y, bounds.Min.Y()),
 				)
 				pd.SetColor(at, pic.Color(at))
 			}
@@ -226,10 +226,10 @@ func PictureDataFromPicture(pic Picture) *PictureData {
 // The resulting image.NRGBA's Bounds will be equivalent of the PictureData's Bounds.
 func (pd *PictureData) Image() *image.NRGBA {
 	bounds := image.Rect(
-		int(math.Floor(pd.Rect.Pos.X())),
-		int(math.Floor(pd.Rect.Pos.Y())),
-		int(math.Ceil(pd.Rect.Pos.X()+pd.Rect.Size.X())),
-		int(math.Ceil(pd.Rect.Pos.Y()+pd.Rect.Size.Y())),
+		int(math.Floor(pd.Rect.Min.X())),
+		int(math.Floor(pd.Rect.Min.Y())),
+		int(math.Ceil(pd.Rect.Max.X())),
+		int(math.Ceil(pd.Rect.Max.Y())),
 	)
 	nrgba := image.NewNRGBA(bounds)
 
@@ -251,7 +251,7 @@ func (pd *PictureData) Image() *image.NRGBA {
 }
 
 func (pd *PictureData) offset(at Vec) int {
-	at -= pd.Rect.Pos.Map(math.Floor)
+	at -= pd.Rect.Min.Map(math.Floor)
 	x, y := int(at.X()), int(at.Y())
 	return y*pd.Stride + x
 }
@@ -264,7 +264,7 @@ func (pd *PictureData) Bounds() Rect {
 // Slice returns a sub-Picture of this PictureData inside the supplied rectangle.
 func (pd *PictureData) Slice(r Rect) Picture {
 	return &PictureData{
-		Pix:    pd.Pix[pd.offset(r.Pos):],
+		Pix:    pd.Pix[pd.offset(r.Min):],
 		Stride: pd.Stride,
 		Rect:   r,
 		Orig:   pd.Orig,

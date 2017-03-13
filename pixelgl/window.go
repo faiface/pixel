@@ -2,7 +2,6 @@ package pixelgl
 
 import (
 	"image/color"
-	"math"
 	"runtime"
 
 	"github.com/faiface/glhf"
@@ -147,14 +146,7 @@ func (w *Window) Destroy() {
 func (w *Window) Update() {
 	mainthread.Call(func() {
 		wi, hi := w.window.GetSize()
-		w.bounds.Size = pixel.V(float64(wi), float64(hi))
-		// fractional positions end up covering more pixels with less size
-		if w.bounds.X() != math.Floor(w.bounds.X()) {
-			w.bounds.Size -= pixel.V(1, 0)
-		}
-		if w.bounds.Y() != math.Floor(w.bounds.Y()) {
-			w.bounds.Size -= pixel.V(0, 1)
-		}
+		w.bounds = w.bounds.ResizedMin(pixel.V(float64(wi), float64(hi)))
 	})
 
 	w.canvas.SetBounds(w.Bounds())

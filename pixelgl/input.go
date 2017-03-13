@@ -342,8 +342,8 @@ func (w *Window) initInput() {
 
 		w.window.SetCursorPosCallback(func(_ *glfw.Window, x, y float64) {
 			w.currInp.mouse = pixel.V(
-				x+w.bounds.X(),
-				(w.bounds.H()-y)+w.bounds.Y(),
+				x+w.bounds.Min.X(),
+				(w.bounds.H()-y)+w.bounds.Min.Y(),
 			)
 		})
 

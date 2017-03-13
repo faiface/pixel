@@ -105,8 +105,8 @@ func (c *Canvas) MakePicture(p pixel.Picture) pixel.TargetPicture {
 		for y := 0; y < bh; y++ {
 			for x := 0; x < bw; x++ {
 				at := pixel.V(
-					math.Max(float64(bx+x), bounds.Pos.X()),
-					math.Max(float64(by+y), bounds.Pos.Y()),
+					math.Max(float64(bx+x), bounds.Min.X()),
+					math.Max(float64(by+y), bounds.Min.Y()),
 				)
 				color := p.Color(at)
 				pixels[(y*bw+x)*4+0] = uint8(color.R * 255)
@@ -179,7 +179,7 @@ func (c *Canvas) SetBounds(bounds pixel.Rect) {
 		// preserve old content
 		if oldF != nil {
 			relBounds := bounds
-			relBounds.Pos -= c.orig.borders.Pos
+			relBounds = relBounds.Moved(-c.orig.borders.Min)
 			ox, oy, ow, oh := intBounds(relBounds)
 			oldF.Blit(
 				c.f,
@@ -216,7 +216,7 @@ func (c *Canvas) Smooth() bool {
 // must be manually called inside mainthread
 func (c *Canvas) setGlhfBounds() {
 	bounds := c.bounds
-	bounds.Pos -= c.orig.borders.Pos
+	bounds.Moved(c.orig.borders.Min)
 	bx, by, bw, bh := intBounds(bounds)
 	glhf.Bounds(bx, by, bw, bh)
 }
@@ -311,8 +311,8 @@ func (ct *canvasTriangles) draw(tex *glhf.Texture, borders, bounds pixel.Rect) {
 		ct.dst.s.Begin()
 
 		ct.dst.s.SetUniformAttr(canvasBounds, mgl32.Vec4{
-			float32(ct.dst.bounds.X()),
-			float32(ct.dst.bounds.Y()),
+			float32(ct.dst.bounds.Min.X()),
+			float32(ct.dst.bounds.Min.Y()),
 			float32(ct.dst.bounds.W()),
 			float32(ct.dst.bounds.H()),
 		})
@@ -327,14 +327,14 @@ func (ct *canvasTriangles) draw(tex *glhf.Texture, borders, bounds pixel.Rect) {
 			tex.Begin()
 
 			ct.dst.s.SetUniformAttr(canvasTexBorders, mgl32.Vec4{
-				float32(borders.X()),
-				float32(borders.Y()),
+				float32(borders.Min.X()),
+				float32(borders.Min.Y()),
 				float32(borders.W()),
 				float32(borders.H()),
 			})
 			ct.dst.s.SetUniformAttr(canvasTexBounds, mgl32.Vec4{
-				float32(bounds.X()),
-				float32(bounds.Y()),
+				float32(bounds.Min.X()),
+				float32(bounds.Min.Y()),
 				float32(bounds.W()),
 				float32(bounds.H()),
 			})
