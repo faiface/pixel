@@ -65,10 +65,10 @@ func (s *Sprite) Draw(t Target) {
 	s.d.Draw(t)
 }
 
-// IM is an immediate-like-mode shape drawer.
+// IMDraw is an immediate-like-mode shape drawer.
 //
 // TODO: mode doc
-type IM struct {
+type IMDraw struct {
 	points []point
 	opts   point
 	matrix Matrix
@@ -99,12 +99,12 @@ const (
 	SharpEndShape
 )
 
-// NewIM creates a new empty IM. An optional Picture can be used to draw with a Picture.
+// NewIMDraw creates a new empty IMDraw. An optional Picture can be used to draw with a Picture.
 //
 // If you just want to draw primitive shapes, pass nil as the Picture.
-func NewIM(pic Picture) *IM {
+func NewIMDraw(pic Picture) *IMDraw {
 	tri := &TrianglesData{}
-	im := &IM{
+	im := &IMDraw{
 		tri: tri,
 		d:   Drawer{Triangles: tri, Picture: pic},
 	}
@@ -115,132 +115,132 @@ func NewIM(pic Picture) *IM {
 }
 
 // Clear removes all drawn shapes from the IM. This does not remove Pushed points.
-func (im *IM) Clear() {
-	im.tri.SetLen(0)
-	im.d.Dirty()
+func (imd *IMDraw) Clear() {
+	imd.tri.SetLen(0)
+	imd.d.Dirty()
 }
 
 // Draw draws all currently drawn shapes inside the IM onto another Target.
-func (im *IM) Draw(t Target) {
-	im.d.Draw(t)
+func (imd *IMDraw) Draw(t Target) {
+	imd.d.Draw(t)
 }
 
 // Push adds some points to the IM queue. All Pushed points will have the same properties except for
 // the position.
-func (im *IM) Push(pts ...Vec) {
-	point := im.opts
+func (imd *IMDraw) Push(pts ...Vec) {
+	point := imd.opts
 	for _, pt := range pts {
-		point.pos = im.matrix.Project(pt)
-		point.col = im.mask.Mul(im.opts.col)
-		im.points = append(im.points, point)
+		point.pos = imd.matrix.Project(pt)
+		point.col = imd.mask.Mul(imd.opts.col)
+		imd.points = append(imd.points, point)
 	}
 }
 
 // Color sets the color of the next Pushed points.
-func (im *IM) Color(color color.Color) {
-	im.opts.col = NRGBAModel.Convert(color).(NRGBA)
+func (imd *IMDraw) Color(color color.Color) {
+	imd.opts.col = NRGBAModel.Convert(color).(NRGBA)
 }
 
 // Picture sets the Picture coordinates of the next Pushed points.
-func (im *IM) Picture(pic Vec) {
-	im.opts.pic = pic
+func (imd *IMDraw) Picture(pic Vec) {
+	imd.opts.pic = pic
 }
 
 // Intensity sets the picture Intensity of the next Pushed points.
-func (im *IM) Intensity(in float64) {
-	im.opts.in = in
+func (imd *IMDraw) Intensity(in float64) {
+	imd.opts.in = in
 }
 
 // Width sets the with property of the next Pushed points.
 //
 // Note that this property does not apply to filled shapes.
-func (im *IM) Width(w float64) {
-	im.opts.width = w
+func (imd *IMDraw) Width(w float64) {
+	imd.opts.width = w
 }
 
 // Precision sets the curve/circle drawing precision of the next Pushed points.
 //
 // It is the number of segments per 360 degrees.
-func (im *IM) Precision(p int) {
-	im.opts.precision = p
-	if p+1 > len(im.tmp) {
-		im.tmp = append(im.tmp, make([]Vec, p+1-len(im.tmp))...)
+func (imd *IMDraw) Precision(p int) {
+	imd.opts.precision = p
+	if p+1 > len(imd.tmp) {
+		imd.tmp = append(imd.tmp, make([]Vec, p+1-len(imd.tmp))...)
 	}
-	if p+1 < len(im.tmp) {
-		im.tmp = im.tmp[:p+1]
+	if p+1 < len(imd.tmp) {
+		imd.tmp = imd.tmp[:p+1]
 	}
 }
 
 // EndShape sets the endshape of the next Pushed points.
-func (im *IM) EndShape(es EndShape) {
-	im.opts.endshape = es
+func (imd *IMDraw) EndShape(es EndShape) {
+	imd.opts.endshape = es
 }
 
 // SetMatrix sets a Matrix that all further points will be transformed by.
-func (im *IM) SetMatrix(m Matrix) {
-	im.matrix = m
+func (imd *IMDraw) SetMatrix(m Matrix) {
+	imd.matrix = m
 }
 
 // SetColorMask sets a color that all futher point's color will be multiplied by.
-func (im *IM) SetColorMask(color color.Color) {
-	im.mask = NRGBAModel.Convert(color).(NRGBA)
+func (imd *IMDraw) SetColorMask(color color.Color) {
+	imd.mask = NRGBAModel.Convert(color).(NRGBA)
 }
 
 // FillConvexPolygon takes all points Pushed into the IM's queue and fills the convex polygon formed
 // by them.
-func (im *IM) FillConvexPolygon() {
-	points := im.points
-	im.points = nil
+func (imd *IMDraw) FillConvexPolygon() {
+	points := imd.points
+	imd.points = nil
 
 	if len(points) < 3 {
 		return
 	}
 
-	i := im.tri.Len()
-	im.tri.SetLen(im.tri.Len() + 3*(len(points)-2))
+	i := imd.tri.Len()
+	imd.tri.SetLen(imd.tri.Len() + 3*(len(points)-2))
 
 	for j := 1; j+1 < len(points); j++ {
-		(*im.tri)[i].Position = points[0].pos
-		(*im.tri)[i].Color = points[0].col
-		(*im.tri)[i].Picture = points[0].pic
-		(*im.tri)[i].Intensity = points[0].in
+		(*imd.tri)[i].Position = points[0].pos
+		(*imd.tri)[i].Color = points[0].col
+		(*imd.tri)[i].Picture = points[0].pic
+		(*imd.tri)[i].Intensity = points[0].in
 
-		(*im.tri)[i+1].Position = points[j].pos
-		(*im.tri)[i+1].Color = points[j].col
-		(*im.tri)[i+1].Picture = points[j].pic
-		(*im.tri)[i+1].Intensity = points[j].in
+		(*imd.tri)[i+1].Position = points[j].pos
+		(*imd.tri)[i+1].Color = points[j].col
+		(*imd.tri)[i+1].Picture = points[j].pic
+		(*imd.tri)[i+1].Intensity = points[j].in
 
-		(*im.tri)[i+2].Position = points[j+1].pos
-		(*im.tri)[i+2].Color = points[j+1].col
-		(*im.tri)[i+2].Picture = points[j+1].pic
-		(*im.tri)[i+2].Intensity = points[j+1].in
+		(*imd.tri)[i+2].Position = points[j+1].pos
+		(*imd.tri)[i+2].Color = points[j+1].col
+		(*imd.tri)[i+2].Picture = points[j+1].pic
+		(*imd.tri)[i+2].Intensity = points[j+1].in
 
 		i += 3
 	}
 
-	im.d.Dirty()
+	imd.d.Dirty()
 }
 
 // FillCircle draws a filled circle around each point in the IM's queue.
-func (im *IM) FillCircle(radius float64) {
-	im.FillEllipseArc(V(radius, radius), 0, 2*math.Pi)
+func (imd *IMDraw) FillCircle(radius float64) {
+	imd.FillEllipseArc(V(radius, radius), 0, 2*math.Pi)
 }
 
 // FillCircleArc draws a filled circle arc around each point in the IM's queue.
-func (im *IM) FillCircleArc(radius, low, high float64) {
-	im.FillEllipseArc(V(radius, radius), low, high)
+func (imd *IMDraw) FillCircleArc(radius, low, high float64) {
+	imd.FillEllipseArc(V(radius, radius), low, high)
 }
 
 // FillEllipse draws a filled ellipse around each point in the IM's queue.
-func (im *IM) FillEllipse(radius Vec) {
-	im.FillEllipseArc(radius, 0, 2*math.Pi)
+func (imd *IMDraw) FillEllipse(radius Vec) {
+	imd.FillEllipseArc(radius, 0, 2*math.Pi)
 }
 
 // FillEllipseArc draws a filled ellipse arc around each point in the IM's queue. Low and high
 // angles are in radians.
-func (im *IM) FillEllipseArc(radius Vec, low, high float64) {
-	points := im.points
-	im.points = nil
+func (imd *IMDraw) FillEllipseArc(radius Vec, low, high float64) {
+	points := imd.points
+	imd.points = nil
 
 	// normalize high
 	if math.Abs(high-low) > 2*math.Pi {
@@ -248,20 +248,20 @@ func (im *IM) FillEllipseArc(radius Vec, low, high float64) {
 	}
 
 	for _, pt := range points {
-		im.Push(pt.pos) // center
+		imd.Push(pt.pos) // center
 
 		num := math.Ceil(math.Abs(high-low) / (2 * math.Pi) * float64(pt.precision))
 		delta := (high - low) / num
-		for i := range im.tmp[:int(num)+1] {
+		for i := range imd.tmp[:int(num)+1] {
 			angle := low + float64(i)*delta
 			sin, cos := math.Sincos(angle)
-			im.tmp[i] = pt.pos + V(
+			imd.tmp[i] = pt.pos + V(
 				radius.X()*cos,
 				radius.Y()*sin,
 			)
 		}
 
-		im.Push(im.tmp[:int(num)+1]...)
-		im.FillConvexPolygon()
+		imd.Push(imd.tmp[:int(num)+1]...)
+		imd.FillConvexPolygon()
 	}
 }
