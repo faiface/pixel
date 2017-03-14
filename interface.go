@@ -25,7 +25,7 @@ type Target interface {
 	MakePicture(Picture) TargetPicture
 }
 
-// BasicTarget is a Target with additional basic "adjustment" methods.
+// BasicTarget is a Target with additional basic adjustment methods.
 type BasicTarget interface {
 	Target
 
