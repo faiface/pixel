@@ -159,14 +159,12 @@ func (c *Canvas) SetColorMask(col color.Color) {
 
 // SetBounds resizes the Canvas to the new bounds. Old content will be preserved.
 //
-// If the new Bounds fit into the Original capacity bounds, no new Canvas will be allocated.
+// If the new Bounds fit into the Original borders, no new Canvas will be allocated.
 func (c *Canvas) SetBounds(bounds pixel.Rect) {
 	c.bounds = bounds
 
 	// if this bounds fit into the original bounds, no need to reallocate
-	borX, borY, borW, borH := intBounds(c.orig.borders)
-	bndX, bndY, bndW, bndH := intBounds(bounds)
-	if borX <= bndX && bndX+bndW <= borX+borW && borY <= bndY && bndY+bndH <= borY+borH {
+	if c.orig.borders.Contains(bounds.Min) && c.orig.borders.Contains(bounds.Max) {
 		return
 	}
 
