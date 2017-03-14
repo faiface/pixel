@@ -188,6 +188,10 @@ func (imd *IMDraw) SetColorMask(color color.Color) {
 
 // FillConvexPolygon takes all points Pushed into the IM's queue and fills the convex polygon formed
 // by them.
+//
+// The polygon does not need to be exactly convex. The way it's drawn is that for each two adjacent
+// points, a triangle is constructed from those two points and the first Pushed point. You can use
+// this property to draw specific concave graphs.
 func (imd *IMDraw) FillConvexPolygon() {
 	points := imd.points
 	imd.points = nil
