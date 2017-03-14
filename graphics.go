@@ -35,8 +35,8 @@ func (s *Sprite) SetPicture(pic Picture) {
 
 	var (
 		center     = s.bounds.Center()
-		horizontal = V(s.bounds.W()/2, 0)
-		vertical   = V(0, s.bounds.H()/2)
+		horizontal = X(s.bounds.W() / 2)
+		vertical   = Y(s.bounds.H() / 2)
 	)
 
 	(*s.tri)[0].Position = -horizontal - vertical
