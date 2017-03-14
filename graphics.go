@@ -109,7 +109,7 @@ func NewIMDraw(pic Picture) *IMDraw {
 		d:   Drawer{Triangles: tri, Picture: pic},
 	}
 	im.Precision(64)
-	im.SetMatrix(ZM)
+	im.SetMatrix(IM)
 	im.SetColorMask(NRGBA{1, 1, 1, 1})
 	return im
 }

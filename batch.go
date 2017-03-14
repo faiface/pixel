@@ -30,7 +30,7 @@ var _ BasicTarget = (*Batch)(nil)
 func NewBatch(container Triangles, pic Picture) *Batch {
 	return &Batch{
 		cont: Drawer{Triangles: container, Picture: pic},
-		mat:  ZM,
+		mat:  IM,
 		col:  NRGBA{1, 1, 1, 1},
 	}
 }
