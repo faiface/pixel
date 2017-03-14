@@ -242,7 +242,7 @@ func (r Rect) Contains(u Vec) bool {
 // vertically and then rotates everything by 90 degrees around the origin.
 type Matrix [9]float64
 
-// IM stands for Zero-Matrix which is the identity matrix. Does nothing, no transformation.
+// IM stands for identity matrix. Does nothing, no transformation.
 var IM = Matrix(mgl64.Ident3())
 
 // Moved moves everything by the delta vector.
