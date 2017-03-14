@@ -241,7 +241,7 @@ func (r Rect) Contains(u Vec) bool {
 // Matrix has a handful of useful methods, each of which adds a transformation to the matrix. For
 // example:
 //
-//   pixel.ZM.Move(pixel.V(100, 200)).Rotate(0, math.Pi/2)
+//   pixel.IM.Move(pixel.V(100, 200)).Rotate(0, math.Pi/2)
 //
 // This code creates a Matrix that first moves everything by 100 units horizontaly and 200 units
 // vertically and then rotates everything by 90 degrees around the origin.
