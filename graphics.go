@@ -92,11 +92,11 @@ type point struct {
 type EndShape int
 
 const (
-	// RoundEndShape is a circular end shape.
-	RoundEndShape EndShape = iota
-
 	// SharpEndShape is a square end shape.
-	SharpEndShape
+	SharpEndShape EndShape = iota
+
+	// RoundEndShape is a circular end shape.
+	RoundEndShape
 )
 
 // NewIMDraw creates a new empty IMDraw. An optional Picture can be used to draw with a Picture.
@@ -108,9 +108,9 @@ func NewIMDraw(pic Picture) *IMDraw {
 		tri: tri,
 		d:   Drawer{Triangles: tri, Picture: pic},
 	}
-	im.Precision(64)
 	im.SetMatrix(IM)
 	im.SetColorMask(NRGBA{1, 1, 1, 1})
+	im.Reset()
 	return im
 }
 
@@ -118,6 +118,15 @@ func NewIMDraw(pic Picture) *IMDraw {
 func (imd *IMDraw) Clear() {
 	imd.tri.SetLen(0)
 	imd.d.Dirty()
+}
+
+// Reset restores all point properties to defaults and removes all Pushed points.
+//
+// This does not affect matrix and color mask set by SetMatrix and SetColorMask.
+func (imd *IMDraw) Reset() {
+	imd.points = nil
+	imd.opts = point{}
+	imd.Precision(64)
 }
 
 // Draw draws all currently drawn shapes inside the IM onto another Target.
