@@ -186,9 +186,11 @@ func (r Rect) Moved(delta Vec) Rect {
 }
 
 // Resized returns the Rect resized to the given size while keeping the position of the given anchor.
+//
 //   r.Resized(r.Min, size)      // resizes while keeping the position of the lower-left corner
 //   r.Resized(r.Max, size)      // same with the top-right corner
 //   r.Resized(r.Center(), size) // resizes around the center
+//
 // This function does not make sense for size of zero area and will panic. Use ResizeMin in the case
 // of zero area.
 func (r Rect) Resized(anchor, size Vec) Rect {
