@@ -41,7 +41,7 @@ func NewBatch(container Triangles, pic Picture) *Batch {
 //
 //   container := &pixel.TrianglesData{}
 //   batch := pixel.NewBatch(container, nil)
-//   container.SetLen(10) // changed container from outside of Batch
+//   container.SetLen(10) // container changed from outside of Batch
 //   batch.Dirty()        // notify Batch about the change
 func (b *Batch) Dirty() {
 	b.cont.Dirty()
