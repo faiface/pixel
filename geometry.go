@@ -245,8 +245,8 @@ type Matrix [9]float64
 // IM stands for Zero-Matrix which is the identity matrix. Does nothing, no transformation.
 var IM = Matrix(mgl64.Ident3())
 
-// Move moves everything by the delta vector.
-func (m Matrix) Move(delta Vec) Matrix {
+// Moved moves everything by the delta vector.
+func (m Matrix) Moved(delta Vec) Matrix {
 	m3 := mgl64.Mat3(m)
 	m3 = mgl64.Translate2D(delta.XY()).Mul3(m3)
 	return Matrix(m3)
