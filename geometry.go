@@ -281,6 +281,8 @@ func (m Matrix) Rotated(around Vec, angle float64) Matrix {
 }
 
 // Project applies all transformations added to the Matrix to a vector u and returns the result.
+//
+// Time complexity is O(1).
 func (m Matrix) Project(u Vec) Vec {
 	m3 := mgl64.Mat3(m)
 	proj := m3.Mul3x1(mgl64.Vec3{u.X(), u.Y(), 1})
@@ -288,6 +290,8 @@ func (m Matrix) Project(u Vec) Vec {
 }
 
 // Unproject does the inverse operation to Project.
+//
+// Time complexity is O(1).
 func (m Matrix) Unproject(u Vec) Vec {
 	m3 := mgl64.Mat3(m)
 	inv := m3.Inv()
