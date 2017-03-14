@@ -145,11 +145,15 @@ func (w *Window) Destroy() {
 // Update swaps buffers and polls events.
 func (w *Window) Update() {
 	mainthread.Call(func() {
-		wi, hi := w.window.GetSize()
-		w.bounds = w.bounds.ResizedMin(pixel.V(float64(wi), float64(hi)))
+		_, _, oldW, oldH := intBounds(w.bounds)
+		newW, newH := w.window.GetSize()
+		w.bounds = w.bounds.ResizedMin(w.bounds.Size() + pixel.V(
+			float64(newW-oldW),
+			float64(newH-oldH),
+		))
 	})
 
-	w.canvas.SetBounds(w.Bounds())
+	w.canvas.SetBounds(w.bounds)
 
 	mainthread.Call(func() {
 		w.begin()
