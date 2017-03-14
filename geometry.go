@@ -34,9 +34,19 @@ import (
 //   x := u.Unit().Dot(v.Unit())
 type Vec complex128
 
-// V returns a new 2d vector with the given coordinates.
+// V returns a new 2D vector with the given coordinates.
 func V(x, y float64) Vec {
 	return Vec(complex(x, y))
+}
+
+// X returns a 2D vector with coordinates (x, 0).
+func X(x float64) Vec {
+	return V(x, 0)
+}
+
+// Y returns a 2D vector with coordinates (0, y).
+func Y(y float64) Vec {
+	return V(0, y)
 }
 
 // String returns the string representation of the vector u.
