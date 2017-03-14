@@ -182,6 +182,11 @@ func (r Rect) H() float64 {
 	return r.Max.Y() - r.Min.Y()
 }
 
+// Size returns the vector of width and height as components respectively.
+func (r Rect) Size() Vec {
+	return V(r.W(), r.H())
+}
+
 // Center returns the position of the center of the rectangle.
 func (r Rect) Center() Vec {
 	return (r.Min + r.Max) / 2
