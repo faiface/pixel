@@ -23,8 +23,9 @@ var _ BasicTarget = (*Batch)(nil)
 
 // NewBatch creates an empty Batch with the specified Picture and container.
 //
-// The container is where objects get accumulated. Batch will support precisely those vertex
-// properties, that the supplied container supports.
+// The container is where objects get accumulated. Batch will support precisely those Triangles
+// properties, that the supplied container supports. If you retain access to the container and
+// change it, call Dirty to notify Batch about the change.
 //
 // Note, that if the container does not support TrianglesColor, color masking will not work.
 func NewBatch(container Triangles, pic Picture) *Batch {
@@ -33,6 +34,17 @@ func NewBatch(container Triangles, pic Picture) *Batch {
 		mat:  IM,
 		col:  NRGBA{1, 1, 1, 1},
 	}
+}
+
+// Dirty notifies Batch about an external modification of it's container. If you retain access to
+// the Batch's container and change it, call Dirty to notify Batch about the change.
+//
+//   container := &pixel.TrianglesData{}
+//   batch := pixel.NewBatch(container, nil)
+//   container.SetLen(10) // changed container from outside of Batch
+//   batch.Dirty()        // notify Batch about the change
+func (b *Batch) Dirty() {
+	b.cont.Dirty()
 }
 
 // Clear removes all objects from the Batch.
