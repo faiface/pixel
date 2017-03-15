@@ -67,7 +67,7 @@ type Window struct {
 	}
 }
 
-var currentWindow *Window
+var currWin *Window
 
 // NewWindow creates a new Window with it's properties specified in the provided config.
 //
@@ -78,9 +78,7 @@ func NewWindow(cfg WindowConfig) (*Window, error) {
 		false: glfw.False,
 	}
 
-	w := &Window{
-		bounds: cfg.Bounds,
-	}
+	w := &Window{bounds: cfg.Bounds}
 
 	err := mainthread.CallErr(func() error {
 		var err error
@@ -97,8 +95,8 @@ func NewWindow(cfg WindowConfig) (*Window, error) {
 		glfw.WindowHint(glfw.Maximized, bool2int[cfg.Maximized])
 
 		var share *glfw.Window
-		if currentWindow != nil {
-			share = currentWindow.window
+		if currWin != nil {
+			share = currWin.window
 		}
 		_, _, width, height := intBounds(cfg.Bounds)
 		w.window, err = glfw.CreateWindow(
@@ -346,10 +344,10 @@ func (w *Window) VSync() bool {
 
 // Note: must be called inside the main thread.
 func (w *Window) begin() {
-	if currentWindow != w {
+	if currWin != w {
 		w.window.MakeContextCurrent()
 		glhf.Init()
-		currentWindow = w
+		currWin = w
 	}
 }
 
