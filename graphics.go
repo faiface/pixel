@@ -74,7 +74,7 @@ type IMDraw struct {
 	matrix Matrix
 	mask   NRGBA
 	tri    *TrianglesData
-	d      Drawer
+	batch  *Batch
 	tmp    []Vec
 }
 
@@ -105,8 +105,8 @@ const (
 func NewIMDraw(pic Picture) *IMDraw {
 	tri := &TrianglesData{}
 	im := &IMDraw{
-		tri: tri,
-		d:   Drawer{Triangles: tri, Picture: pic},
+		tri:   tri,
+		batch: NewBatch(tri, pic),
 	}
 	im.SetMatrix(IM)
 	im.SetColorMask(NRGBA{1, 1, 1, 1})
@@ -117,7 +117,7 @@ func NewIMDraw(pic Picture) *IMDraw {
 // Clear removes all drawn shapes from the IM. This does not remove Pushed points.
 func (imd *IMDraw) Clear() {
 	imd.tri.SetLen(0)
-	imd.d.Dirty()
+	imd.batch.Dirty()
 }
 
 // Reset restores all point properties to defaults and removes all Pushed points.
@@ -131,7 +131,7 @@ func (imd *IMDraw) Reset() {
 
 // Draw draws all currently drawn shapes inside the IM onto another Target.
 func (imd *IMDraw) Draw(t Target) {
-	imd.d.Draw(t)
+	imd.batch.Draw(t)
 }
 
 // Push adds some points to the IM queue. All Pushed points will have the same properties except for
@@ -188,11 +188,23 @@ func (imd *IMDraw) EndShape(es EndShape) {
 // SetMatrix sets a Matrix that all further points will be transformed by.
 func (imd *IMDraw) SetMatrix(m Matrix) {
 	imd.matrix = m
+	imd.batch.SetMatrix(imd.matrix)
 }
 
 // SetColorMask sets a color that all futher point's color will be multiplied by.
 func (imd *IMDraw) SetColorMask(color color.Color) {
 	imd.mask = NRGBAModel.Convert(color).(NRGBA)
+	imd.batch.SetColorMask(imd.mask)
+}
+
+// MakeTriangles returns a specialized copy of the provided Triangles that draws onto this IMDraw.
+func (imd *IMDraw) MakeTriangles(t Triangles) TargetTriangles {
+	return imd.batch.MakeTriangles(t)
+}
+
+// MakePicture returns a specialized copy of the provided Picture that draws onto this IMDraw.
+func (imd *IMDraw) MakePicture(p Picture) TargetPicture {
+	return imd.batch.MakePicture(p)
 }
 
 // FillConvexPolygon takes all points Pushed into the IM's queue and fills the convex polygon formed
@@ -231,7 +243,7 @@ func (imd *IMDraw) FillConvexPolygon() {
 		i += 3
 	}
 
-	imd.d.Dirty()
+	imd.batch.Dirty()
 }
 
 // FillCircle draws a filled circle around each point in the IM's queue.
