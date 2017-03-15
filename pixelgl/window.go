@@ -17,7 +17,7 @@ import (
 //
 // Note that you always need to set the Bounds of the Window.
 type WindowConfig struct {
-	// Title at the top of the Window
+	// Title at the top of the Window.
 	Title string
 
 	// Bounds specify the bounds of the Window in pixels.
