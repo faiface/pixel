@@ -78,6 +78,8 @@ type IMDraw struct {
 	tmp    []Vec
 }
 
+var _ BasicTarget = (*IMDraw)(nil)
+
 type point struct {
 	pos       Vec
 	col       NRGBA
