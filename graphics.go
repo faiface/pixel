@@ -177,9 +177,6 @@ func (imd *IMDraw) Precision(p int) {
 	if p+1 > len(imd.tmp) {
 		imd.tmp = append(imd.tmp, make([]Vec, p+1-len(imd.tmp))...)
 	}
-	if p+1 < len(imd.tmp) {
-		imd.tmp = imd.tmp[:p+1]
-	}
 }
 
 // EndShape sets the endshape of the next Pushed points.
