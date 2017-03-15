@@ -83,7 +83,7 @@ func (u Vec) Angle() float64 {
 	return cmplx.Phase(complex128(u))
 }
 
-// Unit returns a vector of length 1 with the same angle as u.
+// Unit returns a vector of length 1 facing the direction of u (has the same angle).
 func (u Vec) Unit() Vec {
 	return u / V(u.Len(), 0)
 }
@@ -93,7 +93,7 @@ func (u Vec) Scaled(c float64) Vec {
 	return u * V(c, 0)
 }
 
-// ScaledXY returns the vector u multiplied by vector v component-wise.
+// ScaledXY returns the vector u multiplied by the vector v component-wise.
 func (u Vec) ScaledXY(v Vec) Vec {
 	return V(u.X()*v.X(), u.Y()*v.Y())
 }
@@ -116,6 +116,9 @@ func (u Vec) Cross(v Vec) float64 {
 
 // Map applies the function f to both x and y components of the vector u and returns the modified
 // vector.
+//
+//   u := pixel.V(10.5, -1.5)
+//   v := u.Map(math.Floor)   // v is Vec(10, -2), both components of u floored
 func (u Vec) Map(f func(float64) float64) Vec {
 	return V(
 		f(u.X()),
@@ -125,7 +128,7 @@ func (u Vec) Map(f func(float64) float64) Vec {
 
 // Lerp returns a linear interpolation between vectors a and b.
 //
-// This function basically returns a point along the line between a and b and t chooses which point.
+// This function basically returns a point along the line between a and b and t chooses which one.
 // If t is 0, then a will be returned, if t is 1, b will be returned. Anything between 0 and 1 will
 // return the appropriate point between a and b and so on.
 func Lerp(a, b Vec, t float64) Vec {
@@ -163,7 +166,7 @@ func (r Rect) Norm() Rect {
 	}
 }
 
-// String returns the string representation of the rectangle.
+// String returns the string representation of the Rect.
 //
 //   r := pixel.R(100, 50, 200, 300)
 //   r.String()     // returns "Rect(100, 50, 200, 300)"
@@ -172,22 +175,22 @@ func (r Rect) String() string {
 	return fmt.Sprintf("Rect(%v, %v, %v, %v)", r.Min.X(), r.Min.Y(), r.Max.X(), r.Max.Y())
 }
 
-// W returns the width of the rectangle.
+// W returns the width of the Rect.
 func (r Rect) W() float64 {
 	return r.Max.X() - r.Min.X()
 }
 
-// H returns the height of the rectangle.
+// H returns the height of the Rect.
 func (r Rect) H() float64 {
 	return r.Max.Y() - r.Min.Y()
 }
 
-// Size returns the vector of width and height as components respectively.
+// Size returns the vector of width and height of the Rect.
 func (r Rect) Size() Vec {
 	return V(r.W(), r.H())
 }
 
-// Center returns the position of the center of the rectangle.
+// Center returns the position of the center of the Rect.
 func (r Rect) Center() Vec {
 	return (r.Min + r.Max) / 2
 }
@@ -200,14 +203,15 @@ func (r Rect) Moved(delta Vec) Rect {
 	}
 }
 
-// Resized returns the Rect resized to the given size while keeping the position of the given anchor.
+// Resized returns the Rect resized to the given size while keeping the position of the given
+// anchor.
 //
 //   r.Resized(r.Min, size)      // resizes while keeping the position of the lower-left corner
 //   r.Resized(r.Max, size)      // same with the top-right corner
 //   r.Resized(r.Center(), size) // resizes around the center
 //
-// This function does not make sense for size of zero area and will panic. Use ResizeMin in the case
-// of zero area.
+// This function does not make sense for sizes of zero area and will panic. Use ResizedMin in the
+// case of zero area.
 func (r Rect) Resized(anchor, size Vec) Rect {
 	if r.W()*r.H() == 0 || size.X()*size.Y() == 0 {
 		panic(fmt.Errorf("(%T).Resize: zero area", r))

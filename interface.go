@@ -5,7 +5,8 @@ import "image/color"
 // Target is something that can be drawn onto, such as a window, a canvas, and so on.
 //
 // You can notice, that there are no "drawing" methods in a Target. That's because all drawing
-// happens indirectly through Triangles instance generated via MakeTriangles method.
+// happens indirectly through Triangles and Picture instances generated via MakeTriangles and
+// MakePicture method.
 type Target interface {
 	// MakeTriangles generates a specialized copy of the provided Triangles.
 	//
@@ -63,7 +64,7 @@ type Triangles interface {
 	// Properies not supported by these Triangles should be ignored. Properties not supported by
 	// the supplied Triangles should be left untouched.
 	//
-	// The two Triangles need to have the same Len.
+	// The two Triangles must have the same Len.
 	Update(Triangles)
 
 	// Copy creates an exact independent copy of this Triangles (with the same underlying type).
@@ -93,7 +94,9 @@ type TrianglesColor interface {
 
 // TrianglesPicture specifies Triangles with Picture propery.
 //
-// Note that this represents picture coordinates, not an actual picture.
+// The first value returned from Picture method is Picture coordinates. The second one specifies the
+// weight of the Picture. Value of 0 means, that Picture should be completely ignored, 1 means that
+// is should be fully included and anything in between means anything in between.
 type TrianglesPicture interface {
 	Triangles
 	Picture(i int) (pic Vec, intensity float64)
@@ -108,7 +111,7 @@ type Picture interface {
 
 	// Slice returns a sub-Picture with specified Bounds.
 	//
-	// A result Slice-ing outside the original Bounds is unspecified.
+	// A result of Slice-ing outside the original Bounds is unspecified.
 	Slice(Rect) Picture
 
 	// Original returns the most original Picture (may be itself) that this Picture was created

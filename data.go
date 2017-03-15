@@ -8,8 +8,8 @@ import (
 	"math"
 )
 
-// TrianglesData specifies a list of Triangles vertices with three common properties: Position,
-// Color and Texture.
+// TrianglesData specifies a list of Triangles vertices with three common properties:
+// TrianglesPosition, TrianglesColor and TrianglesPicture.
 type TrianglesData []struct {
 	Position  Vec
 	Color     NRGBA
@@ -20,7 +20,7 @@ type TrianglesData []struct {
 // MakeTrianglesData creates TrianglesData of length len initialized with default property values.
 //
 // Prefer this function to make(TrianglesData, len), because make zeros them, while this function
-// does a correct intialization.
+// does the correct intialization.
 func MakeTrianglesData(len int) *TrianglesData {
 	td := &TrianglesData{}
 	td.SetLen(len)
@@ -35,7 +35,7 @@ func (td *TrianglesData) Len() int {
 // SetLen resizes TrianglesData to len, while keeping the original content.
 //
 // If len is greater than TrianglesData's current length, the new data is filled with default
-// values ((0, 0), white, (-1, -1)).
+// values ((0, 0), white, (0, 0), 0).
 func (td *TrianglesData) SetLen(len int) {
 	if len > td.Len() {
 		needAppend := len - td.Len()
