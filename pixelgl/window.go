@@ -181,7 +181,7 @@ func (w *Window) Update() {
 
 // SetClosed sets the closed flag of the Window.
 //
-// This is usefull when overriding the user's attempt to close the Window, or just to close the
+// This is useful when overriding the user's attempt to close the Window, or just to close the
 // Window from within the program.
 func (w *Window) SetClosed(closed bool) {
 	mainthread.Call(func() {

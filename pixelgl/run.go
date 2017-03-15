@@ -6,9 +6,9 @@ import (
 	"github.com/pkg/errors"
 )
 
-// Run is essentialy the main function of PixelGL. It exists mainly due to the technical limitations
-// of OpenGL and operating systems. In short, all graphics and window manipulating calls must be
-// done from the main thread. Run makes this possible.
+// Run is essentially the main function of PixelGL. It exists mainly due to the technical
+// limitations of OpenGL and operating systems. In short, all graphics and window manipulating calls
+// must be done from the main thread. Run makes this possible.
 //
 // Call this function from the main function of your application. This is necessary, so that Run
 // runs on the main thread.
