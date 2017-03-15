@@ -23,26 +23,26 @@ type WindowConfig struct {
 	// Bounds specify the bounds of the Window in pixels.
 	Bounds pixel.Rect
 
-	// If set to nil, a window will be windowed. Otherwise it will be fullscreen on the
-	// specified monitor.
+	// If set to nil, a Window will be windowed. Otherwise it will be fullscreen on the
+	// specified Monitor.
 	Fullscreen *Monitor
 
-	// Whether a window is resizable.
+	// Whether a Window is resizable.
 	Resizable bool
 
-	// If set to true, the window will be initially invisible.
+	// If set to true, the Window will be initially invisible.
 	Hidden bool
 
-	// Undecorated window ommits the borders and decorations (close button, etc.).
+	// Undecorated Window ommits the borders and decorations (close button, etc.).
 	Undecorated bool
 
-	// If set to true, a window will not get focused upon showing up.
+	// If set to true, a Window will not get focused upon showing up.
 	Unfocused bool
 
-	// Whether a window is maximized.
+	// Whether a Window is maximized.
 	Maximized bool
 
-	// VSync (vertical synchronization) synchronizes window's framerate with the framerate of
+	// VSync (vertical synchronization) synchronizes Window's framerate with the framerate of
 	// the monitor.
 	VSync bool
 }
