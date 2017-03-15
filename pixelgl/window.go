@@ -195,9 +195,11 @@ func (w *Window) SetClosed(closed bool) {
 //
 // The closed flag is automatically set when a user attempts to close the Window.
 func (w *Window) Closed() bool {
-	return mainthread.CallVal(func() interface{} {
-		return w.window.ShouldClose()
-	}).(bool)
+	var closed bool
+	mainthread.Call(func() {
+		closed = w.window.ShouldClose()
+	})
+	return closed
 }
 
 // SetTitle changes the title of the Window.
@@ -290,9 +292,10 @@ func (w *Window) IsFullscreen() bool {
 // Monitor returns a monitor the Window is fullscreen on. If the Window is not fullscreen, this
 // function returns nil.
 func (w *Window) Monitor() *Monitor {
-	monitor := mainthread.CallVal(func() interface{} {
-		return w.window.GetMonitor()
-	}).(*glfw.Monitor)
+	var monitor *glfw.Monitor
+	mainthread.Call(func() {
+		monitor = w.window.GetMonitor()
+	})
 	if monitor == nil {
 		return nil
 	}
@@ -310,9 +313,11 @@ func (w *Window) Focus() {
 
 // Focused returns true if the Window has input focus.
 func (w *Window) Focused() bool {
-	return mainthread.CallVal(func() interface{} {
-		return w.window.GetAttrib(glfw.Focused) == glfw.True
-	}).(bool)
+	var focused bool
+	mainthread.Call(func() {
+		focused = w.window.GetAttrib(glfw.Focused) == glfw.True
+	})
+	return focused
 }
 
 // Maximize puts the Window to the maximized state.
