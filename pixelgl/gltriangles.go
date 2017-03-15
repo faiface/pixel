@@ -11,7 +11,7 @@ import (
 // GLTriangles are OpenGL triangles implemented using glhf.VertexSlice.
 //
 // Triangles returned from this function support TrianglesPosition, TrianglesColor and
-// TrianglesTexture. If you need to support more, you can "override" SetLen and Update method.
+// TrianglesPicture. If you need to support more, you can "override" SetLen and Update methods.
 type GLTriangles struct {
 	vs     *glhf.VertexSlice
 	data   []float32
@@ -58,6 +58,8 @@ func (gt *GLTriangles) Len() int {
 }
 
 // SetLen efficiently resizes GLTriangles to len.
+//
+// Time complexity is amortized O(1).
 func (gt *GLTriangles) SetLen(len int) {
 	if len > gt.Len() {
 		needAppend := len - gt.Len()
@@ -163,7 +165,7 @@ func (gt *GLTriangles) Update(t pixel.Triangles) {
 
 // Copy returns an independent copy of this GLTriangles.
 //
-// The returned Triangles are GLTriangles as the underlying type.
+// The returned Triangles are *GLTriangles as the underlying type.
 func (gt *GLTriangles) Copy() pixel.Triangles {
 	return NewGLTriangles(gt.shader, gt)
 }

@@ -12,7 +12,8 @@ import (
 	"github.com/pkg/errors"
 )
 
-// Canvas is an off-screen rectangular BasicTarget that you can draw onto.
+// Canvas is an off-screen rectangular BasicTarget and Picture at the same time, that you can draw
+// onto.
 //
 // It supports TrianglesPosition, TrianglesColor, TrianglesPicture and PictureColor.
 type Canvas struct {
@@ -32,7 +33,7 @@ type Canvas struct {
 	orig *Canvas
 }
 
-// NewCanvas creates a new empty, fully transparent Canvas with given bounds. If the smooth flag
+// NewCanvas creates a new empty, fully transparent Canvas with given bounds. If the smooth flag is
 // set, then stretched Pictures will be smoothed and will not be drawn pixely onto this Canvas.
 func NewCanvas(bounds pixel.Rect, smooth bool) *Canvas {
 	c := &Canvas{
@@ -199,14 +200,14 @@ func (c *Canvas) Bounds() pixel.Rect {
 	return c.bounds
 }
 
-// SetSmooth sets whether the stretched Pictures drawn onto this Canvas should be drawn smooth or
+// SetSmooth sets whether stretched Pictures drawn onto this Canvas should be drawn smooth or
 // pixely.
 func (c *Canvas) SetSmooth(smooth bool) {
 	c.smooth = smooth
 }
 
-// Smooth returns whether the stretched Pictures drawn onto this Canvas are set to be drawn smooth
-// or pixely.
+// Smooth returns whether stretched Pictures drawn onto this Canvas are set to be drawn smooth or
+// pixely.
 func (c *Canvas) Smooth() bool {
 	return c.smooth
 }
@@ -219,7 +220,7 @@ func (c *Canvas) setGlhfBounds() {
 	glhf.Bounds(bx, by, bw, bh)
 }
 
-// Clear fill the whole Canvas with a single color.
+// Clear fills the whole Canvas with a single color.
 func (c *Canvas) Clear(color color.Color) {
 	c.orig.dirty = true
 
@@ -248,8 +249,8 @@ func (c *Canvas) Clear(color color.Color) {
 
 // Slice returns a sub-Canvas with the specified Bounds.
 //
-// The returned value is *Canvas, the type of the return value is a general pixel.Picture just so
-// that Canvas implements pixel.Picture interface.
+// The type of the returned value is *Canvas, the type of the return value is a general
+// pixel.Picture just so that Canvas implements pixel.Picture interface.
 func (c *Canvas) Slice(bounds pixel.Rect) pixel.Picture {
 	sc := new(Canvas)
 	*sc = *c
@@ -259,8 +260,8 @@ func (c *Canvas) Slice(bounds pixel.Rect) pixel.Picture {
 
 // Original returns the most original Canvas that this Canvas was created from using Slice-ing.
 //
-// The returned value is *Canvas, the type of the return value is a general pixel.Picture just so
-// that Canvas implements pixel.Picture interface.
+// The type of the returned value is *Canvas, the type of the return value is a general
+// pixel.Picture just so that Canvas implements pixel.Picture interface.
 func (c *Canvas) Original() pixel.Picture {
 	return c.orig
 }

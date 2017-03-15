@@ -6,27 +6,27 @@ import (
 	"github.com/go-gl/glfw/v3.2/glfw"
 )
 
-// Pressed returns whether button is currently pressed down.
+// Pressed returns whether the Button is currently pressed down.
 func (w *Window) Pressed(button Button) bool {
 	return w.currInp.buttons[button]
 }
 
-// JustPressed returns whether button has just been pressed down.
+// JustPressed returns whether the Button has just been pressed down.
 func (w *Window) JustPressed(button Button) bool {
 	return w.currInp.buttons[button] && !w.prevInp.buttons[button]
 }
 
-// JustReleased returns whether button has just been released up.
+// JustReleased returns whether the Button has just been released up.
 func (w *Window) JustReleased(button Button) bool {
 	return !w.currInp.buttons[button] && w.prevInp.buttons[button]
 }
 
-// MousePosition returns the current mouse position relative to the window.
+// MousePosition returns the current mouse position in the Window's Bounds.
 func (w *Window) MousePosition() pixel.Vec {
 	return w.currInp.mouse
 }
 
-// MouseScroll returns the scroll amount (in both axis) since the last call to Window.Update.
+// MouseScroll returns the mouse scroll amount (in both axes) since the last call to Window.Update.
 func (w *Window) MouseScroll() pixel.Vec {
 	return w.currInp.scroll
 }

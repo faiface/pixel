@@ -11,11 +11,11 @@ import (
 	"github.com/pkg/errors"
 )
 
-// WindowConfig is a structure for specifying all possible properties of a window. Properties are
+// WindowConfig is a structure for specifying all possible properties of a Window. Properties are
 // chosen in such a way, that you usually only need to set a few of them - defaults (zeros) should
 // usually be sensible.
 //
-// Note that you always need to set the Bounds of the Window.
+// Note that you always need to set the Bounds of a Window.
 type WindowConfig struct {
 	// Title at the top of the Window.
 	Title string
@@ -47,7 +47,7 @@ type WindowConfig struct {
 	VSync bool
 }
 
-// Window is a window handler. Use this type to manipulate a window (input, drawing, ...).
+// Window is a window handler. Use this type to manipulate a window (input, drawing, etc.).
 type Window struct {
 	window *glfw.Window
 
@@ -142,7 +142,7 @@ func (w *Window) Destroy() {
 	})
 }
 
-// Update swaps buffers and polls events.
+// Update swaps buffers and polls events. Call this method at the end of each frame.
 func (w *Window) Update() {
 	mainthread.Call(func() {
 		_, _, oldW, oldH := intBounds(w.bounds)
@@ -207,8 +207,8 @@ func (w *Window) SetTitle(title string) {
 	})
 }
 
-// SetBounds sets the bounds of the Window in pixels. Bounds can be fractional, but the size will be
-// changed in the next Update to a real possible size of the Window.
+// SetBounds sets the bounds of the Window in pixels. Bounds can be fractional, but the actual size
+// of the window will be rounded to integers.
 func (w *Window) SetBounds(bounds pixel.Rect) {
 	w.bounds = bounds
 	mainthread.Call(func() {
@@ -268,11 +268,10 @@ func (w *Window) setWindowed() {
 }
 
 // SetMonitor sets the Window fullscreen on the given Monitor. If the Monitor is nil, the Window
-// will be resored to windowed state instead.
+// will be restored to windowed state instead.
 //
-// Note, that there is nothing about the resolution of the fullscreen Window. The Window is
-// automatically set to the Monitor's resolution. If you want a different resolution, you need
-// to set it manually with SetSize method.
+// The Window will be automatically set to the Monitor's resolution. If you want a different
+// resolution, you will need to set it manually with SetBounds method.
 func (w *Window) SetMonitor(monitor *Monitor) {
 	if w.Monitor() != monitor {
 		if monitor != nil {
@@ -288,7 +287,7 @@ func (w *Window) IsFullscreen() bool {
 	return w.Monitor() != nil
 }
 
-// Monitor returns a monitor the Window is fullscreen is on. If the Window is not fullscreen, this
+// Monitor returns a monitor the Window is fullscreen on. If the Window is not fullscreen, this
 // function returns nil.
 func (w *Window) Monitor() *Monitor {
 	monitor := mainthread.CallVal(func() interface{} {
@@ -316,21 +315,21 @@ func (w *Window) Focused() bool {
 	}).(bool)
 }
 
-// Maximize puts the Window window to the maximized state.
+// Maximize puts the Window to the maximized state.
 func (w *Window) Maximize() {
 	mainthread.Call(func() {
 		w.window.Maximize()
 	})
 }
 
-// Restore restores the Window window from the maximized state.
+// Restore restores the Window from the maximized state.
 func (w *Window) Restore() {
 	mainthread.Call(func() {
 		w.window.Restore()
 	})
 }
 
-// SetVSync sets whether the Window should synchronize with the monitor refresh rate.
+// SetVSync sets whether the Window's Update should synchronize with the monitor refresh rate.
 func (w *Window) SetVSync(vsync bool) {
 	w.vsync = vsync
 }
@@ -357,7 +356,7 @@ func (w *Window) end() {
 // MakeTriangles generates a specialized copy of the supplied Triangles that will draw onto this
 // Window.
 //
-// Window supports TrianglesPosition, TrianglesColor and TrianglesTexture.
+// Window supports TrianglesPosition, TrianglesColor and TrianglesPicture.
 func (w *Window) MakeTriangles(t pixel.Triangles) pixel.TargetTriangles {
 	return w.canvas.MakeTriangles(t)
 }
@@ -391,7 +390,7 @@ func (w *Window) Smooth() bool {
 	return w.canvas.Smooth()
 }
 
-// Clear clears the Window with a color.
+// Clear clears the Window with a single color.
 func (w *Window) Clear(c color.Color) {
 	w.canvas.Clear(c)
 }
