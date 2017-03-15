@@ -247,7 +247,7 @@ func (r Rect) Contains(u Vec) bool {
 //
 //   pixel.IM.Moved(pixel.V(100, 200)).Rotated(0, math.Pi/2)
 //
-// This code creates a Matrix that first moves everything by 100 units horizontaly and 200 units
+// This code creates a Matrix that first moves everything by 100 units horizontally and 200 units
 // vertically and then rotates everything by 90 degrees around the origin.
 type Matrix [9]float64
 

@@ -190,7 +190,7 @@ func (imd *IMDraw) SetMatrix(m Matrix) {
 	imd.batch.SetMatrix(imd.matrix)
 }
 
-// SetColorMask sets a color that all futher point's color will be multiplied by.
+// SetColorMask sets a color that all further point's color will be multiplied by.
 func (imd *IMDraw) SetColorMask(color color.Color) {
 	imd.mask = NRGBAModel.Convert(color).(NRGBA)
 	imd.batch.SetColorMask(imd.mask)
