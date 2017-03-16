@@ -73,9 +73,9 @@ type IMDraw struct {
 	opts   point
 	matrix Matrix
 	mask   NRGBA
-	tri    *TrianglesData
-	batch  *Batch
-	tmp    []Vec
+
+	tri   *TrianglesData
+	batch *Batch
 }
 
 var _ BasicTarget = (*IMDraw)(nil)
@@ -139,12 +139,16 @@ func (imd *IMDraw) Draw(t Target) {
 // Push adds some points to the IM queue. All Pushed points will have the same properties except for
 // the position.
 func (imd *IMDraw) Push(pts ...Vec) {
-	point := imd.opts
 	for _, pt := range pts {
-		point.pos = imd.matrix.Project(pt)
-		point.col = imd.mask.Mul(imd.opts.col)
-		imd.points = append(imd.points, point)
+		imd.pushPt(pt)
 	}
+}
+
+func (imd *IMDraw) pushPt(pt Vec) {
+	point := imd.opts
+	point.pos = imd.matrix.Project(pt)
+	point.col = imd.mask.Mul(point.col)
+	imd.points = append(imd.points, point)
 }
 
 // Color sets the color of the next Pushed points.
@@ -174,9 +178,6 @@ func (imd *IMDraw) Width(w float64) {
 // It is the number of segments per 360 degrees.
 func (imd *IMDraw) Precision(p int) {
 	imd.opts.precision = p
-	if p+1 > len(imd.tmp) {
-		imd.tmp = append(imd.tmp, make([]Vec, p+1-len(imd.tmp))...)
-	}
 }
 
 // EndShape sets the endshape of the next Pushed points.
@@ -224,10 +225,10 @@ func (imd *IMDraw) FillConvexPolygon() {
 	imd.tri.SetLen(imd.tri.Len() + 3*(len(points)-2))
 
 	for j := 1; j+1 < len(points); j++ {
-		(*imd.tri)[i].Position = points[0].pos
-		(*imd.tri)[i].Color = points[0].col
-		(*imd.tri)[i].Picture = points[0].pic
-		(*imd.tri)[i].Intensity = points[0].in
+		(*imd.tri)[i+0].Position = points[0].pos
+		(*imd.tri)[i+0].Color = points[0].col
+		(*imd.tri)[i+0].Picture = points[0].pic
+		(*imd.tri)[i+0].Intensity = points[0].in
 
 		(*imd.tri)[i+1].Position = points[j].pos
 		(*imd.tri)[i+1].Color = points[j].col
@@ -262,30 +263,32 @@ func (imd *IMDraw) FillEllipse(radius Vec) {
 
 // FillEllipseArc draws a filled ellipse arc around each point in the IM's queue. Low and high
 // angles are in radians.
+//
+// The arc is drawn starting at the low angle continuing to the high angle. If the high angle is
+// numerically greater than the low angle, the arc will be drawn counterclockwise, otherwise it will
+// be drawn clockwise.
+//
+// The angles are not normalized by any means. This will rotate four times in a full circle:
+//
+//   imd.FillEllipseArc(pixel.V(100, 100), 0, 8*math.Pi)
 func (imd *IMDraw) FillEllipseArc(radius Vec, low, high float64) {
 	points := imd.points
 	imd.points = nil
 
-	// normalize high
-	if math.Abs(high-low) > 2*math.Pi {
-		high = low + math.Mod(high-low, 2*math.Pi)
-	}
-
 	for _, pt := range points {
-		imd.Push(pt.pos) // center
+		imd.pushPt(pt.pos) // center
 
 		num := math.Ceil(math.Abs(high-low) / (2 * math.Pi) * float64(pt.precision))
 		delta := (high - low) / num
-		for i := range imd.tmp[:int(num)+1] {
-			angle := low + float64(i)*delta
+		for i := 0.0; i <= num; i++ {
+			angle := low + i*delta
 			sin, cos := math.Sincos(angle)
-			imd.tmp[i] = pt.pos + V(
+			imd.pushPt(pt.pos + V(
 				radius.X()*cos,
 				radius.Y()*sin,
-			)
+			))
 		}
 
-		imd.Push(imd.tmp[:int(num)+1]...)
 		imd.FillConvexPolygon()
 	}
 }
