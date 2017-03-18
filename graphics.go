@@ -67,7 +67,7 @@ func (s *Sprite) Draw(t Target) {
 
 // IMDraw is an immediate-like-mode shape drawer.
 //
-// TODO: mode doc
+// TODO: doc
 type IMDraw struct {
 	points []point
 	opts   point
@@ -85,7 +85,6 @@ type point struct {
 	col       NRGBA
 	pic       Vec
 	in        float64
-	width     float64
 	precision int
 	endshape  EndShape
 }
@@ -94,8 +93,11 @@ type point struct {
 type EndShape int
 
 const (
-	// SharpEndShape is a square end shape.
-	SharpEndShape EndShape = iota
+	// NoEndShape leaves a line point with no special end shape.
+	NoEndShape EndShape = iota
+
+	// SharpEndShape is a sharp triangular end shape.
+	SharpEndShape
 
 	// RoundEndShape is a circular end shape.
 	RoundEndShape
@@ -140,15 +142,14 @@ func (imd *IMDraw) Draw(t Target) {
 // the position.
 func (imd *IMDraw) Push(pts ...Vec) {
 	for _, pt := range pts {
-		imd.pushPt(pt)
+		imd.pushPt(pt, imd.opts)
 	}
 }
 
-func (imd *IMDraw) pushPt(pt Vec) {
-	point := imd.opts
-	point.pos = imd.matrix.Project(pt)
-	point.col = imd.mask.Mul(point.col)
-	imd.points = append(imd.points, point)
+func (imd *IMDraw) pushPt(pos Vec, pt point) {
+	pt.pos = imd.matrix.Project(pos)
+	pt.col = imd.mask.Mul(pt.col)
+	imd.points = append(imd.points, pt)
 }
 
 // Color sets the color of the next Pushed points.
@@ -164,13 +165,6 @@ func (imd *IMDraw) Picture(pic Vec) {
 // Intensity sets the picture Intensity of the next Pushed points.
 func (imd *IMDraw) Intensity(in float64) {
 	imd.opts.in = in
-}
-
-// Width sets the with property of the next Pushed points.
-//
-// Note that this property does not apply to filled shapes.
-func (imd *IMDraw) Width(w float64) {
-	imd.opts.width = w
 }
 
 // Precision sets the curve/circle drawing precision of the next Pushed points.
@@ -207,88 +201,368 @@ func (imd *IMDraw) MakePicture(p Picture) TargetPicture {
 	return imd.batch.MakePicture(p)
 }
 
-// FillConvexPolygon takes all points Pushed into the IM's queue and fills the convex polygon formed
-// by them.
+// Polygon draws a polygon from the Pushed points. If the thickness is 0, the convex polygon will be
+// filled. Otherwise, an outline of the specified thickness will be drawn. The outline does not have
+// to be convex.
 //
-// The polygon does not need to be exactly convex. The way it's drawn is that for each two adjacent
-// points, a triangle is constructed from those two points and the first Pushed point. You can use
-// this property to draw specific concave polygons.
-func (imd *IMDraw) FillConvexPolygon() {
+// Note, that the filled polygon does not have to be strictly convex. The way it's drawn is that a
+// triangle is drawn between each two adjacent points and the first Pushed point. You can use this
+// property to draw certain kinds of concave polygons.
+func (imd *IMDraw) Polygon(thickness float64) {
+	if thickness == 0 {
+		imd.fillPolygon()
+	} else {
+		imd.polyline(thickness, true)
+	}
+}
+
+// Circle draws a circle of the specified radius around each Pushed point. If the thickness is 0,
+// the circle will be filled, otherwise a circle outline of the specified thickness will be drawn.
+func (imd *IMDraw) Circle(radius, thickness float64) {
+	if thickness == 0 {
+		imd.fillEllipseArc(V(radius, radius), 0, 2*math.Pi)
+	} else {
+		imd.outlineEllipseArc(V(radius, radius), 0, 2*math.Pi, thickness, false)
+	}
+}
+
+// CircleArc draws a circle arc of the specified radius around each Pushed point. If the thickness
+// is 0, the arc will be filled, otherwise will be outlined. The arc starts at the low angle and
+// continues to the high angle. If low<high, the arc will be drawn counterclockwise. Otherwise it
+// will be clockwise. The angles are not normalized by any means.
+//
+//   imd.CircleArc(40, 0, 8*math.Pi, 0)
+//
+// This line will fill the whole circle 4 times.
+func (imd *IMDraw) CircleArc(radius, low, high, thickness float64) {
+	if thickness == 0 {
+		imd.fillEllipseArc(V(radius, radius), low, high)
+	} else {
+		imd.outlineEllipseArc(V(radius, radius), low, high, thickness, true)
+	}
+}
+
+// Ellipse draws an ellipse of the specified radius in each axis around each Pushed points. If the
+// thickness is 0, the ellipse will be filled, otherwise an ellipse outline of the specified
+// thickness will be drawn.
+func (imd *IMDraw) Ellipse(radius Vec, thickness float64) {
+	if thickness == 0 {
+		imd.fillEllipseArc(radius, 0, 2*math.Pi)
+	} else {
+		imd.outlineEllipseArc(radius, 0, 2*math.Pi, thickness, false)
+	}
+}
+
+// EllipseArc draws an ellipse arc of the specified radius in each axis around each Pushed point. If
+// the thickness is 0, the arc will be filled, otherwise will be outlined. The arc starts at the low
+// angle and continues to the high angle. If low<high, the arc will be drawn counterclockwise.
+// Otherwise it will be clockwise. The angles are not normalized by any means.
+//
+//   imd.EllipseArc(pixel.V(100, 50), 0, 8*math.Pi, 0)
+//
+// This line will fill the whole ellipse 4 times.
+func (imd *IMDraw) EllipseArc(radius Vec, low, high, thickness float64) {
+	if thickness == 0 {
+		imd.fillEllipseArc(radius, low, high)
+	} else {
+		imd.outlineEllipseArc(radius, low, high, thickness, true)
+	}
+}
+
+// Line draws a polyline of the specified thickness between the Pushed points.
+func (imd *IMDraw) Line(thickness float64) {
+	imd.polyline(thickness, false)
+}
+
+func (imd *IMDraw) getAndClearPoints() []point {
 	points := imd.points
 	imd.points = nil
+	return points
+}
+
+func (imd *IMDraw) fillPolygon() {
+	points := imd.getAndClearPoints()
 
 	if len(points) < 3 {
 		return
 	}
 
-	i := imd.tri.Len()
+	off := imd.tri.Len()
 	imd.tri.SetLen(imd.tri.Len() + 3*(len(points)-2))
 
-	for j := 1; j+1 < len(points); j++ {
-		(*imd.tri)[i+0].Position = points[0].pos
-		(*imd.tri)[i+0].Color = points[0].col
-		(*imd.tri)[i+0].Picture = points[0].pic
-		(*imd.tri)[i+0].Intensity = points[0].in
+	for i := 1; i+1 < len(points); i++ {
+		(*imd.tri)[off].Position = points[0].pos
+		(*imd.tri)[off].Color = points[0].col
+		(*imd.tri)[off].Picture = points[0].pic
+		(*imd.tri)[off].Intensity = points[0].in
 
-		(*imd.tri)[i+1].Position = points[j].pos
-		(*imd.tri)[i+1].Color = points[j].col
-		(*imd.tri)[i+1].Picture = points[j].pic
-		(*imd.tri)[i+1].Intensity = points[j].in
+		(*imd.tri)[off+1].Position = points[i].pos
+		(*imd.tri)[off+1].Color = points[i].col
+		(*imd.tri)[off+1].Picture = points[i].pic
+		(*imd.tri)[off+1].Intensity = points[i].in
 
-		(*imd.tri)[i+2].Position = points[j+1].pos
-		(*imd.tri)[i+2].Color = points[j+1].col
-		(*imd.tri)[i+2].Picture = points[j+1].pic
-		(*imd.tri)[i+2].Intensity = points[j+1].in
+		(*imd.tri)[off+2].Position = points[i+1].pos
+		(*imd.tri)[off+2].Color = points[i+1].col
+		(*imd.tri)[off+2].Picture = points[i+1].pic
+		(*imd.tri)[off+2].Intensity = points[i+1].in
 
-		i += 3
+		off += 3
 	}
 
 	imd.batch.Dirty()
 }
 
-// FillCircle draws a filled circle around each point in the IM's queue.
-func (imd *IMDraw) FillCircle(radius float64) {
-	imd.FillEllipseArc(V(radius, radius), 0, 2*math.Pi)
-}
-
-// FillCircleArc draws a filled circle arc around each point in the IM's queue.
-func (imd *IMDraw) FillCircleArc(radius, low, high float64) {
-	imd.FillEllipseArc(V(radius, radius), low, high)
-}
-
-// FillEllipse draws a filled ellipse around each point in the IM's queue.
-func (imd *IMDraw) FillEllipse(radius Vec) {
-	imd.FillEllipseArc(radius, 0, 2*math.Pi)
-}
-
-// FillEllipseArc draws a filled ellipse arc around each point in the IM's queue. Low and high
-// angles are in radians.
-//
-// The arc is drawn starting at the low angle continuing to the high angle. If the high angle is
-// numerically greater than the low angle, the arc will be drawn counterclockwise, otherwise it will
-// be drawn clockwise.
-//
-// The angles are not normalized by any means. This will rotate four times in a full circle:
-//
-//   imd.FillEllipseArc(pixel.V(100, 100), 0, 8*math.Pi)
-func (imd *IMDraw) FillEllipseArc(radius Vec, low, high float64) {
-	points := imd.points
-	imd.points = nil
+func (imd *IMDraw) fillEllipseArc(radius Vec, low, high float64) {
+	points := imd.getAndClearPoints()
 
 	for _, pt := range points {
-		imd.pushPt(pt.pos) // center
-
 		num := math.Ceil(math.Abs(high-low) / (2 * math.Pi) * float64(pt.precision))
 		delta := (high - low) / num
-		for i := 0.0; i <= num; i++ {
-			angle := low + i*delta
-			sin, cos := math.Sincos(angle)
-			imd.pushPt(pt.pos + V(
-				radius.X()*cos,
-				radius.Y()*sin,
-			))
+
+		off := imd.tri.Len()
+		imd.tri.SetLen(imd.tri.Len() + 3*int(num))
+
+		for i := range (*imd.tri)[off:] {
+			(*imd.tri)[off+i].Color = pt.col
+			(*imd.tri)[off+i].Picture = 0
+			(*imd.tri)[off+i].Intensity = 0
 		}
 
-		imd.FillConvexPolygon()
+		for i := 0.0; i < num; i++ {
+			angle := low + i*delta
+			sin, cos := math.Sincos(angle)
+			a := pt.pos + V(
+				radius.X()*cos,
+				radius.Y()*sin,
+			)
+
+			angle = low + (i+1)*delta
+			sin, cos = math.Sincos(angle)
+			b := pt.pos + V(
+				radius.X()*cos,
+				radius.Y()*sin,
+			)
+
+			(*imd.tri)[off+0].Position = pt.pos
+			(*imd.tri)[off+1].Position = a
+			(*imd.tri)[off+2].Position = b
+
+			off += 3
+		}
+
+		imd.batch.Dirty()
+	}
+}
+
+func (imd *IMDraw) outlineEllipseArc(radius Vec, low, high, thickness float64, doEndShape bool) {
+	points := imd.getAndClearPoints()
+
+	for _, pt := range points {
+		num := math.Ceil(math.Abs(high-low) / (2 * math.Pi) * float64(pt.precision))
+		delta := (high - low) / num
+
+		off := imd.tri.Len()
+		imd.tri.SetLen(imd.tri.Len() + 6*int(num))
+
+		for i := range (*imd.tri)[off:] {
+			(*imd.tri)[off+i].Color = pt.col
+			(*imd.tri)[off+i].Picture = 0
+			(*imd.tri)[off+i].Intensity = 0
+		}
+
+		for i := 0.0; i < num; i++ {
+			angle := low + i*delta
+			sin, cos := math.Sincos(angle)
+			normalSin, normalCos := V(sin, cos).ScaledXY(radius).Unit().XY()
+			a := pt.pos + V(
+				radius.X()*cos-thickness/2*normalCos,
+				radius.Y()*sin-thickness/2*normalSin,
+			)
+			b := pt.pos + V(
+				radius.X()*cos+thickness/2*normalCos,
+				radius.Y()*sin+thickness/2*normalSin,
+			)
+
+			angle = low + (i+1)*delta
+			sin, cos = math.Sincos(angle)
+			normalSin, normalCos = V(sin, cos).ScaledXY(radius).Unit().XY()
+			c := pt.pos + V(
+				radius.X()*cos-thickness/2*normalCos,
+				radius.Y()*sin-thickness/2*normalSin,
+			)
+			d := pt.pos + V(
+				radius.X()*cos+thickness/2*normalCos,
+				radius.Y()*sin+thickness/2*normalSin,
+			)
+
+			(*imd.tri)[off+0].Position = a
+			(*imd.tri)[off+1].Position = b
+			(*imd.tri)[off+2].Position = c
+			(*imd.tri)[off+3].Position = c
+			(*imd.tri)[off+4].Position = b
+			(*imd.tri)[off+5].Position = d
+
+			off += 6
+		}
+
+		imd.batch.Dirty()
+
+		if doEndShape {
+			lowSin, lowCos := math.Sincos(low)
+			lowCenter := pt.pos + V(
+				radius.X()*lowCos,
+				radius.Y()*lowSin,
+			)
+			normalLowSin, normalLowCos := V(lowSin, lowCos).ScaledXY(radius).Unit().XY()
+			normalLow := V(normalLowCos, normalLowSin).Angle()
+
+			highSin, highCos := math.Sincos(high)
+			highCenter := pt.pos + V(
+				radius.X()*highCos,
+				radius.Y()*highSin,
+			)
+			normalHighSin, normalHighCos := V(highSin, highCos).ScaledXY(radius).Unit().XY()
+			normalHigh := V(normalHighCos, normalHighSin).Angle()
+
+			orientation := 1.0
+			if low > high {
+				orientation = -1.0
+			}
+
+			switch pt.endshape {
+			case NoEndShape:
+				// nothing
+			case SharpEndShape:
+				thick := X(thickness / 2).Rotated(normalLow)
+				imd.pushPt(lowCenter+thick, pt)
+				imd.pushPt(lowCenter-thick, pt)
+				imd.pushPt(lowCenter-thick.Rotated(math.Pi/2*orientation), pt)
+				imd.fillPolygon()
+				thick = X(thickness / 2).Rotated(normalHigh)
+				imd.pushPt(highCenter+thick, pt)
+				imd.pushPt(highCenter-thick, pt)
+				imd.pushPt(highCenter+thick.Rotated(math.Pi/2*orientation), pt)
+				imd.fillPolygon()
+			case RoundEndShape:
+				imd.pushPt(lowCenter, pt)
+				imd.fillEllipseArc(V(thickness, thickness)/2, normalLow, normalLow-math.Pi*orientation)
+				imd.pushPt(highCenter, pt)
+				imd.fillEllipseArc(V(thickness, thickness)/2, normalHigh, normalHigh+math.Pi*orientation)
+			}
+		}
+	}
+}
+
+func (imd *IMDraw) polyline(thickness float64, closed bool) {
+	points := imd.getAndClearPoints()
+
+	// filter identical adjacent points
+	filtered := points[:0]
+	for i := 0; i < len(points); i++ {
+		if closed || i+1 < len(points) {
+			j := (i + 1) % len(points)
+			if points[i].pos != points[j].pos {
+				filtered = append(filtered, points[i])
+			}
+		}
+	}
+	points = filtered
+
+	if len(points) < 2 {
+		return
+	}
+
+	// first point
+	j, i := 0, 1
+	normal := (points[i].pos - points[j].pos).Rotated(math.Pi / 2).Unit().Scaled(thickness / 2)
+
+	if !closed {
+		switch points[j].endshape {
+		case NoEndShape:
+			// nothing
+		case SharpEndShape:
+			imd.pushPt(points[j].pos+normal, points[j])
+			imd.pushPt(points[j].pos-normal, points[j])
+			imd.pushPt(points[j].pos+normal.Rotated(math.Pi/2), points[j])
+			imd.fillPolygon()
+		case RoundEndShape:
+			imd.pushPt(points[j].pos, points[j])
+			imd.fillEllipseArc(V(thickness, thickness)/2, normal.Angle(), normal.Angle()+math.Pi)
+		}
+	}
+
+	imd.pushPt(points[j].pos+normal, points[j])
+	imd.pushPt(points[j].pos-normal, points[j])
+
+	// middle points
+	for i := 0; i < len(points); i++ {
+		j, k := i+1, i+2
+
+		closing := false
+		if j >= len(points) {
+			if !closed {
+				break
+			}
+			j %= len(points)
+			closing = true
+		}
+		if k >= len(points) {
+			k %= len(points)
+		}
+
+		ijNormal := (points[j].pos - points[i].pos).Rotated(math.Pi / 2).Unit().Scaled(thickness / 2)
+		jkNormal := (points[k].pos - points[j].pos).Rotated(math.Pi / 2).Unit().Scaled(thickness / 2)
+
+		orientation := 1.0
+		if ijNormal.Cross(jkNormal) > 0 {
+			orientation = -1.0
+		}
+
+		imd.pushPt(points[j].pos-ijNormal, points[j])
+		imd.pushPt(points[j].pos+ijNormal, points[j])
+		imd.fillPolygon()
+
+		switch points[j].endshape {
+		case NoEndShape:
+			// nothing
+		case SharpEndShape:
+			imd.pushPt(points[j].pos, points[j])
+			imd.pushPt(points[j].pos+ijNormal.Scaled(orientation), points[j])
+			imd.pushPt(points[j].pos+jkNormal.Scaled(orientation), points[j])
+			imd.fillPolygon()
+		case RoundEndShape:
+			imd.pushPt(points[j].pos, points[j])
+			imd.fillEllipseArc(V(thickness, thickness)/2, ijNormal.Angle(), ijNormal.Angle()-math.Pi)
+			imd.pushPt(points[j].pos, points[j])
+			imd.fillEllipseArc(V(thickness, thickness)/2, jkNormal.Angle(), jkNormal.Angle()+math.Pi)
+		}
+
+		if !closing {
+			imd.pushPt(points[j].pos+jkNormal, points[j])
+			imd.pushPt(points[j].pos-jkNormal, points[j])
+		}
+	}
+
+	// last point
+	i, j = len(points)-2, len(points)-1
+	normal = (points[j].pos - points[i].pos).Rotated(math.Pi / 2).Unit().Scaled(thickness / 2)
+
+	imd.pushPt(points[j].pos-normal, points[j])
+	imd.pushPt(points[j].pos+normal, points[j])
+	imd.fillPolygon()
+
+	if !closed {
+		switch points[j].endshape {
+		case NoEndShape:
+			// nothing
+		case SharpEndShape:
+			imd.pushPt(points[j].pos+normal, points[j])
+			imd.pushPt(points[j].pos-normal, points[j])
+			imd.pushPt(points[j].pos+normal.Rotated(-math.Pi/2), points[j])
+			imd.fillPolygon()
+		case RoundEndShape:
+			imd.pushPt(points[j].pos, points[j])
+			imd.fillEllipseArc(V(thickness, thickness)/2, normal.Angle(), normal.Angle()-math.Pi)
+		}
 	}
 }
