@@ -157,10 +157,8 @@ func (imd *IMDraw) Draw(t Target) {
 // Push adds some points to the IM queue. All Pushed points will have the same properties except for
 // the position.
 func (imd *IMDraw) Push(pts ...Vec) {
-	point := imd.opts
-	point.col = imd.mask.Mul(point.col)
 	for _, pt := range pts {
-		imd.pushPt(imd.matrix.Project(pt), point)
+		imd.pushPt(pt, imd.opts)
 	}
 }
 
@@ -297,6 +295,13 @@ func (imd *IMDraw) getAndClearPoints() []point {
 	return points
 }
 
+func (imd *IMDraw) applyMatrixAndMask(off int) {
+	for i := range (*imd.tri)[off:] {
+		(*imd.tri)[off+i].Position = imd.matrix.Project((*imd.tri)[off+i].Position)
+		(*imd.tri)[off+i].Color = imd.mask.Mul((*imd.tri)[off+i].Color)
+	}
+}
+
 func (imd *IMDraw) fillPolygon() {
 	points := imd.getAndClearPoints()
 
@@ -307,25 +312,24 @@ func (imd *IMDraw) fillPolygon() {
 	off := imd.tri.Len()
 	imd.tri.SetLen(imd.tri.Len() + 3*(len(points)-2))
 
-	for i := 1; i+1 < len(points); i++ {
-		(*imd.tri)[off].Position = points[0].pos
-		(*imd.tri)[off].Color = points[0].col
-		(*imd.tri)[off].Picture = points[0].pic
-		(*imd.tri)[off].Intensity = points[0].in
+	for i, j := 1, off; i+1 < len(points); i, j = i+1, j+3 {
+		(*imd.tri)[j+0].Position = points[0].pos
+		(*imd.tri)[j+0].Color = points[0].col
+		(*imd.tri)[j+0].Picture = points[0].pic
+		(*imd.tri)[j+0].Intensity = points[0].in
 
-		(*imd.tri)[off+1].Position = points[i].pos
-		(*imd.tri)[off+1].Color = points[i].col
-		(*imd.tri)[off+1].Picture = points[i].pic
-		(*imd.tri)[off+1].Intensity = points[i].in
+		(*imd.tri)[j+1].Position = points[i].pos
+		(*imd.tri)[j+1].Color = points[i].col
+		(*imd.tri)[j+1].Picture = points[i].pic
+		(*imd.tri)[j+1].Intensity = points[i].in
 
-		(*imd.tri)[off+2].Position = points[i+1].pos
-		(*imd.tri)[off+2].Color = points[i+1].col
-		(*imd.tri)[off+2].Picture = points[i+1].pic
-		(*imd.tri)[off+2].Intensity = points[i+1].in
-
-		off += 3
+		(*imd.tri)[j+2].Position = points[i+1].pos
+		(*imd.tri)[j+2].Color = points[i+1].col
+		(*imd.tri)[j+2].Picture = points[i+1].pic
+		(*imd.tri)[j+2].Intensity = points[i+1].in
 	}
 
+	imd.applyMatrixAndMask(off)
 	imd.batch.Dirty()
 }
 
@@ -345,7 +349,7 @@ func (imd *IMDraw) fillEllipseArc(radius Vec, low, high float64) {
 			(*imd.tri)[off+i].Intensity = 0
 		}
 
-		for i := 0.0; i < num; i++ {
+		for i, j := 0.0, off; i < num; i, j = i+1, j+3 {
 			angle := low + i*delta
 			sin, cos := math.Sincos(angle)
 			a := pt.pos + V(
@@ -360,13 +364,12 @@ func (imd *IMDraw) fillEllipseArc(radius Vec, low, high float64) {
 				radius.Y()*sin,
 			)
 
-			(*imd.tri)[off+0].Position = pt.pos
-			(*imd.tri)[off+1].Position = a
-			(*imd.tri)[off+2].Position = b
-
-			off += 3
+			(*imd.tri)[j+0].Position = pt.pos
+			(*imd.tri)[j+1].Position = a
+			(*imd.tri)[j+2].Position = b
 		}
 
+		imd.applyMatrixAndMask(off)
 		imd.batch.Dirty()
 	}
 }
@@ -387,7 +390,7 @@ func (imd *IMDraw) outlineEllipseArc(radius Vec, low, high, thickness float64, d
 			(*imd.tri)[off+i].Intensity = 0
 		}
 
-		for i := 0.0; i < num; i++ {
+		for i, j := 0.0, off; i < num; i, j = i+1, j+6 {
 			angle := low + i*delta
 			sin, cos := math.Sincos(angle)
 			normalSin, normalCos := V(sin, cos).ScaledXY(radius).Unit().XY()
@@ -412,16 +415,15 @@ func (imd *IMDraw) outlineEllipseArc(radius Vec, low, high, thickness float64, d
 				radius.Y()*sin+thickness/2*normalSin,
 			)
 
-			(*imd.tri)[off+0].Position = a
-			(*imd.tri)[off+1].Position = b
-			(*imd.tri)[off+2].Position = c
-			(*imd.tri)[off+3].Position = c
-			(*imd.tri)[off+4].Position = b
-			(*imd.tri)[off+5].Position = d
-
-			off += 6
+			(*imd.tri)[j+0].Position = a
+			(*imd.tri)[j+1].Position = b
+			(*imd.tri)[j+2].Position = c
+			(*imd.tri)[j+3].Position = c
+			(*imd.tri)[j+4].Position = b
+			(*imd.tri)[j+5].Position = d
 		}
 
+		imd.applyMatrixAndMask(off)
 		imd.batch.Dirty()
 
 		if doEndShape {
