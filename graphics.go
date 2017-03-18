@@ -157,14 +157,15 @@ func (imd *IMDraw) Draw(t Target) {
 // Push adds some points to the IM queue. All Pushed points will have the same properties except for
 // the position.
 func (imd *IMDraw) Push(pts ...Vec) {
+	point := imd.opts
+	point.col = imd.mask.Mul(point.col)
 	for _, pt := range pts {
-		imd.pushPt(pt, imd.opts)
+		imd.pushPt(imd.matrix.Project(pt), point)
 	}
 }
 
 func (imd *IMDraw) pushPt(pos Vec, pt point) {
-	pt.pos = imd.matrix.Project(pos)
-	pt.col = imd.mask.Mul(pt.col)
+	pt.pos = pos
 	imd.points = append(imd.points, pt)
 }
 
