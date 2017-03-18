@@ -65,9 +65,25 @@ func (s *Sprite) Draw(t Target) {
 	s.d.Draw(t)
 }
 
-// IMDraw is an immediate-like-mode shape drawer.
+// IMDraw is an immediate-like-mode shape drawer and BasicTarget. IMDraw supports TrianglesPosition,
+// TrianglesColor, TrianglesPicture and PictureColor.
 //
-// TODO: doc
+// IMDraw, other than a regular BasicTarget, is used to draw shapes. To draw shapes, you first need
+// to Push some points to IMDraw:
+//
+//   imd := pixel.NewIMDraw(pic) // use nil pic if you only want to draw primitive shapes
+//   imd.Push(pixel.V(100, 100))
+//   imd.Push(pixel.V(500, 100))
+//
+// Once you have Pushed some points, you can use them to draw a shape, such as a line:
+//
+//   imd.Line(20) // draws a 20 units thick line
+//
+// Use various methods to change properties of Pushed points:
+//
+//   imd.Color(pixel.NRGBA{R: 1, G: 0, B: 0, A: 1})
+//   imd.Push(pixel.V(200, 200))
+//   imd.Circle(400, 0)
 type IMDraw struct {
 	points []point
 	opts   point
