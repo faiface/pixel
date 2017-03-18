@@ -284,6 +284,14 @@ func (m Matrix) Rotated(around Vec, angle float64) Matrix {
 	return Matrix(m3)
 }
 
+// Chained adds another Matrix to this one. All tranformations by the next Matrix will be applied
+// after the transformations of this Matrix.
+func (m Matrix) Chained(next Matrix) Matrix {
+	m3 := mgl64.Mat3(m)
+	m3 = mgl64.Mat3(next).Mul3(m3)
+	return Matrix(m3)
+}
+
 // Project applies all transformations added to the Matrix to a vector u and returns the result.
 //
 // Time complexity is O(1).
