@@ -3,8 +3,6 @@ package pixel
 import (
 	"fmt"
 	"image/color"
-
-	"github.com/go-gl/mathgl/mgl64"
 )
 
 // Batch is a Target that allows for efficient drawing of many objects with the same Picture (but
@@ -29,11 +27,10 @@ var _ BasicTarget = (*Batch)(nil)
 //
 // Note, that if the container does not support TrianglesColor, color masking will not work.
 func NewBatch(container Triangles, pic Picture) *Batch {
-	return &Batch{
-		cont: Drawer{Triangles: container, Picture: pic},
-		mat:  IM,
-		col:  NRGBA{1, 1, 1, 1},
-	}
+	b := &Batch{cont: Drawer{Triangles: container, Picture: pic}}
+	b.SetMatrix(IM)
+	b.SetColorMask(NRGBA{1, 1, 1, 1})
+	return b
 }
 
 // Dirty notifies Batch about an external modification of it's container. If you retain access to
@@ -75,13 +72,10 @@ func (b *Batch) SetColorMask(c color.Color) {
 // MakeTriangles returns a specialized copy of the provided Triangles that draws onto this Batch.
 func (b *Batch) MakeTriangles(t Triangles) TargetTriangles {
 	bt := &batchTriangles{
-		Triangles: t.Copy(),
-		orig:      MakeTrianglesData(t.Len()),
-		trans:     MakeTrianglesData(t.Len()),
-		dst:       b,
+		tri: t.Copy(),
+		tmp: MakeTrianglesData(t.Len()),
+		dst: b,
 	}
-	bt.orig.Update(t)
-	bt.trans.Update(bt.orig)
 	return bt
 }
 
@@ -91,38 +85,62 @@ func (b *Batch) MakePicture(p Picture) TargetPicture {
 		panic(fmt.Errorf("(%T).MakePicture: Picture is not a slice of Batch's Picture", b))
 	}
 	bp := &batchPicture{
-		Picture: p,
-		dst:     b,
+		pic: p,
+		dst: b,
 	}
 	bp.orig = bp
 	return bp
 }
 
 type batchTriangles struct {
-	Triangles
-	orig, trans *TrianglesData
+	tri Triangles
+	tmp *TrianglesData
 
 	dst *Batch
 }
 
+func (bt *batchTriangles) Len() int {
+	return bt.tri.Len()
+}
+
+func (bt *batchTriangles) SetLen(len int) {
+	bt.tri.SetLen(len)
+	bt.tmp.SetLen(len)
+}
+
+func (bt *batchTriangles) Slice(i, j int) Triangles {
+	return &batchTriangles{
+		tri: bt.tri.Slice(i, j),
+		tmp: bt.tmp.Slice(i, j).(*TrianglesData),
+		dst: bt.dst,
+	}
+}
+
+func (bt *batchTriangles) Update(t Triangles) {
+	bt.tri.Update(t)
+}
+
+func (bt *batchTriangles) Copy() Triangles {
+	return &batchTriangles{
+		tri: bt.tri.Copy(),
+		tmp: bt.tmp.Copy().(*TrianglesData),
+		dst: bt.dst,
+	}
+}
+
 func (bt *batchTriangles) draw(bp *batchPicture) {
-	for i := range *bt.trans {
-		transPos := mgl64.Mat3(bt.dst.mat).Mul3x1(mgl64.Vec3{
-			(*bt.orig)[i].Position.X(),
-			(*bt.orig)[i].Position.Y(),
-			1,
-		})
-		(*bt.trans)[i].Position = V(float64(transPos.X()), float64(transPos.Y()))
-		(*bt.trans)[i].Color = (*bt.orig)[i].Color.Mul(bt.dst.col)
-		(*bt.trans)[i].Picture = (*bt.orig)[i].Picture
-		(*bt.trans)[i].Intensity = (*bt.orig)[i].Intensity
+	bt.tmp.Update(bt.tri)
+
+	for i := range *bt.tmp {
+		(*bt.tmp)[i].Position = bt.dst.mat.Project((*bt.tmp)[i].Position)
+		(*bt.tmp)[i].Color = bt.dst.col.Mul((*bt.tmp)[i].Color)
 	}
 
-	bt.Triangles.Update(bt.trans)
-
 	cont := bt.dst.cont.Triangles
-	cont.SetLen(cont.Len() + bt.Triangles.Len())
-	cont.Slice(cont.Len()-bt.Triangles.Len(), cont.Len()).Update(bt.Triangles)
+	cont.SetLen(cont.Len() + bt.tri.Len())
+	added := cont.Slice(cont.Len()-bt.tri.Len(), cont.Len())
+	added.Update(bt.tri)
+	added.Update(bt.tmp)
 	bt.dst.cont.Dirty()
 }
 
@@ -131,17 +149,20 @@ func (bt *batchTriangles) Draw() {
 }
 
 type batchPicture struct {
-	Picture
-
+	pic  Picture
 	orig *batchPicture
 	dst  *Batch
 }
 
+func (bp *batchPicture) Bounds() Rect {
+	return bp.pic.Bounds()
+}
+
 func (bp *batchPicture) Slice(r Rect) Picture {
 	return &batchPicture{
-		Picture: bp.Picture.Slice(r),
-		orig:    bp.orig,
-		dst:     bp.dst,
+		pic:  bp.pic.Slice(r),
+		orig: bp.orig,
+		dst:  bp.dst,
 	}
 }
 
