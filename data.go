@@ -117,7 +117,7 @@ func (td *TrianglesData) Picture(i int) (pic Vec, intensity float64) {
 	return (*td)[i].Picture, (*td)[i].Intensity
 }
 
-// PictureData specifies an in-memory rectangular area of NRGBA pixels and implements Picture and
+// PictureData specifies an in-memory rectangular area of pixels and implements Picture and
 // PictureColor.
 //
 // Pixels are small rectangles of unit size of form (x, y, x+1, y+1), where x and y are integers.
@@ -125,8 +125,11 @@ func (td *TrianglesData) Picture(i int) (pic Vec, intensity float64) {
 // within it's Bounds (Rect).
 //
 // The struct's innards are exposed for convenience, manual modification is at your own risk.
+//
+// The format of the pixels is color.NRGBA and not pixel.NRGBA for a very serious reason:
+// pixel.NRGBA takes up 8x more memory than color.NRGBA.
 type PictureData struct {
-	Pix    []NRGBA
+	Pix    []color.NRGBA
 	Stride int
 	Rect   Rect
 	Orig   *PictureData
@@ -140,7 +143,7 @@ func MakePictureData(rect Rect) *PictureData {
 		Stride: w,
 		Rect:   rect,
 	}
-	pd.Pix = make([]NRGBA, w*h)
+	pd.Pix = make([]color.NRGBA, w*h)
 	pd.Orig = pd
 	return pd
 }
@@ -182,12 +185,10 @@ func PictureDataFromImage(img image.Image) *PictureData {
 	))
 
 	for i := range pd.Pix {
-		pd.Pix[i] = NRGBA{
-			R: float64(nrgba.Pix[i*4+0]) / 255,
-			G: float64(nrgba.Pix[i*4+1]) / 255,
-			B: float64(nrgba.Pix[i*4+2]) / 255,
-			A: float64(nrgba.Pix[i*4+3]) / 255,
-		}
+		pd.Pix[i].R = nrgba.Pix[i*4+0]
+		pd.Pix[i].G = nrgba.Pix[i*4+1]
+		pd.Pix[i].B = nrgba.Pix[i*4+2]
+		pd.Pix[i].A = nrgba.Pix[i*4+3]
 	}
 
 	return pd
@@ -237,10 +238,10 @@ func (pd *PictureData) Image() *image.NRGBA {
 	for y := bounds.Min.Y; y < bounds.Max.Y; y++ {
 		for x := bounds.Min.X; x < bounds.Max.X; x++ {
 			off := pd.offset(V(float64(x), float64(y)))
-			nrgba.Pix[i*4+0] = uint8(pd.Pix[off].R * 255)
-			nrgba.Pix[i*4+1] = uint8(pd.Pix[off].G * 255)
-			nrgba.Pix[i*4+2] = uint8(pd.Pix[off].B * 255)
-			nrgba.Pix[i*4+3] = uint8(pd.Pix[off].A * 255)
+			nrgba.Pix[i*4+0] = pd.Pix[off].R
+			nrgba.Pix[i*4+1] = pd.Pix[off].G
+			nrgba.Pix[i*4+2] = pd.Pix[off].B
+			nrgba.Pix[i*4+3] = pd.Pix[off].A
 			i++
 		}
 	}
@@ -282,13 +283,13 @@ func (pd *PictureData) Color(at Vec) NRGBA {
 	if !pd.Rect.Contains(at) {
 		return NRGBA{0, 0, 0, 0}
 	}
-	return pd.Pix[pd.offset(at)]
+	return NRGBAModel.Convert(pd.Pix[pd.offset(at)]).(NRGBA)
 }
 
 // SetColor changes the color located at the given position.
-func (pd *PictureData) SetColor(at Vec, color color.Color) {
+func (pd *PictureData) SetColor(at Vec, col color.Color) {
 	if !pd.Rect.Contains(at) {
 		return
 	}
-	pd.Pix[pd.offset(at)] = NRGBAModel.Convert(color).(NRGBA)
+	pd.Pix[pd.offset(at)] = color.NRGBAModel.Convert(col).(color.NRGBA)
 }
