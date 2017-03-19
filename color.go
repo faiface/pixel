@@ -82,6 +82,14 @@ func nrgbaModel(c color.Color) color.Color {
 	if c, ok := c.(NRGBA); ok {
 		return c
 	}
+	if c, ok := c.(color.NRGBA); ok {
+		return NRGBA{
+			R: float64(c.R) / 255,
+			G: float64(c.G) / 255,
+			B: float64(c.B) / 255,
+			A: float64(c.A) / 255,
+		}
+	}
 	r, g, b, a := c.RGBA()
 	if a == 0 {
 		return NRGBA{0, 0, 0, 0}
