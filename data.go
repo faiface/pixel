@@ -237,7 +237,7 @@ func (pd *PictureData) Image() *image.NRGBA {
 	i := 0
 	for y := bounds.Min.Y; y < bounds.Max.Y; y++ {
 		for x := bounds.Min.X; x < bounds.Max.X; x++ {
-			off := pd.offset(V(float64(x), float64(y)))
+			off := pd.Offset(V(float64(x), float64(y)))
 			nrgba.Pix[i*4+0] = pd.Pix[off].R
 			nrgba.Pix[i*4+1] = pd.Pix[off].G
 			nrgba.Pix[i*4+2] = pd.Pix[off].B
@@ -251,7 +251,8 @@ func (pd *PictureData) Image() *image.NRGBA {
 	return nrgba
 }
 
-func (pd *PictureData) offset(at Vec) int {
+// Offset returns the index of the pixel at the specified position inside the Pix slice.
+func (pd *PictureData) Offset(at Vec) int {
 	at -= pd.Rect.Min.Map(math.Floor)
 	x, y := int(at.X()), int(at.Y())
 	return y*pd.Stride + x
@@ -265,7 +266,7 @@ func (pd *PictureData) Bounds() Rect {
 // Slice returns a sub-Picture of this PictureData inside the supplied rectangle.
 func (pd *PictureData) Slice(r Rect) Picture {
 	return &PictureData{
-		Pix:    pd.Pix[pd.offset(r.Min):],
+		Pix:    pd.Pix[pd.Offset(r.Min):],
 		Stride: pd.Stride,
 		Rect:   r,
 		Orig:   pd.Orig,
@@ -283,7 +284,7 @@ func (pd *PictureData) Color(at Vec) NRGBA {
 	if !pd.Rect.Contains(at) {
 		return NRGBA{0, 0, 0, 0}
 	}
-	return NRGBAModel.Convert(pd.Pix[pd.offset(at)]).(NRGBA)
+	return NRGBAModel.Convert(pd.Pix[pd.Offset(at)]).(NRGBA)
 }
 
 // SetColor changes the color located at the given position.
@@ -291,5 +292,5 @@ func (pd *PictureData) SetColor(at Vec, col color.Color) {
 	if !pd.Rect.Contains(at) {
 		return
 	}
-	pd.Pix[pd.offset(at)] = color.NRGBAModel.Convert(col).(color.NRGBA)
+	pd.Pix[pd.Offset(at)] = color.NRGBAModel.Convert(col).(color.NRGBA)
 }
