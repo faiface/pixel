@@ -102,7 +102,16 @@ func (c *Canvas) MakePicture(p pixel.Picture) pixel.TargetPicture {
 	bx, by, bw, bh := intBounds(bounds)
 
 	pixels := make([]uint8, 4*bw*bh)
-	if p, ok := p.(pixel.PictureColor); ok {
+
+	if pd, ok := p.(*pixel.PictureData); ok {
+		// PictureData short path
+		for i, nrgba := range pd.Pix {
+			pixels[i*4+0] = nrgba.R
+			pixels[i*4+1] = nrgba.G
+			pixels[i*4+2] = nrgba.B
+			pixels[i*4+3] = nrgba.A
+		}
+	} else if p, ok := p.(pixel.PictureColor); ok {
 		for y := 0; y < bh; y++ {
 			for x := 0; x < bw; x++ {
 				at := pixel.V(
