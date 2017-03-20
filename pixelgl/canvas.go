@@ -105,11 +105,15 @@ func (c *Canvas) MakePicture(p pixel.Picture) pixel.TargetPicture {
 
 	if pd, ok := p.(*pixel.PictureData); ok {
 		// PictureData short path
-		for i, nrgba := range pd.Pix {
-			pixels[i*4+0] = nrgba.R
-			pixels[i*4+1] = nrgba.G
-			pixels[i*4+2] = nrgba.B
-			pixels[i*4+3] = nrgba.A
+		for y := 0; y < bh; y++ {
+			for x := 0; x < bw; x++ {
+				nrgba := pd.Pix[y*pd.Stride+x]
+				off := (y*bw + x) * 4
+				pixels[off+0] = nrgba.R
+				pixels[off+1] = nrgba.G
+				pixels[off+2] = nrgba.B
+				pixels[off+3] = nrgba.A
+			}
 		}
 	} else if p, ok := p.(pixel.PictureColor); ok {
 		for y := 0; y < bh; y++ {
@@ -119,10 +123,11 @@ func (c *Canvas) MakePicture(p pixel.Picture) pixel.TargetPicture {
 					math.Max(float64(by+y), bounds.Min.Y()),
 				)
 				color := p.Color(at)
-				pixels[(y*bw+x)*4+0] = uint8(color.R * 255)
-				pixels[(y*bw+x)*4+1] = uint8(color.G * 255)
-				pixels[(y*bw+x)*4+2] = uint8(color.B * 255)
-				pixels[(y*bw+x)*4+3] = uint8(color.A * 255)
+				off := (y*bw + x) * 4
+				pixels[off+0] = uint8(color.R * 255)
+				pixels[off+1] = uint8(color.G * 255)
+				pixels[off+2] = uint8(color.B * 255)
+				pixels[off+3] = uint8(color.A * 255)
 			}
 		}
 	}
