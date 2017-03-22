@@ -26,6 +26,22 @@ import (
 //   imd.Color(pixel.NRGBA{R: 1, G: 0, B: 0, A: 1})
 //   imd.Push(pixel.V(200, 200))
 //   imd.Circle(400, 0)
+//
+// Here is the list of all available point properties (need to be set before Pushing a point):
+//   - Color     - applies to all
+//   - Picture   - coordinates, only applies to filled polygons
+//   - Intensity - picture intensity, only applies to filled polygons
+//   - Precision - curve drawing precision, only applies to circles and ellipses
+//   - EndShape  - shape of the end of a line, only applies to lines and outlines
+//
+// And here's the list of all shapes that can be drawn (all, except for line, can be filled or
+// outlined):
+//   - Line
+//   - Polygon
+//   - Circle
+//   - Circle arc
+//   - Ellipse
+//   - Ellipse arc
 type IMDraw struct {
 	points []point
 	opts   point
@@ -158,6 +174,11 @@ func (imd *IMDraw) MakePicture(p pixel.Picture) pixel.TargetPicture {
 	return imd.batch.MakePicture(p)
 }
 
+// Line draws a polyline of the specified thickness between the Pushed points.
+func (imd *IMDraw) Line(thickness float64) {
+	imd.polyline(thickness, false)
+}
+
 // Polygon draws a polygon from the Pushed points. If the thickness is 0, the convex polygon will be
 // filled. Otherwise, an outline of the specified thickness will be drawn. The outline does not have
 // to be convex.
@@ -224,11 +245,6 @@ func (imd *IMDraw) EllipseArc(radius pixel.Vec, low, high, thickness float64) {
 	} else {
 		imd.outlineEllipseArc(radius, low, high, thickness, true)
 	}
-}
-
-// Line draws a polyline of the specified thickness between the Pushed points.
-func (imd *IMDraw) Line(thickness float64) {
-	imd.polyline(thickness, false)
 }
 
 func (imd *IMDraw) getAndClearPoints() []point {
