@@ -75,10 +75,9 @@ func clamp(x, low, high float64) float64 {
 	return x
 }
 
-// NRGBAModel converts colors to NRGBA format.
-var NRGBAModel = color.ModelFunc(nrgbaModel)
-
-func nrgbaModel(c color.Color) color.Color {
+// ToNRGBA converts a color to NRGBA format. Using this function is preferred to using NRGBAModel,
+// for performance (using NRGBAModel introduced additional unnecessary allocations).
+func ToNRGBA(c color.Color) NRGBA {
 	if c, ok := c.(NRGBA); ok {
 		return c
 	}
@@ -100,4 +99,11 @@ func nrgbaModel(c color.Color) color.Color {
 		float64(b) / float64(a),
 		float64(a) / 0xffff,
 	}
+}
+
+// NRGBAModel converts colors to NRGBA format.
+var NRGBAModel = color.ModelFunc(nrgbaModel)
+
+func nrgbaModel(c color.Color) color.Color {
+	return ToNRGBA(c)
 }
