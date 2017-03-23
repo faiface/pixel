@@ -127,7 +127,7 @@ func (imd *IMDraw) pushPt(pos pixel.Vec, pt point) {
 
 // Color sets the color of the next Pushed points.
 func (imd *IMDraw) Color(color color.Color) {
-	imd.opts.col = pixel.NRGBAModel.Convert(color).(pixel.NRGBA)
+	imd.opts.col = pixel.ToNRGBA(color)
 }
 
 // Picture sets the Picture coordinates of the next Pushed points.
@@ -160,7 +160,7 @@ func (imd *IMDraw) SetMatrix(m pixel.Matrix) {
 
 // SetColorMask sets a color that all further point's color will be multiplied by.
 func (imd *IMDraw) SetColorMask(color color.Color) {
-	imd.mask = pixel.NRGBAModel.Convert(color).(pixel.NRGBA)
+	imd.mask = pixel.ToNRGBA(color)
 	imd.batch.SetColorMask(imd.mask)
 }
 

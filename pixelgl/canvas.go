@@ -162,7 +162,7 @@ func (c *Canvas) SetMatrix(m pixel.Matrix) {
 func (c *Canvas) SetColorMask(col color.Color) {
 	nrgba := pixel.NRGBA{R: 1, G: 1, B: 1, A: 1}
 	if col != nil {
-		nrgba = pixel.NRGBAModel.Convert(col).(pixel.NRGBA)
+		nrgba = pixel.ToNRGBA(col)
 	}
 	c.col = mgl32.Vec4{
 		float32(nrgba.R),
@@ -238,7 +238,7 @@ func (c *Canvas) setGlhfBounds() {
 func (c *Canvas) Clear(color color.Color) {
 	c.orig.dirty = true
 
-	nrgba := pixel.NRGBAModel.Convert(color).(pixel.NRGBA)
+	nrgba := pixel.ToNRGBA(color)
 
 	// color masking
 	nrgba = nrgba.Mul(pixel.NRGBA{

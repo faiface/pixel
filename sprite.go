@@ -67,7 +67,7 @@ func (s *Sprite) Matrix() Matrix {
 // Note, that this has nothing to do with BasicTarget's SetColorMask method. This only affects this
 // Sprite and is usable with any Target.
 func (s *Sprite) SetColorMask(mask color.Color) {
-	s.mask = NRGBAModel.Convert(mask).(NRGBA)
+	s.mask = ToNRGBA(mask)
 	s.calcData()
 }
 

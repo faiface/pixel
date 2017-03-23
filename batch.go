@@ -66,7 +66,7 @@ func (b *Batch) SetColorMask(c color.Color) {
 		b.col = NRGBA{1, 1, 1, 1}
 		return
 	}
-	b.col = NRGBAModel.Convert(c).(NRGBA)
+	b.col = ToNRGBA(c)
 }
 
 // MakeTriangles returns a specialized copy of the provided Triangles that draws onto this Batch.

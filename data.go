@@ -284,7 +284,7 @@ func (pd *PictureData) Color(at Vec) NRGBA {
 	if !pd.Rect.Contains(at) {
 		return NRGBA{0, 0, 0, 0}
 	}
-	return NRGBAModel.Convert(pd.Pix[pd.Index(at)]).(NRGBA)
+	return ToNRGBA(pd.Pix[pd.Index(at)])
 }
 
 // SetColor changes the color located at the given position.
@@ -292,5 +292,11 @@ func (pd *PictureData) SetColor(at Vec, col color.Color) {
 	if !pd.Rect.Contains(at) {
 		return
 	}
-	pd.Pix[pd.Index(at)] = color.NRGBAModel.Convert(col).(color.NRGBA)
+	nrgba := ToNRGBA(col)
+	pd.Pix[pd.Index(at)] = color.NRGBA{
+		R: uint8(nrgba.R * 255),
+		G: uint8(nrgba.G * 255),
+		B: uint8(nrgba.B * 255),
+		A: uint8(nrgba.A * 255),
+	}
 }
