@@ -433,8 +433,12 @@ func (imd *IMDraw) outlineEllipseArc(radius pixel.Vec, low, high, thickness floa
 func (imd *IMDraw) polyline(thickness float64, closed bool) {
 	points := imd.getAndClearPoints()
 
-	if len(points) < 2 {
+	if len(points) == 0 {
 		return
+	}
+	if len(points) == 1 {
+		// one point special case
+		points = append(points, points[0])
 	}
 
 	// first point
