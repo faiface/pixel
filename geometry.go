@@ -107,6 +107,16 @@ func (u Vec) Rotated(angle float64) Vec {
 	return u * V(cos, sin)
 }
 
+// WithX return the vector u with the x coordinate changed to the given value.
+func (u Vec) WithX(x float64) Vec {
+	return V(x, u.Y())
+}
+
+// WithY returns the vector u with the y coordinate changed to the given value.
+func (u Vec) WithY(y float64) Vec {
+	return V(u.X(), y)
+}
+
 // Dot returns the dot product of vectors u and v.
 func (u Vec) Dot(v Vec) float64 {
 	return u.X()*v.X() + u.Y()*v.Y()
@@ -203,6 +213,26 @@ func (r Rect) Moved(delta Vec) Rect {
 	return Rect{
 		Min: r.Min + delta,
 		Max: r.Max + delta,
+	}
+}
+
+// WithMin returns the Rect with it's Min changed to the given position.
+//
+// Note, that the Rect is not automatically normalized.
+func (r Rect) WithMin(min Vec) Rect {
+	return Rect{
+		Min: min,
+		Max: r.Max,
+	}
+}
+
+// WithMax returns the Rect with it's Max changed to the given position.
+//
+// Note, that the Rect is not automatically normalized.
+func (r Rect) WithMax(max Vec) Rect {
+	return Rect{
+		Min: r.Min,
+		Max: max,
 	}
 }
 
