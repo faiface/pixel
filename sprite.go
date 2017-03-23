@@ -1,5 +1,7 @@
 package pixel
 
+import "image/color"
+
 // Sprite is a drawable Picture. It's anchored by the center of it's Picture.
 //
 // To achieve different anchoring, transformations and color masking, use SetMatrix and SetColorMask
@@ -54,14 +56,24 @@ func (s *Sprite) SetMatrix(matrix Matrix) {
 	s.calcData()
 }
 
+// Matrix returns the currently set Matrix.
+func (s *Sprite) Matrix() Matrix {
+	return s.matrix
+}
+
 // SetColorMask sets a color that this Sprite will be multiplied by. This overrides any previously
 // set color mask.
 //
 // Note, that this has nothing to do with BasicTarget's SetColorMask method. This only affects this
 // Sprite and is usable with any Target.
-func (s *Sprite) SetColorMask(mask NRGBA) {
-	s.mask = mask
+func (s *Sprite) SetColorMask(mask color.Color) {
+	s.mask = NRGBAModel.Convert(mask).(NRGBA)
 	s.calcData()
+}
+
+// ColorMask returns the currently set color mask.
+func (s *Sprite) ColorMask() NRGBA {
+	return s.mask
 }
 
 // Draw draws the Sprite onto the provided Target.
