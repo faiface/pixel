@@ -433,18 +433,6 @@ func (imd *IMDraw) outlineEllipseArc(radius pixel.Vec, low, high, thickness floa
 func (imd *IMDraw) polyline(thickness float64, closed bool) {
 	points := imd.getAndClearPoints()
 
-	// filter identical adjacent points
-	filtered := points[:0]
-	for i := 0; i < len(points); i++ {
-		if closed || i+1 < len(points) {
-			j := (i + 1) % len(points)
-			if points[i].pos != points[j].pos {
-				filtered = append(filtered, points[i])
-			}
-		}
-	}
-	points = filtered
-
 	if len(points) < 2 {
 		return
 	}

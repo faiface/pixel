@@ -85,6 +85,9 @@ func (u Vec) Angle() float64 {
 
 // Unit returns a vector of length 1 facing the direction of u (has the same angle).
 func (u Vec) Unit() Vec {
+	if u == 0 {
+		return 1
+	}
 	return u / V(u.Len(), 0)
 }
 
