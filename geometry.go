@@ -162,7 +162,7 @@ func R(minX, minY, maxX, maxY float64) Rect {
 	return Rect{
 		Min: V(minX, minY),
 		Max: V(maxX, maxY),
-	}.Norm()
+	}
 }
 
 // Norm returns the Rect in normal form, such that Max is component-wise greater or equal than Min.
