@@ -132,7 +132,6 @@ type PictureData struct {
 	Pix    []color.NRGBA
 	Stride int
 	Rect   Rect
-	Orig   *PictureData
 }
 
 // MakePictureData creates a zero-initialized PictureData covering the given rectangle.
@@ -144,7 +143,6 @@ func MakePictureData(rect Rect) *PictureData {
 		Rect:   rect,
 	}
 	pd.Pix = make([]color.NRGBA, w*h)
-	pd.Orig = pd
 	return pd
 }
 
@@ -261,22 +259,6 @@ func (pd *PictureData) Index(at Vec) int {
 // Bounds returns the bounds of this PictureData.
 func (pd *PictureData) Bounds() Rect {
 	return pd.Rect
-}
-
-// Slice returns a sub-Picture of this PictureData inside the supplied rectangle.
-func (pd *PictureData) Slice(r Rect) Picture {
-	return &PictureData{
-		Pix:    pd.Pix[pd.Index(r.Min):],
-		Stride: pd.Stride,
-		Rect:   r,
-		Orig:   pd.Orig,
-	}
-}
-
-// Original returns the most original PictureData that this PictureData was obtained from using
-// Slice-ing.
-func (pd *PictureData) Original() Picture {
-	return pd.Orig
 }
 
 // Color returns the color located at the given position.
