@@ -81,14 +81,13 @@ func (b *Batch) MakeTriangles(t Triangles) TargetTriangles {
 
 // MakePicture returns a specialized copy of the provided Picture that draws onto this Batch.
 func (b *Batch) MakePicture(p Picture) TargetPicture {
-	if p.Original() != b.cont.Picture.Original() {
-		panic(fmt.Errorf("(%T).MakePicture: Picture is not a slice of Batch's Picture", b))
+	if p != b.cont.Picture {
+		panic(fmt.Errorf("(%T).MakePicture: Picture is not the Batch's Picture", b))
 	}
 	bp := &batchPicture{
 		pic: p,
 		dst: b,
 	}
-	bp.orig = bp
 	return bp
 }
 
@@ -149,25 +148,12 @@ func (bt *batchTriangles) Draw() {
 }
 
 type batchPicture struct {
-	pic  Picture
-	orig *batchPicture
-	dst  *Batch
+	pic Picture
+	dst *Batch
 }
 
 func (bp *batchPicture) Bounds() Rect {
 	return bp.pic.Bounds()
-}
-
-func (bp *batchPicture) Slice(r Rect) Picture {
-	return &batchPicture{
-		pic:  bp.pic.Slice(r),
-		orig: bp.orig,
-		dst:  bp.dst,
-	}
-}
-
-func (bp *batchPicture) Original() Picture {
-	return bp.orig
 }
 
 func (bp *batchPicture) Draw(t TargetTriangles) {
