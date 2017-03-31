@@ -2,21 +2,26 @@ package pixel
 
 import "image/color"
 
-// Sprite is a drawable Picture. It's anchored by the center of it's Picture.
+// Sprite is a drawable frame of a Picture. It's anchored by the center of it's Picture's frame.
+//
+// Frame specifies a rectangular portion of the Picture that will be drawn. For example, this
+// creates a Sprite that draws the whole Picture:
+//
+//   sprite := pixel.NewSprite(pic, pic.Bounds())
 //
 // To achieve different anchoring, transformations and color masking, use SetMatrix and SetColorMask
 // methods.
 type Sprite struct {
-	tri    *TrianglesData
-	bounds Rect
-	d      Drawer
+	tri   *TrianglesData
+	frame Rect
+	d     Drawer
 
 	matrix Matrix
 	mask   NRGBA
 }
 
-// NewSprite creates a Sprite from the supplied Picture.
-func NewSprite(pic Picture) *Sprite {
+// NewSprite creates a Sprite from the supplied frame of a Picture.
+func NewSprite(pic Picture, frame Rect) *Sprite {
 	tri := MakeTrianglesData(6)
 	s := &Sprite{
 		tri: tri,
@@ -24,26 +29,27 @@ func NewSprite(pic Picture) *Sprite {
 	}
 	s.matrix = IM
 	s.mask = NRGBA{1, 1, 1, 1}
-	s.SetPicture(pic)
+	s.Set(pic, frame)
 	return s
 }
 
-// SetPicture changes the Sprite's Picture. The new Picture may have a different size, everything
-// works.
-func (s *Sprite) SetPicture(pic Picture) {
+// Set sets a new frame of a Picture for this Sprite.
+func (s *Sprite) Set(pic Picture, frame Rect) {
 	s.d.Picture = pic
-
-	if s.bounds == pic.Bounds() {
-		return
+	if frame != s.frame {
+		s.frame = frame
+		s.calcData()
 	}
-	s.bounds = pic.Bounds()
-
-	s.calcData()
 }
 
 // Picture returns the current Sprite's Picture.
 func (s *Sprite) Picture() Picture {
 	return s.d.Picture
+}
+
+// Frame returns the current Sprite's frame.
+func (s *Sprite) Frame() Rect {
+	return s.frame
 }
 
 // SetMatrix sets a Matrix that this Sprite will be transformed by. This overrides any previously
@@ -83,9 +89,9 @@ func (s *Sprite) Draw(t Target) {
 
 func (s *Sprite) calcData() {
 	var (
-		center     = s.bounds.Center()
-		horizontal = X(s.bounds.W() / 2)
-		vertical   = Y(s.bounds.H() / 2)
+		center     = s.frame.Center()
+		horizontal = X(s.frame.W() / 2)
+		vertical   = Y(s.frame.H() / 2)
 	)
 
 	(*s.tri)[0].Position = -horizontal - vertical
