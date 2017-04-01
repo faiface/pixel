@@ -156,16 +156,16 @@ func (w *Window) Update() {
 	mainthread.Call(func() {
 		w.begin()
 
-		glhf.Bounds(0, 0, w.canvas.f.Texture().Width(), w.canvas.f.Texture().Height())
+		glhf.Bounds(0, 0, w.canvas.Texture().Width(), w.canvas.Texture().Height())
 
 		glhf.Clear(0, 0, 0, 0)
-		w.canvas.f.Begin()
-		w.canvas.f.Blit(
+		w.canvas.gf.Frame().Begin()
+		w.canvas.gf.Frame().Blit(
 			nil,
-			0, 0, w.canvas.f.Texture().Width(), w.canvas.f.Texture().Height(),
-			0, 0, w.canvas.f.Texture().Width(), w.canvas.f.Texture().Height(),
+			0, 0, w.canvas.Texture().Width(), w.canvas.Texture().Height(),
+			0, 0, w.canvas.Texture().Width(), w.canvas.Texture().Height(),
 		)
-		w.canvas.f.End()
+		w.canvas.gf.Frame().End()
 
 		if w.vsync {
 			glfw.SwapInterval(1)
