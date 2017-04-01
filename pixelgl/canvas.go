@@ -3,7 +3,6 @@ package pixelgl
 import (
 	"fmt"
 	"image/color"
-	"math"
 
 	"github.com/faiface/glhf"
 	"github.com/faiface/mainthread"
@@ -17,11 +16,8 @@ import (
 //
 // It supports TrianglesPosition, TrianglesColor, TrianglesPicture and PictureColor.
 type Canvas struct {
-	f      *glhf.Frame
-	s      *glhf.Shader
-	bounds pixel.Rect
-	pixels []uint8
-	dirty  bool
+	gf     *GLFrame
+	shader *glhf.Shader
 
 	mat    mgl32.Mat3
 	col    mgl32.Vec4
@@ -32,14 +28,18 @@ type Canvas struct {
 // set, then stretched Pictures will be smoothed and will not be drawn pixely onto this Canvas.
 func NewCanvas(bounds pixel.Rect, smooth bool) *Canvas {
 	c := &Canvas{
-		smooth: smooth,
+		gf:     NewGLFrame(bounds),
 		mat:    mgl32.Ident3(),
 		col:    mgl32.Vec4{1, 1, 1, 1},
+		smooth: smooth,
 	}
 
+	c.SetBounds(bounds)
+
+	var shader *glhf.Shader
 	mainthread.Call(func() {
 		var err error
-		c.s, err = glhf.NewShader(
+		shader, err = glhf.NewShader(
 			canvasVertexFormat,
 			canvasUniformFormat,
 			canvasVertexShader,
@@ -49,8 +49,7 @@ func NewCanvas(bounds pixel.Rect, smooth bool) *Canvas {
 			panic(errors.Wrap(err, "failed to create Canvas, there's a bug in the shader"))
 		}
 	})
-
-	c.SetBounds(bounds)
+	c.shader = shader
 
 	return c
 }
@@ -60,7 +59,7 @@ func NewCanvas(bounds pixel.Rect, smooth bool) *Canvas {
 // TrianglesPosition, TrianglesColor and TrianglesPicture are supported.
 func (c *Canvas) MakeTriangles(t pixel.Triangles) pixel.TargetTriangles {
 	return &canvasTriangles{
-		GLTriangles: NewGLTriangles(c.s, t),
+		GLTriangles: NewGLTriangles(c.shader, t),
 		dst:         c,
 	}
 }
@@ -69,78 +68,22 @@ func (c *Canvas) MakeTriangles(t pixel.Triangles) pixel.TargetTriangles {
 //
 // PictureColor is supported.
 func (c *Canvas) MakePicture(p pixel.Picture) pixel.TargetPicture {
-	// short paths
 	if cp, ok := p.(*canvasPicture); ok {
-		tp := new(canvasPicture)
-		*tp = *cp
-		tp.dst = c
-		return tp
-	}
-	if ccp, ok := p.(*canvasCanvasPicture); ok {
-		tp := new(canvasCanvasPicture)
-		*tp = *ccp
-		tp.dst = c
-		return tp
-	}
-
-	// Canvas special case
-	if canvas, ok := p.(*Canvas); ok {
-		return &canvasCanvasPicture{
-			src: canvas,
-			dst: c,
+		return &canvasPicture{
+			GLPicture: cp.GLPicture,
+			dst:       c,
 		}
 	}
-
-	bounds := p.Bounds()
-	bx, by, bw, bh := intBounds(bounds)
-
-	pixels := make([]uint8, 4*bw*bh)
-
-	if pd, ok := p.(*pixel.PictureData); ok {
-		// PictureData short path
-		for y := 0; y < bh; y++ {
-			for x := 0; x < bw; x++ {
-				nrgba := pd.Pix[y*pd.Stride+x]
-				off := (y*bw + x) * 4
-				pixels[off+0] = nrgba.R
-				pixels[off+1] = nrgba.G
-				pixels[off+2] = nrgba.B
-				pixels[off+3] = nrgba.A
-			}
-		}
-	} else if p, ok := p.(pixel.PictureColor); ok {
-		for y := 0; y < bh; y++ {
-			for x := 0; x < bw; x++ {
-				at := pixel.V(
-					math.Max(float64(bx+x), bounds.Min.X()),
-					math.Max(float64(by+y), bounds.Min.Y()),
-				)
-				color := p.Color(at)
-				off := (y*bw + x) * 4
-				pixels[off+0] = uint8(color.R * 255)
-				pixels[off+1] = uint8(color.G * 255)
-				pixels[off+2] = uint8(color.B * 255)
-				pixels[off+3] = uint8(color.A * 255)
-			}
+	if gp, ok := p.(GLPicture); ok {
+		return &canvasPicture{
+			GLPicture: gp,
+			dst:       c,
 		}
 	}
-
-	var tex *glhf.Texture
-	mainthread.Call(func() {
-		tex = glhf.NewTexture(bw, bh, c.smooth, pixels)
-	})
-
-	cp := &canvasPicture{
-		tex:    tex,
-		pixels: pixels,
-		bounds: pixel.R(
-			float64(bx), float64(by),
-			float64(bw), float64(bh),
-		),
-		dst: c,
+	return &canvasPicture{
+		GLPicture: NewGLPicture(p),
+		dst:       c,
 	}
-	cp.orig = cp
-	return cp
 }
 
 // SetMatrix sets a Matrix that every point will be projected by.
@@ -166,31 +109,12 @@ func (c *Canvas) SetColorMask(col color.Color) {
 
 // SetBounds resizes the Canvas to the new bounds. Old content will be preserved.
 func (c *Canvas) SetBounds(bounds pixel.Rect) {
-	mainthread.Call(func() {
-		oldF := c.f
-
-		_, _, w, h := intBounds(bounds)
-		c.f = glhf.NewFrame(w, h, c.smooth)
-
-		// preserve old content
-		if oldF != nil {
-			ox, oy, ow, oh := intBounds(bounds)
-			oldF.Blit(
-				c.f,
-				ox, oy, ox+ow, oy+oh,
-				ox, oy, ox+ow, oy+oh,
-			)
-		}
-	})
-
-	c.bounds = bounds
-	c.pixels = nil
-	c.dirty = true
+	c.gf.SetBounds(bounds)
 }
 
 // Bounds returns the rectangular bounds of the Canvas.
 func (c *Canvas) Bounds() pixel.Rect {
-	return c.bounds
+	return c.gf.Bounds()
 }
 
 // SetSmooth sets whether stretched Pictures drawn onto this Canvas should be drawn smooth or
@@ -207,13 +131,13 @@ func (c *Canvas) Smooth() bool {
 
 // must be manually called inside mainthread
 func (c *Canvas) setGlhfBounds() {
-	bx, by, bw, bh := intBounds(c.bounds)
+	bx, by, bw, bh := intBounds(c.gf.Bounds())
 	glhf.Bounds(bx, by, bw, bh)
 }
 
 // Clear fills the whole Canvas with a single color.
 func (c *Canvas) Clear(color color.Color) {
-	c.dirty = true
+	c.gf.Dirty()
 
 	nrgba := pixel.ToNRGBA(color)
 
@@ -227,50 +151,36 @@ func (c *Canvas) Clear(color color.Color) {
 
 	mainthread.CallNonBlock(func() {
 		c.setGlhfBounds()
-		c.f.Begin()
+		c.gf.Frame().Begin()
 		glhf.Clear(
 			float32(nrgba.R),
 			float32(nrgba.G),
 			float32(nrgba.B),
 			float32(nrgba.A),
 		)
-		c.f.End()
+		c.gf.Frame().End()
 	})
 }
 
 // Color returns the color of the pixel over the given position inside the Canvas.
 func (c *Canvas) Color(at pixel.Vec) pixel.NRGBA {
-	if c.dirty {
-		mainthread.Call(func() {
-			tex := c.f.Texture()
-			tex.Begin()
-			c.pixels = tex.Pixels(0, 0, tex.Width(), tex.Height())
-			tex.End()
-		})
-		c.dirty = false
-	}
-	if !c.bounds.Contains(at) {
-		return pixel.NRGBA{}
-	}
-	bx, by, bw, _ := intBounds(c.bounds)
-	x, y := int(at.X())-bx, int(at.Y())-by
-	off := y*bw + x
-	return pixel.NRGBA{
-		R: float64(c.pixels[off*4+0]) / 255,
-		G: float64(c.pixels[off*4+1]) / 255,
-		B: float64(c.pixels[off*4+2]) / 255,
-		A: float64(c.pixels[off*4+3]) / 255,
-	}
+	return c.gf.Color(at)
+}
+
+// Texture returns the underlying OpenGL Texture of this Canvas.
+//
+// Implements GLPicture interface.
+func (c *Canvas) Texture() *glhf.Texture {
+	return c.gf.Texture()
 }
 
 type canvasTriangles struct {
 	*GLTriangles
-
 	dst *Canvas
 }
 
 func (ct *canvasTriangles) draw(tex *glhf.Texture, bounds pixel.Rect) {
-	ct.dst.dirty = true
+	ct.dst.gf.Dirty()
 
 	// save the current state vars to avoid race condition
 	mat := ct.dst.mat
@@ -278,17 +188,22 @@ func (ct *canvasTriangles) draw(tex *glhf.Texture, bounds pixel.Rect) {
 
 	mainthread.CallNonBlock(func() {
 		ct.dst.setGlhfBounds()
-		ct.dst.f.Begin()
-		ct.dst.s.Begin()
 
-		ct.dst.s.SetUniformAttr(canvasBounds, mgl32.Vec4{
-			float32(ct.dst.bounds.Min.X()),
-			float32(ct.dst.bounds.Min.Y()),
-			float32(ct.dst.bounds.W()),
-			float32(ct.dst.bounds.H()),
+		frame := ct.dst.gf.Frame()
+		shader := ct.dst.shader
+
+		frame.Begin()
+		shader.Begin()
+
+		dstBounds := ct.dst.Bounds()
+		shader.SetUniformAttr(canvasBounds, mgl32.Vec4{
+			float32(dstBounds.Min.X()),
+			float32(dstBounds.Min.Y()),
+			float32(dstBounds.W()),
+			float32(dstBounds.H()),
 		})
-		ct.dst.s.SetUniformAttr(canvasTransform, mat)
-		ct.dst.s.SetUniformAttr(canvasColorMask, col)
+		shader.SetUniformAttr(canvasTransform, mat)
+		shader.SetUniformAttr(canvasColorMask, col)
 
 		if tex == nil {
 			ct.vs.Begin()
@@ -297,11 +212,12 @@ func (ct *canvasTriangles) draw(tex *glhf.Texture, bounds pixel.Rect) {
 		} else {
 			tex.Begin()
 
-			ct.dst.s.SetUniformAttr(canvasTexBounds, mgl32.Vec4{
-				float32(bounds.Min.X()),
-				float32(bounds.Min.Y()),
-				float32(bounds.W()),
-				float32(bounds.H()),
+			bx, by, bw, bh := intBounds(bounds)
+			shader.SetUniformAttr(canvasTexBounds, mgl32.Vec4{
+				float32(bx),
+				float32(by),
+				float32(bw),
+				float32(bh),
 			})
 
 			if tex.Smooth() != ct.dst.smooth {
@@ -315,8 +231,8 @@ func (ct *canvasTriangles) draw(tex *glhf.Texture, bounds pixel.Rect) {
 			tex.End()
 		}
 
-		ct.dst.s.End()
-		ct.dst.f.End()
+		shader.End()
+		frame.End()
 	})
 }
 
@@ -325,31 +241,8 @@ func (ct *canvasTriangles) Draw() {
 }
 
 type canvasPicture struct {
-	tex    *glhf.Texture
-	pixels []uint8
-	bounds pixel.Rect
-
-	orig *canvasPicture
-	dst  *Canvas
-}
-
-func (cp *canvasPicture) Bounds() pixel.Rect {
-	return cp.bounds
-}
-
-func (cp *canvasPicture) Color(at pixel.Vec) pixel.NRGBA {
-	if !cp.bounds.Contains(at) {
-		return pixel.NRGBA{}
-	}
-	bx, by, bw, _ := intBounds(cp.bounds)
-	x, y := int(at.X())-bx, int(at.Y())-by
-	off := y*bw + x
-	return pixel.NRGBA{
-		R: float64(cp.pixels[off*4+0]) / 255,
-		G: float64(cp.pixels[off*4+1]) / 255,
-		B: float64(cp.pixels[off*4+2]) / 255,
-		A: float64(cp.pixels[off*4+3]) / 255,
-	}
+	GLPicture
+	dst *Canvas
 }
 
 func (cp *canvasPicture) Draw(t pixel.TargetTriangles) {
@@ -357,30 +250,7 @@ func (cp *canvasPicture) Draw(t pixel.TargetTriangles) {
 	if cp.dst != ct.dst {
 		panic(fmt.Errorf("(%T).Draw: TargetTriangles generated by different Canvas", cp))
 	}
-	ct.draw(cp.tex, cp.bounds)
-}
-
-type canvasCanvasPicture struct {
-	src, dst *Canvas
-}
-
-func (ccp *canvasCanvasPicture) Bounds() pixel.Rect {
-	return ccp.src.Bounds()
-}
-
-func (ccp *canvasCanvasPicture) Color(at pixel.Vec) pixel.NRGBA {
-	if !ccp.Bounds().Contains(at) {
-		return pixel.NRGBA{}
-	}
-	return ccp.src.Color(at)
-}
-
-func (ccp *canvasCanvasPicture) Draw(t pixel.TargetTriangles) {
-	ct := t.(*canvasTriangles)
-	if ccp.dst != ct.dst {
-		panic(fmt.Errorf("(%T).Draw: TargetTriangles generated by different Canvas", ccp))
-	}
-	ct.draw(ccp.src.f.Texture(), ccp.Bounds())
+	ct.draw(cp.GLPicture.Texture(), cp.GLPicture.Bounds())
 }
 
 const (
