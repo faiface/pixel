@@ -3,6 +3,7 @@ package main
 import (
 	"image"
 	"os"
+	"time"
 
 	_ "image/png"
 
@@ -46,8 +47,12 @@ func run() {
 
 	angle := 0.0
 
+	last := time.Now()
 	for !win.Closed() {
-		angle += 0.05
+		dt := time.Since(last).Seconds()
+		last = time.Now()
+
+		angle += 3 * dt
 
 		win.Clear(colornames.Firebrick)
 
