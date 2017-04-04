@@ -165,6 +165,15 @@ func R(minX, minY, maxX, maxY float64) Rect {
 	}
 }
 
+// String returns the string representation of the Rect.
+//
+//   r := pixel.R(100, 50, 200, 300)
+//   r.String()     // returns "Rect(100, 50, 200, 300)"
+//   fmt.Println(r) // Rect(100, 50, 200, 300)
+func (r Rect) String() string {
+	return fmt.Sprintf("Rect(%v, %v, %v, %v)", r.Min.X(), r.Min.Y(), r.Max.X(), r.Max.Y())
+}
+
 // Norm returns the Rect in normal form, such that Max is component-wise greater or equal than Min.
 func (r Rect) Norm() Rect {
 	return Rect{
@@ -177,15 +186,6 @@ func (r Rect) Norm() Rect {
 			math.Max(r.Min.Y(), r.Max.Y()),
 		),
 	}
-}
-
-// String returns the string representation of the Rect.
-//
-//   r := pixel.R(100, 50, 200, 300)
-//   r.String()     // returns "Rect(100, 50, 200, 300)"
-//   fmt.Println(r) // Rect(100, 50, 200, 300)
-func (r Rect) String() string {
-	return fmt.Sprintf("Rect(%v, %v, %v, %v)", r.Min.X(), r.Min.Y(), r.Max.X(), r.Max.Y())
 }
 
 // W returns the width of the Rect.
