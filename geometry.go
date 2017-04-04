@@ -287,6 +287,19 @@ type Matrix [9]float64
 // IM stands for identity matrix. Does nothing, no transformation.
 var IM = Matrix(mgl64.Ident3())
 
+// String returns a string representation of the Matrix.
+//
+//   m := pixel.IM
+//   fmt.Println(m) // Matrix(1 0 0 | 0 1 0 | 0 0 1)
+func (m Matrix) String() string {
+	return fmt.Sprintf(
+		"Matrix(%v %v %v | %v %v %v | %v %v %v)",
+		m[0], m[1], m[2],
+		m[3], m[4], m[5],
+		m[6], m[7], m[8],
+	)
+}
+
 // Moved moves everything by the delta vector.
 func (m Matrix) Moved(delta Vec) Matrix {
 	m3 := mgl64.Mat3(m)
