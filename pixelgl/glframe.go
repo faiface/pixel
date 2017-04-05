@@ -24,6 +24,10 @@ func NewGLFrame(bounds pixel.Rect) *GLFrame {
 
 // SetBounds resizes the GLFrame to the new bounds.
 func (gf *GLFrame) SetBounds(bounds pixel.Rect) {
+	if bounds == gf.Bounds() {
+		return
+	}
+
 	mainthread.Call(func() {
 		oldF := gf.frame
 
