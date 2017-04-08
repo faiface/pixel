@@ -366,7 +366,7 @@ func (w *Window) MakeTriangles(t pixel.Triangles) pixel.TargetTriangles {
 
 // MakePicture generates a specialized copy of the supplied Picture that will draw onto this Window.
 //
-// Window support PictureColor.
+// Window supports PictureColor.
 func (w *Window) MakePicture(p pixel.Picture) pixel.TargetPicture {
 	return w.canvas.MakePicture(p)
 }
