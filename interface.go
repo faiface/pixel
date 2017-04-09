@@ -56,6 +56,7 @@ const (
 	ComposeIn
 	ComposeOut
 	ComposeAtop
+	ComposeDstOver
 	ComposeDstIn
 	ComposeDstOut
 	ComposeDstAtop
