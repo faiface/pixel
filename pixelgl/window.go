@@ -125,7 +125,7 @@ func NewWindow(cfg WindowConfig) (*Window, error) {
 	w.initInput()
 	w.SetMonitor(cfg.Fullscreen)
 
-	w.canvas = NewCanvas(cfg.Bounds, false)
+	w.canvas = NewCanvas(cfg.Bounds)
 	w.Update()
 
 	runtime.SetFinalizer(w, (*Window).Destroy)
