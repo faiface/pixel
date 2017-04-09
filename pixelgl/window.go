@@ -399,6 +399,6 @@ func (w *Window) Clear(c color.Color) {
 }
 
 // Color returns the color of the pixel over the given position inside the Window.
-func (w *Window) Color(at pixel.Vec) pixel.NRGBA {
+func (w *Window) Color(at pixel.Vec) pixel.RGBA {
 	return w.canvas.Color(at)
 }

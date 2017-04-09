@@ -178,12 +178,12 @@ func (gt *GLTriangles) Position(i int) pixel.Vec {
 }
 
 // Color returns the Color property of the i-th vertex.
-func (gt *GLTriangles) Color(i int) pixel.NRGBA {
+func (gt *GLTriangles) Color(i int) pixel.RGBA {
 	r := gt.data[i*gt.vs.Stride()+2]
 	g := gt.data[i*gt.vs.Stride()+3]
 	b := gt.data[i*gt.vs.Stride()+4]
 	a := gt.data[i*gt.vs.Stride()+5]
-	return pixel.NRGBA{
+	return pixel.RGBA{
 		R: float64(r),
 		G: float64(g),
 		B: float64(b),

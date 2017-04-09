@@ -12,7 +12,7 @@ import (
 // TrianglesPosition, TrianglesColor and TrianglesPicture.
 type TrianglesData []struct {
 	Position  Vec
-	Color     NRGBA
+	Color     RGBA
 	Picture   Vec
 	Intensity float64
 }
@@ -42,10 +42,10 @@ func (td *TrianglesData) SetLen(len int) {
 		for i := 0; i < needAppend; i++ {
 			*td = append(*td, struct {
 				Position  Vec
-				Color     NRGBA
+				Color     RGBA
 				Picture   Vec
 				Intensity float64
-			}{V(0, 0), NRGBA{1, 1, 1, 1}, V(0, 0), 0})
+			}{V(0, 0), RGBA{1, 1, 1, 1}, V(0, 0), 0})
 		}
 	}
 	if len < td.Len() {
@@ -108,7 +108,7 @@ func (td *TrianglesData) Position(i int) Vec {
 }
 
 // Color returns the color property of i-th vertex.
-func (td *TrianglesData) Color(i int) NRGBA {
+func (td *TrianglesData) Color(i int) RGBA {
 	return (*td)[i].Color
 }
 
@@ -126,10 +126,10 @@ func (td *TrianglesData) Picture(i int) (pic Vec, intensity float64) {
 //
 // The struct's innards are exposed for convenience, manual modification is at your own risk.
 //
-// The format of the pixels is color.NRGBA and not pixel.NRGBA for a very serious reason:
-// pixel.NRGBA takes up 8x more memory than color.NRGBA.
+// The format of the pixels is color.RGBA and not pixel.RGBA for a very serious reason:
+// pixel.RGBA takes up 8x more memory than color.RGBA.
 type PictureData struct {
-	Pix    []color.NRGBA
+	Pix    []color.RGBA
 	Stride int
 	Rect   Rect
 }
@@ -142,18 +142,18 @@ func MakePictureData(rect Rect) *PictureData {
 		Stride: w,
 		Rect:   rect,
 	}
-	pd.Pix = make([]color.NRGBA, w*h)
+	pd.Pix = make([]color.RGBA, w*h)
 	return pd
 }
 
-func verticalFlip(nrgba *image.NRGBA) {
-	bounds := nrgba.Bounds()
+func verticalFlip(rgba *image.RGBA) {
+	bounds := rgba.Bounds()
 	width := bounds.Dx()
 
 	tmpRow := make([]uint8, width*4)
 	for i, j := 0, bounds.Dy()-1; i < j; i, j = i+1, j-1 {
-		iRow := nrgba.Pix[i*nrgba.Stride : i*nrgba.Stride+width*4]
-		jRow := nrgba.Pix[j*nrgba.Stride : j*nrgba.Stride+width*4]
+		iRow := rgba.Pix[i*rgba.Stride : i*rgba.Stride+width*4]
+		jRow := rgba.Pix[j*rgba.Stride : j*rgba.Stride+width*4]
 
 		copy(tmpRow, iRow)
 		copy(iRow, jRow)
@@ -165,28 +165,28 @@ func verticalFlip(nrgba *image.NRGBA) {
 //
 // The resulting PictureData's Bounds will be the equivalent of the supplied image.Image's Bounds.
 func PictureDataFromImage(img image.Image) *PictureData {
-	var nrgba *image.NRGBA
-	if nrgbaImg, ok := img.(*image.NRGBA); ok {
-		nrgba = nrgbaImg
+	var rgba *image.RGBA
+	if rgbaImg, ok := img.(*image.RGBA); ok {
+		rgba = rgbaImg
 	} else {
-		nrgba = image.NewNRGBA(img.Bounds())
-		draw.Draw(nrgba, nrgba.Bounds(), img, img.Bounds().Min, draw.Src)
+		rgba = image.NewRGBA(img.Bounds())
+		draw.Draw(rgba, rgba.Bounds(), img, img.Bounds().Min, draw.Src)
 	}
 
-	verticalFlip(nrgba)
+	verticalFlip(rgba)
 
 	pd := MakePictureData(R(
-		float64(nrgba.Bounds().Min.X),
-		float64(nrgba.Bounds().Min.Y),
-		float64(nrgba.Bounds().Dx()),
-		float64(nrgba.Bounds().Dy()),
+		float64(rgba.Bounds().Min.X),
+		float64(rgba.Bounds().Min.Y),
+		float64(rgba.Bounds().Dx()),
+		float64(rgba.Bounds().Dy()),
 	))
 
 	for i := range pd.Pix {
-		pd.Pix[i].R = nrgba.Pix[i*4+0]
-		pd.Pix[i].G = nrgba.Pix[i*4+1]
-		pd.Pix[i].B = nrgba.Pix[i*4+2]
-		pd.Pix[i].A = nrgba.Pix[i*4+3]
+		pd.Pix[i].R = rgba.Pix[i*4+0]
+		pd.Pix[i].G = rgba.Pix[i*4+1]
+		pd.Pix[i].B = rgba.Pix[i*4+2]
+		pd.Pix[i].A = rgba.Pix[i*4+3]
 	}
 
 	return pd
@@ -220,33 +220,33 @@ func PictureDataFromPicture(pic Picture) *PictureData {
 	return pd
 }
 
-// Image converts PictureData into an image.NRGBA.
+// Image converts PictureData into an image.RGBA.
 //
-// The resulting image.NRGBA's Bounds will be equivalent of the PictureData's Bounds.
-func (pd *PictureData) Image() *image.NRGBA {
+// The resulting image.RGBA's Bounds will be equivalent of the PictureData's Bounds.
+func (pd *PictureData) Image() *image.RGBA {
 	bounds := image.Rect(
 		int(math.Floor(pd.Rect.Min.X())),
 		int(math.Floor(pd.Rect.Min.Y())),
 		int(math.Ceil(pd.Rect.Max.X())),
 		int(math.Ceil(pd.Rect.Max.Y())),
 	)
-	nrgba := image.NewNRGBA(bounds)
+	rgba := image.NewRGBA(bounds)
 
 	i := 0
 	for y := bounds.Min.Y; y < bounds.Max.Y; y++ {
 		for x := bounds.Min.X; x < bounds.Max.X; x++ {
 			off := pd.Index(V(float64(x), float64(y)))
-			nrgba.Pix[i*4+0] = pd.Pix[off].R
-			nrgba.Pix[i*4+1] = pd.Pix[off].G
-			nrgba.Pix[i*4+2] = pd.Pix[off].B
-			nrgba.Pix[i*4+3] = pd.Pix[off].A
+			rgba.Pix[i*4+0] = pd.Pix[off].R
+			rgba.Pix[i*4+1] = pd.Pix[off].G
+			rgba.Pix[i*4+2] = pd.Pix[off].B
+			rgba.Pix[i*4+3] = pd.Pix[off].A
 			i++
 		}
 	}
 
-	verticalFlip(nrgba)
+	verticalFlip(rgba)
 
-	return nrgba
+	return rgba
 }
 
 // Index returns the index of the pixel at the specified position inside the Pix slice.
@@ -262,11 +262,11 @@ func (pd *PictureData) Bounds() Rect {
 }
 
 // Color returns the color located at the given position.
-func (pd *PictureData) Color(at Vec) NRGBA {
+func (pd *PictureData) Color(at Vec) RGBA {
 	if !pd.Rect.Contains(at) {
-		return NRGBA{0, 0, 0, 0}
+		return RGBA{0, 0, 0, 0}
 	}
-	return ToNRGBA(pd.Pix[pd.Index(at)])
+	return ToRGBA(pd.Pix[pd.Index(at)])
 }
 
 // SetColor changes the color located at the given position.
@@ -274,11 +274,11 @@ func (pd *PictureData) SetColor(at Vec, col color.Color) {
 	if !pd.Rect.Contains(at) {
 		return
 	}
-	nrgba := ToNRGBA(col)
-	pd.Pix[pd.Index(at)] = color.NRGBA{
-		R: uint8(nrgba.R * 255),
-		G: uint8(nrgba.G * 255),
-		B: uint8(nrgba.B * 255),
-		A: uint8(nrgba.A * 255),
+	rgba := ToRGBA(col)
+	pd.Pix[pd.Index(at)] = color.RGBA{
+		R: uint8(rgba.R * 255),
+		G: uint8(rgba.G * 255),
+		B: uint8(rgba.B * 255),
+		A: uint8(rgba.A * 255),
 	}
 }

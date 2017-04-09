@@ -23,7 +23,7 @@ import (
 //
 // Use various methods to change properties of Pushed points:
 //
-//   imd.Color(pixel.NRGBA{R: 1, G: 0, B: 0, A: 1})
+//   imd.Color(pixel.RGBA{R: 1, G: 0, B: 0, A: 1})
 //   imd.Push(pixel.V(200, 200))
 //   imd.Circle(400, 0)
 //
@@ -46,7 +46,7 @@ type IMDraw struct {
 	points []point
 	opts   point
 	matrix pixel.Matrix
-	mask   pixel.NRGBA
+	mask   pixel.RGBA
 
 	tri   *pixel.TrianglesData
 	batch *pixel.Batch
@@ -56,7 +56,7 @@ var _ pixel.BasicTarget = (*IMDraw)(nil)
 
 type point struct {
 	pos       pixel.Vec
-	col       pixel.NRGBA
+	col       pixel.RGBA
 	pic       pixel.Vec
 	in        float64
 	precision int
@@ -87,7 +87,7 @@ func New(pic pixel.Picture) *IMDraw {
 		batch: pixel.NewBatch(tri, pic),
 	}
 	im.SetMatrix(pixel.IM)
-	im.SetColorMask(pixel.NRGBA{R: 1, G: 1, B: 1, A: 1})
+	im.SetColorMask(pixel.RGBA{R: 1, G: 1, B: 1, A: 1})
 	im.Reset()
 	return im
 }
@@ -127,7 +127,7 @@ func (imd *IMDraw) pushPt(pos pixel.Vec, pt point) {
 
 // Color sets the color of the next Pushed points.
 func (imd *IMDraw) Color(color color.Color) {
-	imd.opts.col = pixel.ToNRGBA(color)
+	imd.opts.col = pixel.ToRGBA(color)
 }
 
 // Picture sets the Picture coordinates of the next Pushed points.
@@ -160,7 +160,7 @@ func (imd *IMDraw) SetMatrix(m pixel.Matrix) {
 
 // SetColorMask sets a color that all further point's color will be multiplied by.
 func (imd *IMDraw) SetColorMask(color color.Color) {
-	imd.mask = pixel.ToNRGBA(color)
+	imd.mask = pixel.ToRGBA(color)
 	imd.batch.SetColorMask(imd.mask)
 }
 

@@ -30,12 +30,12 @@ func NewGLPicture(p pixel.Picture) GLPicture {
 		// PictureData short path
 		for y := 0; y < bh; y++ {
 			for x := 0; x < bw; x++ {
-				nrgba := pd.Pix[y*pd.Stride+x]
+				rgba := pd.Pix[y*pd.Stride+x]
 				off := (y*bw + x) * 4
-				pixels[off+0] = nrgba.R
-				pixels[off+1] = nrgba.G
-				pixels[off+2] = nrgba.B
-				pixels[off+3] = nrgba.A
+				pixels[off+0] = rgba.R
+				pixels[off+1] = rgba.G
+				pixels[off+2] = rgba.B
+				pixels[off+3] = rgba.A
 			}
 		}
 	} else if p, ok := p.(pixel.PictureColor); ok {
@@ -82,14 +82,14 @@ func (gp *glPicture) Texture() *glhf.Texture {
 	return gp.tex
 }
 
-func (gp *glPicture) Color(at pixel.Vec) pixel.NRGBA {
+func (gp *glPicture) Color(at pixel.Vec) pixel.RGBA {
 	if !gp.bounds.Contains(at) {
-		return pixel.NRGBA{}
+		return pixel.RGBA{}
 	}
 	bx, by, bw, _ := intBounds(gp.bounds)
 	x, y := int(at.X())-bx, int(at.Y())-by
 	off := y*bw + x
-	return pixel.NRGBA{
+	return pixel.RGBA{
 		R: float64(gp.pixels[off*4+0]) / 255,
 		G: float64(gp.pixels[off*4+1]) / 255,
 		B: float64(gp.pixels[off*4+2]) / 255,

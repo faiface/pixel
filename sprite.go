@@ -17,7 +17,7 @@ type Sprite struct {
 	d     Drawer
 
 	matrix Matrix
-	mask   NRGBA
+	mask   RGBA
 }
 
 // NewSprite creates a Sprite from the supplied frame of a Picture.
@@ -28,7 +28,7 @@ func NewSprite(pic Picture, frame Rect) *Sprite {
 		d:   Drawer{Triangles: tri},
 	}
 	s.matrix = IM
-	s.mask = NRGBA{1, 1, 1, 1}
+	s.mask = RGBA{1, 1, 1, 1}
 	s.Set(pic, frame)
 	return s
 }
@@ -73,12 +73,12 @@ func (s *Sprite) Matrix() Matrix {
 // Note, that this has nothing to do with BasicTarget's SetColorMask method. This only affects this
 // Sprite and is usable with any Target.
 func (s *Sprite) SetColorMask(mask color.Color) {
-	s.mask = ToNRGBA(mask)
+	s.mask = ToRGBA(mask)
 	s.calcData()
 }
 
 // ColorMask returns the currently set color mask.
-func (s *Sprite) ColorMask() NRGBA {
+func (s *Sprite) ColorMask() RGBA {
 	return s.mask
 }
 
