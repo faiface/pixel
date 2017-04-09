@@ -27,14 +27,12 @@ type Canvas struct {
 
 var _ pixel.ComposeTarget = (*Canvas)(nil)
 
-// NewCanvas creates a new empty, fully transparent Canvas with given bounds. If the smooth flag is
-// set, then stretched Pictures will be smoothed and will not be drawn pixely onto this Canvas.
-func NewCanvas(bounds pixel.Rect, smooth bool) *Canvas {
+// NewCanvas creates a new empty, fully transparent Canvas with given bounds.
+func NewCanvas(bounds pixel.Rect) *Canvas {
 	c := &Canvas{
-		gf:     NewGLFrame(bounds),
-		mat:    mgl32.Ident3(),
-		col:    mgl32.Vec4{1, 1, 1, 1},
-		smooth: smooth,
+		gf:  NewGLFrame(bounds),
+		mat: mgl32.Ident3(),
+		col: mgl32.Vec4{1, 1, 1, 1},
 	}
 
 	c.SetBounds(bounds)
