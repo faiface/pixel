@@ -145,8 +145,8 @@ func (c *Canvas) setGlhfBounds() {
 }
 
 // must be manually called inside mainthread
-func (c *Canvas) setBlendFunc() {
-	switch c.cmp {
+func setBlendFunc(cmp pixel.ComposeMethod) {
+	switch cmp {
 	case pixel.ComposeOver:
 		glhf.BlendFunc(glhf.One, glhf.OneMinusSrcAlpha)
 	case pixel.ComposeIn:
@@ -218,12 +218,14 @@ func (ct *canvasTriangles) draw(tex *glhf.Texture, bounds pixel.Rect) {
 	ct.dst.gf.Dirty()
 
 	// save the current state vars to avoid race condition
+	cmp := ct.dst.cmp
 	mat := ct.dst.mat
 	col := ct.dst.col
+	smt := ct.dst.smooth
 
 	mainthread.CallNonBlock(func() {
 		ct.dst.setGlhfBounds()
-		ct.dst.setBlendFunc()
+		setBlendFunc(cmp)
 
 		frame := ct.dst.gf.Frame()
 		shader := ct.dst.shader
@@ -256,8 +258,8 @@ func (ct *canvasTriangles) draw(tex *glhf.Texture, bounds pixel.Rect) {
 				float32(bh),
 			})
 
-			if tex.Smooth() != ct.dst.smooth {
-				tex.SetSmooth(ct.dst.smooth)
+			if tex.Smooth() != smt {
+				tex.SetSmooth(smt)
 			}
 
 			ct.vs.Begin()
