@@ -19,10 +19,13 @@ type Canvas struct {
 	gf     *GLFrame
 	shader *glhf.Shader
 
+	cmp    pixel.ComposeMethod
 	mat    mgl32.Mat3
 	col    mgl32.Vec4
 	smooth bool
 }
+
+var _ pixel.ComposeTarget = (*Canvas)(nil)
 
 // NewCanvas creates a new empty, fully transparent Canvas with given bounds. If the smooth flag is
 // set, then stretched Pictures will be smoothed and will not be drawn pixely onto this Canvas.
@@ -107,6 +110,12 @@ func (c *Canvas) SetColorMask(col color.Color) {
 	}
 }
 
+// SetComposeMethod sets a Porter-Duff composition method to be used in the following draws onto
+// this Canvas.
+func (c *Canvas) SetComposeMethod(cmp pixel.ComposeMethod) {
+	c.cmp = cmp
+}
+
 // SetBounds resizes the Canvas to the new bounds. Old content will be preserved.
 func (c *Canvas) SetBounds(bounds pixel.Rect) {
 	c.gf.SetBounds(bounds)
@@ -133,6 +142,32 @@ func (c *Canvas) Smooth() bool {
 func (c *Canvas) setGlhfBounds() {
 	bx, by, bw, bh := intBounds(c.gf.Bounds())
 	glhf.Bounds(bx, by, bw, bh)
+}
+
+// must be manually called inside mainthread
+func (c *Canvas) setBlendFunc() {
+	switch c.cmp {
+	case pixel.ComposeOver:
+		glhf.BlendFunc(glhf.One, glhf.OneMinusSrcAlpha)
+	case pixel.ComposeIn:
+		glhf.BlendFunc(glhf.DstAlpha, glhf.Zero)
+	case pixel.ComposeOut:
+		glhf.BlendFunc(glhf.OneMinusDstAlpha, glhf.Zero)
+	case pixel.ComposeAtop:
+		glhf.BlendFunc(glhf.DstAlpha, glhf.OneMinusSrcAlpha)
+	case pixel.ComposeDstOver:
+		glhf.BlendFunc(glhf.OneMinusDstAlpha, glhf.One)
+	case pixel.ComposeDstIn:
+		glhf.BlendFunc(glhf.Zero, glhf.SrcAlpha)
+	case pixel.ComposeDstOut:
+		glhf.BlendFunc(glhf.Zero, glhf.OneMinusSrcAlpha)
+	case pixel.ComposeDstAtop:
+		glhf.BlendFunc(glhf.OneMinusDstAlpha, glhf.SrcAlpha)
+	case pixel.ComposeXor:
+		glhf.BlendFunc(glhf.OneMinusDstAlpha, glhf.OneMinusSrcAlpha)
+	default:
+		panic(errors.New("Canvas: invalid compose method"))
+	}
 }
 
 // Clear fills the whole Canvas with a single color.
@@ -188,7 +223,7 @@ func (ct *canvasTriangles) draw(tex *glhf.Texture, bounds pixel.Rect) {
 
 	mainthread.CallNonBlock(func() {
 		ct.dst.setGlhfBounds()
-		glhf.BlendFunc(glhf.One, glhf.OneMinusSrcAlpha)
+		ct.dst.setBlendFunc()
 
 		frame := ct.dst.gf.Frame()
 		shader := ct.dst.shader
