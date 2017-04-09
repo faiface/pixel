@@ -2,7 +2,7 @@ package pixel
 
 import "image/color"
 
-// RGBA represents a alpha-premultiplied RGBA color with components within range [0, 1].
+// RGBA represents an alpha-premultiplied RGBA color with components within range [0, 1].
 //
 // The difference between color.RGBA is that the value range is [0, 1] and the values are floats.
 type RGBA struct {
