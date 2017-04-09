@@ -2,17 +2,17 @@ package pixel
 
 import "image/color"
 
-// NRGBA represents a non-alpha-premultiplied RGBA color with components within range [0, 1].
+// RGBA represents a alpha-premultiplied RGBA color with components within range [0, 1].
 //
-// The difference between color.NRGBA is that the value range is [0, 1] and the values are floats.
-type NRGBA struct {
+// The difference between color.RGBA is that the value range is [0, 1] and the values are floats.
+type RGBA struct {
 	R, G, B, A float64
 }
 
 // Add adds color d to color c component-wise and returns the result (the components are not
 // clamped).
-func (c NRGBA) Add(d NRGBA) NRGBA {
-	return NRGBA{
+func (c RGBA) Add(d RGBA) RGBA {
+	return RGBA{
 		R: c.R + d.R,
 		G: c.G + d.G,
 		B: c.B + d.B,
@@ -22,8 +22,8 @@ func (c NRGBA) Add(d NRGBA) NRGBA {
 
 // Sub subtracts color d from color c component-wise and returns the result (the components
 // are not clamped).
-func (c NRGBA) Sub(d NRGBA) NRGBA {
-	return NRGBA{
+func (c RGBA) Sub(d RGBA) RGBA {
+	return RGBA{
 		R: c.R - d.R,
 		G: c.G - d.G,
 		B: c.B - d.B,
@@ -32,8 +32,8 @@ func (c NRGBA) Sub(d NRGBA) NRGBA {
 }
 
 // Mul multiplies color c by color d component-wise (the components are not clamped).
-func (c NRGBA) Mul(d NRGBA) NRGBA {
-	return NRGBA{
+func (c RGBA) Mul(d RGBA) RGBA {
+	return RGBA{
 		R: c.R * d.R,
 		G: c.G * d.G,
 		B: c.B * d.B,
@@ -43,8 +43,8 @@ func (c NRGBA) Mul(d NRGBA) NRGBA {
 
 // Scaled multiplies each component of color c by scale and returns the result (the components
 // are not clamped).
-func (c NRGBA) Scaled(scale float64) NRGBA {
-	return NRGBA{
+func (c RGBA) Scaled(scale float64) RGBA {
+	return RGBA{
 		R: c.R * scale,
 		G: c.G * scale,
 		B: c.B * scale,
@@ -52,37 +52,23 @@ func (c NRGBA) Scaled(scale float64) NRGBA {
 	}
 }
 
-// RGBA returns alpha-premultiplied red, green, blue and alpha components of the NRGBA color.
-func (c NRGBA) RGBA() (r, g, b, a uint32) {
-	c.R = clamp(c.R, 0, 1)
-	c.G = clamp(c.G, 0, 1)
-	c.B = clamp(c.B, 0, 1)
-	c.A = clamp(c.A, 0, 1)
-	r = uint32(0xffff * c.R * c.A)
-	g = uint32(0xffff * c.G * c.A)
-	b = uint32(0xffff * c.B * c.A)
+// RGBA returns alpha-premultiplied red, green, blue and alpha components of the RGBA color.
+func (c RGBA) RGBA() (r, g, b, a uint32) {
+	r = uint32(0xffff * c.R)
+	g = uint32(0xffff * c.G)
+	b = uint32(0xffff * c.B)
 	a = uint32(0xffff * c.A)
 	return
 }
 
-func clamp(x, low, high float64) float64 {
-	if x < low {
-		return low
-	}
-	if x > high {
-		return high
-	}
-	return x
-}
-
-// ToNRGBA converts a color to NRGBA format. Using this function is preferred to using NRGBAModel,
-// for performance (using NRGBAModel introduced additional unnecessary allocations).
-func ToNRGBA(c color.Color) NRGBA {
-	if c, ok := c.(NRGBA); ok {
+// ToRGBA converts a color to RGBA format. Using this function is preferred to using RGBAModel, for
+// performance (using RGBAModel introduced additional unnecessary allocations).
+func ToRGBA(c color.Color) RGBA {
+	if c, ok := c.(RGBA); ok {
 		return c
 	}
-	if c, ok := c.(color.NRGBA); ok {
-		return NRGBA{
+	if c, ok := c.(color.RGBA); ok {
+		return RGBA{
 			R: float64(c.R) / 255,
 			G: float64(c.G) / 255,
 			B: float64(c.B) / 255,
@@ -90,20 +76,17 @@ func ToNRGBA(c color.Color) NRGBA {
 		}
 	}
 	r, g, b, a := c.RGBA()
-	if a == 0 {
-		return NRGBA{0, 0, 0, 0}
-	}
-	return NRGBA{
-		float64(r) / float64(a),
-		float64(g) / float64(a),
-		float64(b) / float64(a),
+	return RGBA{
+		float64(r) / 0xffff,
+		float64(g) / 0xffff,
+		float64(b) / 0xffff,
 		float64(a) / 0xffff,
 	}
 }
 
-// NRGBAModel converts colors to NRGBA format.
-var NRGBAModel = color.ModelFunc(nrgbaModel)
+// RGBAModel converts colors to RGBA format.
+var RGBAModel = color.ModelFunc(rgbaModel)
 
-func nrgbaModel(c color.Color) color.Color {
-	return ToNRGBA(c)
+func rgbaModel(c color.Color) color.Color {
+	return ToRGBA(c)
 }

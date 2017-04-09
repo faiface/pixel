@@ -56,7 +56,7 @@ func (gf *GLFrame) Bounds() pixel.Rect {
 }
 
 // Color returns the color of the pixel under the specified position.
-func (gf *GLFrame) Color(at pixel.Vec) pixel.NRGBA {
+func (gf *GLFrame) Color(at pixel.Vec) pixel.RGBA {
 	if gf.dirty {
 		mainthread.Call(func() {
 			tex := gf.frame.Texture()
@@ -67,12 +67,12 @@ func (gf *GLFrame) Color(at pixel.Vec) pixel.NRGBA {
 		gf.dirty = false
 	}
 	if !gf.bounds.Contains(at) {
-		return pixel.NRGBA{}
+		return pixel.RGBA{}
 	}
 	bx, by, bw, _ := intBounds(gf.bounds)
 	x, y := int(at.X())-bx, int(at.Y())-by
 	off := y*bw + x
-	return pixel.NRGBA{
+	return pixel.RGBA{
 		R: float64(gf.pixels[off*4+0]) / 255,
 		G: float64(gf.pixels[off*4+1]) / 255,
 		B: float64(gf.pixels[off*4+2]) / 255,

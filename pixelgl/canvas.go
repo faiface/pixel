@@ -95,15 +95,15 @@ func (c *Canvas) SetMatrix(m pixel.Matrix) {
 
 // SetColorMask sets a color that every color in triangles or a picture will be multiplied by.
 func (c *Canvas) SetColorMask(col color.Color) {
-	nrgba := pixel.NRGBA{R: 1, G: 1, B: 1, A: 1}
+	rgba := pixel.RGBA{R: 1, G: 1, B: 1, A: 1}
 	if col != nil {
-		nrgba = pixel.ToNRGBA(col)
+		rgba = pixel.ToRGBA(col)
 	}
 	c.col = mgl32.Vec4{
-		float32(nrgba.R),
-		float32(nrgba.G),
-		float32(nrgba.B),
-		float32(nrgba.A),
+		float32(rgba.R),
+		float32(rgba.G),
+		float32(rgba.B),
+		float32(rgba.A),
 	}
 }
 
@@ -139,10 +139,10 @@ func (c *Canvas) setGlhfBounds() {
 func (c *Canvas) Clear(color color.Color) {
 	c.gf.Dirty()
 
-	nrgba := pixel.ToNRGBA(color)
+	rgba := pixel.ToRGBA(color)
 
 	// color masking
-	nrgba = nrgba.Mul(pixel.NRGBA{
+	rgba = rgba.Mul(pixel.RGBA{
 		R: float64(c.col[0]),
 		G: float64(c.col[1]),
 		B: float64(c.col[2]),
@@ -153,17 +153,17 @@ func (c *Canvas) Clear(color color.Color) {
 		c.setGlhfBounds()
 		c.gf.Frame().Begin()
 		glhf.Clear(
-			float32(nrgba.R),
-			float32(nrgba.G),
-			float32(nrgba.B),
-			float32(nrgba.A),
+			float32(rgba.R),
+			float32(rgba.G),
+			float32(rgba.B),
+			float32(rgba.A),
 		)
 		c.gf.Frame().End()
 	})
 }
 
 // Color returns the color of the pixel over the given position inside the Canvas.
-func (c *Canvas) Color(at pixel.Vec) pixel.NRGBA {
+func (c *Canvas) Color(at pixel.Vec) pixel.RGBA {
 	return c.gf.Color(at)
 }
 
@@ -324,9 +324,10 @@ void main() {
 		color = colorMask * Color;
 	} else {
 		color = vec4(0, 0, 0, 0);
-		color += (1 - Intensity) * colorMask * Color;
+		color += (1 - Intensity) * Color;
 		vec2 t = (Texture - texBounds.xy) / texBounds.zw;
-		color += Intensity * colorMask * Color * texture(tex, t);
+		color += Intensity * Color * texture(tex, t);
+		color *= colorMask;
 	}
 }
 `
