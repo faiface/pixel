@@ -9,6 +9,16 @@ type RGBA struct {
 	R, G, B, A float64
 }
 
+// RGB returns a fully opaque RGBA color with the given RGB values.
+func RGB(r, g, b float64) RGBA {
+	return RGBA{r, g, b, 1}
+}
+
+// Alpha returns a while RGBA color with the  given alpha component.
+func Alpha(a float64) RGBA {
+	return RGBA{a, a, a, a}
+}
+
 // Add adds color d to color c component-wise and returns the result (the components are not
 // clamped).
 func (c RGBA) Add(d RGBA) RGBA {
