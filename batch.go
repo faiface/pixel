@@ -5,8 +5,7 @@ import (
 	"image/color"
 )
 
-// Batch is a Target that allows for efficient drawing of many objects with the same Picture (but
-// different slices of the same Picture are allowed).
+// Batch is a Target that allows for efficient drawing of many objects with the same Picture.
 //
 // To put an object into a Batch, just draw it onto it:
 //   object.Draw(batch)
