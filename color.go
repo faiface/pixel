@@ -10,11 +10,14 @@ type RGBA struct {
 }
 
 // RGB returns a fully opaque RGBA color with the given RGB values.
+//
+// A common way to construct a transparent color is to create one with RGB constructor, then
+// multiply it by a color obtained from the Alpha constructor.
 func RGB(r, g, b float64) RGBA {
 	return RGBA{r, g, b, 1}
 }
 
-// Alpha returns a while RGBA color with the  given alpha component.
+// Alpha returns a while RGBA color with the given alpha component.
 func Alpha(a float64) RGBA {
 	return RGBA{a, a, a, a}
 }
