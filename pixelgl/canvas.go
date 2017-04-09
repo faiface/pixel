@@ -188,6 +188,7 @@ func (ct *canvasTriangles) draw(tex *glhf.Texture, bounds pixel.Rect) {
 
 	mainthread.CallNonBlock(func() {
 		ct.dst.setGlhfBounds()
+		glhf.BlendFunc(glhf.One, glhf.OneMinusSrcAlpha)
 
 		frame := ct.dst.gf.Frame()
 		shader := ct.dst.shader
