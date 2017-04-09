@@ -381,6 +381,12 @@ func (w *Window) SetColorMask(c color.Color) {
 	w.canvas.SetColorMask(c)
 }
 
+// SetComposeMethod sets a Porter-Duff composition method to be used in the following draws onto
+// this Window.
+func (w *Window) SetComposeMethod(cmp pixel.ComposeMethod) {
+	w.canvas.SetComposeMethod(cmp)
+}
+
 // SetSmooth sets whether the stretched Pictures drawn onto this Window should be drawn smooth or
 // pixely.
 func (w *Window) SetSmooth(smooth bool) {
