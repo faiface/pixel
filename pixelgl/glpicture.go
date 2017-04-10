@@ -84,7 +84,7 @@ func (gp *glPicture) Texture() *glhf.Texture {
 
 func (gp *glPicture) Color(at pixel.Vec) pixel.RGBA {
 	if !gp.bounds.Contains(at) {
-		return pixel.RGBA{}
+		return pixel.Alpha(0)
 	}
 	bx, by, bw, _ := intBounds(gp.bounds)
 	x, y := int(at.X())-bx, int(at.Y())-by

@@ -28,7 +28,7 @@ func NewSprite(pic Picture, frame Rect) *Sprite {
 		d:   Drawer{Triangles: tri},
 	}
 	s.matrix = IM
-	s.mask = RGBA{1, 1, 1, 1}
+	s.mask = Alpha(1)
 	s.Set(pic, frame)
 	return s
 }

@@ -96,7 +96,7 @@ func (c *Canvas) SetMatrix(m pixel.Matrix) {
 
 // SetColorMask sets a color that every color in triangles or a picture will be multiplied by.
 func (c *Canvas) SetColorMask(col color.Color) {
-	rgba := pixel.RGBA{R: 1, G: 1, B: 1, A: 1}
+	rgba := pixel.Alpha(1)
 	if col != nil {
 		rgba = pixel.ToRGBA(col)
 	}
