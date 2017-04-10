@@ -28,7 +28,7 @@ var _ BasicTarget = (*Batch)(nil)
 func NewBatch(container Triangles, pic Picture) *Batch {
 	b := &Batch{cont: Drawer{Triangles: container, Picture: pic}}
 	b.SetMatrix(IM)
-	b.SetColorMask(RGBA{1, 1, 1, 1})
+	b.SetColorMask(Alpha(1))
 	return b
 }
 
@@ -62,7 +62,7 @@ func (b *Batch) SetMatrix(m Matrix) {
 // SetColorMask sets a mask color used in the following draws onto the Batch.
 func (b *Batch) SetColorMask(c color.Color) {
 	if c == nil {
-		b.col = RGBA{1, 1, 1, 1}
+		b.col = Alpha(1)
 		return
 	}
 	b.col = ToRGBA(c)

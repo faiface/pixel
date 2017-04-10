@@ -23,7 +23,7 @@ import (
 //
 // Use various methods to change properties of Pushed points:
 //
-//   imd.Color(pixel.RGBA{R: 1, G: 0, B: 0, A: 1})
+//   imd.Color(pixel.RGB(1, 0, 0))
 //   imd.Push(pixel.V(200, 200))
 //   imd.Circle(400, 0)
 //
@@ -87,7 +87,7 @@ func New(pic pixel.Picture) *IMDraw {
 		batch: pixel.NewBatch(tri, pic),
 	}
 	im.SetMatrix(pixel.IM)
-	im.SetColorMask(pixel.RGBA{R: 1, G: 1, B: 1, A: 1})
+	im.SetColorMask(pixel.Alpha(1))
 	im.Reset()
 	return im
 }

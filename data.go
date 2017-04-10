@@ -45,7 +45,7 @@ func (td *TrianglesData) SetLen(len int) {
 				Color     RGBA
 				Picture   Vec
 				Intensity float64
-			}{V(0, 0), RGBA{1, 1, 1, 1}, V(0, 0), 0})
+			}{V(0, 0), Alpha(1), V(0, 0), 0})
 		}
 	}
 	if len < td.Len() {

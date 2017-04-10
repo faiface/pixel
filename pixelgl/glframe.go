@@ -67,7 +67,7 @@ func (gf *GLFrame) Color(at pixel.Vec) pixel.RGBA {
 		gf.dirty = false
 	}
 	if !gf.bounds.Contains(at) {
-		return pixel.RGBA{}
+		return pixel.Alpha(0)
 	}
 	bx, by, bw, _ := intBounds(gf.bounds)
 	x, y := int(at.X())-bx, int(at.Y())-by
