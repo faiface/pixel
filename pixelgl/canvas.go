@@ -153,16 +153,20 @@ func setBlendFunc(cmp pixel.ComposeMethod) {
 		glhf.BlendFunc(glhf.OneMinusDstAlpha, glhf.Zero)
 	case pixel.ComposeAtop:
 		glhf.BlendFunc(glhf.DstAlpha, glhf.OneMinusSrcAlpha)
-	case pixel.ComposeDstOver:
+	case pixel.ComposeRover:
 		glhf.BlendFunc(glhf.OneMinusDstAlpha, glhf.One)
-	case pixel.ComposeDstIn:
+	case pixel.ComposeRin:
 		glhf.BlendFunc(glhf.Zero, glhf.SrcAlpha)
-	case pixel.ComposeDstOut:
+	case pixel.ComposeRout:
 		glhf.BlendFunc(glhf.Zero, glhf.OneMinusSrcAlpha)
-	case pixel.ComposeDstAtop:
+	case pixel.ComposeRatop:
 		glhf.BlendFunc(glhf.OneMinusDstAlpha, glhf.SrcAlpha)
 	case pixel.ComposeXor:
 		glhf.BlendFunc(glhf.OneMinusDstAlpha, glhf.OneMinusSrcAlpha)
+	case pixel.ComposePlus:
+		glhf.BlendFunc(glhf.One, glhf.One)
+	case pixel.ComposeCopy:
+		glhf.BlendFunc(glhf.One, glhf.Zero)
 	default:
 		panic(errors.New("Canvas: invalid compose method"))
 	}

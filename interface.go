@@ -56,11 +56,13 @@ const (
 	ComposeIn
 	ComposeOut
 	ComposeAtop
-	ComposeDstOver
-	ComposeDstIn
-	ComposeDstOut
-	ComposeDstAtop
+	ComposeRover
+	ComposeRin
+	ComposeRout
+	ComposeRatop
 	ComposeXor
+	ComposePlus
+	ComposeCopy
 )
 
 // Triangles represents a list of vertices, where each three vertices form a triangle. (First,
