@@ -13,7 +13,7 @@ type ComposeTarget interface {
 // ComposeMethod is a Porter-Duff composition method.
 type ComposeMethod int
 
-// Here's the list of all available Porter-Duff composition methods. User ComposeOver for the basic
+// Here's the list of all available Porter-Duff composition methods. Use ComposeOver for the basic
 // alpha blending.
 const (
 	ComposeOver ComposeMethod = iota
