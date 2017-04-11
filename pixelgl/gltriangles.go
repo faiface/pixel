@@ -2,6 +2,7 @@ package pixelgl
 
 import (
 	"fmt"
+	"sync"
 
 	"github.com/faiface/glhf"
 	"github.com/faiface/mainthread"
@@ -13,9 +14,10 @@ import (
 // Triangles returned from this function support TrianglesPosition, TrianglesColor and
 // TrianglesPicture. If you need to support more, you can "override" SetLen and Update methods.
 type GLTriangles struct {
-	vs     *glhf.VertexSlice
-	data   []float32
-	shader *glhf.Shader
+	vs         *glhf.VertexSlice
+	data       []float32
+	shader     *glhf.Shader
+	updateLock sync.Mutex
 }
 
 var (
@@ -75,6 +77,7 @@ func (gt *GLTriangles) SetLen(len int) {
 	if len < gt.Len() {
 		gt.data = gt.data[:len*gt.vs.Stride()]
 	}
+	gt.submitData()
 }
 
 // Slice returns a sub-Triangles of this GLTriangles in range [i, j).
@@ -142,14 +145,26 @@ func (gt *GLTriangles) updateData(t pixel.Triangles) {
 }
 
 func (gt *GLTriangles) submitData() {
-	data := append([]float32{}, gt.data...) // avoid race condition
-	mainthread.CallNonBlock(func() {
-		gt.vs.Begin()
-		dataLen := len(data) / gt.vs.Stride()
-		gt.vs.SetLen(dataLen)
-		gt.vs.SetVertexData(gt.data)
-		gt.vs.End()
-	})
+	// this code is supposed to copy the vertex data and CallNonBlock the update if
+	// the data is small enough, otherwise it'll block and not copy the data
+	if len(gt.data) < 256 { // arbitrary heurestic constant
+		data := append([]float32{}, gt.data...)
+		mainthread.CallNonBlock(func() {
+			gt.vs.Begin()
+			dataLen := len(data) / gt.vs.Stride()
+			gt.vs.SetLen(dataLen)
+			gt.vs.SetVertexData(data)
+			gt.vs.End()
+		})
+	} else {
+		mainthread.Call(func() {
+			gt.vs.Begin()
+			dataLen := len(gt.data) / gt.vs.Stride()
+			gt.vs.SetLen(dataLen)
+			gt.vs.SetVertexData(gt.data)
+			gt.vs.End()
+		})
+	}
 }
 
 // Update copies vertex properties from the supplied Triangles into this GLTriangles.
