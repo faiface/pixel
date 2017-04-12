@@ -2,7 +2,6 @@ package pixelgl
 
 import (
 	"fmt"
-	"sync"
 
 	"github.com/faiface/glhf"
 	"github.com/faiface/mainthread"
@@ -14,10 +13,9 @@ import (
 // Triangles returned from this function support TrianglesPosition, TrianglesColor and
 // TrianglesPicture. If you need to support more, you can "override" SetLen and Update methods.
 type GLTriangles struct {
-	vs         *glhf.VertexSlice
-	data       []float32
-	shader     *glhf.Shader
-	updateLock sync.Mutex
+	vs     *glhf.VertexSlice
+	data   []float32
+	shader *glhf.Shader
 }
 
 var (
