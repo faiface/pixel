@@ -108,6 +108,8 @@ func (imd *IMDraw) Reset() {
 }
 
 // Draw draws all currently drawn shapes inside the IM onto another Target.
+//
+// Note, that IMDraw's matrix and color mask have no effect here.
 func (imd *IMDraw) Draw(t pixel.Target) {
 	imd.batch.Draw(t)
 }
