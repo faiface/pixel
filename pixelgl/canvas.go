@@ -23,6 +23,8 @@ type Canvas struct {
 	mat    mgl32.Mat3
 	col    mgl32.Vec4
 	smooth bool
+
+	sprite *pixel.Sprite
 }
 
 var _ pixel.ComposeTarget = (*Canvas)(nil)
@@ -51,6 +53,8 @@ func NewCanvas(bounds pixel.Rect) *Canvas {
 		}
 	})
 	c.shader = shader
+
+	c.sprite = pixel.NewSprite(c, c.Bounds())
 
 	return c
 }
@@ -117,6 +121,7 @@ func (c *Canvas) SetComposeMethod(cmp pixel.ComposeMethod) {
 // SetBounds resizes the Canvas to the new bounds. Old content will be preserved.
 func (c *Canvas) SetBounds(bounds pixel.Rect) {
 	c.gf.SetBounds(bounds)
+	c.sprite.Set(c, c.Bounds())
 }
 
 // Bounds returns the rectangular bounds of the Canvas.
@@ -209,6 +214,14 @@ func (c *Canvas) Color(at pixel.Vec) pixel.RGBA {
 // Implements GLPicture interface.
 func (c *Canvas) Texture() *glhf.Texture {
 	return c.gf.Texture()
+}
+
+// Draw draws a rectangle equal to Canvas's Bounds containing the Canvas's content to another
+// Target.
+//
+// Note, that the matrix and the color mask of this Canvas have no effect here.
+func (c *Canvas) Draw(t pixel.Target) {
+	c.sprite.Draw(t)
 }
 
 type canvasTriangles struct {
