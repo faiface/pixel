@@ -54,8 +54,6 @@ func NewCanvas(bounds pixel.Rect) *Canvas {
 	})
 	c.shader = shader
 
-	c.sprite = pixel.NewSprite(c, c.Bounds())
-
 	return c
 }
 
@@ -121,7 +119,11 @@ func (c *Canvas) SetComposeMethod(cmp pixel.ComposeMethod) {
 // SetBounds resizes the Canvas to the new bounds. Old content will be preserved.
 func (c *Canvas) SetBounds(bounds pixel.Rect) {
 	c.gf.SetBounds(bounds)
+	if c.sprite == nil {
+		c.sprite = pixel.NewSprite(nil, pixel.Rect{})
+	}
 	c.sprite.Set(c, c.Bounds())
+	c.sprite.SetMatrix(pixel.IM.Moved(c.Bounds().Center()))
 }
 
 // Bounds returns the rectangular bounds of the Canvas.
