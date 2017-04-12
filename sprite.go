@@ -58,8 +58,10 @@ func (s *Sprite) Frame() Rect {
 // Note, that this has nothing to do with BasicTarget's SetMatrix method. This only affects this
 // Sprite and is usable with any Target.
 func (s *Sprite) SetMatrix(matrix Matrix) {
-	s.matrix = matrix
-	s.calcData()
+	if s.matrix != matrix {
+		s.matrix = matrix
+		s.calcData()
+	}
 }
 
 // Matrix returns the currently set Matrix.
@@ -73,8 +75,11 @@ func (s *Sprite) Matrix() Matrix {
 // Note, that this has nothing to do with BasicTarget's SetColorMask method. This only affects this
 // Sprite and is usable with any Target.
 func (s *Sprite) SetColorMask(mask color.Color) {
-	s.mask = ToRGBA(mask)
-	s.calcData()
+	rgba := ToRGBA(mask)
+	if s.mask != rgba {
+		s.mask = ToRGBA(mask)
+		s.calcData()
+	}
 }
 
 // ColorMask returns the currently set color mask.
