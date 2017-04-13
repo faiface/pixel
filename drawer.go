@@ -14,7 +14,7 @@ package pixel
 // Picture.
 //
 // Whenever you change the Triangles, call Dirty to notify Drawer that Triangles changed. You don't
-// need to notify Drawer about a change of Picture.
+// need to notify Drawer about a change of the Picture.
 type Drawer struct {
 	Triangles Triangles
 	Picture   Picture
