@@ -1,3 +1,5 @@
+// Package imdraw implements a basic primitive geometry shape and pictured polygon drawing for Pixel
+// with a nice immediate-like-mode API.
 package imdraw
 
 import (
