@@ -353,7 +353,7 @@ uniform vec4 bounds;
 
 void main() {
 	vec2 transPos = (transform * vec3(position, 1.0)).xy;
-	vec2 normPos = (transPos - bounds.xy) / (bounds.zw) * 2 - vec2(1, 1);
+	vec2 normPos = (transPos - bounds.xy) / bounds.zw * 2 - vec2(1, 1);
 	gl_Position = vec4(normPos, 0.0, 1.0);
 	Color = color;
 	Texture = texture;
