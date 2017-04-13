@@ -1,5 +1,5 @@
 // Package imdraw implements a basic primitive geometry shape and pictured polygon drawing for Pixel
-// with a nice immediate-like-mode API.
+// with a nice immediate-mode-like API.
 package imdraw
 
 import (
@@ -9,7 +9,7 @@ import (
 	"github.com/faiface/pixel"
 )
 
-// IMDraw is an immediate-like-mode shape drawer and BasicTarget. IMDraw supports TrianglesPosition,
+// IMDraw is an immediate-mode-like shape drawer and BasicTarget. IMDraw supports TrianglesPosition,
 // TrianglesColor, TrianglesPicture and PictureColor.
 //
 // IMDraw, other than a regular BasicTarget, is used to draw shapes. To draw shapes, you first need
