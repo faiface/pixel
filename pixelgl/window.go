@@ -25,22 +25,13 @@ type WindowConfig struct {
 
 	// If set to nil, the Window will be windowed. Otherwise it will be fullscreen on the
 	// specified Monitor.
-	Fullscreen *Monitor
+	Monitor *Monitor
 
 	// Whether the Window is resizable.
 	Resizable bool
 
-	// If set to true, the Window will be initially invisible.
-	Hidden bool
-
 	// Undecorated Window ommits the borders and decorations (close button, etc.).
 	Undecorated bool
-
-	// If set to true, the Window will not get focused upon showing up.
-	Unfocused bool
-
-	// Whether the Window is maximized.
-	Maximized bool
 
 	// VSync (vertical synchronization) synchronizes Window's framerate with the framerate of
 	// the monitor.
@@ -89,10 +80,7 @@ func NewWindow(cfg WindowConfig) (*Window, error) {
 		glfw.WindowHint(glfw.OpenGLForwardCompatible, glfw.True)
 
 		glfw.WindowHint(glfw.Resizable, bool2int[cfg.Resizable])
-		glfw.WindowHint(glfw.Visible, bool2int[!cfg.Hidden])
 		glfw.WindowHint(glfw.Decorated, bool2int[!cfg.Undecorated])
-		glfw.WindowHint(glfw.Focused, bool2int[!cfg.Unfocused])
-		glfw.WindowHint(glfw.Maximized, bool2int[cfg.Maximized])
 
 		var share *glfw.Window
 		if currWin != nil {
@@ -123,7 +111,7 @@ func NewWindow(cfg WindowConfig) (*Window, error) {
 	w.SetVSync(cfg.VSync)
 
 	w.initInput()
-	w.SetMonitor(cfg.Fullscreen)
+	w.SetMonitor(cfg.Monitor)
 
 	w.canvas = NewCanvas(cfg.Bounds)
 	w.Update()
@@ -222,20 +210,6 @@ func (w *Window) Bounds() pixel.Rect {
 	return w.bounds
 }
 
-// Show makes the Window visible if it was hidden.
-func (w *Window) Show() {
-	mainthread.Call(func() {
-		w.window.Show()
-	})
-}
-
-// Hide hides the Window if it was visible.
-func (w *Window) Hide() {
-	mainthread.Call(func() {
-		w.window.Hide()
-	})
-}
-
 func (w *Window) setFullscreen(monitor *Monitor) {
 	mainthread.Call(func() {
 		w.restore.xpos, w.restore.ypos = w.window.GetPos()
@@ -282,11 +256,6 @@ func (w *Window) SetMonitor(monitor *Monitor) {
 	}
 }
 
-// IsFullscreen returns true if the Window is in fullscreen mode.
-func (w *Window) IsFullscreen() bool {
-	return w.Monitor() != nil
-}
-
 // Monitor returns a monitor the Window is fullscreen on. If the Window is not fullscreen, this
 // function returns nil.
 func (w *Window) Monitor() *Monitor {
@@ -302,13 +271,6 @@ func (w *Window) Monitor() *Monitor {
 	}
 }
 
-// Focus brings the Window to the front and sets input focus.
-func (w *Window) Focus() {
-	mainthread.Call(func() {
-		w.window.Focus()
-	})
-}
-
 // Focused returns true if the Window has input focus.
 func (w *Window) Focused() bool {
 	var focused bool
@@ -316,20 +278,6 @@ func (w *Window) Focused() bool {
 		focused = w.window.GetAttrib(glfw.Focused) == glfw.True
 	})
 	return focused
-}
-
-// Maximize puts the Window to the maximized state.
-func (w *Window) Maximize() {
-	mainthread.Call(func() {
-		w.window.Maximize()
-	})
-}
-
-// Restore restores the Window from the maximized state.
-func (w *Window) Restore() {
-	mainthread.Call(func() {
-		w.window.Restore()
-	})
 }
 
 // SetVSync sets whether the Window's Update should synchronize with the monitor refresh rate.
