@@ -78,7 +78,7 @@ func (u Vec) Len() float64 {
 	return cmplx.Abs(complex128(u))
 }
 
-// Angle returns the angle between the vector u and the x-axis. The result is in the range [-Pi, Pi].
+// Angle returns the angle between the vector u and the x-axis. The result is in range [-Pi, Pi].
 func (u Vec) Angle() float64 {
 	return cmplx.Phase(complex128(u))
 }
