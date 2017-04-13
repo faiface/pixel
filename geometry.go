@@ -249,7 +249,7 @@ func (r Rect) Resized(anchor, size Vec) Rect {
 	if r.W()*r.H() == 0 || size.X()*size.Y() == 0 {
 		panic(fmt.Errorf("(%T).Resize: zero area", r))
 	}
-	fraction := size.ScaledXY(V(1/r.W(), 1/r.H()))
+	fraction := V(size.X()/r.W(), size.Y()/r.H())
 	return Rect{
 		Min: anchor + (r.Min - anchor).ScaledXY(fraction),
 		Max: anchor + (r.Max - anchor).ScaledXY(fraction),
