@@ -10,4 +10,4 @@ the limit.
 
 Credit for the panda art goes to [Ján Štrba](https://www.artstation.com/artist/janstrba).
 
-[[./screenshot.png]]
+![Screenshot](screenshot.png)
