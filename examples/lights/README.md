@@ -1,7 +1,6 @@
 # Lights
 
-This example demonstrates powerful Porter-Duff composition in order to create a nice noisy light
-effect.
+This example demonstrates powerful Porter-Duff composition used to create a nice noisy light effect.
 
 **Use W and S keys** to adjust the level of "dust".
 
