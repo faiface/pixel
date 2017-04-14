@@ -9,3 +9,5 @@ The FPS is limited to 30, because the effect is a little expensive and my comput
 the limit.
 
 Credit for the panda art goes to [Ján Štrba](https://www.artstation.com/artist/janstrba).
+
+[[./screenshot.png]]
