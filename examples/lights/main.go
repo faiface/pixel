@@ -61,7 +61,7 @@ func (cl *colorlight) apply(src, noise drawer, dst pixel.ComposeTarget) {
 	// draw the light arc
 	dst.SetMatrix(pixel.IM.Scaled(0, cl.radius).Rotated(0, cl.angle).Moved(cl.point))
 	dst.SetColorMask(pixel.Alpha(1))
-	dst.SetComposeMethod(pixel.ComposeCopy)
+	dst.SetComposeMethod(pixel.ComposePlus)
 	cl.imd.Draw(dst)
 
 	// draw the noise inside the light
@@ -77,7 +77,7 @@ func (cl *colorlight) apply(src, noise drawer, dst pixel.ComposeTarget) {
 	// draw the light reflected from the dust
 	dst.SetMatrix(pixel.IM.Scaled(0, cl.radius).Rotated(0, cl.angle).Moved(cl.point))
 	dst.SetColorMask(cl.color.Mul(pixel.Alpha(cl.dust)))
-	dst.SetComposeMethod(pixel.ComposeOver)
+	dst.SetComposeMethod(pixel.ComposePlus)
 	cl.imd.Draw(dst)
 }
 
@@ -178,7 +178,7 @@ func run() {
 
 		// draw the panda visible outside the light
 		win.SetColorMask(pixel.Alpha(0.4))
-		win.SetComposeMethod(pixel.ComposeOver)
+		win.SetComposeMethod(pixel.ComposePlus)
 		panda.Draw(win)
 
 		allLight.Clear(pixel.Alpha(0))
@@ -193,7 +193,6 @@ func run() {
 
 		// compose the final result
 		win.SetColorMask(pixel.Alpha(1))
-		win.SetComposeMethod(pixel.ComposePlus)
 		allLight.Draw(win)
 
 		win.Update()
