@@ -17,7 +17,7 @@ func RGB(r, g, b float64) RGBA {
 	return RGBA{r, g, b, 1}
 }
 
-// Alpha returns a while RGBA color with the given alpha component.
+// Alpha returns a white RGBA color with the given alpha component.
 func Alpha(a float64) RGBA {
 	return RGBA{a, a, a, a}
 }
