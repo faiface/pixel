@@ -28,7 +28,7 @@ func run() {
 
 	start := time.Now()
 	for !win.Closed() {
-		// in case window got resized, we also need to resize out canvas
+		// in case window got resized, we also need to resize our canvas
 		canvas.SetBounds(win.Bounds())
 
 		offset := math.Sin(time.Since(start).Seconds()) * 300
