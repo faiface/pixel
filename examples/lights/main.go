@@ -44,7 +44,7 @@ type colorlight struct {
 	imd *imdraw.IMDraw
 }
 
-func (cl *colorlight) apply(src, noise drawer, tmp, dst *pixelgl.Canvas) {
+func (cl *colorlight) apply(src, noise drawer, dst pixel.ComposeTarget) {
 	// create the light arc if not created already
 	if cl.imd == nil {
 		imd := imdraw.New(nil)
@@ -59,32 +59,26 @@ func (cl *colorlight) apply(src, noise drawer, tmp, dst *pixelgl.Canvas) {
 	}
 
 	// draw the light arc
-	tmp.Clear(pixel.Alpha(0))
-	tmp.SetMatrix(pixel.IM.Scaled(0, cl.radius).Rotated(0, cl.angle).Moved(cl.point))
-	tmp.SetColorMask(pixel.Alpha(1))
-	tmp.SetComposeMethod(pixel.ComposeCopy)
-	cl.imd.Draw(tmp)
+	dst.SetMatrix(pixel.IM.Scaled(0, cl.radius).Rotated(0, cl.angle).Moved(cl.point))
+	dst.SetColorMask(pixel.Alpha(1))
+	dst.SetComposeMethod(pixel.ComposeCopy)
+	cl.imd.Draw(dst)
 
 	// draw the noise inside the light
-	tmp.SetMatrix(pixel.IM)
-	tmp.SetComposeMethod(pixel.ComposeIn)
-	noise.Draw(tmp)
+	dst.SetMatrix(pixel.IM)
+	dst.SetComposeMethod(pixel.ComposeIn)
+	noise.Draw(dst)
 
 	// draw an image inside the noisy light
-	tmp.SetColorMask(cl.color)
-	tmp.SetComposeMethod(pixel.ComposeIn)
-	src.Draw(tmp)
+	dst.SetColorMask(cl.color)
+	dst.SetComposeMethod(pixel.ComposeIn)
+	src.Draw(dst)
 
 	// draw the light reflected from the dust
-	tmp.SetMatrix(pixel.IM.Scaled(0, cl.radius).Rotated(0, cl.angle).Moved(cl.point))
-	tmp.SetColorMask(cl.color.Mul(pixel.Alpha(cl.dust)))
-	tmp.SetComposeMethod(pixel.ComposeOver)
-	cl.imd.Draw(tmp)
-
-	// draw the result to the dst
-	dst.SetColorMask(pixel.Alpha(1))
-	dst.SetComposeMethod(pixel.ComposePlus)
-	tmp.Draw(dst)
+	dst.SetMatrix(pixel.IM.Scaled(0, cl.radius).Rotated(0, cl.angle).Moved(cl.point))
+	dst.SetColorMask(cl.color.Mul(pixel.Alpha(cl.dust)))
+	dst.SetComposeMethod(pixel.ComposeOver)
+	cl.imd.Draw(dst)
 }
 
 func run() {
@@ -147,8 +141,8 @@ func run() {
 
 	speed := []float64{11.0 / 23, 13.0 / 23, 17.0 / 23, 19.0 / 23}
 
-	tmp := pixelgl.NewCanvas(win.Bounds())
-	dst := pixelgl.NewCanvas(win.Bounds())
+	oneLight := pixelgl.NewCanvas(win.Bounds())
+	allLight := pixelgl.NewCanvas(win.Bounds())
 
 	var (
 		frames = 0
@@ -181,17 +175,27 @@ func run() {
 		}
 
 		win.Clear(pixel.RGB(0, 0, 0))
-		dst.Clear(pixel.Alpha(0))
 
-		dst.SetColorMask(pixel.Alpha(0.4))
-		dst.SetComposeMethod(pixel.ComposeOver)
-		panda.Draw(dst)
+		// draw the panda visible outside the light
+		win.SetColorMask(pixel.Alpha(0.4))
+		win.SetComposeMethod(pixel.ComposeOver)
+		panda.Draw(win)
 
+		allLight.Clear(pixel.Alpha(0))
+		allLight.SetComposeMethod(pixel.ComposePlus)
+
+		// accumulate all the lights
 		for i := range lights {
-			lights[i].apply(panda, noise, tmp, dst)
+			oneLight.Clear(pixel.Alpha(0))
+			lights[i].apply(panda, noise, oneLight)
+			oneLight.Draw(allLight)
 		}
 
-		dst.Draw(win)
+		// compose the final result
+		win.SetColorMask(pixel.Alpha(1))
+		win.SetComposeMethod(pixel.ComposePlus)
+		allLight.Draw(win)
+
 		win.Update()
 
 		<-fps30 // maintain 30 fps, because my computer couldn't handle 60 here
