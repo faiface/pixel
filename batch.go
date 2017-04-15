@@ -93,7 +93,6 @@ func (b *Batch) MakePicture(p Picture) TargetPicture {
 type batchTriangles struct {
 	tri Triangles
 	tmp *TrianglesData
-
 	dst *Batch
 }
 
