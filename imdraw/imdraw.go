@@ -183,6 +183,20 @@ func (imd *IMDraw) Line(thickness float64) {
 	imd.polyline(thickness, false)
 }
 
+// Rectangle draws a rectangle between each two subsequent Pushed points. Drawing a rectangle
+// between two points means drawing a rectangle with sides parallel to the axes of the coordinate
+// system, where the two points specify it's two opposite corners.
+//
+// If the thickness is 0, rectangles will be filled, otherwise will be outlined with the given
+// thickness.
+func (imd *IMDraw) Rectangle(thickness float64) {
+	if thickness == 0 {
+		imd.fillRectangle()
+	} else {
+		imd.outlineRectangle(thickness)
+	}
+}
+
 // Polygon draws a polygon from the Pushed points. If the thickness is 0, the convex polygon will be
 // filled. Otherwise, an outline of the specified thickness will be drawn. The outline does not have
 // to be convex.
@@ -261,6 +275,64 @@ func (imd *IMDraw) applyMatrixAndMask(off int) {
 	for i := range (*imd.tri)[off:] {
 		(*imd.tri)[off+i].Position = imd.matrix.Project((*imd.tri)[off+i].Position)
 		(*imd.tri)[off+i].Color = imd.mask.Mul((*imd.tri)[off+i].Color)
+	}
+}
+
+func (imd *IMDraw) fillRectangle() {
+	points := imd.getAndClearPoints()
+
+	if len(points) < 2 {
+		return
+	}
+
+	off := imd.tri.Len()
+	imd.tri.SetLen(imd.tri.Len() + 6*(len(points)-1))
+
+	for i, j := 0, off; i+1 < len(points); i, j = i+1, j+6 {
+		a, b := points[i], points[i+1]
+		c := point{
+			pos: pixel.V(a.pos.X(), b.pos.Y()),
+			col: a.col.Add(b.col).Mul(pixel.Alpha(0.5)),
+			pic: pixel.V(a.pic.X(), b.pic.Y()),
+			in:  (a.in + b.in) / 2,
+		}
+		d := point{
+			pos: pixel.V(b.pos.X(), a.pos.Y()),
+			col: a.col.Add(b.col).Mul(pixel.Alpha(0.5)),
+			pic: pixel.V(b.pic.X(), a.pic.Y()),
+			in:  (a.in + b.in) / 2,
+		}
+
+		for k, p := range []point{a, b, c, a, b, d} {
+			(*imd.tri)[j+k].Position = p.pos
+			(*imd.tri)[j+k].Color = p.col
+			(*imd.tri)[j+k].Picture = p.pic
+			(*imd.tri)[j+k].Intensity = p.in
+		}
+	}
+
+	imd.applyMatrixAndMask(off)
+	imd.batch.Dirty()
+}
+
+func (imd *IMDraw) outlineRectangle(thickness float64) {
+	points := imd.getAndClearPoints()
+
+	if len(points) < 2 {
+		return
+	}
+
+	for i := 0; i+1 < len(points); i++ {
+		a, b := points[i], points[i+1]
+		mid := a
+		mid.col = a.col.Add(b.col).Mul(pixel.Alpha(0.5))
+		mid.in = (a.in + b.in) / 2
+
+		imd.pushPt(a.pos, a)
+		imd.pushPt(pixel.V(a.pos.X(), b.pos.Y()), mid)
+		imd.pushPt(b.pos, b)
+		imd.pushPt(pixel.V(b.pos.X(), a.pos.Y()), mid)
+		imd.polyline(thickness, true)
 	}
 }
 
