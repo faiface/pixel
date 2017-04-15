@@ -92,7 +92,7 @@ func run() {
 	}
 
 	cfg := pixelgl.WindowConfig{
-		Title:  "Color Light",
+		Title:  "Lights",
 		Bounds: pixel.R(0, 0, 1024, 768),
 		VSync:  true,
 	}
