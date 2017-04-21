@@ -281,7 +281,6 @@ func (ct *canvasTriangles) draw(tex *glhf.Texture, bounds pixel.Rect) {
 
 			ct.vs.Begin()
 			ct.vs.Draw()
-			fmt.Println(ct.vs.VertexData())
 			ct.vs.End()
 
 			tex.End()
