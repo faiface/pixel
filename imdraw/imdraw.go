@@ -537,9 +537,6 @@ func (imd *IMDraw) polyline(thickness float64, closed bool) {
 
 		closing := false
 		if j >= len(points) {
-			/*if !closed {
-				break
-			}*/
 			j %= len(points)
 			closing = true
 		}
