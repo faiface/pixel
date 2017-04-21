@@ -2,6 +2,6 @@
 // library.
 //
 // It specifies the core Target, Triangles, Picture pattern and implements standard elements, such
-// as Sprite, Batch, Vec, Rect and RGBA in addition to the basic Triangles and Picture
+// as Sprite, Batch, Vec, Matrix and RGBA in addition to the basic Triangles and Picture
 // implementations: TrianglesData and PictureData.
 package pixel
