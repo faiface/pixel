@@ -145,8 +145,8 @@ func (c *Canvas) Smooth() bool {
 
 // must be manually called inside mainthread
 func (c *Canvas) setGlhfBounds() {
-	bx, by, bw, bh := intBounds(c.gf.Bounds())
-	glhf.Bounds(bx, by, bw, bh)
+	_, _, bw, bh := intBounds(c.gf.Bounds())
+	glhf.Bounds(0, 0, bw, bh)
 }
 
 // must be manually called inside mainthread
@@ -281,6 +281,7 @@ func (ct *canvasTriangles) draw(tex *glhf.Texture, bounds pixel.Rect) {
 
 			ct.vs.Begin()
 			ct.vs.Draw()
+			fmt.Println(ct.vs.VertexData())
 			ct.vs.End()
 
 			tex.End()
