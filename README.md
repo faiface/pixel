@@ -86,7 +86,7 @@ ways.** This is not a 100% guarantee thought.
 
 ## Missing features
 
-Pixel is in development and still missing a few critical features. Here're the most critical ones.
+Pixel is in development and still missing few critical features. Here're the most critical ones.
 
 - Audio
 - Drawing text
