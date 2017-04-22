@@ -78,7 +78,7 @@ ways.** This is not a 100% guarantee thought.
   - Much more...
 - Pixel let's you draw stuff and do your job, it doesn't impose any particular style or paradigm
 - Off-screen drawing to Canvas or any other target (Batch, IMDraw, ...)
-- Platform and backend independent core
+- Platform and backend independent [core](https://godoc.org/github.com/faiface/pixel)
 - Core Target/Triangles/Picture pattern makes it easy to create new drawing targets that do
   arbitrarily crazy stuff (e.g. graphical effects)
 - Small codebase, ~5K lines of code, together with the backend
