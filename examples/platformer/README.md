@@ -8,4 +8,4 @@ large off-screen canvas, drawing everything to it and then stretching it to fit 
 
 The Gopher spritesheet comes from excellent [Egon Elbre](https://github.com/egonelbre/gophers).
 
-[Screenshot](screenshot.png)
+![Screenshot](screenshot.png)
