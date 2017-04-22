@@ -57,6 +57,7 @@ ways.** This is not a 100% guarantee thought.
   - Adding and subtracting vectors with `+` and `-` operators... how?
   - Wanna know where the center of a window is? `window.Bounds().Center()`
   - [...](https://godoc.org/github.com/faiface/pixel)
+- Full documentation and tutorial
 - Works on Linux, macOS and Windows
 - Window creation and manipulation (resizing, fullscreen, multiple windows, ...)
 - Keyboard and mouse input without events
