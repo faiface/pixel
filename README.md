@@ -99,8 +99,9 @@ possible!
 
 ## Requirements
 
-PixelGL backend uses OpenGL to render graphics. Because of that, OpenGL development libraries are
-needed for compilation. The dependencies are same as for [GLFW](https://github.com/go-gl/glfw).
+[PixelGL](https://godoc.org/github.com/faiface/pixel/pixelgl) backend uses OpenGL to render
+graphics. Because of that, OpenGL development libraries are needed for compilation. The dependencies
+are same as for [GLFW](https://github.com/go-gl/glfw).
 
 - On macOS, you need Xcode or Command Line Tools for Xcode (`xcode-select --install`) for required
   headers and libraries.
