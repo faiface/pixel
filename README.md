@@ -52,6 +52,10 @@ ways.** This is not a 100% guarantee thought.
     [IMDraw](https://github.com/faiface/pixel/wiki/Drawing-shapes-with-IMDraw) (circles, rectangles,
     lines, ...)
   - Optimized drawing with [Batch](https://github.com/faiface/pixel/wiki/Drawing-efficiently-with-Batch)
+- Geometry transformations with
+  [Matrix](https://github.com/faiface/pixel/wiki/Moving,-scaling-and-rotating-with-Matrix)
+  - Moving, scaling, rotating
+  - Easy camera implementation
 - Simple and convenient API
   - Drawing a sprite to a window is as simple as `sprite.Draw(window)`
   - Adding and subtracting vectors with `+` and `-` operators... how?
