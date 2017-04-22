@@ -1,0 +1,9 @@
+Front,0,0
+FrontBlink,1,1
+LookUp,2,2
+Left,3,7
+LeftRight,4,6
+LeftBlink,7,7
+Walk,8,15
+Run,16,23
+Jump,24,26
