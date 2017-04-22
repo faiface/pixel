@@ -335,7 +335,7 @@ func run() {
 		last = time.Now()
 
 		// lerp the camera position towards the gopher
-		camPos = pixel.Lerp(camPos, phys.rect.Center(), 1-math.Pow(1.0/64, dt))
+		camPos = pixel.Lerp(camPos, phys.rect.Center(), 1-math.Pow(1.0/128, dt))
 		cam := pixel.IM.Moved(-camPos)
 		canvas.SetMatrix(cam)
 
