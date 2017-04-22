@@ -52,10 +52,6 @@ ways.** This is not a 100% guarantee thought.
     [IMDraw](https://github.com/faiface/pixel/wiki/Drawing-shapes-with-IMDraw) (circles, rectangles,
     lines, ...)
   - Optimized drawing with [Batch](https://github.com/faiface/pixel/wiki/Drawing-efficiently-with-Batch)
-- Geometry transformations with
-  [Matrix](https://github.com/faiface/pixel/wiki/Moving,-scaling-and-rotating-with-Matrix)
-  - Moving, scaling, rotating
-  - Easy camera implementation
 - Simple and convenient API
   - Drawing a sprite to a window is as simple as `sprite.Draw(window)`
   - Adding and subtracting vectors with `+` and `-` operators... how?
@@ -70,6 +66,10 @@ ways.** This is not a 100% guarantee thought.
   - Use `"image/color"` for colors, or use Pixel's own `color.Color` format, which supports easy
     multiplication and a few mor features
   - Pixel uses `float64` throughout the library, compatible with `"math"` package
+- Geometry transformations with
+  [Matrix](https://github.com/faiface/pixel/wiki/Moving,-scaling-and-rotating-with-Matrix)
+  - Moving, scaling, rotating
+  - Easy camera implementation
 - Fully garbage collected, no `Close` or `Dispose` methods
 - Full [Porter-Duff](http://ssp.impulsetrain.com/porterduff.html) composition, which enables
   - 2D lighting
