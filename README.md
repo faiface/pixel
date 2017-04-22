@@ -71,13 +71,13 @@ ways.** This is not a 100% guarantee thought.
   [Matrix](https://github.com/faiface/pixel/wiki/Moving,-scaling-and-rotating-with-Matrix)
   - Moving, scaling, rotating
   - Easy camera implementation
+- Off-screen drawing to Canvas or any other target (Batch, IMDraw, ...)
 - Fully garbage collected, no `Close` or `Dispose` methods
 - Full [Porter-Duff](http://ssp.impulsetrain.com/porterduff.html) composition, which enables
   - 2D lighting
   - Cutting holes into objects
   - Much more...
 - Pixel let's you draw stuff and do your job, it doesn't impose any particular style or paradigm
-- Off-screen drawing to Canvas or any other target (Batch, IMDraw, ...)
 - Platform and backend independent [core](https://godoc.org/github.com/faiface/pixel)
 - Core Target/Triangles/Picture pattern makes it easy to create new drawing targets that do
   arbitrarily crazy stuff (e.g. graphical effects)
