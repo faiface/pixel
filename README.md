@@ -11,12 +11,12 @@ go get github.com/faiface/pixel
 The [Wiki of this repo](https://github.com/faiface/pixel/wiki) contains an extensive tutorial
 covering several topics of Pixel. Here's the content of the tutorial parts so far:
 
-### [Creating a Window](https://github.com/faiface/pixel/wiki/Creating-a-Window)
-### [Drawing a Sprite](https://github.com/faiface/pixel/wiki/Drawing-a-Sprite)
-### [Moving, scaling and rotating with Matrix](https://github.com/faiface/pixel/wiki/Moving,-scaling-and-rotating-with-Matrix)
-### [Pressing keys and clicking mouse](https://github.com/faiface/pixel/wiki/Pressing-keys-and-clicking-mouse)
-### [Drawing efficiently with Batch](https://github.com/faiface/pixel/wiki/Drawing-efficiently-with-Batch)
-### [Drawing shapes with IMDraw](https://github.com/faiface/pixel/wiki/Drawing-shapes-with-IMDraw)
+- [Creating a Window](https://github.com/faiface/pixel/wiki/Creating-a-Window)
+- [Drawing a Sprite](https://github.com/faiface/pixel/wiki/Drawing-a-Sprite)
+- [Moving, scaling and rotating with Matrix](https://github.com/faiface/pixel/wiki/Moving,-scaling-and-rotating-with-Matrix)
+- [Pressing keys and clicking mouse](https://github.com/faiface/pixel/wiki/Pressing-keys-and-clicking-mouse)
+- [Drawing efficiently with Batch](https://github.com/faiface/pixel/wiki/Drawing-efficiently-with-Batch)
+- [Drawing shapes with IMDraw](https://github.com/faiface/pixel/wiki/Drawing-shapes-with-IMDraw)
 
 ## Examples
 
