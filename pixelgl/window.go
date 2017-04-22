@@ -144,14 +144,15 @@ func (w *Window) Update() {
 	mainthread.Call(func() {
 		w.begin()
 
-		glhf.Bounds(0, 0, w.canvas.Texture().Width(), w.canvas.Texture().Height())
+		framebufferWidth, framebufferHeight := w.window.GetFramebufferSize()
+		glhf.Bounds(0, 0, framebufferWidth, framebufferHeight)
 
 		glhf.Clear(0, 0, 0, 0)
 		w.canvas.gf.Frame().Begin()
 		w.canvas.gf.Frame().Blit(
 			nil,
 			0, 0, w.canvas.Texture().Width(), w.canvas.Texture().Height(),
-			0, 0, w.canvas.Texture().Width(), w.canvas.Texture().Height(),
+			0, 0, framebufferWidth, framebufferHeight,
 		)
 		w.canvas.gf.Frame().End()
 
