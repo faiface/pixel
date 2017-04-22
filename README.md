@@ -1,6 +1,6 @@
 # Pixel [![GoDoc](https://godoc.org/github.com/faiface/pixel?status.svg)](https://godoc.org/github.com/faiface/pixel) [![Go Report Card](https://goreportcard.com/badge/github.com/faiface/pixel)](https://goreportcard.com/report/github.com/faiface/pixel)
 
-A simple, easy to use, fast, flexible, hand-crafter 2D game library in Go.
+A simple, easy to use, fast, flexible, hand-crafted 2D game library in Go.
 
 ```
 go get github.com/faiface/pixel
