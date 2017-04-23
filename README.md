@@ -35,13 +35,13 @@ $ go run main.go
 
 Here are some screenshots from the examples!
 
-![Lights](examples/lights/screenshot.png)
+| [Lights](examples/lights) | [Platformer](examples/platformer) |
+| --- | --- |
+| ![Lights](examples/lights/screenshot.png) | ![Platformer](examples/platformer/screenshot.png) |
 
-![Platformer](examples/platformer/screenshot.png)
-
-![Smoke](examples/smoke/screenshot.png)
-
-![Xor](examples/xor/screenshot.png)
+| [Smoke](examples/smoke) | [Xor](examples/xor) |
+| --- | --- |
+| ![Smoke](examples/smoke/screenshot.png) | ![Xor](examples/xor/screenshot.png) |
 
 ## Features
 
