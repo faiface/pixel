@@ -44,7 +44,7 @@ Here are some screenshots from the examples!
 
 Here's the list of the main features in Pixel. Although Pixel is still in heavy development, **you
 can quite expect that the features and API that is inside the library now, will not change in major
-ways.** This is not a 100% guarantee thought.
+ways.** This is not a 100% guarantee, though.
 
 - Fast 2D graphics
   - Sprites
