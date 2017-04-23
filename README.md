@@ -92,6 +92,7 @@ Pixel is in development and still missing few critical features. Here're the mos
 - Drawing text
 - Antialiasing (filtering is supported, though)
 - Better support for Hi-DPI displays
+- Mobile (and perhaps HTML5?) backend
 - More advanced graphical effects (e.g. blur)
 
 **Implementing these features will get us to the 1.0 release.** Contribute, so that it's as soon as
