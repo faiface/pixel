@@ -1,6 +1,6 @@
 # Pixel [![GoDoc](https://godoc.org/github.com/faiface/pixel?status.svg)](https://godoc.org/github.com/faiface/pixel) [![Go Report Card](https://goreportcard.com/badge/github.com/faiface/pixel)](https://goreportcard.com/report/github.com/faiface/pixel)
 
-A simple, easy to use, fast, flexible, hand-crafted 2D game library in Go.
+A 2D game library that doesn't get in your way. Focus on ease of use, extensibility and performance.
 
 ```
 go get github.com/faiface/pixel
@@ -30,7 +30,7 @@ $ cd examples/platformer
 $ go run main.go
 ```
 
-Here are some eye-catching screenshots from the examples!
+Here are some screenshots from the examples!
 
 ![Lights](examples/lights/screenshot.png)
 
@@ -65,7 +65,7 @@ ways.** This is not a 100% guarantee thought.
   - Use `"image"` package for loading pictures
   - Use `"time"` package for measuring delta time and FPS
   - Use `"image/color"` for colors, or use Pixel's own `color.Color` format, which supports easy
-    multiplication and a few mor features
+    multiplication and a few more features
   - Pixel uses `float64` throughout the library, compatible with `"math"` package
 - Geometry transformations with
   [Matrix](https://github.com/faiface/pixel/wiki/Moving,-scaling-and-rotating-with-Matrix)
