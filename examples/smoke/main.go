@@ -3,7 +3,6 @@ package main
 import (
 	"container/list"
 	"encoding/csv"
-	"fmt"
 	"image"
 	"io"
 	"math"
@@ -204,11 +203,6 @@ func run() {
 
 	batch := pixel.NewBatch(&pixel.TrianglesData{}, sheet)
 
-	var (
-		second = time.Tick(time.Second)
-		frames = 0
-	)
-
 	last := time.Now()
 	for !win.Closed() {
 		dt := time.Since(last).Seconds()
@@ -224,14 +218,6 @@ func run() {
 		batch.Draw(win)
 
 		win.Update()
-
-		frames++
-		select {
-		case <-second:
-			win.SetTitle(fmt.Sprintf("%s | FPS: %d", cfg.Title, frames))
-			frames = 0
-		default:
-		}
 	}
 }
 

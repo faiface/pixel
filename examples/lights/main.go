@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"image"
 	"math"
 	"os"
@@ -144,11 +143,7 @@ func run() {
 	oneLight := pixelgl.NewCanvas(win.Bounds())
 	allLight := pixelgl.NewCanvas(win.Bounds())
 
-	var (
-		frames = 0
-		second = time.Tick(time.Second)
-		fps30  = time.Tick(time.Second / 30)
-	)
+	fps30 := time.Tick(time.Second / 30)
 
 	start := time.Now()
 	for !win.Closed() {
@@ -198,13 +193,6 @@ func run() {
 		win.Update()
 
 		<-fps30 // maintain 30 fps, because my computer couldn't handle 60 here
-		frames++
-		select {
-		case <-second:
-			win.SetTitle(fmt.Sprintf("%s | FPS: %d", cfg.Title, frames))
-			frames = 0
-		default:
-		}
 	}
 }
 
