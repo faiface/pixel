@@ -123,9 +123,9 @@ finish the library, but it'll take a lot of time. With your help, it'll take muc
 everyone to contribute, even with just an idea. Especially welcome are **issues** and **pull
 requests**.
 
-However, I won't accept everything. Pixel is being developed with thought and care. Each component
-was designed and re-designed multiple times. Code and API quality is very important here. API is
-focused on simplicity and expressiveness.
+**However, I won't accept everything. Pixel is being developed with thought and care.** Each
+component was designed and re-designed multiple times. Code and API quality is very important here.
+API is focused on simplicity and expressiveness.
 
 When contributing, keep these goals in mind. It doesn't mean that I'll only accept perfect pull
 requests. It just means that I might not like your idea. Or that your pull requests could need some
