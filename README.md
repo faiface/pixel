@@ -117,7 +117,27 @@ are same as for [GLFW](https://github.com/go-gl/glfw).
 
 ## Contributing
 
-TODO
+Pixel is in, let's say, mid-stage of development. Many of the important features are here, some are
+missing. That's why **contributions are very important and welcome!** All alone, I will be able to
+finish the library, but it'll take a lot of time. With your help, it'll take much less. I encourage
+everyone to contribute, even with just an idea. Especially welcome are **issues** and **pull
+requests**.
+
+However, I won't accept everything. Pixel is being developed with thought and care. Each component
+was designed and re-designed multiple times. Code and API quality is very important here. API is
+focused on simplicity and expressiveness.
+
+When contributing, keep these goals in mind. It doesn't mean that I'll only accept perfect pull
+requests. It just means that I might not like your idea. Or that your pull requests could need some
+rewriting. That's perfectly fine, don't let it put you off. In the end, we'll just end up with a
+better result.
+
+**Don't start working on a pull request before submiting an issue or commenting on one. Proposals
+also take the form of issues.**
+
+For any kind of discussion, feel free to use our
+[Gitter](https://gitter.im/pixellib/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+community.
 
 ## License
 
