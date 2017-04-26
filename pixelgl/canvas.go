@@ -311,14 +311,14 @@ func (cp *canvasPicture) Draw(t pixel.TargetTriangles) {
 const (
 	canvasPosition int = iota
 	canvasColor
-	canvasTexture
+	canvasTexCoords
 	canvasIntensity
 )
 
 var canvasVertexFormat = glhf.AttrFormat{
 	canvasPosition:  {Name: "position", Type: glhf.Vec2},
 	canvasColor:     {Name: "color", Type: glhf.Vec4},
-	canvasTexture:   {Name: "texture", Type: glhf.Vec2},
+	canvasTexCoords: {Name: "texCoords", Type: glhf.Vec2},
 	canvasIntensity: {Name: "intensity", Type: glhf.Float},
 }
 
@@ -341,11 +341,11 @@ var canvasVertexShader = `
 
 in vec2 position;
 in vec4 color;
-in vec2 texture;
+in vec2 texCoords;
 in float intensity;
 
 out vec4 Color;
-out vec2 Texture;
+out vec2 TexCoords;
 out float Intensity;
 
 uniform mat3 transform;
@@ -356,7 +356,7 @@ void main() {
 	vec2 normPos = (transPos - bounds.xy) / bounds.zw * 2 - vec2(1, 1);
 	gl_Position = vec4(normPos, 0.0, 1.0);
 	Color = color;
-	Texture = texture;
+	TexCoords = texCoords;
 	Intensity = intensity;
 }
 `
@@ -365,7 +365,7 @@ var canvasFragmentShader = `
 #version 330 core
 
 in vec4 Color;
-in vec2 Texture;
+in vec2 TexCoords;
 in float Intensity;
 
 out vec4 color;
@@ -380,7 +380,7 @@ void main() {
 	} else {
 		color = vec4(0, 0, 0, 0);
 		color += (1 - Intensity) * Color;
-		vec2 t = (Texture - texBounds.xy) / texBounds.zw;
+		vec2 t = (TexCoords - texBounds.xy) / texBounds.zw;
 		color += Intensity * Color * texture(tex, t);
 		color *= colorMask;
 	}
