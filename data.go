@@ -212,7 +212,13 @@ func PictureDataFromPicture(pic Picture) *PictureData {
 					math.Max(x, bounds.Min.X()),
 					math.Max(y, bounds.Min.Y()),
 				)
-				pd.SetColor(at, pic.Color(at))
+				col := pic.Color(at)
+				pd.Pix[pd.Index(at)] = color.RGBA{
+					R: uint8(col.R * 255),
+					G: uint8(col.G * 255),
+					B: uint8(col.B * 255),
+					A: uint8(col.A * 255),
+				}
 			}
 		}
 	}
