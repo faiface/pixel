@@ -116,7 +116,8 @@ are same as for [GLFW](https://github.com/go-gl/glfw).
 - See [here](http://www.glfw.org/docs/latest/compile.html#compile_deps) for full details.
 
 **The combination of Go 1.8, macOS and latest XCode seems to be problematic** as mentioned in issue
-[#7](#7). This issue is probably not related to Pixel. **Upgrading to Go 1.8.1 fixes the issue.**
+[#7](https://github.com/faiface/pixel/issues/7). This issue is probably not related to Pixel.
+**Upgrading to Go 1.8.1 fixes the issue.**
 
 ## Contributing
 
