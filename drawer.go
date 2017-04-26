@@ -15,6 +15,11 @@ package pixel
 //
 // Whenever you change the Triangles, call Dirty to notify Drawer that Triangles changed. You don't
 // need to notify Drawer about a change of the Picture.
+//
+// Note, that Drawer caches the results of MakePicture from Targets it's drawn to for each Picture
+// it's set to. What it means is that using a Drawer with an unbounded number of Pictures leads to a
+// memory leak, since Drawer caches them and never forgets. In such a situation, create a new Drawer
+// for each Picture.
 type Drawer struct {
 	Triangles Triangles
 	Picture   Picture
