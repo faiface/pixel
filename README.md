@@ -115,6 +115,9 @@ are same as for [GLFW](https://github.com/go-gl/glfw).
   libXinerama-devel mesa-libGL-devel libXi-devel` packages.
 - See [here](http://www.glfw.org/docs/latest/compile.html#compile_deps) for full details.
 
+**The combination of Go 1.8, macOS and latest XCode seems to be problematic** as mentioned in issue
+[#7](#7). This issue is probably not related to Pixel. **Upgrading to Go 1.8.1 fixes the issue.**
+
 ## Contributing
 
 Pixel is in, let's say, mid-stage of development. Many of the important features are here, some are
