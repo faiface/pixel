@@ -268,17 +268,3 @@ func (pd *PictureData) Color(at Vec) RGBA {
 	}
 	return ToRGBA(pd.Pix[pd.Index(at)])
 }
-
-// SetColor changes the color located at the given position.
-func (pd *PictureData) SetColor(at Vec, col color.Color) {
-	if !pd.Rect.Contains(at) {
-		return
-	}
-	rgba := ToRGBA(col)
-	pd.Pix[pd.Index(at)] = color.RGBA{
-		R: uint8(rgba.R * 255),
-		G: uint8(rgba.G * 255),
-		B: uint8(rgba.B * 255),
-		A: uint8(rgba.A * 255),
-	}
-}
