@@ -116,7 +116,7 @@ func (gp *gopherPhys) update(dt float64, ctrl pixel.Vec, platforms []platform) {
 	gp.vel += pixel.Y(gp.gravity).Scaled(dt)
 	gp.rect = gp.rect.Moved(gp.vel.Scaled(dt))
 
-	// check collisions agains each platform
+	// check collisions against each platform
 	gp.ground = false
 	if gp.vel.Y() <= 0 {
 		for _, p := range platforms {
@@ -213,7 +213,7 @@ func (ga *gopherAnim) draw(t pixel.Target, phys *gopherPhys) {
 	if ga.sprite == nil {
 		ga.sprite = pixel.NewSprite(nil, pixel.Rect{})
 	}
-	// draw the correct frame with the correct positon and direction
+	// draw the correct frame with the correct position and direction
 	ga.sprite.Set(ga.sheet, ga.frame)
 	ga.sprite.SetMatrix(pixel.IM.
 		ScaledXY(0, pixel.V(
