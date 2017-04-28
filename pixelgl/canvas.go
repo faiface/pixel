@@ -218,6 +218,33 @@ func (c *Canvas) Texture() *glhf.Texture {
 	return c.gf.Texture()
 }
 
+// SetPixels replaces the content of the Canvas with the provided pixels. The provided slice must be
+// an alpha-premultiplied RGBA sequence of correct length (4 * width * height).
+func (c *Canvas) SetPixels(pixels []uint8) {
+	c.gf.Dirty()
+
+	mainthread.Call(func() {
+		tex := c.Texture()
+		tex.Begin()
+		tex.SetPixels(0, 0, tex.Width(), tex.Height(), pixels)
+		tex.End()
+	})
+}
+
+// Pixels returns an alpha-premultiplied RGBA sequence of the content of the Canvas.
+func (c *Canvas) Pixels() []uint8 {
+	var pixels []uint8
+
+	mainthread.Call(func() {
+		tex := c.Texture()
+		tex.Begin()
+		pixels = tex.Pixels(0, 0, tex.Width(), tex.Height())
+		tex.End()
+	})
+
+	return pixels
+}
+
 // Draw draws a rectangle equal to Canvas's Bounds containing the Canvas's content to another
 // Target.
 //
