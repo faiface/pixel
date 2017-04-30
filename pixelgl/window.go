@@ -21,16 +21,16 @@ type WindowConfig struct {
 	// Title at the top of the Window.
 	Title string
 
-	// Icon specifies the icon images available to be used by the window. This is usually displayed
-	// in the top bar of the window or in the task bar of the desktop environment.
+	// Icon specifies the icon images available to be used by the window. This is usually
+	// displayed in the top bar of the window or in the task bar of the desktop environment.
 	//
-	// If passed one image, it will use that image, if passed an array of images
-	// those of or closest to the sizes desired by the system are selected.
-	// The desired image sizes varies depending on platform and system settings. The selected
-	// images will be rescaled as needed. Good sizes include 16x16, 32x32 and 48x48.
+	// If passed one image, it will use that image, if passed an array of images those of or
+	// closest to the sizes desired by the system are selected. The desired image sizes varies
+	// depending on platform and system settings. The selected images will be rescaled as
+	// needed. Good sizes include 16x16, 32x32 and 48x48.
 	//
-	// Note: Setting this value doesn't have an effect on OSX. You'll need to set the icon
-	// when bundling your application for release.
+	// Note: Setting this value doesn't have an effect on OSX. You'll need to set the icon when
+	// bundling your application for release.
 	Icon []pixel.Picture
 
 	// Bounds specify the bounds of the Window in pixels.
