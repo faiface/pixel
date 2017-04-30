@@ -42,9 +42,10 @@ type WindowConfig struct {
 type Window struct {
 	window *glfw.Window
 
-	bounds pixel.Rect
-	canvas *Canvas
-	vsync  bool
+	bounds        pixel.Rect
+	canvas        *Canvas
+	vsync         bool
+	cursorVisible bool
 
 	// need to save these to correctly restore a fullscreen window
 	restore struct {
@@ -289,6 +290,24 @@ func (w *Window) SetVSync(vsync bool) {
 // VSync returns whether the Window is set to synchronize with the monitor refresh rate.
 func (w *Window) VSync() bool {
 	return w.vsync
+}
+
+// SetCursorVisible sets the visibility of the mouse cursor inside the window client area
+func (w *Window) SetCursorVisible(visible bool) {
+	w.cursorVisible = visible
+	mainthread.Call(func() {
+		if visible && w.window.GetInputMode(glfw.CursorMode) != glfw.CursorNormal {
+			w.window.SetInputMode(glfw.CursorMode, glfw.CursorNormal)
+		}
+		if !visible && w.window.GetInputMode(glfw.CursorMode) != glfw.CursorHidden {
+			w.window.SetInputMode(glfw.CursorMode, glfw.CursorHidden)
+		}
+	})
+}
+
+// CursorVisible returns the visibility status of the mouse cursor
+func (w *Window) CursorVisible() bool {
+	return w.cursorVisible
 }
 
 // Note: must be called inside the main thread.
