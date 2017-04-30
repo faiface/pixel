@@ -70,7 +70,7 @@ func NewWindow(cfg WindowConfig) (*Window, error) {
 		false: glfw.False,
 	}
 
-	w := &Window{bounds: cfg.Bounds}
+	w := &Window{bounds: cfg.Bounds, cursorVisible: true}
 
 	err := mainthread.CallErr(func() error {
 		var err error
