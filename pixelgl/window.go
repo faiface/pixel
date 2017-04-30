@@ -292,20 +292,19 @@ func (w *Window) VSync() bool {
 	return w.vsync
 }
 
-// SetCursorVisible sets the visibility of the mouse cursor inside the window client area
+// SetCursorVisible sets the visibility of the mouse cursor inside the Window client area.
 func (w *Window) SetCursorVisible(visible bool) {
 	w.cursorVisible = visible
 	mainthread.Call(func() {
-		if visible && w.window.GetInputMode(glfw.CursorMode) != glfw.CursorNormal {
+		if visible {
 			w.window.SetInputMode(glfw.CursorMode, glfw.CursorNormal)
-		}
-		if !visible && w.window.GetInputMode(glfw.CursorMode) != glfw.CursorHidden {
+		} else {
 			w.window.SetInputMode(glfw.CursorMode, glfw.CursorHidden)
 		}
 	})
 }
 
-// CursorVisible returns the visibility status of the mouse cursor
+// CursorVisible returns the visibility status of the mouse cursor.
 func (w *Window) CursorVisible() bool {
 	return w.cursorVisible
 }
