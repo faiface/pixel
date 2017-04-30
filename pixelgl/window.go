@@ -132,9 +132,9 @@ func NewWindow(cfg WindowConfig) (*Window, error) {
 
 	runtime.SetFinalizer(w, (*Window).Destroy)
 	imgs := make([]image.Image, len(cfg.Icon))
-	for _, v := range cfg.Icon {
+	for i, v := range cfg.Icon {
 		pic := pixel.PictureDataFromPicture(v)
-		imgs = append(imgs, pic.Image())
+		imgs[i] = pic.Image()
 	}
 	mainthread.Call(func() {
 		w.window.SetIcon(imgs)
