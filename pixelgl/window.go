@@ -122,6 +122,17 @@ func NewWindow(cfg WindowConfig) (*Window, error) {
 		return nil, errors.Wrap(err, "creating window failed")
 	}
 
+	if len(cfg.Icon) > 0 {
+		imgs := make([]image.Image, len(cfg.Icon))
+		for i, icon := range cfg.Icon {
+			pic := pixel.PictureDataFromPicture(icon)
+			imgs[i] = pic.Image()
+		}
+		mainthread.Call(func() {
+			w.window.SetIcon(imgs)
+		})
+	}
+
 	w.SetVSync(cfg.VSync)
 
 	w.initInput()
@@ -131,14 +142,7 @@ func NewWindow(cfg WindowConfig) (*Window, error) {
 	w.Update()
 
 	runtime.SetFinalizer(w, (*Window).Destroy)
-	imgs := make([]image.Image, len(cfg.Icon))
-	for i, v := range cfg.Icon {
-		pic := pixel.PictureDataFromPicture(v)
-		imgs[i] = pic.Image()
-	}
-	mainthread.Call(func() {
-		w.window.SetIcon(imgs)
-	})
+
 	return w, nil
 }
 
