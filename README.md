@@ -93,7 +93,7 @@ Pixel is in development and still missing few critical features. Here're the mos
 - Audio
 - Drawing text
 - Antialiasing (filtering is supported, though)
-- Advanced window manipulation (cursor hiding, window icon, ...)
+- ~~Advanced window manipulation (cursor hiding, window icon, ...)~~
 - Better support for Hi-DPI displays
 - Mobile (and perhaps HTML5?) backend
 - More advanced graphical effects (e.g. blur)
