@@ -27,6 +27,7 @@ type Drawer struct {
 	tris   map[Target]TargetTriangles
 	clean  map[Target]bool
 	pics   map[targetPicturePair]TargetPicture
+	dirty  bool
 	inited bool
 }
 
@@ -49,9 +50,7 @@ func (d *Drawer) lazyInit() {
 func (d *Drawer) Dirty() {
 	d.lazyInit()
 
-	for t := range d.clean {
-		d.clean[t] = false
-	}
+	d.dirty = true
 }
 
 // Draw efficiently draws Triangles with Picture onto the provided Target.
@@ -60,6 +59,13 @@ func (d *Drawer) Dirty() {
 // Picture.
 func (d *Drawer) Draw(t Target) {
 	d.lazyInit()
+
+	if d.dirty {
+		for t := range d.clean {
+			d.clean[t] = false
+		}
+		d.dirty = false
+	}
 
 	if d.Triangles == nil {
 		return
