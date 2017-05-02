@@ -43,6 +43,7 @@ type Text struct {
 
 	prevR rune
 	atlas atlas
+	glyph pixel.TrianglesData
 	tris  pixel.TrianglesData
 	d     pixel.Drawer
 }
@@ -57,6 +58,7 @@ func New(face font.Face, runeSets ...[]rune) *Text {
 		color: pixel.Alpha(1),
 		atlas: makeAtlas(face, runes),
 	}
+	txt.glyph.SetLen(6)
 	txt.d.Picture = txt.atlas.pic
 	txt.d.Triangles = &txt.tris
 
@@ -82,10 +84,9 @@ func (txt *Text) Write(p []byte) (n int, err error) {
 
 	n = len(p)
 
-	glyphTris := make(pixel.TrianglesData, 6)
-	for i := range glyphTris {
-		glyphTris[i].Color = txt.color
-		glyphTris[i].Intensity = 1
+	for i := range txt.glyph {
+		txt.glyph[i].Color = txt.color
+		txt.glyph[i].Intensity = 1
 	}
 
 	for len(p) > 0 {
@@ -120,11 +121,11 @@ func (txt *Text) Write(p []byte) (n int, err error) {
 		d := pixel.V(glyph.frame.Min.X(), glyph.frame.Max.Y())
 
 		for i, v := range []pixel.Vec{a, b, c, a, c, d} {
-			glyphTris[i].Position = v - glyph.orig + txt.Dot
-			glyphTris[i].Picture = v
+			txt.glyph[i].Position = v - glyph.orig + txt.Dot
+			txt.glyph[i].Picture = v
 		}
 
-		txt.tris = append(txt.tris, glyphTris...)
+		txt.tris = append(txt.tris, txt.glyph...)
 
 		txt.Dot += pixel.X(glyph.advance)
 		txt.prevR = r
