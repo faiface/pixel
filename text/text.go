@@ -37,7 +37,8 @@ func RangeTable(table *unicode.RangeTable) []rune {
 }
 
 type Text struct {
-	Dot pixel.Vec
+	Orig pixel.Vec
+	Dot  pixel.Vec
 
 	color pixel.RGBA
 
@@ -96,10 +97,10 @@ func (txt *Text) Write(p []byte) (n int, err error) {
 		switch r {
 		case '\n':
 			txt.Dot -= pixel.Y(txt.atlas.lineHeight)
-			txt.Dot = txt.Dot.WithX(0)
+			txt.Dot = txt.Dot.WithX(txt.Orig.X())
 			continue
 		case '\r':
-			txt.Dot = txt.Dot.WithX(0)
+			txt.Dot = txt.Dot.WithX(txt.Orig.X())
 			continue
 		case '\t':
 			//TODO
