@@ -40,7 +40,7 @@ type Text struct {
 	Orig pixel.Vec
 	Dot  pixel.Vec
 
-	atlas atlas
+	atlas *Atlas
 
 	color      pixel.RGBA
 	lineHeight float64
@@ -59,13 +59,13 @@ func New(face font.Face, runeSets ...[]rune) *Text {
 		runes = append(runes, set...)
 	}
 
-	atlas := makeAtlas(face, runes)
+	atlas := NewAtlas(face, runes)
 
 	txt := &Text{
 		atlas:      atlas,
 		color:      pixel.Alpha(1),
 		lineHeight: 1,
-		tabWidth:   atlas.mapping[' '].advance * 4,
+		tabWidth:   atlas.mapping[' '].Advance * 4,
 	}
 	txt.glyph.SetLen(6)
 	txt.d.Picture = txt.atlas.pic
@@ -104,11 +104,11 @@ func (txt *Text) Clear() {
 }
 
 func (txt *Text) Write(p []byte) (n int, err error) {
-	if len(p) == 0 {
-		return 0, nil
-	}
+	n, err = len(p), nil // always returns this
 
-	n = len(p)
+	if len(p) == 0 {
+		return
+	}
 
 	for i := range txt.glyph {
 		txt.glyph[i].Color = txt.color
@@ -118,49 +118,77 @@ func (txt *Text) Write(p []byte) (n int, err error) {
 	for len(p) > 0 {
 		r, size := utf8.DecodeRune(p)
 		p = p[size:]
-
-		switch r {
-		case '\n':
-			txt.Dot -= pixel.Y(txt.atlas.lineHeight * txt.lineHeight)
-			txt.Dot = txt.Dot.WithX(txt.Orig.X())
-			continue
-		case '\r':
-			txt.Dot = txt.Dot.WithX(txt.Orig.X())
-			continue
-		case '\t':
-			//TODO: properly align tab
-			txt.Dot += pixel.X(txt.tabWidth)
-			continue
-		}
-
-		glyph, ok := txt.atlas.mapping[r]
-		if !ok {
-			glyph = txt.atlas.mapping[unicode.ReplacementChar]
-		}
-
-		if txt.prevR >= 0 {
-			txt.Dot += pixel.X(txt.atlas.kern[struct{ r0, r1 rune }{txt.prevR, r}])
-		}
-
-		a := pixel.V(glyph.frame.Min.X(), glyph.frame.Min.Y())
-		b := pixel.V(glyph.frame.Max.X(), glyph.frame.Min.Y())
-		c := pixel.V(glyph.frame.Max.X(), glyph.frame.Max.Y())
-		d := pixel.V(glyph.frame.Min.X(), glyph.frame.Max.Y())
-
-		for i, v := range []pixel.Vec{a, b, c, a, c, d} {
-			txt.glyph[i].Position = v - glyph.orig + txt.Dot
-			txt.glyph[i].Picture = v
-		}
-
-		txt.tris = append(txt.tris, txt.glyph...)
-
-		txt.Dot += pixel.X(glyph.advance)
-		txt.prevR = r
+		txt.WriteRune(r)
 	}
+
+	return
+}
+
+func (txt *Text) WriteString(s string) (n int, err error) {
+	if len(s) == 0 {
+		return
+	}
+
+	for i := range txt.glyph {
+		txt.glyph[i].Color = txt.color
+		txt.glyph[i].Intensity = 1
+	}
+
+	for _, r := range s {
+		txt.WriteRune(r)
+	}
+
+	return len(s), nil
+}
+
+func (txt *Text) WriteRune(r rune) (n int, err error) {
+	n, err = utf8.RuneLen(r), nil // always returns this
+
+	switch r {
+	case '\n':
+		txt.Dot -= pixel.Y(txt.atlas.lineHeight * txt.lineHeight)
+		txt.Dot = txt.Dot.WithX(txt.Orig.X())
+		return
+	case '\r':
+		txt.Dot = txt.Dot.WithX(txt.Orig.X())
+		return
+	case '\t':
+		//TODO: properly align tab
+		txt.Dot += pixel.X(txt.tabWidth)
+		return
+	}
+
+	if !txt.atlas.Contains(r) {
+		r = unicode.ReplacementChar
+	}
+	if !txt.atlas.Contains(unicode.ReplacementChar) {
+		return
+	}
+
+	glyph := txt.atlas.Glyph(r)
+
+	if txt.prevR >= 0 {
+		txt.Dot += pixel.X(txt.atlas.Kern(txt.prevR, r))
+	}
+
+	a := pixel.V(glyph.Frame.Min.X(), glyph.Frame.Min.Y())
+	b := pixel.V(glyph.Frame.Max.X(), glyph.Frame.Min.Y())
+	c := pixel.V(glyph.Frame.Max.X(), glyph.Frame.Max.Y())
+	d := pixel.V(glyph.Frame.Min.X(), glyph.Frame.Max.Y())
+
+	for i, v := range []pixel.Vec{a, b, c, a, c, d} {
+		txt.glyph[i].Position = v - glyph.Orig + txt.Dot
+		txt.glyph[i].Picture = v
+	}
+
+	txt.tris = append(txt.tris, txt.glyph...)
+
+	txt.Dot += pixel.X(glyph.Advance)
+	txt.prevR = r
 
 	txt.d.Dirty()
 
-	return n, nil
+	return
 }
 
 func (txt *Text) Draw(t pixel.Target) {
@@ -169,20 +197,20 @@ func (txt *Text) Draw(t pixel.Target) {
 	txt.trans.Draw(t)
 }
 
-type atlas struct {
+type Glyph struct {
+	Orig    pixel.Vec
+	Frame   pixel.Rect
+	Advance float64
+}
+
+type Atlas struct {
 	pic        pixel.Picture
-	mapping    map[rune]glyph
+	mapping    map[rune]Glyph
 	kern       map[struct{ r0, r1 rune }]float64
 	lineHeight float64
 }
 
-type glyph struct {
-	orig    pixel.Vec
-	frame   pixel.Rect
-	advance float64
-}
-
-func makeAtlas(face font.Face, runes []rune) atlas {
+func NewAtlas(face font.Face, runes []rune) *Atlas {
 	//FIXME: don't put glyphs in just one row, make a square
 
 	width := fixed.Int26_6(0)
@@ -204,7 +232,7 @@ func makeAtlas(face font.Face, runes []rune) atlas {
 	))
 	atlasHeight := float64(atlasImg.Bounds().Dy())
 
-	mapping := make(map[rune]glyph)
+	mapping := make(map[rune]Glyph)
 
 	dot := fixed.Point26_6{
 		X: 0,
@@ -237,7 +265,7 @@ func makeAtlas(face font.Face, runes []rune) atlas {
 		adv, _ := face.GlyphAdvance(r)
 		advance := float64(adv) / (1 << 6)
 
-		mapping[r] = glyph{orig, frame, advance}
+		mapping[r] = Glyph{orig, frame, advance}
 
 		dot.X += b.Max.X
 
@@ -253,10 +281,31 @@ func makeAtlas(face font.Face, runes []rune) atlas {
 		}
 	}
 
-	return atlas{
+	return &Atlas{
 		pixel.PictureDataFromImage(atlasImg),
 		mapping,
 		kern,
 		float64(face.Metrics().Height) / (1 << 6),
 	}
+}
+
+func (a *Atlas) Picture() pixel.Picture {
+	return a.pic
+}
+
+func (a *Atlas) Contains(r rune) bool {
+	_, ok := a.mapping[r]
+	return ok
+}
+
+func (a *Atlas) Glyph(r rune) Glyph {
+	return a.mapping[r]
+}
+
+func (a *Atlas) Kern(r0, r1 rune) float64 {
+	return a.kern[struct{ r0, r1 rune }{r0, r1}]
+}
+
+func (a *Atlas) LineHeight() float64 {
+	return a.lineHeight
 }
