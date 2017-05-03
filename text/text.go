@@ -77,6 +77,10 @@ func New(face font.Face, runeSets ...[]rune) *Text {
 	return txt
 }
 
+func (txt *Text) Atlas() *Atlas {
+	return txt.atlas
+}
+
 func (txt *Text) SetMatrix(m pixel.Matrix) {
 	txt.trans.SetMatrix(m)
 }
