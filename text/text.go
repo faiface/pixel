@@ -141,6 +141,11 @@ func (txt *Text) WriteString(s string) (n int, err error) {
 	return len(s), nil
 }
 
+func (txt *Text) WriteByte(c byte) error {
+	_, err := txt.WriteRune(rune(c))
+	return err
+}
+
 func (txt *Text) WriteRune(r rune) (n int, err error) {
 	n, err = utf8.RuneLen(r), nil // always returns this
 
