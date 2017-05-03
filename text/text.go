@@ -64,8 +64,8 @@ func New(face font.Face, runeSets ...[]rune) *Text {
 	txt := &Text{
 		atlas:      atlas,
 		color:      pixel.Alpha(1),
-		lineHeight: 1,
-		tabWidth:   atlas.mapping[' '].Advance * 4,
+		lineHeight: atlas.LineHeight(),
+		tabWidth:   atlas.Glyph(' ').Advance * 4,
 	}
 	txt.glyph.SetLen(6)
 	txt.d.Picture = txt.atlas.pic
@@ -155,7 +155,7 @@ func (txt *Text) WriteRune(r rune) (n int, err error) {
 
 	switch r {
 	case '\n':
-		txt.Dot -= pixel.Y(txt.atlas.lineHeight * txt.lineHeight)
+		txt.Dot -= pixel.Y(txt.lineHeight)
 		txt.Dot = txt.Dot.WithX(txt.Orig.X())
 		return
 	case '\r':
