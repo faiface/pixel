@@ -50,6 +50,7 @@ type Text struct {
 	glyph pixel.TrianglesData
 	tris  pixel.TrianglesData
 	d     pixel.Drawer
+	trans *pixel.Batch
 }
 
 func New(face font.Face, runeSets ...[]rune) *Text {
@@ -69,10 +70,19 @@ func New(face font.Face, runeSets ...[]rune) *Text {
 	txt.glyph.SetLen(6)
 	txt.d.Picture = txt.atlas.pic
 	txt.d.Triangles = &txt.tris
+	txt.trans = pixel.NewBatch(&pixel.TrianglesData{}, atlas.pic)
 
 	txt.Clear()
 
 	return txt
+}
+
+func (txt *Text) SetMatrix(m pixel.Matrix) {
+	txt.trans.SetMatrix(m)
+}
+
+func (txt *Text) SetColorMask(c color.Color) {
+	txt.trans.SetColorMask(c)
 }
 
 func (txt *Text) Color(c color.Color) {
@@ -118,6 +128,7 @@ func (txt *Text) Write(p []byte) (n int, err error) {
 			txt.Dot = txt.Dot.WithX(txt.Orig.X())
 			continue
 		case '\t':
+			//TODO: properly align tab
 			txt.Dot += pixel.X(txt.tabWidth)
 			continue
 		}
@@ -153,7 +164,9 @@ func (txt *Text) Write(p []byte) (n int, err error) {
 }
 
 func (txt *Text) Draw(t pixel.Target) {
-	txt.d.Draw(t)
+	txt.trans.Clear()
+	txt.d.Draw(txt.trans)
+	txt.trans.Draw(t)
 }
 
 type atlas struct {
