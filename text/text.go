@@ -40,10 +40,13 @@ type Text struct {
 	Orig pixel.Vec
 	Dot  pixel.Vec
 
-	color pixel.RGBA
+	atlas atlas
+
+	color      pixel.RGBA
+	lineHeight float64
+	tabWidth   float64
 
 	prevR rune
-	atlas atlas
 	glyph pixel.TrianglesData
 	tris  pixel.TrianglesData
 	d     pixel.Drawer
@@ -55,9 +58,13 @@ func New(face font.Face, runeSets ...[]rune) *Text {
 		runes = append(runes, set...)
 	}
 
+	atlas := makeAtlas(face, runes)
+
 	txt := &Text{
-		color: pixel.Alpha(1),
-		atlas: makeAtlas(face, runes),
+		atlas:      atlas,
+		color:      pixel.Alpha(1),
+		lineHeight: 1,
+		tabWidth:   atlas.mapping[' '].advance * 4,
 	}
 	txt.glyph.SetLen(6)
 	txt.d.Picture = txt.atlas.pic
@@ -70,6 +77,14 @@ func New(face font.Face, runeSets ...[]rune) *Text {
 
 func (txt *Text) Color(c color.Color) {
 	txt.color = pixel.ToRGBA(c)
+}
+
+func (txt *Text) LineHeight(scale float64) {
+	txt.lineHeight = scale
+}
+
+func (txt *Text) TabWidth(width float64) {
+	txt.tabWidth = width
 }
 
 func (txt *Text) Clear() {
@@ -96,14 +111,14 @@ func (txt *Text) Write(p []byte) (n int, err error) {
 
 		switch r {
 		case '\n':
-			txt.Dot -= pixel.Y(txt.atlas.lineHeight)
+			txt.Dot -= pixel.Y(txt.atlas.lineHeight * txt.lineHeight)
 			txt.Dot = txt.Dot.WithX(txt.Orig.X())
 			continue
 		case '\r':
 			txt.Dot = txt.Dot.WithX(txt.Orig.X())
 			continue
 		case '\t':
-			//TODO
+			txt.Dot += pixel.X(txt.tabWidth)
 			continue
 		}
 
