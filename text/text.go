@@ -2,6 +2,7 @@ package text
 
 import (
 	"image/color"
+	"math"
 	"unicode"
 	"unicode/utf8"
 
@@ -39,7 +40,6 @@ type Text struct {
 
 	atlas *Atlas
 
-	color      pixel.RGBA
 	lineHeight float64
 	tabWidth   float64
 
@@ -60,11 +60,16 @@ func New(face font.Face, runeSets ...[]rune) *Text {
 
 	txt := &Text{
 		atlas:      atlas,
-		color:      pixel.Alpha(1),
 		lineHeight: atlas.LineHeight(),
 		tabWidth:   atlas.Glyph(' ').Advance * 4,
 	}
+
 	txt.glyph.SetLen(6)
+	for i := range txt.glyph {
+		txt.glyph[i].Color = pixel.Alpha(1)
+		txt.glyph[i].Intensity = 1
+	}
+
 	txt.d.Picture = txt.atlas.pic
 	txt.d.Triangles = &txt.tris
 	txt.trans = pixel.NewBatch(&pixel.TrianglesData{}, atlas.pic)
@@ -87,7 +92,10 @@ func (txt *Text) SetColorMask(c color.Color) {
 }
 
 func (txt *Text) Color(c color.Color) {
-	txt.color = pixel.ToRGBA(c)
+	rgba := pixel.ToRGBA(c)
+	for i := range txt.glyph {
+		txt.glyph[i].Color = rgba
+	}
 }
 
 func (txt *Text) LineHeight(scale float64) {
@@ -111,11 +119,6 @@ func (txt *Text) Write(p []byte) (n int, err error) {
 		return
 	}
 
-	for i := range txt.glyph {
-		txt.glyph[i].Color = txt.color
-		txt.glyph[i].Intensity = 1
-	}
-
 	for len(p) > 0 {
 		r, size := utf8.DecodeRune(p)
 		p = p[size:]
@@ -128,11 +131,6 @@ func (txt *Text) Write(p []byte) (n int, err error) {
 func (txt *Text) WriteString(s string) (n int, err error) {
 	if len(s) == 0 {
 		return
-	}
-
-	for i := range txt.glyph {
-		txt.glyph[i].Color = txt.color
-		txt.glyph[i].Intensity = 1
 	}
 
 	for _, r := range s {
@@ -159,8 +157,12 @@ func (txt *Text) WriteRune(r rune) (n int, err error) {
 		txt.Dot = txt.Dot.WithX(txt.Orig.X())
 		return
 	case '\t':
-		//TODO: properly align tab
-		txt.Dot += pixel.X(txt.tabWidth)
+		rem := math.Mod(txt.Dot.X()-txt.Orig.X(), txt.tabWidth)
+		rem = math.Mod(rem, rem+txt.tabWidth)
+		if rem == 0 {
+			rem = txt.tabWidth
+		}
+		txt.Dot += pixel.X(rem)
 		return
 	}
 
