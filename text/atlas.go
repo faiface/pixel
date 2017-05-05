@@ -20,6 +20,8 @@ type Atlas struct {
 	pic        pixel.Picture
 	mapping    map[rune]Glyph
 	kern       map[struct{ r0, r1 rune }]float64
+	ascent     float64
+	descent    float64
 	lineHeight float64
 }
 
@@ -95,10 +97,12 @@ func NewAtlas(face font.Face, runes []rune) *Atlas {
 	}
 
 	return &Atlas{
-		pixel.PictureDataFromImage(atlasImg),
-		mapping,
-		kern,
-		float64(face.Metrics().Height) / (1 << 6),
+		pic:        pixel.PictureDataFromImage(atlasImg),
+		mapping:    mapping,
+		kern:       kern,
+		ascent:     float64(face.Metrics().Ascent) / (1 << 6),
+		descent:    float64(face.Metrics().Descent) / (1 << 6),
+		lineHeight: float64(face.Metrics().Height) / (1 << 6),
 	}
 }
 
@@ -117,6 +121,14 @@ func (a *Atlas) Glyph(r rune) Glyph {
 
 func (a *Atlas) Kern(r0, r1 rune) float64 {
 	return a.kern[struct{ r0, r1 rune }{r0, r1}]
+}
+
+func (a *Atlas) Ascent() float64 {
+	return a.ascent
+}
+
+func (a *Atlas) Descent() float64 {
+	return a.descent
 }
 
 func (a *Atlas) LineHeight() float64 {
