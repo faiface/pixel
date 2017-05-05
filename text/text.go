@@ -43,11 +43,16 @@ type Text struct {
 	lineHeight float64
 	tabWidth   float64
 
-	prevR rune
-	glyph pixel.TrianglesData
-	tris  pixel.TrianglesData
-	d     pixel.Drawer
-	trans *pixel.Batch
+	prevR  rune
+	bounds pixel.Rect
+	glyph  pixel.TrianglesData
+	tris   pixel.TrianglesData
+
+	mat    pixel.Matrix
+	col    pixel.RGBA
+	trans  pixel.TrianglesData
+	transD pixel.Drawer
+	dirty  bool
 }
 
 func New(face font.Face, runeSets ...[]rune) *Text {
@@ -62,6 +67,8 @@ func New(face font.Face, runeSets ...[]rune) *Text {
 		atlas:      atlas,
 		lineHeight: atlas.LineHeight(),
 		tabWidth:   atlas.Glyph(' ').Advance * 4,
+		mat:        pixel.IM,
+		col:        pixel.Alpha(1),
 	}
 
 	txt.glyph.SetLen(6)
@@ -70,9 +77,8 @@ func New(face font.Face, runeSets ...[]rune) *Text {
 		txt.glyph[i].Intensity = 1
 	}
 
-	txt.d.Picture = txt.atlas.pic
-	txt.d.Triangles = &txt.tris
-	txt.trans = pixel.NewBatch(&pixel.TrianglesData{}, atlas.pic)
+	txt.transD.Picture = txt.atlas.pic
+	txt.transD.Triangles = &txt.trans
 
 	txt.Clear()
 
@@ -84,11 +90,22 @@ func (txt *Text) Atlas() *Atlas {
 }
 
 func (txt *Text) SetMatrix(m pixel.Matrix) {
-	txt.trans.SetMatrix(m)
+	if txt.mat != m {
+		txt.mat = m
+		txt.dirty = true
+	}
 }
 
 func (txt *Text) SetColorMask(c color.Color) {
-	txt.trans.SetColorMask(c)
+	rgba := pixel.ToRGBA(c)
+	if txt.col != rgba {
+		txt.col = rgba
+		txt.dirty = true
+	}
+}
+
+func (txt *Text) Bounds() pixel.Rect {
+	return txt.bounds
 }
 
 func (txt *Text) Color(c color.Color) {
@@ -108,8 +125,9 @@ func (txt *Text) TabWidth(width float64) {
 
 func (txt *Text) Clear() {
 	txt.prevR = -1
+	txt.bounds = pixel.Rect{}
 	txt.tris.SetLen(0)
-	txt.d.Dirty()
+	txt.dirty = true
 }
 
 func (txt *Text) Write(p []byte) (n int, err error) {
@@ -141,6 +159,7 @@ func (txt *Text) WriteString(s string) (n int, err error) {
 }
 
 func (txt *Text) WriteByte(c byte) error {
+	//FIXME: this is not correct, what if I want to write a 4-byte rune byte by byte?
 	_, err := txt.WriteRune(rune(c))
 	return err
 }
@@ -179,6 +198,19 @@ func (txt *Text) WriteRune(r rune) (n int, err error) {
 		txt.Dot += pixel.X(txt.atlas.Kern(txt.prevR, r))
 	}
 
+	glyphBounds := glyph.Frame.Moved(txt.Dot - glyph.Orig)
+	if glyphBounds.H() > 0 {
+		glyphBounds = glyphBounds.Resized(txt.Dot, pixel.V(
+			glyphBounds.W(),
+			txt.atlas.Ascent()+txt.atlas.Descent(),
+		))
+	}
+	if txt.bounds.W()*txt.bounds.H() == 0 {
+		txt.bounds = glyphBounds
+	} else {
+		txt.bounds = txt.bounds.Union(glyphBounds)
+	}
+
 	a := pixel.V(glyph.Frame.Min.X(), glyph.Frame.Min.Y())
 	b := pixel.V(glyph.Frame.Max.X(), glyph.Frame.Min.Y())
 	c := pixel.V(glyph.Frame.Max.X(), glyph.Frame.Max.Y())
@@ -194,13 +226,21 @@ func (txt *Text) WriteRune(r rune) (n int, err error) {
 	txt.Dot += pixel.X(glyph.Advance)
 	txt.prevR = r
 
-	txt.d.Dirty()
+	txt.dirty = true
 
 	return
 }
 
 func (txt *Text) Draw(t pixel.Target) {
-	txt.trans.Clear()
-	txt.d.Draw(txt.trans)
-	txt.trans.Draw(t)
+	if txt.dirty {
+		txt.trans.SetLen(txt.tris.Len())
+		txt.trans.Update(&txt.tris)
+		for i := range txt.trans {
+			txt.trans[i].Position = txt.mat.Project(txt.trans[i].Position)
+			txt.trans[i].Color = txt.trans[i].Color.Mul(txt.col)
+		}
+		txt.transD.Dirty()
+		txt.dirty = false
+	}
+	txt.transD.Draw(t)
 }
