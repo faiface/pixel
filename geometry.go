@@ -272,6 +272,16 @@ func (r Rect) Contains(u Vec) bool {
 	return r.Min.X() <= u.X() && u.X() <= r.Max.X() && r.Min.Y() <= u.Y() && u.Y() <= r.Max.Y()
 }
 
+// Union returns a minimal Rect which covers both r and s. Rects r and s should be normalized.
+func (r Rect) Union(s Rect) Rect {
+	return R(
+		math.Min(r.Min.X(), s.Min.X()),
+		math.Min(r.Min.Y(), s.Min.Y()),
+		math.Max(r.Max.X(), s.Max.X()),
+		math.Max(r.Max.Y(), s.Max.Y()),
+	)
+}
+
 // Matrix is a 3x3 transformation matrix that can be used for all kinds of spacial transforms, such
 // as movement, scaling and rotations.
 //
