@@ -199,16 +199,18 @@ func (txt *Text) WriteRune(r rune) (n int, err error) {
 	}
 
 	glyphBounds := glyph.Frame.Moved(txt.Dot - glyph.Orig)
-	if glyphBounds.H() > 0 {
-		glyphBounds = glyphBounds.Resized(txt.Dot, pixel.V(
-			glyphBounds.W(),
-			txt.atlas.Ascent()+txt.atlas.Descent(),
-		))
-	}
-	if txt.bounds.W()*txt.bounds.H() == 0 {
-		txt.bounds = glyphBounds
-	} else {
-		txt.bounds = txt.bounds.Union(glyphBounds)
+	if glyphBounds.W()*glyphBounds.H() != 0 {
+		glyphBounds = pixel.R(
+			glyphBounds.Min.X(),
+			txt.Dot.Y()-txt.Atlas().Descent(),
+			glyphBounds.Max.X(),
+			txt.Dot.Y()+txt.Atlas().Ascent(),
+		)
+		if txt.bounds.W()*txt.bounds.H() == 0 {
+			txt.bounds = glyphBounds
+		} else {
+			txt.bounds = txt.bounds.Union(glyphBounds)
+		}
 	}
 
 	a := pixel.V(glyph.Frame.Min.X(), glyph.Frame.Min.Y())
