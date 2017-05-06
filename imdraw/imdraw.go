@@ -106,6 +106,7 @@ func (imd *IMDraw) Clear() {
 func (imd *IMDraw) Reset() {
 	imd.points = nil
 	imd.opts = point{}
+	imd.Color(pixel.Alpha(1))
 	imd.Precision(64)
 }
 
