@@ -143,8 +143,8 @@ func (txt *Text) Color(c color.Color) {
 	}
 }
 
-func (txt *Text) LineHeight(scale float64) {
-	txt.lineHeight = scale
+func (txt *Text) LineHeight(height float64) {
+	txt.lineHeight = height
 }
 
 func (txt *Text) TabWidth(width float64) {
