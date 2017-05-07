@@ -134,3 +134,37 @@ func (a *Atlas) Descent() float64 {
 func (a *Atlas) LineHeight() float64 {
 	return a.lineHeight
 }
+
+func (a *Atlas) DrawRune(prevR, r rune, dot pixel.Vec) (rect, frame, bounds pixel.Rect, newDot pixel.Vec) {
+	if !a.Contains(r) {
+		r = unicode.ReplacementChar
+	}
+	if !a.Contains(unicode.ReplacementChar) {
+		return pixel.Rect{}, pixel.Rect{}, pixel.Rect{}, dot
+	}
+	if !a.Contains(prevR) {
+		prevR = unicode.ReplacementChar
+	}
+
+	if prevR >= 0 {
+		dot += pixel.X(a.Kern(prevR, r))
+	}
+
+	glyph := a.Glyph(r)
+
+	rect = glyph.Frame.Moved(dot - glyph.Orig)
+	bounds = rect
+
+	if bounds.W()*bounds.H() != 0 {
+		bounds = pixel.R(
+			bounds.Min.X(),
+			dot.Y()-a.Descent(),
+			bounds.Max.X(),
+			dot.Y()+a.Ascent(),
+		)
+	}
+
+	dot += pixel.X(glyph.Advance)
+
+	return rect, glyph.Frame, bounds, dot
+}
