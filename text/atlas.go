@@ -11,7 +11,7 @@ import (
 )
 
 type Glyph struct {
-	Orig    pixel.Vec
+	Dot     pixel.Vec
 	Frame   pixel.Rect
 	Advance float64
 }
@@ -152,7 +152,7 @@ func (a *Atlas) DrawRune(prevR, r rune, dot pixel.Vec) (rect, frame, bounds pixe
 
 	glyph := a.Glyph(r)
 
-	rect = glyph.Frame.Moved(dot - glyph.Orig)
+	rect = glyph.Frame.Moved(dot - glyph.Dot)
 	bounds = rect
 
 	if bounds.W()*bounds.H() != 0 {
