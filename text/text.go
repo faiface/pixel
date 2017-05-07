@@ -115,6 +115,12 @@ func (txt *Text) BoundsOf(s string) pixel.Rect {
 	bounds := pixel.Rect{}
 
 	for _, r := range s {
+		var control bool
+		dot, control = txt.controlRune(r, dot)
+		if control {
+			continue
+		}
+
 		var b pixel.Rect
 		_, _, b, dot = txt.Atlas().DrawRune(prevR, r, dot)
 
@@ -178,26 +184,36 @@ func (txt *Text) WriteRune(r rune) (n int, err error) {
 	return n, nil
 }
 
+// controlRune checks if r is a control rune (newline, tab, ...). If it is, a new dot position and
+// true is returned. If r is not a control rune, the original dot and false is returned.
+func (txt *Text) controlRune(r rune, dot pixel.Vec) (newDot pixel.Vec, control bool) {
+	switch r {
+	case '\n':
+		dot -= pixel.Y(txt.lineHeight)
+		dot = dot.WithX(txt.Orig.X())
+	case '\r':
+		dot = dot.WithX(txt.Orig.X())
+	case '\t':
+		rem := math.Mod(dot.X()-txt.Orig.X(), txt.tabWidth)
+		rem = math.Mod(rem, rem+txt.tabWidth)
+		if rem == 0 {
+			rem = txt.tabWidth
+		}
+		dot += pixel.X(rem)
+	default:
+		return dot, false
+	}
+	return dot, true
+}
+
 func (txt *Text) drawBuf() {
 	for utf8.FullRune(txt.buf) {
 		r, size := utf8.DecodeRune(txt.buf)
 		txt.buf = txt.buf[size:]
 
-		switch r {
-		case '\n':
-			txt.Dot -= pixel.Y(txt.lineHeight)
-			txt.Dot = txt.Dot.WithX(txt.Orig.X())
-			continue
-		case '\r':
-			txt.Dot = txt.Dot.WithX(txt.Orig.X())
-			continue
-		case '\t':
-			rem := math.Mod(txt.Dot.X()-txt.Orig.X(), txt.tabWidth)
-			rem = math.Mod(rem, rem+txt.tabWidth)
-			if rem == 0 {
-				rem = txt.tabWidth
-			}
-			txt.Dot += pixel.X(rem)
+		var control bool
+		txt.Dot, control = txt.controlRune(r, txt.Dot)
+		if control {
 			continue
 		}
 
