@@ -254,12 +254,15 @@ func (txt *Text) Draw(t pixel.Target) {
 	if txt.dirty {
 		txt.trans.SetLen(txt.tris.Len())
 		txt.trans.Update(&txt.tris)
+
 		for i := range txt.trans {
 			txt.trans[i].Position = txt.mat.Project(txt.trans[i].Position)
 			txt.trans[i].Color = txt.trans[i].Color.Mul(txt.col)
 		}
+
 		txt.transD.Dirty()
 		txt.dirty = false
 	}
+
 	txt.transD.Draw(t)
 }
