@@ -109,6 +109,27 @@ func (txt *Text) Bounds() pixel.Rect {
 	return txt.bounds
 }
 
+func (txt *Text) BoundsOf(s string) pixel.Rect {
+	dot := txt.Dot
+	prevR := txt.prevR
+	bounds := pixel.Rect{}
+
+	for _, r := range s {
+		var b pixel.Rect
+		_, _, b, dot = txt.Atlas().DrawRune(prevR, r, dot)
+
+		if bounds.W()*bounds.H() == 0 {
+			bounds = b
+		} else {
+			bounds = bounds.Union(b)
+		}
+
+		prevR = r
+	}
+
+	return bounds
+}
+
 func (txt *Text) Color(c color.Color) {
 	rgba := pixel.ToRGBA(c)
 	for i := range txt.glyph {
