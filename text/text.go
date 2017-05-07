@@ -43,6 +43,7 @@ type Text struct {
 	lineHeight float64
 	tabWidth   float64
 
+	buf    []byte
 	prevR  rune
 	bounds pixel.Rect
 	glyph  pixel.TrianglesData
@@ -131,106 +132,85 @@ func (txt *Text) Clear() {
 }
 
 func (txt *Text) Write(p []byte) (n int, err error) {
-	n, err = len(p), nil // always returns this
-
-	if len(p) == 0 {
-		return
-	}
-
-	for len(p) > 0 {
-		r, size := utf8.DecodeRune(p)
-		p = p[size:]
-		txt.WriteRune(r)
-	}
-
-	return
+	txt.buf = append(txt.buf, p...)
+	txt.drawBuf()
+	return len(p), nil
 }
 
 func (txt *Text) WriteString(s string) (n int, err error) {
-	if len(s) == 0 {
-		return
-	}
-
-	for _, r := range s {
-		txt.WriteRune(r)
-	}
-
+	txt.buf = append(txt.buf, s...)
+	txt.drawBuf()
 	return len(s), nil
 }
 
 func (txt *Text) WriteByte(c byte) error {
-	//FIXME: this is not correct, what if I want to write a 4-byte rune byte by byte?
-	_, err := txt.WriteRune(rune(c))
-	return err
+	txt.buf = append(txt.buf, c)
+	txt.drawBuf()
+	return nil
 }
 
 func (txt *Text) WriteRune(r rune) (n int, err error) {
-	n, err = utf8.RuneLen(r), nil // always returns this
+	var b [4]byte
+	n = utf8.EncodeRune(b[:], r)
+	txt.buf = append(txt.buf, b[:n]...)
+	txt.drawBuf()
+	return n, nil
+}
 
-	switch r {
-	case '\n':
-		txt.Dot -= pixel.Y(txt.lineHeight)
-		txt.Dot = txt.Dot.WithX(txt.Orig.X())
-		return
-	case '\r':
-		txt.Dot = txt.Dot.WithX(txt.Orig.X())
-		return
-	case '\t':
-		rem := math.Mod(txt.Dot.X()-txt.Orig.X(), txt.tabWidth)
-		rem = math.Mod(rem, rem+txt.tabWidth)
-		if rem == 0 {
-			rem = txt.tabWidth
+func (txt *Text) drawBuf() {
+	for utf8.FullRune(txt.buf) {
+		r, size := utf8.DecodeRune(txt.buf)
+		txt.buf = txt.buf[size:]
+
+		switch r {
+		case '\n':
+			txt.Dot -= pixel.Y(txt.lineHeight)
+			txt.Dot = txt.Dot.WithX(txt.Orig.X())
+			continue
+		case '\r':
+			txt.Dot = txt.Dot.WithX(txt.Orig.X())
+			continue
+		case '\t':
+			rem := math.Mod(txt.Dot.X()-txt.Orig.X(), txt.tabWidth)
+			rem = math.Mod(rem, rem+txt.tabWidth)
+			if rem == 0 {
+				rem = txt.tabWidth
+			}
+			txt.Dot += pixel.X(rem)
+			continue
 		}
-		txt.Dot += pixel.X(rem)
-		return
-	}
 
-	if !txt.atlas.Contains(r) {
-		r = unicode.ReplacementChar
-	}
-	if !txt.atlas.Contains(unicode.ReplacementChar) {
-		return
-	}
+		var rect, frame, bounds pixel.Rect
+		rect, frame, bounds, txt.Dot = txt.Atlas().DrawRune(txt.prevR, r, txt.Dot)
 
-	glyph := txt.atlas.Glyph(r)
+		txt.prevR = r
 
-	if txt.prevR >= 0 {
-		txt.Dot += pixel.X(txt.atlas.Kern(txt.prevR, r))
-	}
+		rv := [...]pixel.Vec{pixel.V(rect.Min.X(), rect.Min.Y()),
+			pixel.V(rect.Max.X(), rect.Min.Y()),
+			pixel.V(rect.Max.X(), rect.Max.Y()),
+			pixel.V(rect.Min.X(), rect.Max.Y()),
+		}
 
-	glyphBounds := glyph.Frame.Moved(txt.Dot - glyph.Orig)
-	if glyphBounds.W()*glyphBounds.H() != 0 {
-		glyphBounds = pixel.R(
-			glyphBounds.Min.X(),
-			txt.Dot.Y()-txt.Atlas().Descent(),
-			glyphBounds.Max.X(),
-			txt.Dot.Y()+txt.Atlas().Ascent(),
-		)
+		fv := [...]pixel.Vec{pixel.V(frame.Min.X(), frame.Min.Y()),
+			pixel.V(frame.Max.X(), frame.Min.Y()),
+			pixel.V(frame.Max.X(), frame.Max.Y()),
+			pixel.V(frame.Min.X(), frame.Max.Y()),
+		}
+
+		for i, j := range [...]int{0, 1, 2, 0, 2, 3} {
+			txt.glyph[i].Position = rv[j]
+			txt.glyph[i].Picture = fv[j]
+		}
+
+		txt.tris = append(txt.tris, txt.glyph...)
+		txt.dirty = true
+
 		if txt.bounds.W()*txt.bounds.H() == 0 {
-			txt.bounds = glyphBounds
+			txt.bounds = bounds
 		} else {
-			txt.bounds = txt.bounds.Union(glyphBounds)
+			txt.bounds = txt.bounds.Union(bounds)
 		}
 	}
-
-	a := pixel.V(glyph.Frame.Min.X(), glyph.Frame.Min.Y())
-	b := pixel.V(glyph.Frame.Max.X(), glyph.Frame.Min.Y())
-	c := pixel.V(glyph.Frame.Max.X(), glyph.Frame.Max.Y())
-	d := pixel.V(glyph.Frame.Min.X(), glyph.Frame.Max.Y())
-
-	for i, v := range []pixel.Vec{a, b, c, a, c, d} {
-		txt.glyph[i].Position = v - glyph.Orig + txt.Dot
-		txt.glyph[i].Picture = v
-	}
-
-	txt.tris = append(txt.tris, txt.glyph...)
-
-	txt.Dot += pixel.X(glyph.Advance)
-	txt.prevR = r
-
-	txt.dirty = true
-
-	return
 }
 
 func (txt *Text) Draw(t pixel.Target) {
