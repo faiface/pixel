@@ -178,8 +178,8 @@ func PictureDataFromImage(img image.Image) *PictureData {
 	pd := MakePictureData(R(
 		float64(rgba.Bounds().Min.X),
 		float64(rgba.Bounds().Min.Y),
-		float64(rgba.Bounds().Dx()),
-		float64(rgba.Bounds().Dy()),
+		float64(rgba.Bounds().Max.X),
+		float64(rgba.Bounds().Max.Y),
 	))
 
 	for i := range pd.Pix {
