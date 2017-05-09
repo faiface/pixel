@@ -11,12 +11,14 @@ import (
 	"golang.org/x/image/math/fixed"
 )
 
+// Glyph describes one glyph in an Atlas.
 type Glyph struct {
 	Dot     pixel.Vec
 	Frame   pixel.Rect
 	Advance float64
 }
 
+// Atlas is a set of pre-drawn glyphs of a fixed set of runes. This allows for efficient text drawing.
 type Atlas struct {
 	face       font.Face
 	pic        pixel.Picture
@@ -26,6 +28,8 @@ type Atlas struct {
 	lineHeight float64
 }
 
+// NewAtlas creates a new Atlas containing glyphs of the given set of runes from the given font
+// face.
 func NewAtlas(face font.Face, runes []rune) *Atlas {
 	fixedMapping, fixedBounds := makeSquareMapping(face, runes, fixed.I(2))
 
@@ -75,35 +79,48 @@ func NewAtlas(face font.Face, runes []rune) *Atlas {
 	}
 }
 
+// Picture returns the underlying Picture containing an arrangement of all the glyphs contained
+// within the Atlas.
 func (a *Atlas) Picture() pixel.Picture {
 	return a.pic
 }
 
+// Contains reports wheter r in contained within the Atlas.
 func (a *Atlas) Contains(r rune) bool {
 	_, ok := a.mapping[r]
 	return ok
 }
 
+// Glyph returns the description of r within the Atlas.
 func (a *Atlas) Glyph(r rune) Glyph {
 	return a.mapping[r]
 }
 
+// Kern returns the kerning distance between runes r0 and r1. Positive distance means, that the
+// glyphs should be further apart.
 func (a *Atlas) Kern(r0, r1 rune) float64 {
 	return i2f(a.face.Kern(r0, r1))
 }
 
+// Ascent returns the distance from the top of the line to the baseline.
 func (a *Atlas) Ascent() float64 {
 	return a.ascent
 }
 
+// Descent returns the distance from the baseline to the bottom of the line.
 func (a *Atlas) Descent() float64 {
 	return a.descent
 }
 
+// LineHeight returns the recommended vertical distance between two lines of text.
 func (a *Atlas) LineHeight() float64 {
 	return a.lineHeight
 }
 
+// DrawRune returns parameters necessary for drawing a rune glyph.
+//
+// Rect is a rectangle where the glyph should be positioned. Frame is the glyph frame inside the
+// Atlas's Picture. NewDot is the new position of the dot.
 func (a *Atlas) DrawRune(prevR, r rune, dot pixel.Vec) (rect, frame, bounds pixel.Rect, newDot pixel.Vec) {
 	if !a.Contains(r) {
 		r = unicode.ReplacementChar
@@ -144,6 +161,8 @@ type fixedGlyph struct {
 	advance fixed.Int26_6
 }
 
+// makeSquareMapping finds an optimal glyph arrangement of the given runes, so that their common
+// bounding box is as square as possible.
 func makeSquareMapping(face font.Face, runes []rune, padding fixed.Int26_6) (map[rune]fixedGlyph, fixed.Rectangle26_6) {
 	width := sort.Search(int(fixed.I(1024*1024)), func(i int) bool {
 		width := fixed.Int26_6(i)
@@ -153,6 +172,9 @@ func makeSquareMapping(face font.Face, runes []rune, padding fixed.Int26_6) (map
 	return makeMapping(face, runes, padding, fixed.Int26_6(width))
 }
 
+// makeMapping arranges glyphs of the given runes into rows in such a way, that no glyph is located
+// fully to the right of the specified width. Specifically, it places glyphs in a row one by one and
+// once it reaches the specified width, it starts a new row.
 func makeMapping(face font.Face, runes []rune, padding, width fixed.Int26_6) (map[rune]fixedGlyph, fixed.Rectangle26_6) {
 	mapping := make(map[rune]fixedGlyph)
 	bounds := fixed.Rectangle26_6{}
