@@ -30,6 +30,8 @@ type Atlas struct {
 
 // NewAtlas creates a new Atlas containing glyphs of the given set of runes from the given font
 // face.
+//
+// Do not destroy or close the font.Face after creating the Atlas.
 func NewAtlas(face font.Face, runes []rune) *Atlas {
 	fixedMapping, fixedBounds := makeSquareMapping(face, runes, fixed.I(2))
 
