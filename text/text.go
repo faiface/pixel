@@ -37,7 +37,7 @@ func RangeTable(table *unicode.RangeTable) []rune {
 	return runes
 }
 
-// Text allows text drawing.
+// Text allows for effiecient and convenient text drawing.
 //
 // To create a Text object, use the New constructor:
 //   txt := text.New(face, text.ASCII)
