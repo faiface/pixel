@@ -187,6 +187,23 @@ func (txt *Text) WriteRune(r rune) (n int, err error) {
 	return n, nil
 }
 
+func (txt *Text) Draw(t pixel.Target) {
+	if txt.dirty {
+		txt.trans.SetLen(txt.tris.Len())
+		txt.trans.Update(&txt.tris)
+
+		for i := range txt.trans {
+			txt.trans[i].Position = txt.mat.Project(txt.trans[i].Position)
+			txt.trans[i].Color = txt.trans[i].Color.Mul(txt.col)
+		}
+
+		txt.transD.Dirty()
+		txt.dirty = false
+	}
+
+	txt.transD.Draw(t)
+}
+
 // controlRune checks if r is a control rune (newline, tab, ...). If it is, a new dot position and
 // true is returned. If r is not a control rune, the original dot and false is returned.
 func (txt *Text) controlRune(r rune, dot pixel.Vec) (newDot pixel.Vec, control bool) {
@@ -251,21 +268,4 @@ func (txt *Text) drawBuf() {
 			txt.bounds = txt.bounds.Union(bounds)
 		}
 	}
-}
-
-func (txt *Text) Draw(t pixel.Target) {
-	if txt.dirty {
-		txt.trans.SetLen(txt.tris.Len())
-		txt.trans.Update(&txt.tris)
-
-		for i := range txt.trans {
-			txt.trans[i].Position = txt.mat.Project(txt.trans[i].Position)
-			txt.trans[i].Color = txt.trans[i].Color.Mul(txt.col)
-		}
-
-		txt.transD.Dirty()
-		txt.dirty = false
-	}
-
-	txt.transD.Draw(t)
 }
