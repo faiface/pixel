@@ -18,9 +18,9 @@ type Glyph struct {
 }
 
 type Atlas struct {
+	face       font.Face
 	pic        pixel.Picture
 	mapping    map[rune]Glyph
-	kern       map[struct{ r0, r1 rune }]float64
 	ascent     float64
 	descent    float64
 	lineHeight float64
@@ -41,16 +41,12 @@ func NewAtlas(face font.Face, runes []rune) *Atlas {
 		draw.Draw(atlasImg, dr, mask, maskp, draw.Src)
 	}
 
-	bounds := pixel.Rect{}
-	for _, fg := range fixedMapping {
-		b := pixel.R(
-			i2f(fg.frame.Min.X),
-			i2f(fg.frame.Min.Y),
-			i2f(fg.frame.Max.X),
-			i2f(fg.frame.Max.Y),
-		)
-		bounds = bounds.Union(b)
-	}
+	bounds := pixel.R(
+		i2f(fixedBounds.Min.X),
+		i2f(fixedBounds.Min.Y),
+		i2f(fixedBounds.Max.X),
+		i2f(fixedBounds.Max.Y),
+	)
 
 	mapping := make(map[rune]Glyph)
 	for r, fg := range fixedMapping {
@@ -69,17 +65,10 @@ func NewAtlas(face font.Face, runes []rune) *Atlas {
 		}
 	}
 
-	kern := make(map[struct{ r0, r1 rune }]float64)
-	for _, r0 := range runes {
-		for _, r1 := range runes {
-			kern[struct{ r0, r1 rune }{r0, r1}] = i2f(face.Kern(r0, r1))
-		}
-	}
-
 	return &Atlas{
+		face:       face,
 		pic:        pixel.PictureDataFromImage(atlasImg),
 		mapping:    mapping,
-		kern:       kern,
 		ascent:     i2f(face.Metrics().Ascent),
 		descent:    i2f(face.Metrics().Descent),
 		lineHeight: i2f(face.Metrics().Height),
@@ -100,7 +89,7 @@ func (a *Atlas) Glyph(r rune) Glyph {
 }
 
 func (a *Atlas) Kern(r0, r1 rune) float64 {
-	return a.kern[struct{ r0, r1 rune }{r0, r1}]
+	return i2f(a.face.Kern(r0, r1))
 }
 
 func (a *Atlas) Ascent() float64 {
