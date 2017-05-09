@@ -44,7 +44,7 @@ func RangeTable(table *unicode.RangeTable) []rune {
 //
 // As suggested by the constructor, a Text object is always associated with one font face and a
 // fixed set of runes. For example, the Text we created above can draw text using the font face
-// contained in the `face` variable and is capable of drawing ASCII characters.
+// contained in the face variable and is capable of drawing ASCII characters.
 //
 // Here we create a Text object which can draw ASCII and Katakana characters:
 //   txt := text.New(face, text.ASCII, text.RangeTable(unicode.Katakana))
