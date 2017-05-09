@@ -96,7 +96,7 @@ func (a *Atlas) Glyph(r rune) Glyph {
 	return a.mapping[r]
 }
 
-// Kern returns the kerning distance between runes r0 and r1. Positive distance means, that the
+// Kern returns the kerning distance between runes r0 and r1. Positive distance means that the
 // glyphs should be further apart.
 func (a *Atlas) Kern(r0, r1 rune) float64 {
 	return i2f(a.face.Kern(r0, r1))
