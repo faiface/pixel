@@ -53,6 +53,8 @@ func RangeTable(table *unicode.RangeTable) []rune {
 // text to it is really simple:
 //   fmt.Print(txt, "Hello, world!")
 //
+// Newlines, tabs and carriage returns are supported.
+//
 // Finally, if we want the written text to show up on some other Target, we can draw it:
 //   txt.Draw(target)
 //
