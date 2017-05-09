@@ -206,11 +206,17 @@ func (txt *Text) Color(c color.Color) {
 
 // LineHeight sets the vertical distance between two lines of text. This does not affect any
 // previously written text.
+//
+// Example:
+//   txt.LineHeight(1.5 * txt.Atlas().LineHeight())
 func (txt *Text) LineHeight(height float64) {
 	txt.lineHeight = height
 }
 
 // TabWidth sets the horizontal tab width. Tab characters will align to the multiples of this width.
+//
+// Example:
+//   txt.TabWidth(8 * txt.Atlas().Glyph(' ').Advance)
 func (txt *Text) TabWidth(width float64) {
 	txt.tabWidth = width
 }
