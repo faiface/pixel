@@ -91,7 +91,8 @@ type Text struct {
 }
 
 // New creates a new Text capable of drawing runes contained in the provided rune sets, plus
-// unicode.ReplacementChar using the provided font.Face.
+// unicode.ReplacementChar using the provided font.Face. New automatically generates an Atlas for
+// the Text.
 //
 // Do not destroy or close the font.Face after creating a Text. Although Text caches most of the
 // stuff (pre-drawn glyphs, etc.), it still uses the face for a few things.
