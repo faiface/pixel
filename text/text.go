@@ -10,6 +10,7 @@ import (
 	"golang.org/x/image/font"
 )
 
+// ASCII is a set of all ASCII runes. These runes are codepoints from 32 to 127 inclusive.
 var ASCII []rune
 
 func init() {
@@ -19,6 +20,8 @@ func init() {
 	}
 }
 
+// RangeTable takes a *unicode.RangeTable and generates a set of runes contained within that
+// RangeTable.
 func RangeTable(table *unicode.RangeTable) []rune {
 	var runes []rune
 	for _, rng := range table.R16 {
