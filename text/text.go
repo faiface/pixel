@@ -7,7 +7,6 @@ import (
 	"unicode/utf8"
 
 	"github.com/faiface/pixel"
-	"golang.org/x/image/font"
 )
 
 // ASCII is a set of all ASCII runes. These runes are codepoints from 32 to 127 inclusive.
@@ -40,14 +39,14 @@ func RangeTable(table *unicode.RangeTable) []rune {
 // Text allows for effiecient and convenient text drawing.
 //
 // To create a Text object, use the New constructor:
-//   txt := text.New(face, text.ASCII)
+//   txt := text.New(pixel.V(0, 0), text.NewAtlas(face, text.ASCII))
 //
 // As suggested by the constructor, a Text object is always associated with one font face and a
 // fixed set of runes. For example, the Text we created above can draw text using the font face
 // contained in the face variable and is capable of drawing ASCII characters.
 //
 // Here we create a Text object which can draw ASCII and Katakana characters:
-//   txt := text.New(face, text.ASCII, text.RangeTable(unicode.Katakana))
+//   txt := text.New(0, text.NewAtlas(face, text.ASCII, text.RangeTable(unicode.Katakana)))
 //
 // Similarly to IMDraw, Text functions as a buffer. It implements io.Writer interface, so writing
 // text to it is really simple:
@@ -92,12 +91,8 @@ type Text struct {
 	dirty  bool
 }
 
-// New creates a new Text capable of drawing runes contained in the provided rune sets, plus
-// unicode.ReplacementChar using the provided font.Face. New automatically generates an Atlas for
-// the Text.
-//
-// Do not destroy or close the font.Face after creating a Text. Although Text caches most of the
-// stuff (pre-drawn glyphs, etc.), it still uses the face for a few things.
+// New creates a new Text capable of drawing runes contained in the provided Atlas. Orig and Dot
+// will be initially set to orig.
 //
 // Here we create a Text capable of drawing ASCII characters using the Go Regular font.
 //   ttf, err := truetype.Parse(goregular.TTF)
@@ -107,16 +102,11 @@ type Text struct {
 //   face := truetype.NewFace(ttf, &truetype.Options{
 //       Size: 14,
 //   })
-//   txt := text.New(face, text.ASCII)
-func New(face font.Face, runeSets ...[]rune) *Text {
-	runes := []rune{unicode.ReplacementChar}
-	for _, set := range runeSets {
-		runes = append(runes, set...)
-	}
-
-	atlas := NewAtlas(face, runes)
-
+//   txt := text.New(orig, text.NewAtlas(face, text.ASCII))
+func New(orig pixel.Vec, atlas *Atlas) *Text {
 	txt := &Text{
+		Orig:       orig,
+		Dot:        orig,
 		atlas:      atlas,
 		lineHeight: atlas.LineHeight(),
 		tabWidth:   atlas.Glyph(' ').Advance * 4,

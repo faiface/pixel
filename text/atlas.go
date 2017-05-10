@@ -28,11 +28,24 @@ type Atlas struct {
 	lineHeight float64
 }
 
-// NewAtlas creates a new Atlas containing glyphs of the given set of runes from the given font
-// face.
+// NewAtlas creates a new Atlas containing glyphs of the union of the given sets of runes (plus
+// unicode.ReplacementChar) from the given font face.
 //
-// Do not destroy or close the font.Face after creating the Atlas.
-func NewAtlas(face font.Face, runes []rune) *Atlas {
+// Creating an Atlas is rather expensive, do not create a new Atlas each frame.
+//
+// Do not destroy or close the font.Face after creating the Atlas. Atlas still uses it.
+func NewAtlas(face font.Face, runeSets ...[]rune) *Atlas {
+	seen := make(map[rune]bool)
+	runes := []rune{unicode.ReplacementChar}
+	for _, set := range runeSets {
+		for _, r := range set {
+			if !seen[r] {
+				runes = append(runes, r)
+				seen[r] = true
+			}
+		}
+	}
+
 	fixedMapping, fixedBounds := makeSquareMapping(face, runes, fixed.I(2))
 
 	atlasImg := image.NewRGBA(image.Rect(
