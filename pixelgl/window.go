@@ -65,7 +65,7 @@ type Window struct {
 		xpos, ypos, width, height int
 	}
 
-	prevInp, tempInp, currInp struct {
+	prevInp, currInp, tempInp struct {
 		mouse   pixel.Vec
 		buttons [KeyLast + 1]bool
 		scroll  pixel.Vec
