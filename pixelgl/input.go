@@ -31,6 +31,11 @@ func (w *Window) MouseScroll() pixel.Vec {
 	return w.currInp.scroll
 }
 
+// Typed returns the text typed on the keyboard since the last call to Window.Update.
+func (w *Window) Typed() string {
+	return w.currInp.typed
+}
+
 // Button is a keyboard or mouse button. Why distinguish?
 type Button int
 
@@ -350,15 +355,24 @@ func (w *Window) initInput() {
 		w.window.SetScrollCallback(func(_ *glfw.Window, xoff, yoff float64) {
 			w.currInp.scroll += pixel.V(xoff, yoff)
 		})
+
+		w.window.SetCharCallback(func(_ *glfw.Window, r rune) {
+			w.currInp.typed += string(r)
+		})
 	})
 }
 
 func (w *Window) updateInput() {
+	//FIXME: rething this, currInp can be changed outside this function, which may lead to inconsistencies
+
 	// copy temp to prev
 	w.prevInp = w.tempInp
 
 	// zero current scroll (but keep what was added in callbacks outside of this function)
 	w.currInp.scroll -= w.tempInp.scroll
+
+	// erase typed string
+	w.currInp.typed = ""
 
 	// get events (usually calls callbacks, but callbacks can be called outside too)
 	mainthread.Call(func() {
