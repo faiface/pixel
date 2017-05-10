@@ -327,9 +327,9 @@ func (w *Window) initInput() {
 		w.window.SetMouseButtonCallback(func(_ *glfw.Window, button glfw.MouseButton, action glfw.Action, mod glfw.ModifierKey) {
 			switch action {
 			case glfw.Press:
-				w.currInp.buttons[Button(button)] = true
+				w.tempInp.buttons[Button(button)] = true
 			case glfw.Release:
-				w.currInp.buttons[Button(button)] = false
+				w.tempInp.buttons[Button(button)] = false
 			}
 		})
 
@@ -339,47 +339,37 @@ func (w *Window) initInput() {
 			}
 			switch action {
 			case glfw.Press:
-				w.currInp.buttons[Button(key)] = true
+				w.tempInp.buttons[Button(key)] = true
 			case glfw.Release:
-				w.currInp.buttons[Button(key)] = false
+				w.tempInp.buttons[Button(key)] = false
 			}
 		})
 
 		w.window.SetCursorPosCallback(func(_ *glfw.Window, x, y float64) {
-			w.currInp.mouse = pixel.V(
+			w.tempInp.mouse = pixel.V(
 				x+w.bounds.Min.X(),
 				(w.bounds.H()-y)+w.bounds.Min.Y(),
 			)
 		})
 
 		w.window.SetScrollCallback(func(_ *glfw.Window, xoff, yoff float64) {
-			w.currInp.scroll += pixel.V(xoff, yoff)
+			w.tempInp.scroll += pixel.V(xoff, yoff)
 		})
 
 		w.window.SetCharCallback(func(_ *glfw.Window, r rune) {
-			w.currInp.typed += string(r)
+			w.tempInp.typed += string(r)
 		})
 	})
 }
 
 func (w *Window) updateInput() {
-	//FIXME: rething this, currInp can be changed outside this function, which may lead to inconsistencies
-
-	// copy temp to prev
-	w.prevInp = w.tempInp
-
-	// zero current scroll (but keep what was added in callbacks outside of this function)
-	w.currInp.scroll -= w.tempInp.scroll
-
-	// erase typed string
-	w.currInp.typed = ""
-
-	// get events (usually calls callbacks, but callbacks can be called outside too)
 	mainthread.Call(func() {
 		glfw.PollEvents()
 	})
 
-	// cache current state to temp (so that if there are callbacks outside this function,
-	// everything works)
-	w.tempInp = w.currInp
+	w.prevInp = w.currInp
+	w.currInp = w.tempInp
+
+	w.tempInp.scroll = 0
+	w.tempInp.typed = ""
 }
