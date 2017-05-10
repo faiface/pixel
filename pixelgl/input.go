@@ -21,6 +21,13 @@ func (w *Window) JustReleased(button Button) bool {
 	return !w.currInp.buttons[button] && w.prevInp.buttons[button]
 }
 
+// Repeated returns whether a repeat event has been triggered on button.
+//
+// Repeat event occurs repeatedly when a button is held down for some time.
+func (w *Window) Repeated(button Button) bool {
+	return w.currInp.repeat[button]
+}
+
 // MousePosition returns the current mouse position in the Window's Bounds.
 func (w *Window) MousePosition() pixel.Vec {
 	return w.currInp.mouse
@@ -342,6 +349,8 @@ func (w *Window) initInput() {
 				w.tempInp.buttons[Button(key)] = true
 			case glfw.Release:
 				w.tempInp.buttons[Button(key)] = false
+			case glfw.Repeat:
+				w.tempInp.repeat[Button(key)] = true
 			}
 		})
 
@@ -370,6 +379,7 @@ func (w *Window) updateInput() {
 	w.prevInp = w.currInp
 	w.currInp = w.tempInp
 
+	w.tempInp.repeat = [KeyLast + 1]bool{}
 	w.tempInp.scroll = 0
 	w.tempInp.typed = ""
 }
