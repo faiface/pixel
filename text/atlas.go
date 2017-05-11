@@ -1,6 +1,7 @@
 package text
 
 import (
+	"fmt"
 	"image"
 	"image/draw"
 	"sort"
@@ -197,15 +198,16 @@ func makeMapping(face font.Face, runes []rune, padding, width fixed.Int26_6) (ma
 	dot := fixed.P(0, 0)
 
 	for _, r := range runes {
-		// face.Glyph gives more useful results for drawing than face.GlyphBounds
-		dr, _, _, advance, ok := face.Glyph(fixed.P(0, 0), r)
+		b, advance, ok := face.GlyphBounds(r)
 		if !ok {
+			fmt.Println(r)
 			continue
 		}
 
+		// this is important for drawing, artifacts arise otherwise
 		frame := fixed.Rectangle26_6{
-			Min: fixed.P(dr.Min.X, dr.Min.Y),
-			Max: fixed.P(dr.Max.X, dr.Max.Y),
+			Min: fixed.P(b.Min.X.Floor(), b.Min.Y.Floor()),
+			Max: fixed.P(b.Max.X.Ceil(), b.Max.Y.Ceil()),
 		}
 
 		dot.X -= frame.Min.X
