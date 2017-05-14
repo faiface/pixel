@@ -243,10 +243,10 @@ func (r Rect) WithMax(max Vec) Rect {
 //   r.Resized(r.Max, size)      // same with the top-right corner
 //   r.Resized(r.Center(), size) // resizes around the center
 //
-// This function does not make sense for sizes of zero area and will panic. Use ResizedMin in the
-// case of zero area.
+// This function does not make sense for resizing a rectangle of zero area and will panic. Use
+// ResizedMin in the case of zero area.
 func (r Rect) Resized(anchor, size Vec) Rect {
-	if r.W()*r.H() == 0 || size.X()*size.Y() == 0 {
+	if r.W()*r.H() == 0 {
 		panic(fmt.Errorf("(%T).Resize: zero area", r))
 	}
 	fraction := V(size.X()/r.W(), size.Y()/r.H())
