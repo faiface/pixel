@@ -215,7 +215,7 @@ func (ga *gopherAnim) draw(t pixel.Target, phys *gopherPhys) {
 	}
 	// draw the correct frame with the correct position and direction
 	ga.sprite.Set(ga.sheet, ga.frame)
-	ga.sprite.SetMatrix(pixel.IM.
+	ga.sprite.Draw(t, pixel.IM.
 		ScaledXY(0, pixel.V(
 			phys.rect.W()/ga.sprite.Frame().W(),
 			phys.rect.H()/ga.sprite.Frame().H(),
@@ -223,7 +223,6 @@ func (ga *gopherAnim) draw(t pixel.Target, phys *gopherPhys) {
 		ScaledXY(0, pixel.V(-ga.dir, 1)).
 		Moved(phys.rect.Center()),
 	)
-	ga.sprite.Draw(t)
 }
 
 type goal struct {
@@ -385,7 +384,7 @@ func run() {
 				win.Bounds().H()/canvas.Bounds().H(),
 			),
 		).Moved(win.Bounds().Center()))
-		canvas.Draw(win)
+		canvas.Draw(win, pixel.IM.Moved(canvas.Bounds().Center()))
 		win.Update()
 	}
 }

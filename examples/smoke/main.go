@@ -54,13 +54,14 @@ func (p *particles) DrawAll(t pixel.Target) {
 	for e := p.parts.Front(); e != nil; e = e.Next() {
 		part := e.Value.(*particle)
 
-		part.Sprite.SetMatrix(pixel.IM.
-			Scaled(0, part.Scale).
-			Rotated(0, part.Rot).
-			Moved(part.Pos),
+		part.Sprite.DrawColorMask(
+			t,
+			pixel.IM.
+				Scaled(0, part.Scale).
+				Rotated(0, part.Rot).
+				Moved(part.Pos),
+			part.Mask,
 		)
-		part.Sprite.SetColorMask(part.Mask)
-		part.Sprite.Draw(t)
 	}
 }
 

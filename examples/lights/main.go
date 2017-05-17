@@ -27,10 +27,6 @@ func loadPicture(path string) (pixel.Picture, error) {
 	return pixel.PictureDataFromImage(img), nil
 }
 
-type drawer interface {
-	Draw(pixel.Target)
-}
-
 type colorlight struct {
 	color  pixel.RGBA
 	point  pixel.Vec
@@ -43,7 +39,7 @@ type colorlight struct {
 	imd *imdraw.IMDraw
 }
 
-func (cl *colorlight) apply(src, noise drawer, dst pixel.ComposeTarget) {
+func (cl *colorlight) apply(dst pixel.ComposeTarget, center pixel.Vec, src, noise *pixel.Sprite) {
 	// create the light arc if not created already
 	if cl.imd == nil {
 		imd := imdraw.New(nil)
@@ -66,12 +62,12 @@ func (cl *colorlight) apply(src, noise drawer, dst pixel.ComposeTarget) {
 	// draw the noise inside the light
 	dst.SetMatrix(pixel.IM)
 	dst.SetComposeMethod(pixel.ComposeIn)
-	noise.Draw(dst)
+	noise.Draw(dst, pixel.IM.Moved(center))
 
 	// draw an image inside the noisy light
 	dst.SetColorMask(cl.color)
 	dst.SetComposeMethod(pixel.ComposeIn)
-	src.Draw(dst)
+	src.Draw(dst, pixel.IM.Moved(center))
 
 	// draw the light reflected from the dust
 	dst.SetMatrix(pixel.IM.Scaled(0, cl.radius).Rotated(0, cl.angle).Moved(cl.point))
@@ -101,9 +97,7 @@ func run() {
 	}
 
 	panda := pixel.NewSprite(pandaPic, pandaPic.Bounds())
-	panda.SetMatrix(pixel.IM.Moved(win.Bounds().Center()))
 	noise := pixel.NewSprite(noisePic, noisePic.Bounds())
-	noise.SetMatrix(pixel.IM.Moved(win.Bounds().Center()))
 
 	colors := []pixel.RGBA{
 		pixel.RGB(1, 0, 0),
@@ -174,7 +168,7 @@ func run() {
 		// draw the panda visible outside the light
 		win.SetColorMask(pixel.Alpha(0.4))
 		win.SetComposeMethod(pixel.ComposePlus)
-		panda.Draw(win)
+		panda.Draw(win, pixel.IM.Moved(win.Bounds().Center()))
 
 		allLight.Clear(pixel.Alpha(0))
 		allLight.SetComposeMethod(pixel.ComposePlus)
@@ -182,13 +176,13 @@ func run() {
 		// accumulate all the lights
 		for i := range lights {
 			oneLight.Clear(pixel.Alpha(0))
-			lights[i].apply(panda, noise, oneLight)
-			oneLight.Draw(allLight)
+			lights[i].apply(oneLight, oneLight.Bounds().Center(), panda, noise)
+			oneLight.Draw(allLight, pixel.IM.Moved(allLight.Bounds().Center()))
 		}
 
 		// compose the final result
 		win.SetColorMask(pixel.Alpha(1))
-		allLight.Draw(win)
+		allLight.Draw(win, pixel.IM.Moved(win.Bounds().Center()))
 
 		win.Update()
 

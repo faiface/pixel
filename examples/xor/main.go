@@ -66,7 +66,7 @@ func run() {
 		imd.Draw(canvas)
 
 		win.Clear(colornames.Green)
-		canvas.Draw(win)
+		canvas.Draw(win, pixel.IM.Moved(win.Bounds().Center()))
 		win.Update()
 	}
 }
