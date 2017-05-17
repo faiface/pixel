@@ -57,43 +57,35 @@ func (s *Sprite) Frame() Rect {
 	return s.frame
 }
 
-// SetMatrix sets a Matrix that this Sprite will be transformed by. This overrides any previously
-// set Matrix.
+// Draw draws the Sprite onto the provided Target. The Sprite will be transformed by the given Matrix.
 //
-// Note, that this has nothing to do with BasicTarget's SetMatrix method. This only affects this
-// Sprite and is usable with any Target.
-func (s *Sprite) SetMatrix(matrix Matrix) {
-	if s.matrix != matrix {
+// This method is equivalent to calling DrawColorMask with nil color mask.
+func (s *Sprite) Draw(t Target, matrix Matrix) {
+	s.DrawColorMask(t, matrix, nil)
+}
+
+// DrawColorMask draw the Sprite onto the provided Target. The Sprite will be transformed by the
+// given Matrix and all of it's color will be multiplied by the given mask.
+//
+// If the mask is nil, a fully opaque white mask will be used, which causes no effect.
+func (s *Sprite) DrawColorMask(t Target, matrix Matrix, mask color.Color) {
+	dirty := false
+	if matrix != s.matrix {
 		s.matrix = matrix
-		s.calcData()
+		dirty = true
 	}
-}
-
-// Matrix returns the currently set Matrix.
-func (s *Sprite) Matrix() Matrix {
-	return s.matrix
-}
-
-// SetColorMask sets a color that this Sprite will be multiplied by. This overrides any previously
-// set color mask.
-//
-// Note, that this has nothing to do with BasicTarget's SetColorMask method. This only affects this
-// Sprite and is usable with any Target.
-func (s *Sprite) SetColorMask(mask color.Color) {
-	rgba := ToRGBA(mask)
-	if s.mask != rgba {
+	if mask == nil {
+		mask = Alpha(1)
+	}
+	if mask != s.mask {
 		s.mask = ToRGBA(mask)
+		dirty = true
+	}
+
+	if dirty {
 		s.calcData()
 	}
-}
 
-// ColorMask returns the currently set color mask.
-func (s *Sprite) ColorMask() RGBA {
-	return s.mask
-}
-
-// Draw draws the Sprite onto the provided Target.
-func (s *Sprite) Draw(t Target) {
 	s.d.Draw(t)
 }
 

@@ -123,7 +123,7 @@ func (c *Canvas) SetBounds(bounds pixel.Rect) {
 		c.sprite = pixel.NewSprite(nil, pixel.Rect{})
 	}
 	c.sprite.Set(c, c.Bounds())
-	c.sprite.SetMatrix(pixel.IM.Moved(c.Bounds().Center()))
+	//c.sprite.SetMatrix(pixel.IM.Moved(c.Bounds().Center()))
 }
 
 // Bounds returns the rectangular bounds of the Canvas.
@@ -245,12 +245,18 @@ func (c *Canvas) Pixels() []uint8 {
 	return pixels
 }
 
-// Draw draws a rectangle equal to Canvas's Bounds containing the Canvas's content to another
-// Target.
+// Draw draws the content of the Canvas onto another Target, transformed by the given Matrix, just
+// like if it was a Sprite containing the whole Canvas.
+func (c *Canvas) Draw(t pixel.Target, matrix pixel.Matrix) {
+	c.sprite.Draw(t, matrix)
+}
+
+// DrawColorMask draws the content of the Canvas onto another Target, transformed by the given
+// Matrix and multiplied by the given mask, just like if it was a Sprite containing the whole Canvas.
 //
-// Note, that the matrix and the color mask of this Canvas have no effect here.
-func (c *Canvas) Draw(t pixel.Target) {
-	c.sprite.Draw(t)
+// If the color mask is nil, a fully opaque white mask will be used causing no effect.
+func (c *Canvas) DrawColorMask(t pixel.Target, matrix pixel.Matrix, mask color.Color) {
+	c.sprite.DrawColorMask(t, matrix, mask)
 }
 
 type canvasTriangles struct {
