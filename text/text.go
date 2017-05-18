@@ -156,11 +156,6 @@ func (txt *Text) SetMatrix(m pixel.Matrix) {
 	}
 }
 
-// Matrix returns the current Text's matrix.
-func (txt *Text) Matrix() pixel.Matrix {
-	return txt.mat
-}
-
 // SetColorMask sets a color by which the text will be masked before drawingto another Target.
 func (txt *Text) SetColorMask(c color.Color) {
 	rgba := pixel.ToRGBA(c)
@@ -168,11 +163,6 @@ func (txt *Text) SetColorMask(c color.Color) {
 		txt.col = rgba
 		txt.dirty = true
 	}
-}
-
-// ColorMask returns the current Text's color mask.
-func (txt *Text) ColorMask() pixel.RGBA {
-	return txt.col
 }
 
 // Bounds returns the bounding box of the text currently written to the Text excluding whitespace.
