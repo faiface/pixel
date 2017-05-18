@@ -43,9 +43,9 @@ func (cl *colorlight) apply(dst pixel.ComposeTarget, center pixel.Vec, src, nois
 	// create the light arc if not created already
 	if cl.imd == nil {
 		imd := imdraw.New(nil)
-		imd.Color(pixel.Alpha(1))
+		imd.Color = pixel.Alpha(1)
 		imd.Push(0)
-		imd.Color(pixel.Alpha(0))
+		imd.Color = pixel.Alpha(0)
 		for angle := -cl.spread / 2; angle <= cl.spread/2; angle += cl.spread / 64 {
 			imd.Push(pixel.X(1).Rotated(angle))
 		}

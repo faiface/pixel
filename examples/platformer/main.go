@@ -86,7 +86,7 @@ type platform struct {
 }
 
 func (p *platform) draw(imd *imdraw.IMDraw) {
-	imd.Color(p.color)
+	imd.Color = p.color
 	imd.Push(p.rect.Min, p.rect.Max)
 	imd.Rectangle(0)
 }
@@ -247,7 +247,7 @@ func (g *goal) update(dt float64) {
 
 func (g *goal) draw(imd *imdraw.IMDraw) {
 	for i := len(g.cols) - 1; i >= 0; i-- {
-		imd.Color(g.cols[i])
+		imd.Color = g.cols[i]
 		imd.Push(g.pos)
 		imd.Circle(float64(i+1)*g.radius/float64(len(g.cols)), 0)
 	}
@@ -324,7 +324,7 @@ func run() {
 
 	canvas := pixelgl.NewCanvas(pixel.R(-160/2, -120/2, 160/2, 120/2))
 	imd := imdraw.New(sheet)
-	imd.Precision(32)
+	imd.Precision = 32
 
 	camPos := pixel.V(0, 0)
 
