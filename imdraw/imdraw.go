@@ -23,9 +23,9 @@ import (
 //
 //   imd.Line(20) // draws a 20 units thick line
 //
-// Use various methods to change properties of Pushed points:
+// Set exported fields to change properties of Pushed points:
 //
-//   imd.Color(pixel.RGB(1, 0, 0))
+//   imd.Color = pixel.RGB(1, 0, 0)
 //   imd.Push(pixel.V(200, 200))
 //   imd.Circle(400, 0)
 //
@@ -45,8 +45,13 @@ import (
 //   - Ellipse
 //   - Ellipse arc
 type IMDraw struct {
+	Color     color.Color
+	Picture   pixel.Vec
+	Intensity float64
+	Precision int
+	EndShape  EndShape
+
 	points []point
-	opts   point
 	matrix pixel.Matrix
 	mask   pixel.RGBA
 
@@ -105,9 +110,11 @@ func (imd *IMDraw) Clear() {
 // This does not affect matrix and color mask set by SetMatrix and SetColorMask.
 func (imd *IMDraw) Reset() {
 	imd.points = nil
-	imd.opts = point{}
-	imd.Color(pixel.Alpha(1))
-	imd.Precision(64)
+	imd.Color = pixel.Alpha(1)
+	imd.Picture = 0
+	imd.Intensity = 0
+	imd.Precision = 64
+	imd.EndShape = NoEndShape
 }
 
 // Draw draws all currently drawn shapes inside the IM onto another Target.
@@ -120,41 +127,22 @@ func (imd *IMDraw) Draw(t pixel.Target) {
 // Push adds some points to the IM queue. All Pushed points will have the same properties except for
 // the position.
 func (imd *IMDraw) Push(pts ...pixel.Vec) {
+	imd.Color = pixel.ToRGBA(imd.Color)
+	opts := point{
+		col:       imd.Color.(pixel.RGBA),
+		pic:       imd.Picture,
+		in:        imd.Intensity,
+		precision: imd.Precision,
+		endshape:  imd.EndShape,
+	}
 	for _, pt := range pts {
-		imd.pushPt(pt, imd.opts)
+		imd.pushPt(pt, opts)
 	}
 }
 
 func (imd *IMDraw) pushPt(pos pixel.Vec, pt point) {
 	pt.pos = pos
 	imd.points = append(imd.points, pt)
-}
-
-// Color sets the color of the next Pushed points.
-func (imd *IMDraw) Color(color color.Color) {
-	imd.opts.col = pixel.ToRGBA(color)
-}
-
-// Picture sets the Picture coordinates of the next Pushed points.
-func (imd *IMDraw) Picture(pic pixel.Vec) {
-	imd.opts.pic = pic
-}
-
-// Intensity sets the picture Intensity of the next Pushed points.
-func (imd *IMDraw) Intensity(in float64) {
-	imd.opts.in = in
-}
-
-// Precision sets the curve/circle drawing precision of the next Pushed points.
-//
-// It is the number of segments per 360 degrees.
-func (imd *IMDraw) Precision(p int) {
-	imd.opts.precision = p
-}
-
-// EndShape sets the endshape of the next Pushed points.
-func (imd *IMDraw) EndShape(es EndShape) {
-	imd.opts.endshape = es
 }
 
 // SetMatrix sets a Matrix that all further points will be transformed by.
