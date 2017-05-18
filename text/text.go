@@ -73,10 +73,23 @@ type Text struct {
 	// when writing to a Text object, but you can also manipulate it manually
 	Dot pixel.Vec
 
-	atlas *Atlas
+	// Color is the color of the text that is to be written. Defaults to white.
+	Color color.Color
 
-	lineHeight float64
-	tabWidth   float64
+	// LineHeight is the vertical distance between two lines of text.
+	//
+	// Example:
+	//   txt.LineHeight = 1.5 * txt.Atlas().LineHeight()
+	LineHeight float64
+
+	// TabWidth is the horizontal tab width. Tab characters will align to the multiples of this
+	// width.
+	//
+	// Example:
+	//   txt.TabWidth = 8 * txt.Atlas().Glyph(' ').Advance
+	TabWidth float64
+
+	atlas *Atlas
 
 	buf    []byte
 	prevR  rune
@@ -107,9 +120,10 @@ func New(orig pixel.Vec, atlas *Atlas) *Text {
 	txt := &Text{
 		Orig:       orig,
 		Dot:        orig,
+		Color:      pixel.Alpha(1),
+		LineHeight: atlas.LineHeight(),
+		TabWidth:   atlas.Glyph(' ').Advance * 4,
 		atlas:      atlas,
-		lineHeight: atlas.LineHeight(),
-		tabWidth:   atlas.Glyph(' ').Advance * 4,
 		mat:        pixel.IM,
 		col:        pixel.Alpha(1),
 	}
@@ -196,31 +210,6 @@ func (txt *Text) BoundsOf(s string) pixel.Rect {
 	return bounds
 }
 
-// Color sets the text color. This does not affect any previously written text.
-func (txt *Text) Color(c color.Color) {
-	rgba := pixel.ToRGBA(c)
-	for i := range txt.glyph {
-		txt.glyph[i].Color = rgba
-	}
-}
-
-// LineHeight sets the vertical distance between two lines of text. This does not affect any
-// previously written text.
-//
-// Example:
-//   txt.LineHeight(1.5 * txt.Atlas().LineHeight())
-func (txt *Text) LineHeight(height float64) {
-	txt.lineHeight = height
-}
-
-// TabWidth sets the horizontal tab width. Tab characters will align to the multiples of this width.
-//
-// Example:
-//   txt.TabWidth(8 * txt.Atlas().Glyph(' ').Advance)
-func (txt *Text) TabWidth(width float64) {
-	txt.tabWidth = width
-}
-
 // Clear removes all written text from the Text.
 func (txt *Text) Clear() {
 	txt.prevR = -1
@@ -285,15 +274,15 @@ func (txt *Text) Draw(t pixel.Target) {
 func (txt *Text) controlRune(r rune, dot pixel.Vec) (newDot pixel.Vec, control bool) {
 	switch r {
 	case '\n':
-		dot -= pixel.Y(txt.lineHeight)
+		dot -= pixel.Y(txt.LineHeight)
 		dot = dot.WithX(txt.Orig.X())
 	case '\r':
 		dot = dot.WithX(txt.Orig.X())
 	case '\t':
-		rem := math.Mod(dot.X()-txt.Orig.X(), txt.tabWidth)
-		rem = math.Mod(rem, rem+txt.tabWidth)
+		rem := math.Mod(dot.X()-txt.Orig.X(), txt.TabWidth)
+		rem = math.Mod(rem, rem+txt.TabWidth)
 		if rem == 0 {
-			rem = txt.tabWidth
+			rem = txt.TabWidth
 		}
 		dot += pixel.X(rem)
 	default:
@@ -303,6 +292,15 @@ func (txt *Text) controlRune(r rune, dot pixel.Vec) (newDot pixel.Vec, control b
 }
 
 func (txt *Text) drawBuf() {
+	if !utf8.FullRune(txt.buf) {
+		return
+	}
+
+	rgba := pixel.ToRGBA(txt.Color)
+	for i := range txt.glyph {
+		txt.glyph[i].Color = rgba
+	}
+
 	for utf8.FullRune(txt.buf) {
 		r, size := utf8.DecodeRune(txt.buf)
 		txt.buf = txt.buf[size:]
