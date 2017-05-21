@@ -45,7 +45,7 @@ func (td *TrianglesData) SetLen(len int) {
 				Color     RGBA
 				Picture   Vec
 				Intensity float64
-			}{V(0, 0), Alpha(1), V(0, 0), 0})
+			}{ZV, Alpha(1), ZV, 0})
 		}
 	}
 	if len < td.Len() {
@@ -136,8 +136,8 @@ type PictureData struct {
 
 // MakePictureData creates a zero-initialized PictureData covering the given rectangle.
 func MakePictureData(rect Rect) *PictureData {
-	w := int(math.Ceil(rect.Max.X())) - int(math.Floor(rect.Min.X()))
-	h := int(math.Ceil(rect.Max.Y())) - int(math.Floor(rect.Min.Y()))
+	w := int(math.Ceil(rect.Max.X)) - int(math.Floor(rect.Min.X))
+	h := int(math.Ceil(rect.Max.Y)) - int(math.Floor(rect.Min.Y))
 	pd := &PictureData{
 		Stride: w,
 		Rect:   rect,
@@ -205,12 +205,12 @@ func PictureDataFromPicture(pic Picture) *PictureData {
 	pd := MakePictureData(bounds)
 
 	if pic, ok := pic.(PictureColor); ok {
-		for y := math.Floor(bounds.Min.Y()); y < bounds.Max.Y(); y++ {
-			for x := math.Floor(bounds.Min.X()); x < bounds.Max.X(); x++ {
+		for y := math.Floor(bounds.Min.Y); y < bounds.Max.Y; y++ {
+			for x := math.Floor(bounds.Min.X); x < bounds.Max.X; x++ {
 				// this together with the Floor is a trick to get all of the pixels
 				at := V(
-					math.Max(x, bounds.Min.X()),
-					math.Max(y, bounds.Min.Y()),
+					math.Max(x, bounds.Min.X),
+					math.Max(y, bounds.Min.Y),
 				)
 				col := pic.Color(at)
 				pd.Pix[pd.Index(at)] = color.RGBA{
@@ -231,10 +231,10 @@ func PictureDataFromPicture(pic Picture) *PictureData {
 // The resulting image.RGBA's Bounds will be equivalent of the PictureData's Bounds.
 func (pd *PictureData) Image() *image.RGBA {
 	bounds := image.Rect(
-		int(math.Floor(pd.Rect.Min.X())),
-		int(math.Floor(pd.Rect.Min.Y())),
-		int(math.Ceil(pd.Rect.Max.X())),
-		int(math.Ceil(pd.Rect.Max.Y())),
+		int(math.Floor(pd.Rect.Min.X)),
+		int(math.Floor(pd.Rect.Min.Y)),
+		int(math.Ceil(pd.Rect.Max.X)),
+		int(math.Ceil(pd.Rect.Max.Y)),
 	)
 	rgba := image.NewRGBA(bounds)
 
@@ -257,8 +257,8 @@ func (pd *PictureData) Image() *image.RGBA {
 
 // Index returns the index of the pixel at the specified position inside the Pix slice.
 func (pd *PictureData) Index(at Vec) int {
-	at -= pd.Rect.Min.Map(math.Floor)
-	x, y := int(at.X()), int(at.Y())
+	at = at.Sub(pd.Rect.Min.Map(math.Floor))
+	x, y := int(at.X), int(at.Y)
 	return y*pd.Stride + x
 }
 

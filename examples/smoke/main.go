@@ -57,8 +57,8 @@ func (p *particles) DrawAll(t pixel.Target) {
 		part.Sprite.DrawColorMask(
 			t,
 			pixel.IM.
-				Scaled(0, part.Scale).
-				Rotated(0, part.Rot).
+				Scaled(pixel.ZV, part.Scale).
+				Rotated(pixel.ZV, part.Rot).
 				Moved(part.Pos),
 			part.Mask,
 		)
@@ -86,7 +86,7 @@ func (ss *smokeSystem) Generate() *particle {
 	sd := new(smokeData)
 	for _, base := range ss.VelBasis {
 		c := math.Max(0, 1+rand.NormFloat64()*ss.VelDist)
-		sd.Vel += base.Scaled(c)
+		sd.Vel = sd.Vel.Add(base.Scaled(c))
 	}
 	sd.Vel = sd.Vel.Scaled(1 / float64(len(ss.VelBasis)))
 	sd.Life = math.Max(0, ss.LifeAvg+rand.NormFloat64()*ss.LifeDist)
@@ -108,7 +108,7 @@ func (ss *smokeSystem) Update(dt float64, p *particle) bool {
 
 	frac := sd.Time / sd.Life
 
-	p.Pos += sd.Vel.Scaled(dt)
+	p.Pos = p.Pos.Add(sd.Vel.Scaled(dt))
 	p.Scale = 0.5 + frac*1.5
 
 	const (
@@ -188,7 +188,7 @@ func run() {
 
 	ss := &smokeSystem{
 		Rects:    rects,
-		Orig:     0,
+		Orig:     pixel.ZV,
 		VelBasis: []pixel.Vec{pixel.V(-100, 100), pixel.V(100, 100), pixel.V(0, 100)},
 		VelDist:  0.1,
 		LifeAvg:  7,
@@ -212,7 +212,10 @@ func run() {
 		p.UpdateAll(dt)
 
 		win.Clear(colornames.Aliceblue)
-		win.SetMatrix(pixel.IM.Moved(win.Bounds().Center() - pixel.Y(win.Bounds().H()/2)))
+
+		orig := win.Bounds().Center()
+		orig.Y -= win.Bounds().H() / 2
+		win.SetMatrix(pixel.IM.Moved(orig))
 
 		batch.Clear()
 		p.DrawAll(batch)

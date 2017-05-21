@@ -42,8 +42,8 @@ func NewGLPicture(p pixel.Picture) GLPicture {
 		for y := 0; y < bh; y++ {
 			for x := 0; x < bw; x++ {
 				at := pixel.V(
-					math.Max(float64(bx+x), bounds.Min.X()),
-					math.Max(float64(by+y), bounds.Min.Y()),
+					math.Max(float64(bx+x), bounds.Min.X),
+					math.Max(float64(by+y), bounds.Min.Y),
 				)
 				color := p.Color(at)
 				off := (y*bw + x) * 4
@@ -87,7 +87,7 @@ func (gp *glPicture) Color(at pixel.Vec) pixel.RGBA {
 		return pixel.Alpha(0)
 	}
 	bx, by, bw, _ := intBounds(gp.bounds)
-	x, y := int(at.X())-bx, int(at.Y())-by
+	x, y := int(at.X)-bx, int(at.Y)-by
 	off := y*bw + x
 	return pixel.RGBA{
 		R: float64(gp.pixels[off*4+0]) / 255,

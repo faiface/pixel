@@ -73,13 +73,13 @@ func NewAtlas(face font.Face, runeSets ...[]rune) *Atlas {
 		mapping[r] = Glyph{
 			Dot: pixel.V(
 				i2f(fg.dot.X),
-				bounds.Max.Y()-(i2f(fg.dot.Y)-bounds.Min.Y()),
+				bounds.Max.Y-(i2f(fg.dot.Y)-bounds.Min.Y),
 			),
 			Frame: pixel.R(
 				i2f(fg.frame.Min.X),
-				bounds.Max.Y()-(i2f(fg.frame.Min.Y)-bounds.Min.Y()),
+				bounds.Max.Y-(i2f(fg.frame.Min.Y)-bounds.Min.Y),
 				i2f(fg.frame.Max.X),
-				bounds.Max.Y()-(i2f(fg.frame.Max.Y)-bounds.Min.Y()),
+				bounds.Max.Y-(i2f(fg.frame.Max.Y)-bounds.Min.Y),
 			).Norm(),
 			Advance: i2f(fg.advance),
 		}
@@ -149,24 +149,24 @@ func (a *Atlas) DrawRune(prevR, r rune, dot pixel.Vec) (rect, frame, bounds pixe
 	}
 
 	if prevR >= 0 {
-		dot += pixel.X(a.Kern(prevR, r))
+		dot.X += a.Kern(prevR, r)
 	}
 
 	glyph := a.Glyph(r)
 
-	rect = glyph.Frame.Moved(dot - glyph.Dot)
+	rect = glyph.Frame.Moved(dot.Sub(glyph.Dot))
 	bounds = rect
 
 	if bounds.W()*bounds.H() != 0 {
 		bounds = pixel.R(
-			bounds.Min.X(),
-			dot.Y()-a.Descent(),
-			bounds.Max.X(),
-			dot.Y()+a.Ascent(),
+			bounds.Min.X,
+			dot.Y-a.Descent(),
+			bounds.Max.X,
+			dot.Y+a.Ascent(),
 		)
 	}
 
-	dot += pixel.X(glyph.Advance)
+	dot.X += glyph.Advance
 
 	return rect, glyph.Frame, bounds, dot
 }

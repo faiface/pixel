@@ -42,7 +42,7 @@ func loadAnimationSheet(sheetPath, descPath string, frameWidth float64) (sheet p
 
 	// create a slice of frames inside the spritesheet
 	var frames []pixel.Rect
-	for x := 0.0; x+frameWidth <= sheet.Bounds().Max.X(); x += frameWidth {
+	for x := 0.0; x+frameWidth <= sheet.Bounds().Max.X; x += frameWidth {
 		frames = append(frames, pixel.R(
 			x,
 			0,
@@ -104,37 +104,37 @@ type gopherPhys struct {
 func (gp *gopherPhys) update(dt float64, ctrl pixel.Vec, platforms []platform) {
 	// apply controls
 	switch {
-	case ctrl.X() < 0:
-		gp.vel = gp.vel.WithX(-gp.runSpeed)
-	case ctrl.X() > 0:
-		gp.vel = gp.vel.WithX(+gp.runSpeed)
+	case ctrl.X < 0:
+		gp.vel.X = -gp.runSpeed
+	case ctrl.X > 0:
+		gp.vel.X = +gp.runSpeed
 	default:
-		gp.vel = gp.vel.WithX(0)
+		gp.vel.X = 0
 	}
 
 	// apply gravity and velocity
-	gp.vel += pixel.Y(gp.gravity).Scaled(dt)
+	gp.vel.Y += gp.gravity * dt
 	gp.rect = gp.rect.Moved(gp.vel.Scaled(dt))
 
 	// check collisions against each platform
 	gp.ground = false
-	if gp.vel.Y() <= 0 {
+	if gp.vel.Y <= 0 {
 		for _, p := range platforms {
-			if gp.rect.Max.X() <= p.rect.Min.X() || gp.rect.Min.X() >= p.rect.Max.X() {
+			if gp.rect.Max.X <= p.rect.Min.X || gp.rect.Min.X >= p.rect.Max.X {
 				continue
 			}
-			if gp.rect.Min.Y() > p.rect.Max.Y() || gp.rect.Min.Y() < p.rect.Max.Y()+gp.vel.Y()*dt {
+			if gp.rect.Min.Y > p.rect.Max.Y || gp.rect.Min.Y < p.rect.Max.Y+gp.vel.Y*dt {
 				continue
 			}
-			gp.vel = gp.vel.WithY(0)
-			gp.rect = gp.rect.Moved(pixel.Y(p.rect.Max.Y() - gp.rect.Min.Y()))
+			gp.vel.Y = 0
+			gp.rect = gp.rect.Moved(pixel.V(0, p.rect.Max.Y-gp.rect.Min.Y))
 			gp.ground = true
 		}
 	}
 
 	// jump if on the ground and the player wants to jump
-	if gp.ground && ctrl.Y() > 0 {
-		gp.vel = gp.vel.WithY(gp.jumpSpeed)
+	if gp.ground && ctrl.Y > 0 {
+		gp.vel.Y = gp.jumpSpeed
 	}
 }
 
@@ -188,7 +188,7 @@ func (ga *gopherAnim) update(dt float64, phys *gopherPhys) {
 		i := int(math.Floor(ga.counter / ga.rate))
 		ga.frame = ga.anims["Run"][i%len(ga.anims["Run"])]
 	case jumping:
-		speed := phys.vel.Y()
+		speed := phys.vel.Y
 		i := int((-speed/phys.jumpSpeed + 1) / 2 * float64(len(ga.anims["Jump"])))
 		if i < 0 {
 			i = 0
@@ -200,8 +200,8 @@ func (ga *gopherAnim) update(dt float64, phys *gopherPhys) {
 	}
 
 	// set the facing direction of the gopher
-	if phys.vel.X() != 0 {
-		if phys.vel.X() > 0 {
+	if phys.vel.X != 0 {
+		if phys.vel.X > 0 {
 			ga.dir = +1
 		} else {
 			ga.dir = -1
@@ -216,11 +216,11 @@ func (ga *gopherAnim) draw(t pixel.Target, phys *gopherPhys) {
 	// draw the correct frame with the correct position and direction
 	ga.sprite.Set(ga.sheet, ga.frame)
 	ga.sprite.Draw(t, pixel.IM.
-		ScaledXY(0, pixel.V(
+		ScaledXY(pixel.ZV, pixel.V(
 			phys.rect.W()/ga.sprite.Frame().W(),
 			phys.rect.H()/ga.sprite.Frame().H(),
 		)).
-		ScaledXY(0, pixel.V(-ga.dir, 1)).
+		ScaledXY(pixel.ZV, pixel.V(-ga.dir, 1)).
 		Moved(phys.rect.Center()),
 	)
 }
@@ -326,7 +326,7 @@ func run() {
 	imd := imdraw.New(sheet)
 	imd.Precision = 32
 
-	camPos := pixel.V(0, 0)
+	camPos := pixel.ZV
 
 	last := time.Now()
 	for !win.Closed() {
@@ -335,7 +335,7 @@ func run() {
 
 		// lerp the camera position towards the gopher
 		camPos = pixel.Lerp(camPos, phys.rect.Center(), 1-math.Pow(1.0/128, dt))
-		cam := pixel.IM.Moved(-camPos)
+		cam := pixel.IM.Moved(camPos.Scaled(-1))
 		canvas.SetMatrix(cam)
 
 		// slow motion with tab
@@ -345,20 +345,20 @@ func run() {
 
 		// restart the level on pressing enter
 		if win.JustPressed(pixelgl.KeyEnter) {
-			phys.rect = phys.rect.Moved(-phys.rect.Center())
-			phys.vel = 0
+			phys.rect = phys.rect.Moved(phys.rect.Center().Scaled(-1))
+			phys.vel = pixel.ZV
 		}
 
 		// control the gopher with keys
-		ctrl := pixel.V(0, 0)
+		ctrl := pixel.ZV
 		if win.Pressed(pixelgl.KeyLeft) {
-			ctrl -= pixel.X(1)
+			ctrl.X--
 		}
 		if win.Pressed(pixelgl.KeyRight) {
-			ctrl += pixel.X(1)
+			ctrl.X++
 		}
 		if win.JustPressed(pixelgl.KeyUp) {
-			ctrl = ctrl.WithY(1)
+			ctrl.Y = 1
 		}
 
 		// update the physics and animation
@@ -378,7 +378,7 @@ func run() {
 
 		// stretch the canvas to the window
 		win.Clear(colornames.White)
-		win.SetMatrix(pixel.IM.Scaled(0,
+		win.SetMatrix(pixel.IM.Scaled(pixel.ZV,
 			math.Min(
 				win.Bounds().W()/canvas.Bounds().W(),
 				win.Bounds().H()/canvas.Bounds().H(),

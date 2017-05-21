@@ -40,28 +40,28 @@ func run() {
 		// red circle
 		imd.Clear()
 		imd.Color = pixel.RGB(1, 0, 0)
-		imd.Push(win.Bounds().Center() - pixel.X(offset))
+		imd.Push(win.Bounds().Center().Add(pixel.V(-offset, 0)))
 		imd.Circle(200, 0)
 		imd.Draw(canvas)
 
 		// blue circle
 		imd.Clear()
 		imd.Color = pixel.RGB(0, 0, 1)
-		imd.Push(win.Bounds().Center() + pixel.X(offset))
+		imd.Push(win.Bounds().Center().Add(pixel.V(offset, 0)))
 		imd.Circle(150, 0)
 		imd.Draw(canvas)
 
 		// yellow circle
 		imd.Clear()
 		imd.Color = pixel.RGB(1, 1, 0)
-		imd.Push(win.Bounds().Center() - pixel.Y(offset))
+		imd.Push(win.Bounds().Center().Add(pixel.V(0, -offset)))
 		imd.Circle(100, 0)
 		imd.Draw(canvas)
 
 		// magenta circle
 		imd.Clear()
-		imd.Color=pixel.RGB(1, 0, 1)
-		imd.Push(win.Bounds().Center() + pixel.Y(offset))
+		imd.Color = pixel.RGB(1, 0, 1)
+		imd.Push(win.Bounds().Center().Add(pixel.V(0, offset)))
 		imd.Circle(50, 0)
 		imd.Draw(canvas)
 

@@ -44,17 +44,17 @@ func (cl *colorlight) apply(dst pixel.ComposeTarget, center pixel.Vec, src, nois
 	if cl.imd == nil {
 		imd := imdraw.New(nil)
 		imd.Color = pixel.Alpha(1)
-		imd.Push(0)
+		imd.Push(pixel.ZV)
 		imd.Color = pixel.Alpha(0)
 		for angle := -cl.spread / 2; angle <= cl.spread/2; angle += cl.spread / 64 {
-			imd.Push(pixel.X(1).Rotated(angle))
+			imd.Push(pixel.V(1, 0).Rotated(angle))
 		}
 		imd.Polygon(0)
 		cl.imd = imd
 	}
 
 	// draw the light arc
-	dst.SetMatrix(pixel.IM.Scaled(0, cl.radius).Rotated(0, cl.angle).Moved(cl.point))
+	dst.SetMatrix(pixel.IM.Scaled(pixel.ZV, cl.radius).Rotated(pixel.ZV, cl.angle).Moved(cl.point))
 	dst.SetColorMask(pixel.Alpha(1))
 	dst.SetComposeMethod(pixel.ComposePlus)
 	cl.imd.Draw(dst)
@@ -70,7 +70,7 @@ func (cl *colorlight) apply(dst pixel.ComposeTarget, center pixel.Vec, src, nois
 	src.Draw(dst, pixel.IM.Moved(center))
 
 	// draw the light reflected from the dust
-	dst.SetMatrix(pixel.IM.Scaled(0, cl.radius).Rotated(0, cl.angle).Moved(cl.point))
+	dst.SetMatrix(pixel.IM.Scaled(pixel.ZV, cl.radius).Rotated(pixel.ZV, cl.angle).Moved(cl.point))
 	dst.SetColorMask(cl.color.Mul(pixel.Alpha(cl.dust)))
 	dst.SetComposeMethod(pixel.ComposePlus)
 	cl.imd.Draw(dst)
@@ -107,10 +107,10 @@ func run() {
 	}
 
 	points := []pixel.Vec{
-		pixel.V(win.Bounds().Min.X(), win.Bounds().Min.Y()),
-		pixel.V(win.Bounds().Max.X(), win.Bounds().Min.Y()),
-		pixel.V(win.Bounds().Max.X(), win.Bounds().Max.Y()),
-		pixel.V(win.Bounds().Min.X(), win.Bounds().Max.Y()),
+		{X: win.Bounds().Min.X, Y: win.Bounds().Min.Y},
+		{X: win.Bounds().Max.X, Y: win.Bounds().Min.Y},
+		{X: win.Bounds().Max.X, Y: win.Bounds().Max.Y},
+		{X: win.Bounds().Min.X, Y: win.Bounds().Max.Y},
 	}
 
 	angles := []float64{

@@ -53,7 +53,7 @@ func run() {
 	}
 
 	var (
-		camPos       = pixel.V(0, 0)
+		camPos       = pixel.ZV
 		camSpeed     = 500.0
 		camZoom      = 1.0
 		camZoomSpeed = 1.2
