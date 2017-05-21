@@ -75,7 +75,7 @@ func (c RGBA) RGBA() (r, g, b, a uint32) {
 }
 
 // ToRGBA converts a color to RGBA format. Using this function is preferred to using RGBAModel, for
-// performance (using RGBAModel introduced additional unnecessary allocations).
+// performance (using RGBAModel introduces additional unnecessary allocations).
 func ToRGBA(c color.Color) RGBA {
 	if c, ok := c.(RGBA); ok {
 		return c
