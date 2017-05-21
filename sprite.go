@@ -61,7 +61,7 @@ func (s *Sprite) Draw(t Target, matrix Matrix) {
 	s.DrawColorMask(t, matrix, nil)
 }
 
-// DrawColorMask draw the Sprite onto the provided Target. The Sprite will be transformed by the
+// DrawColorMask draws the Sprite onto the provided Target. The Sprite will be transformed by the
 // given Matrix and all of it's color will be multiplied by the given mask.
 //
 // If the mask is nil, a fully opaque white mask will be used, which causes no effect.
@@ -74,8 +74,9 @@ func (s *Sprite) DrawColorMask(t Target, matrix Matrix, mask color.Color) {
 	if mask == nil {
 		mask = Alpha(1)
 	}
-	if mask != s.mask {
-		s.mask = ToRGBA(mask)
+	rgba := ToRGBA(mask)
+	if rgba != s.mask {
+		s.mask = rgba
 		dirty = true
 	}
 
