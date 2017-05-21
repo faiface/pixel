@@ -9,9 +9,6 @@ import "image/color"
 //
 //   sprite := pixel.NewSprite(pic, pic.Bounds())
 //
-// To achieve different anchoring, transformations and color masking, use SetMatrix and SetColorMask
-// methods.
-//
 // Note, that Sprite caches the results of MakePicture from Targets it's drawn to for each Picture
 // it's set to. What it means is that using a Sprite with an unbounded number of Pictures leads to a
 // memory leak, since Sprite caches them and never forgets. In such a situation, create a new Sprite
