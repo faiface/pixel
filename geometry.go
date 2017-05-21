@@ -145,6 +145,8 @@ type Rect struct {
 }
 
 // R returns a new Rect with given the Min and Max coordinates.
+//
+// Note that the returned rectangle is not automatically normalized.
 func R(minX, minY, maxX, maxY float64) Rect {
 	return Rect{
 		Min: V(minX, minY),
