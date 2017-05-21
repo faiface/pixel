@@ -285,8 +285,8 @@ func (ct *canvasTriangles) draw(tex *glhf.Texture, bounds pixel.Rect) {
 
 		dstBounds := ct.dst.Bounds()
 		shader.SetUniformAttr(canvasBounds, mgl32.Vec4{
-			float32(dstBounds.Min.X()),
-			float32(dstBounds.Min.Y()),
+			float32(dstBounds.Min.X),
+			float32(dstBounds.Min.Y),
 			float32(dstBounds.W()),
 			float32(dstBounds.H()),
 		})

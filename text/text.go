@@ -39,7 +39,7 @@ func RangeTable(table *unicode.RangeTable) []rune {
 // Text allows for effiecient and convenient text drawing.
 //
 // To create a Text object, use the New constructor:
-//   txt := text.New(pixel.V(0, 0), text.NewAtlas(face, text.ASCII))
+//   txt := text.New(pixel.ZV, text.NewAtlas(face, text.ASCII))
 //
 // As suggested by the constructor, a Text object is always associated with one font face and a
 // fixed set of runes. For example, the Text we created above can draw text using the font face
@@ -274,17 +274,17 @@ func (txt *Text) DrawColorMask(t pixel.Target, matrix pixel.Matrix, mask color.C
 func (txt *Text) controlRune(r rune, dot pixel.Vec) (newDot pixel.Vec, control bool) {
 	switch r {
 	case '\n':
-		dot -= pixel.Y(txt.LineHeight)
-		dot = dot.WithX(txt.Orig.X())
+		dot.X = txt.Orig.X
+		dot.Y -= txt.LineHeight
 	case '\r':
-		dot = dot.WithX(txt.Orig.X())
+		dot.X = txt.Orig.X
 	case '\t':
-		rem := math.Mod(dot.X()-txt.Orig.X(), txt.TabWidth)
+		rem := math.Mod(dot.X-txt.Orig.X, txt.TabWidth)
 		rem = math.Mod(rem, rem+txt.TabWidth)
 		if rem == 0 {
 			rem = txt.TabWidth
 		}
-		dot += pixel.X(rem)
+		dot.X += rem
 	default:
 		return dot, false
 	}
@@ -316,16 +316,18 @@ func (txt *Text) drawBuf() {
 
 		txt.prevR = r
 
-		rv := [...]pixel.Vec{pixel.V(rect.Min.X(), rect.Min.Y()),
-			pixel.V(rect.Max.X(), rect.Min.Y()),
-			pixel.V(rect.Max.X(), rect.Max.Y()),
-			pixel.V(rect.Min.X(), rect.Max.Y()),
+		rv := [...]pixel.Vec{
+			{X: rect.Min.X, Y: rect.Min.Y},
+			{X: rect.Max.X, Y: rect.Min.Y},
+			{X: rect.Max.X, Y: rect.Max.Y},
+			{X: rect.Min.X, Y: rect.Max.Y},
 		}
 
-		fv := [...]pixel.Vec{pixel.V(frame.Min.X(), frame.Min.Y()),
-			pixel.V(frame.Max.X(), frame.Min.Y()),
-			pixel.V(frame.Max.X(), frame.Max.Y()),
-			pixel.V(frame.Min.X(), frame.Max.Y()),
+		fv := [...]pixel.Vec{
+			{X: frame.Min.X, Y: frame.Min.Y},
+			{X: frame.Max.X, Y: frame.Min.Y},
+			{X: frame.Max.X, Y: frame.Max.Y},
+			{X: frame.Min.X, Y: frame.Max.Y},
 		}
 
 		for i, j := range [...]int{0, 1, 2, 0, 2, 3} {

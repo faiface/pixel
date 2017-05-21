@@ -160,10 +160,10 @@ func (w *Window) Update() {
 	mainthread.Call(func() {
 		_, _, oldW, oldH := intBounds(w.bounds)
 		newW, newH := w.window.GetSize()
-		w.bounds = w.bounds.ResizedMin(w.bounds.Size() + pixel.V(
+		w.bounds = w.bounds.ResizedMin(w.bounds.Size().Add(pixel.V(
 			float64(newW-oldW),
 			float64(newH-oldH),
-		))
+		)))
 	})
 
 	w.canvas.SetBounds(w.bounds)

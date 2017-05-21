@@ -135,8 +135,8 @@ func (gt *GLTriangles) updateData(t pixel.Triangles) {
 	if t, ok := t.(pixel.TrianglesPicture); ok {
 		for i := 0; i < gt.Len(); i++ {
 			pic, intensity := t.Picture(i)
-			gt.data[i*gt.vs.Stride()+6] = float32(pic.X())
-			gt.data[i*gt.vs.Stride()+7] = float32(pic.Y())
+			gt.data[i*gt.vs.Stride()+6] = float32(pic.X)
+			gt.data[i*gt.vs.Stride()+7] = float32(pic.Y)
 			gt.data[i*gt.vs.Stride()+8] = float32(intensity)
 		}
 	}

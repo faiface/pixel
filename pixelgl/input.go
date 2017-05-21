@@ -356,13 +356,14 @@ func (w *Window) initInput() {
 
 		w.window.SetCursorPosCallback(func(_ *glfw.Window, x, y float64) {
 			w.tempInp.mouse = pixel.V(
-				x+w.bounds.Min.X(),
-				(w.bounds.H()-y)+w.bounds.Min.Y(),
+				x+w.bounds.Min.X,
+				(w.bounds.H()-y)+w.bounds.Min.Y,
 			)
 		})
 
 		w.window.SetScrollCallback(func(_ *glfw.Window, xoff, yoff float64) {
-			w.tempInp.scroll += pixel.V(xoff, yoff)
+			w.tempInp.scroll.X += xoff
+			w.tempInp.scroll.Y += yoff
 		})
 
 		w.window.SetCharCallback(func(_ *glfw.Window, r rune) {
@@ -380,6 +381,6 @@ func (w *Window) updateInput() {
 	w.currInp = w.tempInp
 
 	w.tempInp.repeat = [KeyLast + 1]bool{}
-	w.tempInp.scroll = 0
+	w.tempInp.scroll = pixel.ZV
 	w.tempInp.typed = ""
 }

@@ -90,20 +90,20 @@ func (s *Sprite) DrawColorMask(t Target, matrix Matrix, mask color.Color) {
 func (s *Sprite) calcData() {
 	var (
 		center     = s.frame.Center()
-		horizontal = X(s.frame.W() / 2)
-		vertical   = Y(s.frame.H() / 2)
+		horizontal = V(s.frame.W()/2, 0)
+		vertical   = V(0, s.frame.H()/2)
 	)
 
-	(*s.tri)[0].Position = -horizontal - vertical
-	(*s.tri)[1].Position = +horizontal - vertical
-	(*s.tri)[2].Position = +horizontal + vertical
-	(*s.tri)[3].Position = -horizontal - vertical
-	(*s.tri)[4].Position = +horizontal + vertical
-	(*s.tri)[5].Position = -horizontal + vertical
+	(*s.tri)[0].Position = Vec{}.Sub(horizontal).Sub(vertical)
+	(*s.tri)[1].Position = Vec{}.Add(horizontal).Sub(vertical)
+	(*s.tri)[2].Position = Vec{}.Add(horizontal).Add(vertical)
+	(*s.tri)[3].Position = Vec{}.Sub(horizontal).Sub(vertical)
+	(*s.tri)[4].Position = Vec{}.Add(horizontal).Add(vertical)
+	(*s.tri)[5].Position = Vec{}.Sub(horizontal).Add(vertical)
 
 	for i := range *s.tri {
 		(*s.tri)[i].Color = s.mask
-		(*s.tri)[i].Picture = center + (*s.tri)[i].Position
+		(*s.tri)[i].Picture = center.Add((*s.tri)[i].Position)
 		(*s.tri)[i].Intensity = 1
 	}
 
