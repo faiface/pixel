@@ -148,23 +148,6 @@ func (txt *Text) Atlas() *Atlas {
 	return txt.atlas
 }
 
-// SetMatrix sets a Matrix by which the text will be transformed before drawing to another Target.
-func (txt *Text) SetMatrix(m pixel.Matrix) {
-	if txt.mat != m {
-		txt.mat = m
-		txt.dirty = true
-	}
-}
-
-// SetColorMask sets a color by which the text will be masked before drawingto another Target.
-func (txt *Text) SetColorMask(c color.Color) {
-	rgba := pixel.ToRGBA(c)
-	if txt.col != rgba {
-		txt.col = rgba
-		txt.dirty = true
-	}
-}
-
 // Bounds returns the bounding box of the text currently written to the Text excluding whitespace.
 //
 // If the Text is empty, a zero rectangle is returned.
@@ -241,8 +224,35 @@ func (txt *Text) WriteRune(r rune) (n int, err error) {
 }
 
 // Draw draws all text written to the Text to the provided Target. The text is transformed by the
-// Text's matrix and color mask.
-func (txt *Text) Draw(t pixel.Target) {
+// provided Matrix.
+//
+// This method is equivalent to calling DrawColorMask with nil color mask.
+//
+// If there's a lot of text written to the Text, changing a matrix or a color mask often might hurt
+// performance. Consider using your Target's SetMatrix or SetColorMask methods if available.
+func (txt *Text) Draw(t pixel.Target, matrix pixel.Matrix) {
+	txt.DrawColorMask(t, matrix, nil)
+}
+
+// DrawColorMask draws all text written to the Text to the provided Target. The text is transformed
+// by the provided Matrix and masked by the provided color mask.
+//
+// If there's a lot of text written to the Text, changing a matrix or a color mask often might hurt
+// performance. Consider using your Target's SetMatrix or SetColorMask methods if available.
+func (txt *Text) DrawColorMask(t pixel.Target, matrix pixel.Matrix, mask color.Color) {
+	if matrix != txt.mat {
+		txt.mat = matrix
+		txt.dirty = true
+	}
+	if mask == nil {
+		mask = pixel.Alpha(1)
+	}
+	rgba := pixel.ToRGBA(mask)
+	if rgba != txt.col {
+		txt.col = rgba
+		txt.dirty = true
+	}
+
 	if txt.dirty {
 		txt.trans.SetLen(txt.tris.Len())
 		txt.trans.Update(&txt.tris)
