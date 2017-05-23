@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"image/color"
 	"math"
 	"math/rand"
@@ -120,7 +121,7 @@ func (tw *typewriter) Draw(t pixel.Target, m pixel.Matrix) {
 func typeRune(tw *typewriter, r rune) {
 	tw.Ribbon(r)
 	if !unicode.IsSpace(r) {
-		go shake(tw, 3, 30)
+		go shake(tw, 3, 17)
 	}
 }
 
@@ -149,6 +150,7 @@ func shake(tw *typewriter, intensity, friction float64) {
 		intensity -= friction * dt
 
 		tw.Offset(off)
+		fmt.Println(off)
 	}
 }
 
