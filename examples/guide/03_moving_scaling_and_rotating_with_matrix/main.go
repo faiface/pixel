@@ -57,10 +57,9 @@ func run() {
 		win.Clear(colornames.Firebrick)
 
 		mat := pixel.IM
-		mat = mat.Rotated(0, angle)
+		mat = mat.Rotated(pixel.ZV, angle)
 		mat = mat.Moved(win.Bounds().Center())
-		sprite.SetMatrix(mat)
-		sprite.Draw(win)
+		sprite.Draw(win, mat)
 
 		win.Update()
 	}
