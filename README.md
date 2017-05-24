@@ -63,7 +63,7 @@ Here's the list of the main features in Pixel. Although Pixel is still under hea
 - Full documentation and tutorial
 - Works on Linux, macOS and Windows
 - Window creation and manipulation (resizing, fullscreen, multiple windows, ...)
-- Keyboard and mouse input without events
+- Keyboard (key presses, text input) and mouse input without events
 - Well integrated with the Go standard library
   - Use `"image"` package for loading pictures
   - Use `"time"` package for measuring delta time and FPS
