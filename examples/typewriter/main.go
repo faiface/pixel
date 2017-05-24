@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"image/color"
 	"math"
 	"math/rand"
@@ -150,7 +149,6 @@ func shake(tw *typewriter, intensity, friction float64) {
 		intensity -= friction * dt
 
 		tw.Offset(off)
-		fmt.Println(off)
 	}
 }
 
