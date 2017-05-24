@@ -44,8 +44,7 @@ func run() {
 
 	win.Clear(colornames.Greenyellow)
 
-	sprite.SetMatrix(pixel.IM.Moved(win.Bounds().Center()))
-	sprite.Draw(win)
+	sprite.Draw(win, pixel.IM.Moved(win.Bounds().Center()))
 
 	for !win.Closed() {
 		win.Update()
