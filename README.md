@@ -39,7 +39,7 @@ Here are some screenshots from the examples!
 | --- | --- |
 | ![Lights](examples/lights/screenshot.png) | ![Platformer](examples/platformer/screenshot.png) |
 
-| [Smoke](examples/smoke) | [Xor](examples/xor) |
+| [Smoke](examples/smoke) | [Typewriter](examples/typewriter) |
 | --- | --- |
 | ![Smoke](examples/smoke/screenshot.png) | ![Typewriter](examples/typewriter/screenshot.png) |
 
