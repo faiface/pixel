@@ -56,8 +56,7 @@ Here's the list of the main features in Pixel. Although Pixel is still under hea
   - Optimized drawing with [Batch](https://github.com/faiface/pixel/wiki/Drawing-efficiently-with-Batch)
   - Text drawing with [text](https://godoc.org/github.com/faiface/pixel/text) package
 - Simple and convenient API
-  - Drawing a sprite to a window is as simple as `sprite.Draw(window)`
-  - Adding and subtracting vectors with `+` and `-` operators... how?
+  - Drawing a sprite to a window is as simple as `sprite.Draw(window, matrix)`
   - Wanna know where the center of a window is? `window.Bounds().Center()`
   - [...](https://godoc.org/github.com/faiface/pixel)
 - Full documentation and tutorial
