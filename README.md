@@ -54,6 +54,7 @@ Here's the list of the main features in Pixel. Although Pixel is still under hea
     [IMDraw](https://github.com/faiface/pixel/wiki/Drawing-shapes-with-IMDraw) (circles, rectangles,
     lines, ...)
   - Optimized drawing with [Batch](https://github.com/faiface/pixel/wiki/Drawing-efficiently-with-Batch)
+  - Text drawing with [text](https://godoc.org/github.com/faiface/pixel/text) package
 - Simple and convenient API
   - Drawing a sprite to a window is as simple as `sprite.Draw(window)`
   - Adding and subtracting vectors with `+` and `-` operators... how?
@@ -91,7 +92,7 @@ Here's the list of the main features in Pixel. Although Pixel is still under hea
 Pixel is in development and still missing few critical features. Here're the most critical ones.
 
 - Audio
-- Drawing text
+- ~~Drawing text~~
 - Antialiasing (filtering is supported, though)
 - ~~Advanced window manipulation (cursor hiding, window icon, ...)~~
 - Better support for Hi-DPI displays
