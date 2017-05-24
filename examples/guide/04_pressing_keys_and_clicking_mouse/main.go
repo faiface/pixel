@@ -44,18 +44,19 @@ func run() {
 	}
 
 	var treesFrames []pixel.Rect
-	for x := spritesheet.Bounds().Min.X(); x < spritesheet.Bounds().Max.X(); x += 32 {
-		for y := spritesheet.Bounds().Min.Y(); y < spritesheet.Bounds().Max.Y(); y += 32 {
+	for x := spritesheet.Bounds().Min.X; x < spritesheet.Bounds().Max.X; x += 32 {
+		for y := spritesheet.Bounds().Min.Y; y < spritesheet.Bounds().Max.Y; y += 32 {
 			treesFrames = append(treesFrames, pixel.R(x, y, x+32, y+32))
 		}
 	}
 
 	var (
-		camPos       = ZV
+		camPos       = pixel.ZV
 		camSpeed     = 500.0
 		camZoom      = 1.0
 		camZoomSpeed = 1.2
 		trees        []*pixel.Sprite
+		matrices     []pixel.Matrix
 	)
 
 	last := time.Now()
@@ -63,33 +64,33 @@ func run() {
 		dt := time.Since(last).Seconds()
 		last = time.Now()
 
-		cam := pixel.IM.Scaled(camPos, camZoom).Moved(win.Bounds().Center() - camPos)
+		cam := pixel.IM.Scaled(camPos, camZoom).Moved(win.Bounds().Center().Sub(camPos))
 		win.SetMatrix(cam)
 
 		if win.JustPressed(pixelgl.MouseButtonLeft) {
 			tree := pixel.NewSprite(spritesheet, treesFrames[rand.Intn(len(treesFrames))])
-			mouse := cam.Unproject(win.MousePosition())
-			tree.SetMatrix(pixel.IM.Scaled(0, 4).Moved(mouse))
 			trees = append(trees, tree)
+			mouse := cam.Unproject(win.MousePosition())
+			matrices = append(matrices, pixel.IM.Scaled(pixel.ZV, 4).Moved(mouse))
 		}
 		if win.Pressed(pixelgl.KeyLeft) {
-			camPos -= pixel.X(camSpeed * dt)
+			camPos.X -= camSpeed * dt
 		}
 		if win.Pressed(pixelgl.KeyRight) {
-			camPos += pixel.X(camSpeed * dt)
+			camPos.X += camSpeed * dt
 		}
 		if win.Pressed(pixelgl.KeyDown) {
-			camPos -= pixel.Y(camSpeed * dt)
+			camPos.Y -= camSpeed * dt
 		}
 		if win.Pressed(pixelgl.KeyUp) {
-			camPos += pixel.Y(camSpeed * dt)
+			camPos.Y += camSpeed * dt
 		}
-		camZoom *= math.Pow(camZoomSpeed, win.MouseScroll().Y())
+		camZoom *= math.Pow(camZoomSpeed, win.MouseScroll().Y)
 
 		win.Clear(colornames.Forestgreen)
 
-		for _, tree := range trees {
-			tree.Draw(win)
+		for i, tree := range trees {
+			tree.Draw(win, matrices[i])
 		}
 
 		win.Update()
