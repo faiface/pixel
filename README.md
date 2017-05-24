@@ -41,7 +41,7 @@ Here are some screenshots from the examples!
 
 | [Smoke](examples/smoke) | [Xor](examples/xor) |
 | --- | --- |
-| ![Smoke](examples/smoke/screenshot.png) | ![Xor](examples/xor/screenshot.png) |
+| ![Smoke](examples/smoke/screenshot.png) | ![Typewriter](examples/typewriter/screenshot.png) |
 
 ## Features
 
