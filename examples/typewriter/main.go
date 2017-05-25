@@ -13,6 +13,7 @@ import (
 	"github.com/faiface/pixel/pixelgl"
 	"github.com/faiface/pixel/text"
 	"github.com/golang/freetype/truetype"
+	"github.com/pkg/profile"
 	"golang.org/x/image/colornames"
 	"golang.org/x/image/font"
 	"golang.org/x/image/font/gofont/gobold"
@@ -20,12 +21,15 @@ import (
 	"golang.org/x/image/font/gofont/goregular"
 )
 
-func ttfFromBytesMust(b []byte, opts *truetype.Options) font.Face {
+func ttfFromBytesMust(b []byte, size float64) font.Face {
 	ttf, err := truetype.Parse(b)
 	if err != nil {
 		panic(err)
 	}
-	return truetype.NewFace(ttf, opts)
+	return truetype.NewFace(ttf, &truetype.Options{
+		Size:              size,
+		GlyphCacheEntries: 1,
+	})
 }
 
 type typewriter struct {
@@ -248,15 +252,18 @@ func run() {
 	win.SetSmooth(true)
 
 	var (
-		regular = text.NewAtlas(ttfFromBytesMust(goregular.TTF, &truetype.Options{
-			Size: 42,
-		}), text.ASCII, text.RangeTable(unicode.Latin))
-		bold = text.NewAtlas(ttfFromBytesMust(gobold.TTF, &truetype.Options{
-			Size: 42,
-		}), text.ASCII, text.RangeTable(unicode.Latin))
-		italic = text.NewAtlas(ttfFromBytesMust(goitalic.TTF, &truetype.Options{
-			Size: 42,
-		}), text.ASCII, text.RangeTable(unicode.Latin))
+		regular = text.NewAtlas(
+			ttfFromBytesMust(goregular.TTF, 42),
+			text.ASCII, text.RangeTable(unicode.Latin),
+		)
+		bold = text.NewAtlas(
+			ttfFromBytesMust(gobold.TTF, 42),
+			text.ASCII, text.RangeTable(unicode.Latin),
+		)
+		italic = text.NewAtlas(
+			ttfFromBytesMust(goitalic.TTF, 42),
+			text.ASCII, text.RangeTable(unicode.Latin),
+		)
 
 		bgColor = color.RGBA{
 			R: 241,
@@ -310,5 +317,6 @@ func run() {
 }
 
 func main() {
+	defer profile.Start(profile.MemProfile).Stop()
 	pixelgl.Run(run)
 }
