@@ -22,22 +22,22 @@ func run() {
 
 	imd := imdraw.New(nil)
 
-	imd.Color(colornames.Blueviolet)
-	imd.EndShape(imdraw.RoundEndShape)
+	imd.Color = colornames.Blueviolet
+	imd.EndShape = imdraw.RoundEndShape
 	imd.Push(pixel.V(100, 100), pixel.V(700, 100))
-	imd.EndShape(imdraw.SharpEndShape)
+	imd.EndShape = imdraw.SharpEndShape
 	imd.Push(pixel.V(100, 500), pixel.V(700, 500))
 	imd.Line(30)
 
-	imd.Color(colornames.Limegreen)
+	imd.Color = colornames.Limegreen
 	imd.Push(pixel.V(500, 500))
 	imd.Circle(300, 50)
-	imd.Color(colornames.Navy)
+	imd.Color = colornames.Navy
 	imd.Push(pixel.V(200, 500), pixel.V(800, 500))
 	imd.Ellipse(pixel.V(120, 80), 0)
 
-	imd.Color(colornames.Red)
-	imd.EndShape(imdraw.RoundEndShape)
+	imd.Color = colornames.Red
+	imd.EndShape = imdraw.RoundEndShape
 	imd.Push(pixel.V(500, 350))
 	imd.CircleArc(150, -math.Pi, 0, 30)
 
