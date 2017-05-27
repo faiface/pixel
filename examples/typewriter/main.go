@@ -13,7 +13,6 @@ import (
 	"github.com/faiface/pixel/pixelgl"
 	"github.com/faiface/pixel/text"
 	"github.com/golang/freetype/truetype"
-	"github.com/pkg/profile"
 	"golang.org/x/image/colornames"
 	"golang.org/x/image/font"
 	"golang.org/x/image/font/gofont/gobold"
@@ -317,6 +316,5 @@ func run() {
 }
 
 func main() {
-	defer profile.Start(profile.MemProfile).Stop()
 	pixelgl.Run(run)
 }
