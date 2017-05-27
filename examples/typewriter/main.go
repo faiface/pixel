@@ -227,10 +227,7 @@ func (dl *dotlight) Draw(t pixel.Target, m pixel.Matrix) {
 	dl.imd.Color = pixel.Alpha(0)
 	for i := 0.0; i <= 32; i++ {
 		angle := i * 2 * math.Pi / 32
-		dl.imd.Push(dl.pos.Add(pixel.V(
-			math.Cos(angle)*dl.radius,
-			math.Sin(angle)*dl.radius,
-		)))
+		dl.imd.Push(dl.pos.Add(pixel.V(dl.radius, 0).Rotated(angle)))
 	}
 	dl.imd.Polygon(0)
 	dl.imd.Draw(t)
