@@ -218,6 +218,11 @@ func (c *Canvas) Texture() *glhf.Texture {
 	return c.gf.Texture()
 }
 
+// Frame return the underlying OpenGL Frame of this Canvas.
+func (c *Canvas) Frame() *glhf.Frame {
+	return c.gf.frame
+}
+
 // SetPixels replaces the content of the Canvas with the provided pixels. The provided slice must be
 // an alpha-premultiplied RGBA sequence of correct length (4 * width * height).
 func (c *Canvas) SetPixels(pixels []uint8) {
