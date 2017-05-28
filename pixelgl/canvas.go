@@ -218,7 +218,7 @@ func (c *Canvas) Texture() *glhf.Texture {
 	return c.gf.Texture()
 }
 
-// Frame return the underlying OpenGL Frame of this Canvas.
+// Frame returns the underlying OpenGL Frame of this Canvas.
 func (c *Canvas) Frame() *glhf.Frame {
 	return c.gf.frame
 }
