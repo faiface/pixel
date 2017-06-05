@@ -3,8 +3,6 @@ package pixel
 import (
 	"fmt"
 	"math"
-
-	"github.com/go-gl/mathgl/mgl64"
 )
 
 // Vec is a 2D vector type with X and Y coordinates.
@@ -251,7 +249,7 @@ func (r Rect) Union(s Rect) Rect {
 	)
 }
 
-// Matrix is a 3x3 transformation matrix that can be used for all kinds of spacial transforms, such
+// Matrix is a 3x2 affine matrix that can be used for all kinds of spatial transforms, such
 // as movement, scaling and rotations.
 //
 // Matrix has a handful of useful methods, each of which adds a transformation to the matrix. For
@@ -261,38 +259,41 @@ func (r Rect) Union(s Rect) Rect {
 //
 // This code creates a Matrix that first moves everything by 100 units horizontally and 200 units
 // vertically and then rotates everything by 90 degrees around the origin.
-type Matrix [9]float64
+//
+// Layout is:
+// [0] [2] [4]
+// [1] [3] [5]
+//  0   0   1  [implicit row]
+type Matrix [6]float64
 
 // IM stands for identity matrix. Does nothing, no transformation.
-var IM = Matrix(mgl64.Ident3())
+var IM = Matrix{1, 0, 0, 1, 0, 0}
 
 // String returns a string representation of the Matrix.
 //
 //   m := pixel.IM
-//   fmt.Println(m) // Matrix(1 0 0 | 0 1 0 | 0 0 1)
+//   fmt.Println(m) // Matrix(1 0 0 | 0 1 0)
 func (m Matrix) String() string {
 	return fmt.Sprintf(
-		"Matrix(%v %v %v | %v %v %v | %v %v %v)",
-		m[0], m[3], m[6],
-		m[1], m[4], m[7],
-		m[2], m[5], m[8],
+		"Matrix(%v %v %v | %v %v %v)",
+		m[0], m[2], m[4],
+		m[1], m[3], m[5],
 	)
 }
 
 // Moved moves everything by the delta vector.
 func (m Matrix) Moved(delta Vec) Matrix {
-	m3 := mgl64.Mat3(m)
-	m3 = mgl64.Translate2D(delta.XY()).Mul3(m3)
-	return Matrix(m3)
+	m[4], m[5] = m[4]+delta.X, m[5]+delta.Y
+	return m
 }
 
 // ScaledXY scales everything around a given point by the scale factor in each axis respectively.
 func (m Matrix) ScaledXY(around Vec, scale Vec) Matrix {
-	m3 := mgl64.Mat3(m)
-	m3 = mgl64.Translate2D(around.Scaled(-1).XY()).Mul3(m3)
-	m3 = mgl64.Scale2D(scale.XY()).Mul3(m3)
-	m3 = mgl64.Translate2D(around.XY()).Mul3(m3)
-	return Matrix(m3)
+	m[4], m[5] = m[4]-around.X, m[5]-around.Y
+	m[0], m[2], m[4] = m[0]*scale.X, m[2]*scale.X, m[4]*scale.X
+	m[1], m[3], m[5] = m[1]*scale.Y, m[3]*scale.Y, m[5]*scale.Y
+	m[4], m[5] = m[4]+around.X, m[5]+around.Y
+	return m
 }
 
 // Scaled scales everything around a given point by the scale factor.
@@ -302,36 +303,44 @@ func (m Matrix) Scaled(around Vec, scale float64) Matrix {
 
 // Rotated rotates everything around a given point by the given angle in radians.
 func (m Matrix) Rotated(around Vec, angle float64) Matrix {
-	m3 := mgl64.Mat3(m)
-	m3 = mgl64.Translate2D(around.Scaled(-1).XY()).Mul3(m3)
-	m3 = mgl64.Rotate3DZ(angle).Mul3(m3)
-	m3 = mgl64.Translate2D(around.XY()).Mul3(m3)
-	return Matrix(m3)
+	sint, cost := math.Sincos(angle)
+	m[4], m[5] = m[4]-around.X, m[5]-around.Y
+	m = m.Chained(Matrix{cost, sint, -sint, cost, 0, 0})
+	m[4], m[5] = m[4]+around.X, m[5]+around.Y
+	return m
 }
 
 // Chained adds another Matrix to this one. All tranformations by the next Matrix will be applied
 // after the transformations of this Matrix.
 func (m Matrix) Chained(next Matrix) Matrix {
-	m3 := mgl64.Mat3(m)
-	m3 = mgl64.Mat3(next).Mul3(m3)
-	return Matrix(m3)
+	return Matrix{
+		m[0]*next[0] + m[2]*next[1],
+		m[1]*next[0] + m[3]*next[1],
+		m[0]*next[2] + m[2]*next[3],
+		m[1]*next[2] + m[3]*next[3],
+		m[0]*next[4] + m[2]*next[5] + m[4],
+		m[1]*next[4] + m[3]*next[5] + m[5],
+	}
 }
 
 // Project applies all transformations added to the Matrix to a vector u and returns the result.
 //
 // Time complexity is O(1).
 func (m Matrix) Project(u Vec) Vec {
-	m3 := mgl64.Mat3(m)
-	proj := m3.Mul3x1(mgl64.Vec3{u.X, u.Y, 1})
-	return V(proj.X(), proj.Y())
+	return Vec{X: m[0]*u.X + m[2]*u.Y + m[4], Y: m[1]*u.X + m[3]*u.Y + m[5]}
 }
 
 // Unproject does the inverse operation to Project.
 //
+// It turns out that multiplying a vector by the inverse matrix of m
+// can be nearly-accomplished by subtracting the translate part of the
+// matrix and multplying by the inverse of the top-left 2x2 matrix,
+// and the inverse of a 2x2 matrix is simple enough to just be
+// inlined in the computation.
+//
 // Time complexity is O(1).
 func (m Matrix) Unproject(u Vec) Vec {
-	m3 := mgl64.Mat3(m)
-	inv := m3.Inv()
-	unproj := inv.Mul3x1(mgl64.Vec3{u.X, u.Y, 1})
-	return V(unproj.X(), unproj.Y())
+	d := (m[0] * m[3]) - (m[1] * m[2])
+	u.X, u.Y = (u.X-m[4])/d, (u.Y-m[5])/d
+	return Vec{u.X*m[3] - u.Y*m[1], u.Y*m[0] - u.X*m[2]}
 }
