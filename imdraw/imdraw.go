@@ -543,6 +543,8 @@ func (imd *IMDraw) polyline(thickness float64, closed bool) {
 	imd.pushPt(points[j].pos.Sub(normal), points[j])
 
 	// middle points
+	// compute "previous" normal:
+	ijNormal := points[1].pos.Sub(points[0].pos).Rotated(math.Pi / 2).Unit().Scaled(thickness / 2)
 	for i := 0; i < len(points); i++ {
 		j, k := i+1, i+2
 
@@ -558,7 +560,6 @@ func (imd *IMDraw) polyline(thickness float64, closed bool) {
 			k %= len(points)
 		}
 
-		ijNormal := points[j].pos.Sub(points[i].pos).Rotated(math.Pi / 2).Unit().Scaled(thickness / 2)
 		jkNormal := points[k].pos.Sub(points[j].pos).Rotated(math.Pi / 2).Unit().Scaled(thickness / 2)
 
 		orientation := 1.0
@@ -589,6 +590,8 @@ func (imd *IMDraw) polyline(thickness float64, closed bool) {
 			imd.pushPt(points[j].pos.Add(jkNormal), points[j])
 			imd.pushPt(points[j].pos.Sub(jkNormal), points[j])
 		}
+		// "next" normal becomes previous normal
+		ijNormal = jkNormal
 	}
 
 	// last point
