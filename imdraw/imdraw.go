@@ -354,11 +354,12 @@ func (imd *IMDraw) fillPolygon() {
 	imd.tri.SetLen(imd.tri.Len() + 3*(len(points)-2))
 
 	for i, j := 1, off; i+1 < len(points); i, j = i+1, j+3 {
-		for k, p := range []point{points[0], points[i], points[i+1]} {
-			(*imd.tri)[j+k].Position = p.pos
-			(*imd.tri)[j+k].Color = p.col
-			(*imd.tri)[j+k].Picture = p.pic
-			(*imd.tri)[j+k].Intensity = p.in
+		for k, p := range []int{0, i, i + 1} {
+			tri := &(*imd.tri)[j+k]
+			tri.Position = points[p].pos
+			tri.Color = points[p].col
+			tri.Picture = points[p].pic
+			tri.Intensity = points[p].in
 		}
 	}
 
