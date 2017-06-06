@@ -52,6 +52,7 @@ type IMDraw struct {
 	EndShape  EndShape
 
 	points []point
+	pool   [][]point
 	matrix pixel.Matrix
 	mask   pixel.RGBA
 
@@ -109,7 +110,7 @@ func (imd *IMDraw) Clear() {
 //
 // This does not affect matrix and color mask set by SetMatrix and SetColorMask.
 func (imd *IMDraw) Reset() {
-	imd.points = nil
+	imd.points = imd.points[:0]
 	imd.Color = pixel.Alpha(1)
 	imd.Picture = pixel.ZV
 	imd.Intensity = 0
@@ -256,8 +257,20 @@ func (imd *IMDraw) EllipseArc(radius pixel.Vec, low, high, thickness float64) {
 
 func (imd *IMDraw) getAndClearPoints() []point {
 	points := imd.points
-	imd.points = nil
+	// use one of the existing pools so we don't reallocate as often
+	if len(imd.pool) > 0 {
+		pos := len(imd.pool) - 1
+		imd.points = imd.pool[pos]
+		imd.pool = imd.pool[0:pos]
+	} else {
+		imd.points = nil
+	}
 	return points
+}
+
+func (imd *IMDraw) restorePoints(points []point) {
+	imd.pool = append(imd.pool, imd.points)
+	imd.points = points[:0]
 }
 
 func (imd *IMDraw) applyMatrixAndMask(off int) {
@@ -271,6 +284,7 @@ func (imd *IMDraw) fillRectangle() {
 	points := imd.getAndClearPoints()
 
 	if len(points) < 2 {
+		imd.restorePoints(points)
 		return
 	}
 
@@ -302,12 +316,14 @@ func (imd *IMDraw) fillRectangle() {
 
 	imd.applyMatrixAndMask(off)
 	imd.batch.Dirty()
+	imd.restorePoints(points)
 }
 
 func (imd *IMDraw) outlineRectangle(thickness float64) {
 	points := imd.getAndClearPoints()
 
 	if len(points) < 2 {
+		imd.restorePoints(points)
 		return
 	}
 
@@ -323,12 +339,14 @@ func (imd *IMDraw) outlineRectangle(thickness float64) {
 		imd.pushPt(pixel.V(b.pos.X, a.pos.Y), mid)
 		imd.polyline(thickness, true)
 	}
+	imd.restorePoints(points)
 }
 
 func (imd *IMDraw) fillPolygon() {
 	points := imd.getAndClearPoints()
 
 	if len(points) < 3 {
+		imd.restorePoints(points)
 		return
 	}
 
@@ -346,6 +364,7 @@ func (imd *IMDraw) fillPolygon() {
 
 	imd.applyMatrixAndMask(off)
 	imd.batch.Dirty()
+	imd.restorePoints(points)
 }
 
 func (imd *IMDraw) fillEllipseArc(radius pixel.Vec, low, high float64) {
@@ -387,6 +406,7 @@ func (imd *IMDraw) fillEllipseArc(radius pixel.Vec, low, high float64) {
 		imd.applyMatrixAndMask(off)
 		imd.batch.Dirty()
 	}
+	imd.restorePoints(points)
 }
 
 func (imd *IMDraw) outlineEllipseArc(radius pixel.Vec, low, high, thickness float64, doEndShape bool) {
@@ -485,12 +505,14 @@ func (imd *IMDraw) outlineEllipseArc(radius pixel.Vec, low, high, thickness floa
 			}
 		}
 	}
+	imd.restorePoints(points)
 }
 
 func (imd *IMDraw) polyline(thickness float64, closed bool) {
 	points := imd.getAndClearPoints()
 
 	if len(points) == 0 {
+		imd.restorePoints(points)
 		return
 	}
 	if len(points) == 1 {
@@ -591,4 +613,5 @@ func (imd *IMDraw) polyline(thickness float64, closed bool) {
 			imd.fillEllipseArc(pixel.V(thickness/2, thickness/2), normal.Angle(), normal.Angle()-math.Pi)
 		}
 	}
+	imd.restorePoints(points)
 }
