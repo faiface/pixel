@@ -263,7 +263,7 @@ func (r Rect) Union(s Rect) Rect {
 // Layout is:
 // [0] [2] [4]
 // [1] [3] [5]
-//  0   0   1  [implicit row]
+//  0   0   1  (implicit row)
 type Matrix [6]float64
 
 // IM stands for identity matrix. Does nothing, no transformation.
@@ -332,11 +332,9 @@ func (m Matrix) Project(u Vec) Vec {
 
 // Unproject does the inverse operation to Project.
 //
-// It turns out that multiplying a vector by the inverse matrix of m
-// can be nearly-accomplished by subtracting the translate part of the
-// matrix and multplying by the inverse of the top-left 2x2 matrix,
-// and the inverse of a 2x2 matrix is simple enough to just be
-// inlined in the computation.
+// It turns out that multiplying a vector by the inverse matrix of m can be nearly-accomplished by
+// subtracting the translate part of the matrix and multplying by the inverse of the top-left 2x2
+// matrix, and the inverse of a 2x2 matrix is simple enough to just be inlined in the computation.
 //
 // Time complexity is O(1).
 func (m Matrix) Unproject(u Vec) Vec {

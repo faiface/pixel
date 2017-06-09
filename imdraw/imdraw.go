@@ -260,8 +260,8 @@ func (imd *IMDraw) getAndClearPoints() []point {
 	// use one of the existing pools so we don't reallocate as often
 	if len(imd.pool) > 0 {
 		pos := len(imd.pool) - 1
-		imd.points = imd.pool[pos]
-		imd.pool = imd.pool[0:pos]
+		imd.points = imd.pool[pos][:0]
+		imd.pool = imd.pool[:pos]
 	} else {
 		imd.points = nil
 	}
@@ -306,7 +306,7 @@ func (imd *IMDraw) fillRectangle() {
 			in:  (a.in + b.in) / 2,
 		}
 
-		for k, p := range []point{a, b, c, a, b, d} {
+		for k, p := range [...]point{a, b, c, a, b, d} {
 			(*imd.tri)[j+k].Position = p.pos
 			(*imd.tri)[j+k].Color = p.col
 			(*imd.tri)[j+k].Picture = p.pic
@@ -316,6 +316,7 @@ func (imd *IMDraw) fillRectangle() {
 
 	imd.applyMatrixAndMask(off)
 	imd.batch.Dirty()
+
 	imd.restorePoints(points)
 }
 
@@ -339,6 +340,7 @@ func (imd *IMDraw) outlineRectangle(thickness float64) {
 		imd.pushPt(pixel.V(b.pos.X, a.pos.Y), mid)
 		imd.polyline(thickness, true)
 	}
+
 	imd.restorePoints(points)
 }
 
@@ -354,7 +356,7 @@ func (imd *IMDraw) fillPolygon() {
 	imd.tri.SetLen(imd.tri.Len() + 3*(len(points)-2))
 
 	for i, j := 1, off; i+1 < len(points); i, j = i+1, j+3 {
-		for k, p := range []int{0, i, i + 1} {
+		for k, p := range [...]int{0, i, i + 1} {
 			tri := &(*imd.tri)[j+k]
 			tri.Position = points[p].pos
 			tri.Color = points[p].col
@@ -365,6 +367,7 @@ func (imd *IMDraw) fillPolygon() {
 
 	imd.applyMatrixAndMask(off)
 	imd.batch.Dirty()
+
 	imd.restorePoints(points)
 }
 
@@ -407,6 +410,7 @@ func (imd *IMDraw) fillEllipseArc(radius pixel.Vec, low, high float64) {
 		imd.applyMatrixAndMask(off)
 		imd.batch.Dirty()
 	}
+
 	imd.restorePoints(points)
 }
 
@@ -506,6 +510,7 @@ func (imd *IMDraw) outlineEllipseArc(radius pixel.Vec, low, high, thickness floa
 			}
 		}
 	}
+
 	imd.restorePoints(points)
 }
 
@@ -617,5 +622,6 @@ func (imd *IMDraw) polyline(thickness float64, closed bool) {
 			imd.fillEllipseArc(pixel.V(thickness/2, thickness/2), normal.Angle(), normal.Angle()-math.Pi)
 		}
 	}
+
 	imd.restorePoints(points)
 }
