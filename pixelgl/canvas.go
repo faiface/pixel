@@ -90,9 +90,16 @@ func (c *Canvas) MakePicture(p pixel.Picture) pixel.TargetPicture {
 }
 
 // SetMatrix sets a Matrix that every point will be projected by.
+// pixel.Matrix is 3x2 with an implicit 0, 0, 1 row after it. So
+// [0] [2] [4]    [0] [3] [6]
+// [1] [3] [5] => [1] [4] [7]
+//  0   0   1      0   0   1
+// since all matrix ops are affine, the last row never changes,
+// and we don't need to copy it
+//
 func (c *Canvas) SetMatrix(m pixel.Matrix) {
-	for i := range m {
-		c.mat[i] = float32(m[i])
+	for i, j := range [6]int{ 0, 1, 3, 4, 6, 7} {
+		c.mat[j] = float32(m[i])
 	}
 }
 
