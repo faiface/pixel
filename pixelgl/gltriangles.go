@@ -60,9 +60,10 @@ func (gt *GLTriangles) Len() int {
 // SetLen efficiently resizes GLTriangles to len.
 //
 // Time complexity is amortized O(1).
-func (gt *GLTriangles) SetLen(len int) {
-	if len > gt.Len() {
-		needAppend := len - gt.Len()
+func (gt *GLTriangles) SetLen(length int) {
+	switch {
+	case length > gt.Len():
+		needAppend := length - gt.Len()
 		for i := 0; i < needAppend; i++ {
 			gt.data = append(gt.data,
 				0, 0,
@@ -71,11 +72,16 @@ func (gt *GLTriangles) SetLen(len int) {
 				0,
 			)
 		}
+	case length < gt.Len():
+		gt.data = gt.data[:length*gt.vs.Stride()]
+	default:
+		return
 	}
-	if len < gt.Len() {
-		gt.data = gt.data[:len*gt.vs.Stride()]
-	}
-	gt.submitData()
+	mainthread.CallNonBlock(func() {
+		gt.vs.Begin()
+		gt.vs.SetLen(length)
+		gt.vs.End()
+	})
 }
 
 // Slice returns a sub-Triangles of this GLTriangles in range [i, j).
@@ -144,29 +150,6 @@ func (gt *GLTriangles) updateData(t pixel.Triangles) {
 	}
 }
 
-func (gt *GLTriangles) submitData() {
-	// this code is supposed to copy the vertex data and CallNonBlock the update if
-	// the data is small enough, otherwise it'll block and not copy the data
-	if len(gt.data) < 256 { // arbitrary heurestic constant
-		data := append([]float32{}, gt.data...)
-		mainthread.CallNonBlock(func() {
-			gt.vs.Begin()
-			dataLen := len(data) / gt.vs.Stride()
-			gt.vs.SetLen(dataLen)
-			gt.vs.SetVertexData(data)
-			gt.vs.End()
-		})
-	} else {
-		mainthread.Call(func() {
-			gt.vs.Begin()
-			dataLen := len(gt.data) / gt.vs.Stride()
-			gt.vs.SetLen(dataLen)
-			gt.vs.SetVertexData(gt.data)
-			gt.vs.End()
-		})
-	}
-}
-
 // Update copies vertex properties from the supplied Triangles into this GLTriangles.
 //
 // The two Triangles (gt and t) must be of the same len.
@@ -175,7 +158,23 @@ func (gt *GLTriangles) Update(t pixel.Triangles) {
 		panic(fmt.Errorf("(%T).Update: invalid triangles len", gt))
 	}
 	gt.updateData(t)
-	gt.submitData()
+
+	// this code is supposed to copy the vertex data and CallNonBlock the update if
+	// the data is small enough, otherwise it'll block and not copy the data
+	if len(gt.data) < 256 { // arbitrary heurestic constant
+		data := append([]float32{}, gt.data...)
+		mainthread.CallNonBlock(func() {
+			gt.vs.Begin()
+			gt.vs.SetVertexData(data)
+			gt.vs.End()
+		})
+	} else {
+		mainthread.Call(func() {
+			gt.vs.Begin()
+			gt.vs.SetVertexData(gt.data)
+			gt.vs.End()
+		})
+	}
 }
 
 // Copy returns an independent copy of this GLTriangles.
