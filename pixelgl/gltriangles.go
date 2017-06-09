@@ -103,15 +103,17 @@ func (gt *GLTriangles) updateData(t pixel.Triangles) {
 				tx, ty = (*t)[i].Picture.XY()
 				in     = (*t)[i].Intensity
 			)
-			gt.data[i*gt.vs.Stride()+0] = float32(px)
-			gt.data[i*gt.vs.Stride()+1] = float32(py)
-			gt.data[i*gt.vs.Stride()+2] = float32(col.R)
-			gt.data[i*gt.vs.Stride()+3] = float32(col.G)
-			gt.data[i*gt.vs.Stride()+4] = float32(col.B)
-			gt.data[i*gt.vs.Stride()+5] = float32(col.A)
-			gt.data[i*gt.vs.Stride()+6] = float32(tx)
-			gt.data[i*gt.vs.Stride()+7] = float32(ty)
-			gt.data[i*gt.vs.Stride()+8] = float32(in)
+			s := gt.vs.Stride()
+			d := gt.data[i*s : i*s+9]
+			d[0] = float32(px)
+			d[1] = float32(py)
+			d[2] = float32(col.R)
+			d[3] = float32(col.G)
+			d[4] = float32(col.B)
+			d[5] = float32(col.A)
+			d[6] = float32(tx)
+			d[7] = float32(ty)
+			d[8] = float32(in)
 		}
 		return
 	}

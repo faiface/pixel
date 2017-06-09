@@ -20,6 +20,7 @@ covering several topics of Pixel. Here's the content of the tutorial parts so fa
 - [Pressing keys and clicking mouse](https://github.com/faiface/pixel/wiki/Pressing-keys-and-clicking-mouse)
 - [Drawing efficiently with Batch](https://github.com/faiface/pixel/wiki/Drawing-efficiently-with-Batch)
 - [Drawing shapes with IMDraw](https://github.com/faiface/pixel/wiki/Drawing-shapes-with-IMDraw)
+- [Typing text on the screen](https://github.com/faiface/pixel/wiki/Typing-text-on-the-screen)
 
 ## Examples
 

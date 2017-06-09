@@ -52,6 +52,7 @@ type IMDraw struct {
 	EndShape  EndShape
 
 	points []point
+	pool   [][]point
 	matrix pixel.Matrix
 	mask   pixel.RGBA
 
@@ -109,7 +110,7 @@ func (imd *IMDraw) Clear() {
 //
 // This does not affect matrix and color mask set by SetMatrix and SetColorMask.
 func (imd *IMDraw) Reset() {
-	imd.points = nil
+	imd.points = imd.points[:0]
 	imd.Color = pixel.Alpha(1)
 	imd.Picture = pixel.ZV
 	imd.Intensity = 0
@@ -256,8 +257,20 @@ func (imd *IMDraw) EllipseArc(radius pixel.Vec, low, high, thickness float64) {
 
 func (imd *IMDraw) getAndClearPoints() []point {
 	points := imd.points
-	imd.points = nil
+	// use one of the existing pools so we don't reallocate as often
+	if len(imd.pool) > 0 {
+		pos := len(imd.pool) - 1
+		imd.points = imd.pool[pos][:0]
+		imd.pool = imd.pool[:pos]
+	} else {
+		imd.points = nil
+	}
 	return points
+}
+
+func (imd *IMDraw) restorePoints(points []point) {
+	imd.pool = append(imd.pool, imd.points)
+	imd.points = points[:0]
 }
 
 func (imd *IMDraw) applyMatrixAndMask(off int) {
@@ -271,6 +284,7 @@ func (imd *IMDraw) fillRectangle() {
 	points := imd.getAndClearPoints()
 
 	if len(points) < 2 {
+		imd.restorePoints(points)
 		return
 	}
 
@@ -292,7 +306,7 @@ func (imd *IMDraw) fillRectangle() {
 			in:  (a.in + b.in) / 2,
 		}
 
-		for k, p := range []point{a, b, c, a, b, d} {
+		for k, p := range [...]point{a, b, c, a, b, d} {
 			(*imd.tri)[j+k].Position = p.pos
 			(*imd.tri)[j+k].Color = p.col
 			(*imd.tri)[j+k].Picture = p.pic
@@ -302,12 +316,15 @@ func (imd *IMDraw) fillRectangle() {
 
 	imd.applyMatrixAndMask(off)
 	imd.batch.Dirty()
+
+	imd.restorePoints(points)
 }
 
 func (imd *IMDraw) outlineRectangle(thickness float64) {
 	points := imd.getAndClearPoints()
 
 	if len(points) < 2 {
+		imd.restorePoints(points)
 		return
 	}
 
@@ -323,12 +340,15 @@ func (imd *IMDraw) outlineRectangle(thickness float64) {
 		imd.pushPt(pixel.V(b.pos.X, a.pos.Y), mid)
 		imd.polyline(thickness, true)
 	}
+
+	imd.restorePoints(points)
 }
 
 func (imd *IMDraw) fillPolygon() {
 	points := imd.getAndClearPoints()
 
 	if len(points) < 3 {
+		imd.restorePoints(points)
 		return
 	}
 
@@ -336,16 +356,19 @@ func (imd *IMDraw) fillPolygon() {
 	imd.tri.SetLen(imd.tri.Len() + 3*(len(points)-2))
 
 	for i, j := 1, off; i+1 < len(points); i, j = i+1, j+3 {
-		for k, p := range []point{points[0], points[i], points[i+1]} {
-			(*imd.tri)[j+k].Position = p.pos
-			(*imd.tri)[j+k].Color = p.col
-			(*imd.tri)[j+k].Picture = p.pic
-			(*imd.tri)[j+k].Intensity = p.in
+		for k, p := range [...]int{0, i, i + 1} {
+			tri := &(*imd.tri)[j+k]
+			tri.Position = points[p].pos
+			tri.Color = points[p].col
+			tri.Picture = points[p].pic
+			tri.Intensity = points[p].in
 		}
 	}
 
 	imd.applyMatrixAndMask(off)
 	imd.batch.Dirty()
+
+	imd.restorePoints(points)
 }
 
 func (imd *IMDraw) fillEllipseArc(radius pixel.Vec, low, high float64) {
@@ -387,6 +410,8 @@ func (imd *IMDraw) fillEllipseArc(radius pixel.Vec, low, high float64) {
 		imd.applyMatrixAndMask(off)
 		imd.batch.Dirty()
 	}
+
+	imd.restorePoints(points)
 }
 
 func (imd *IMDraw) outlineEllipseArc(radius pixel.Vec, low, high, thickness float64, doEndShape bool) {
@@ -485,12 +510,15 @@ func (imd *IMDraw) outlineEllipseArc(radius pixel.Vec, low, high, thickness floa
 			}
 		}
 	}
+
+	imd.restorePoints(points)
 }
 
 func (imd *IMDraw) polyline(thickness float64, closed bool) {
 	points := imd.getAndClearPoints()
 
 	if len(points) == 0 {
+		imd.restorePoints(points)
 		return
 	}
 	if len(points) == 1 {
@@ -521,6 +549,8 @@ func (imd *IMDraw) polyline(thickness float64, closed bool) {
 	imd.pushPt(points[j].pos.Sub(normal), points[j])
 
 	// middle points
+	// compute "previous" normal:
+	ijNormal := points[1].pos.Sub(points[0].pos).Rotated(math.Pi / 2).Unit().Scaled(thickness / 2)
 	for i := 0; i < len(points); i++ {
 		j, k := i+1, i+2
 
@@ -536,7 +566,6 @@ func (imd *IMDraw) polyline(thickness float64, closed bool) {
 			k %= len(points)
 		}
 
-		ijNormal := points[j].pos.Sub(points[i].pos).Rotated(math.Pi / 2).Unit().Scaled(thickness / 2)
 		jkNormal := points[k].pos.Sub(points[j].pos).Rotated(math.Pi / 2).Unit().Scaled(thickness / 2)
 
 		orientation := 1.0
@@ -567,6 +596,8 @@ func (imd *IMDraw) polyline(thickness float64, closed bool) {
 			imd.pushPt(points[j].pos.Add(jkNormal), points[j])
 			imd.pushPt(points[j].pos.Sub(jkNormal), points[j])
 		}
+		// "next" normal becomes previous normal
+		ijNormal = jkNormal
 	}
 
 	// last point
@@ -591,4 +622,6 @@ func (imd *IMDraw) polyline(thickness float64, closed bool) {
 			imd.fillEllipseArc(pixel.V(thickness/2, thickness/2), normal.Angle(), normal.Angle()-math.Pi)
 		}
 	}
+
+	imd.restorePoints(points)
 }

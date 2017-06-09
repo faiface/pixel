@@ -91,8 +91,13 @@ func (c *Canvas) MakePicture(p pixel.Picture) pixel.TargetPicture {
 
 // SetMatrix sets a Matrix that every point will be projected by.
 func (c *Canvas) SetMatrix(m pixel.Matrix) {
-	for i := range m {
-		c.mat[i] = float32(m[i])
+	// pixel.Matrix is 3x2 with an implicit 0, 0, 1 row after it. So
+	// [0] [2] [4]    [0] [3] [6]
+	// [1] [3] [5] => [1] [4] [7]
+	//  0   0   1      0   0   1
+	// since all matrix ops are affine, the last row never changes, and we don't need to copy it
+	for i, j := range [...]int{0, 1, 3, 4, 6, 7} {
+		c.mat[j] = float32(m[i])
 	}
 }
 
@@ -216,6 +221,11 @@ func (c *Canvas) Color(at pixel.Vec) pixel.RGBA {
 // Implements GLPicture interface.
 func (c *Canvas) Texture() *glhf.Texture {
 	return c.gf.Texture()
+}
+
+// Frame returns the underlying OpenGL Frame of this Canvas.
+func (c *Canvas) Frame() *glhf.Frame {
+	return c.gf.frame
 }
 
 // SetPixels replaces the content of the Canvas with the provided pixels. The provided slice must be
