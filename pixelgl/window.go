@@ -90,10 +90,8 @@ func NewWindow(cfg WindowConfig) (*Window, error) {
 	err := mainthread.CallErr(func() error {
 		var err error
 
-		glfw.WindowHint(glfw.ContextVersionMajor, 3)
-		glfw.WindowHint(glfw.ContextVersionMinor, 3)
-		glfw.WindowHint(glfw.OpenGLProfile, glfw.OpenGLCoreProfile)
-		glfw.WindowHint(glfw.OpenGLForwardCompatible, glfw.True)
+		glfw.WindowHint(glfw.ContextVersionMajor, 2)
+		glfw.WindowHint(glfw.ContextVersionMinor, 1)
 
 		glfw.WindowHint(glfw.Resizable, bool2int[cfg.Resizable])
 		glfw.WindowHint(glfw.Decorated, bool2int[!cfg.Undecorated])
