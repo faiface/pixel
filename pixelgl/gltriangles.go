@@ -101,16 +101,17 @@ func (gt *GLTriangles) updateData(t pixel.Triangles) {
 	}
 
 	// TrianglesData short path
+	stride := gt.vs.Stride()
+	length := gt.Len()
 	if t, ok := t.(*pixel.TrianglesData); ok {
-		for i := 0; i < gt.Len(); i++ {
+		for i := 0; i < length; i++ {
 			var (
 				px, py = (*t)[i].Position.XY()
 				col    = (*t)[i].Color
 				tx, ty = (*t)[i].Picture.XY()
 				in     = (*t)[i].Intensity
 			)
-			s := gt.vs.Stride()
-			d := gt.data[i*s : i*s+9]
+			d := gt.data[i*stride : i*stride+9]
 			d[0] = float32(px)
 			d[1] = float32(py)
 			d[2] = float32(col.R)
@@ -125,27 +126,27 @@ func (gt *GLTriangles) updateData(t pixel.Triangles) {
 	}
 
 	if t, ok := t.(pixel.TrianglesPosition); ok {
-		for i := 0; i < gt.Len(); i++ {
+		for i := 0; i < length; i++ {
 			px, py := t.Position(i).XY()
-			gt.data[i*gt.vs.Stride()+0] = float32(px)
-			gt.data[i*gt.vs.Stride()+1] = float32(py)
+			gt.data[i*stride+0] = float32(px)
+			gt.data[i*stride+1] = float32(py)
 		}
 	}
 	if t, ok := t.(pixel.TrianglesColor); ok {
-		for i := 0; i < gt.Len(); i++ {
+		for i := 0; i < length; i++ {
 			col := t.Color(i)
-			gt.data[i*gt.vs.Stride()+2] = float32(col.R)
-			gt.data[i*gt.vs.Stride()+3] = float32(col.G)
-			gt.data[i*gt.vs.Stride()+4] = float32(col.B)
-			gt.data[i*gt.vs.Stride()+5] = float32(col.A)
+			gt.data[i*stride+2] = float32(col.R)
+			gt.data[i*stride+3] = float32(col.G)
+			gt.data[i*stride+4] = float32(col.B)
+			gt.data[i*stride+5] = float32(col.A)
 		}
 	}
 	if t, ok := t.(pixel.TrianglesPicture); ok {
-		for i := 0; i < gt.Len(); i++ {
+		for i := 0; i < length; i++ {
 			pic, intensity := t.Picture(i)
-			gt.data[i*gt.vs.Stride()+6] = float32(pic.X)
-			gt.data[i*gt.vs.Stride()+7] = float32(pic.Y)
-			gt.data[i*gt.vs.Stride()+8] = float32(intensity)
+			gt.data[i*stride+6] = float32(pic.X)
+			gt.data[i*stride+7] = float32(pic.Y)
+			gt.data[i*stride+8] = float32(intensity)
 		}
 	}
 }
