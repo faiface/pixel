@@ -60,9 +60,10 @@ func (gt *GLTriangles) Len() int {
 // SetLen efficiently resizes GLTriangles to len.
 //
 // Time complexity is amortized O(1).
-func (gt *GLTriangles) SetLen(len int) {
-	if len > gt.Len() {
-		needAppend := len - gt.Len()
+func (gt *GLTriangles) SetLen(length int) {
+	switch {
+	case length > gt.Len():
+		needAppend := length - gt.Len()
 		for i := 0; i < needAppend; i++ {
 			gt.data = append(gt.data,
 				0, 0,
@@ -71,11 +72,16 @@ func (gt *GLTriangles) SetLen(len int) {
 				0,
 			)
 		}
+	case length < gt.Len():
+		gt.data = gt.data[:length*gt.vs.Stride()]
+	default:
+		return
 	}
-	if len < gt.Len() {
-		gt.data = gt.data[:len*gt.vs.Stride()]
-	}
-	gt.submitData()
+	mainthread.CallNonBlock(func() {
+		gt.vs.Begin()
+		gt.vs.SetLen(length)
+		gt.vs.End()
+	})
 }
 
 // Slice returns a sub-Triangles of this GLTriangles in range [i, j).
@@ -95,16 +101,17 @@ func (gt *GLTriangles) updateData(t pixel.Triangles) {
 	}
 
 	// TrianglesData short path
+	stride := gt.vs.Stride()
+	length := gt.Len()
 	if t, ok := t.(*pixel.TrianglesData); ok {
-		for i := 0; i < gt.Len(); i++ {
+		for i := 0; i < length; i++ {
 			var (
 				px, py = (*t)[i].Position.XY()
 				col    = (*t)[i].Color
 				tx, ty = (*t)[i].Picture.XY()
 				in     = (*t)[i].Intensity
 			)
-			s := gt.vs.Stride()
-			d := gt.data[i*s : i*s+9]
+			d := gt.data[i*stride : i*stride+9]
 			d[0] = float32(px)
 			d[1] = float32(py)
 			d[2] = float32(col.R)
@@ -119,51 +126,28 @@ func (gt *GLTriangles) updateData(t pixel.Triangles) {
 	}
 
 	if t, ok := t.(pixel.TrianglesPosition); ok {
-		for i := 0; i < gt.Len(); i++ {
+		for i := 0; i < length; i++ {
 			px, py := t.Position(i).XY()
-			gt.data[i*gt.vs.Stride()+0] = float32(px)
-			gt.data[i*gt.vs.Stride()+1] = float32(py)
+			gt.data[i*stride+0] = float32(px)
+			gt.data[i*stride+1] = float32(py)
 		}
 	}
 	if t, ok := t.(pixel.TrianglesColor); ok {
-		for i := 0; i < gt.Len(); i++ {
+		for i := 0; i < length; i++ {
 			col := t.Color(i)
-			gt.data[i*gt.vs.Stride()+2] = float32(col.R)
-			gt.data[i*gt.vs.Stride()+3] = float32(col.G)
-			gt.data[i*gt.vs.Stride()+4] = float32(col.B)
-			gt.data[i*gt.vs.Stride()+5] = float32(col.A)
+			gt.data[i*stride+2] = float32(col.R)
+			gt.data[i*stride+3] = float32(col.G)
+			gt.data[i*stride+4] = float32(col.B)
+			gt.data[i*stride+5] = float32(col.A)
 		}
 	}
 	if t, ok := t.(pixel.TrianglesPicture); ok {
-		for i := 0; i < gt.Len(); i++ {
+		for i := 0; i < length; i++ {
 			pic, intensity := t.Picture(i)
-			gt.data[i*gt.vs.Stride()+6] = float32(pic.X)
-			gt.data[i*gt.vs.Stride()+7] = float32(pic.Y)
-			gt.data[i*gt.vs.Stride()+8] = float32(intensity)
+			gt.data[i*stride+6] = float32(pic.X)
+			gt.data[i*stride+7] = float32(pic.Y)
+			gt.data[i*stride+8] = float32(intensity)
 		}
-	}
-}
-
-func (gt *GLTriangles) submitData() {
-	// this code is supposed to copy the vertex data and CallNonBlock the update if
-	// the data is small enough, otherwise it'll block and not copy the data
-	if len(gt.data) < 256 { // arbitrary heurestic constant
-		data := append([]float32{}, gt.data...)
-		mainthread.CallNonBlock(func() {
-			gt.vs.Begin()
-			dataLen := len(data) / gt.vs.Stride()
-			gt.vs.SetLen(dataLen)
-			gt.vs.SetVertexData(data)
-			gt.vs.End()
-		})
-	} else {
-		mainthread.Call(func() {
-			gt.vs.Begin()
-			dataLen := len(gt.data) / gt.vs.Stride()
-			gt.vs.SetLen(dataLen)
-			gt.vs.SetVertexData(gt.data)
-			gt.vs.End()
-		})
 	}
 }
 
@@ -175,7 +159,23 @@ func (gt *GLTriangles) Update(t pixel.Triangles) {
 		panic(fmt.Errorf("(%T).Update: invalid triangles len", gt))
 	}
 	gt.updateData(t)
-	gt.submitData()
+
+	// this code is supposed to copy the vertex data and CallNonBlock the update if
+	// the data is small enough, otherwise it'll block and not copy the data
+	if len(gt.data) < 256 { // arbitrary heurestic constant
+		data := append([]float32{}, gt.data...)
+		mainthread.CallNonBlock(func() {
+			gt.vs.Begin()
+			gt.vs.SetVertexData(data)
+			gt.vs.End()
+		})
+	} else {
+		mainthread.Call(func() {
+			gt.vs.Begin()
+			gt.vs.SetVertexData(gt.data)
+			gt.vs.End()
+		})
+	}
 }
 
 // Copy returns an independent copy of this GLTriangles.
