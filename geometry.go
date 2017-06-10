@@ -65,6 +65,14 @@ func (u Vec) Sub(v Vec) Vec {
 	}
 }
 
+// To returns the vector from u to v. Equivalent to v.Sub(u).
+func (u Vec) To(v Vec) Vec {
+	return Vec{
+		v.X - u.X,
+		v.Y - u.Y,
+	}
+}
+
 // Scaled returns the vector u multiplied by c.
 func (u Vec) Scaled(c float64) Vec {
 	return Vec{u.X * c, u.Y * c}
@@ -100,6 +108,11 @@ func (u Vec) Rotated(angle float64) Vec {
 		u.X*cos - u.Y*sin,
 		u.X*sin + u.Y*cos,
 	}
+}
+
+// Normal returns a vector normal to u. Equivalent to u.Rotated(math.Pi / 2), but faster.
+func (u Vec) Normal() Vec {
+	return Vec{X: u.Y, Y: -u.X}
 }
 
 // Dot returns the dot product of vectors u and v.
