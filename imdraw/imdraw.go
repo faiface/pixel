@@ -128,7 +128,9 @@ func (imd *IMDraw) Draw(t pixel.Target) {
 // Push adds some points to the IM queue. All Pushed points will have the same properties except for
 // the position.
 func (imd *IMDraw) Push(pts ...pixel.Vec) {
-	imd.Color = pixel.ToRGBA(imd.Color)
+	if _, ok := imd.Color.(pixel.RGBA); !ok {
+		imd.Color = pixel.ToRGBA(imd.Color)
+	}
 	opts := point{
 		col:       imd.Color.(pixel.RGBA),
 		pic:       imd.Picture,
