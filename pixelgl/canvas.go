@@ -380,7 +380,7 @@ var canvasUniformFormat = glhf.AttrFormat{
 }
 
 var canvasVertexShader = `
-#version 130
+#version 330 core
 
 in vec2 position;
 in vec4 color;
@@ -405,7 +405,7 @@ void main() {
 `
 
 var canvasFragmentShader = `
-#version 130
+#version 330 core
 
 in vec4 Color;
 in vec2 TexCoords;
