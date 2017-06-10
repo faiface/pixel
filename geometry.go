@@ -110,7 +110,7 @@ func (u Vec) Rotated(angle float64) Vec {
 	}
 }
 
-// Normal returns a vector normal to u. Equivalent to u.Rotated(math.Pi / 2).
+// Normal returns a vector normal to u. Equivalent to u.Rotated(math.Pi / 2), but faster.
 func (u Vec) Normal() Vec {
 	return Vec{X: u.Y, Y: -u.X}
 }
