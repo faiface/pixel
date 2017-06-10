@@ -49,11 +49,6 @@ func (u Vec) XY() (x, y float64) {
 	return u.X, u.Y
 }
 
-// Normal returns a vector normal to u (rotated by math.pi/2)
-func (u Vec) Normal() Vec {
-	return Vec{X: u.Y, Y: -u.X}
-}
-
 // Add returns the sum of vectors u and v.
 func (u Vec) Add(v Vec) Vec {
 	return Vec{
@@ -70,7 +65,7 @@ func (u Vec) Sub(v Vec) Vec {
 	}
 }
 
-// To returns the vector from vector u to vector v, equivalent to v.Sub(u).
+// To returns the vector from u to v. Equivalent to v.Sub(u).
 func (u Vec) To(v Vec) Vec {
 	return Vec{
 		v.X - u.X,
@@ -113,6 +108,11 @@ func (u Vec) Rotated(angle float64) Vec {
 		u.X*cos - u.Y*sin,
 		u.X*sin + u.Y*cos,
 	}
+}
+
+// Normal returns a vector normal to u. Equivalent to u.Rotated(math.Pi / 2).
+func (u Vec) Normal() Vec {
+	return Vec{X: u.Y, Y: -u.X}
 }
 
 // Dot returns the dot product of vectors u and v.
