@@ -340,7 +340,7 @@ func (m Matrix) Chained(next Matrix) Matrix {
 //
 // Time complexity is O(1).
 func (m Matrix) Project(u Vec) Vec {
-	return Vec{X: m[0]*u.X + m[2]*u.Y + m[4], Y: m[1]*u.X + m[3]*u.Y + m[5]}
+	return Vec{m[0]*u.X + m[2]*u.Y + m[4], m[1]*u.X + m[3]*u.Y + m[5]}
 }
 
 // Unproject does the inverse operation to Project.
