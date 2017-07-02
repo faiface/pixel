@@ -80,14 +80,6 @@ func ToRGBA(c color.Color) RGBA {
 	if c, ok := c.(RGBA); ok {
 		return c
 	}
-	if c, ok := c.(color.RGBA); ok {
-		return RGBA{
-			R: float64(c.R) / 255,
-			G: float64(c.G) / 255,
-			B: float64(c.B) / 255,
-			A: float64(c.A) / 255,
-		}
-	}
 	r, g, b, a := c.RGBA()
 	return RGBA{
 		float64(r) / 0xffff,
