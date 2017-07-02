@@ -24,23 +24,19 @@ type Drawer struct {
 	Triangles Triangles
 	Picture   Picture
 
-	tris   map[Target]TargetTriangles
-	clean  map[Target]bool
-	pics   map[targetPicturePair]TargetPicture
-	dirty  bool
-	inited bool
+	targets map[Target]*drawerTarget
+	inited  bool
 }
 
-type targetPicturePair struct {
-	Target  Target
-	Picture Picture
+type drawerTarget struct {
+	tris  TargetTriangles
+	pics  map[Picture]TargetPicture
+	clean bool
 }
 
 func (d *Drawer) lazyInit() {
 	if !d.inited {
-		d.tris = make(map[Target]TargetTriangles)
-		d.clean = make(map[Target]bool)
-		d.pics = make(map[targetPicturePair]TargetPicture)
+		d.targets = make(map[Target]*drawerTarget)
 		d.inited = true
 	}
 }
@@ -50,7 +46,9 @@ func (d *Drawer) lazyInit() {
 func (d *Drawer) Dirty() {
 	d.lazyInit()
 
-	d.dirty = true
+	for _, t := range d.targets {
+		t.clean = false
+	}
 }
 
 // Draw efficiently draws Triangles with Picture onto the provided Target.
@@ -60,40 +58,39 @@ func (d *Drawer) Dirty() {
 func (d *Drawer) Draw(t Target) {
 	d.lazyInit()
 
-	if d.dirty {
-		for t := range d.clean {
-			d.clean[t] = false
-		}
-		d.dirty = false
-	}
-
 	if d.Triangles == nil {
 		return
 	}
 
-	tri := d.tris[t]
-	if tri == nil {
-		tri = t.MakeTriangles(d.Triangles)
-		d.tris[t] = tri
-		d.clean[t] = true
+	dt := d.targets[t]
+	if dt == nil {
+		dt = &drawerTarget{
+			pics: make(map[Picture]TargetPicture),
+		}
+		d.targets[t] = dt
 	}
 
-	if !d.clean[t] {
-		tri.SetLen(d.Triangles.Len())
-		tri.Update(d.Triangles)
-		d.clean[t] = true
+	if dt.tris == nil {
+		dt.tris = t.MakeTriangles(d.Triangles)
+		dt.clean = true
+	}
+
+	if !dt.clean {
+		dt.tris.SetLen(d.Triangles.Len())
+		dt.tris.Update(d.Triangles)
+		dt.clean = true
 	}
 
 	if d.Picture == nil {
-		tri.Draw()
+		dt.tris.Draw()
 		return
 	}
 
-	pic := d.pics[targetPicturePair{t, d.Picture}]
+	pic := dt.pics[d.Picture]
 	if pic == nil {
 		pic = t.MakePicture(d.Picture)
-		d.pics[targetPicturePair{t, d.Picture}] = pic
+		dt.pics[d.Picture] = pic
 	}
 
-	pic.Draw(tri)
+	pic.Draw(dt.tris)
 }
