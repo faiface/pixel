@@ -46,7 +46,7 @@ func BenchmarkTextWrite(b *testing.B) {
 	chunks := make([][]byte, len(lengths))
 	for i := range chunks {
 		chunk := make([]rune, lengths[i])
-		for j := range chunks[i] {
+		for j := range chunk {
 			chunk[j] = runeSet[rand.Intn(len(runeSet))]
 		}
 		chunks[i] = []byte(string(chunk))
