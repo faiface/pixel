@@ -15,7 +15,6 @@ func BenchmarkColorToRGBA(b *testing.B) {
 		pixel.RGB(0.8, 0.2, 0.5).Scaled(0.712),    // fastest
 	}
 	for _, col := range types {
-		col := col
 		b.Run(fmt.Sprintf("From %T", col), func(b *testing.B) {
 			for i := 0; i < b.N; i++ {
 				_ = pixel.ToRGBA(col)
