@@ -2,8 +2,8 @@ package audio
 
 // SampleRate is the number of audio samples a Streamer should produce per one second of audio.
 //
-// This value should be set at most once before using audio package. It is safe to rely on the fact,
-// that this value does not change during runtime.
+// This value should be set at most once before using audio package. It is safe to assume that this
+// value does not change during runtime.
 var SampleRate = 48000
 
 // Streamer is able to stream a finite or infinite sequence of audio samples.
@@ -32,7 +32,7 @@ type Streamer interface {
 	//
 	//   3. n == 0 && !ok
 	//
-	// The Streamer is drained and no more samples will come. Only this case may occur in the
+	// Streamer is drained and no more samples will come. Only this case may occur in the
 	// following calls.
 	Stream(samples [][2]float64) (n int, ok bool)
 }
