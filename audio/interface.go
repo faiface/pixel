@@ -32,7 +32,7 @@ type Streamer interface {
 	//
 	//   3. n == 0 && !ok
 	//
-	// Streamer is drained and no more samples will come. Only this case may occur in the
+	// The Streamer is drained and no more samples will come. Only this case may occur in the
 	// following calls.
 	Stream(samples [][2]float64) (n int, ok bool)
 }
