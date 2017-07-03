@@ -36,3 +36,22 @@ type Streamer interface {
 	// following calls.
 	Stream(samples [][2]float64) (n int, ok bool)
 }
+
+// StreamerFunc is a Streamer created by simply wrapping a streaming function (usually a closure,
+// which encloses a time tracking variable). This sometimes simplifies creating new streamers.
+//
+// Example:
+//
+//   noise := StreamerFunc(func(samples [][2]float64) (n int, ok bool) {
+//       for i := range samples {
+//           samples[i][0] = rand.Float64()*2 - 1
+//           samples[i][1] = rand.Float64()*2 - 1
+//       }
+//       return len(samples), true
+//   })
+type StreamerFunc func(samples [][2]float64) (n int, ok bool)
+
+// Stream calls the wrapped streaming function.
+func (sf StreamerFunc) Stream(samples [][2]float64) (n int, ok bool) {
+	return sf(samples)
+}
