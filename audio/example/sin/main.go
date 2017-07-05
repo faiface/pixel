@@ -20,7 +20,6 @@ func (s *sine) Stream(samples [][2]float64) (n int, ok bool) {
 	if len(samples) == 0 {
 		os.Exit(-1)
 	}
-	fmt.Println(len(samples))
 	for i := 0; i < len(samples)-2; i += 2 {
 		val := math.Sin(math.Pi*s.time*s.freq) / 1.1
 		s.time += 1 / s.rate
@@ -32,7 +31,6 @@ func (s *sine) Stream(samples [][2]float64) (n int, ok bool) {
 		samples[i+1][0] = low
 		samples[i+1][1] = high
 	}
-	fmt.Println(samples)
 	return len(samples), true
 }
 
