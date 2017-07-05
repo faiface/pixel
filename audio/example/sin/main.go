@@ -5,8 +5,6 @@ import (
 
 	"fmt"
 
-	"os"
-
 	"github.com/faiface/pixel/audio"
 )
 
@@ -17,10 +15,7 @@ type sine struct {
 }
 
 func (s *sine) Stream(samples [][2]float64) (n int, ok bool) {
-	if len(samples) == 0 {
-		os.Exit(-1)
-	}
-	for i := 0; i < len(samples)-2; i += 2 {
+	for i := 0; i < len(samples)-1; i += 2 {
 		val := math.Sin(math.Pi*s.time*s.freq) / 1.1
 		s.time += 1 / s.rate
 		valI := int16((1 << 15) * val)
