@@ -160,8 +160,8 @@ type Rect struct {
 // Note that the returned rectangle is not automatically normalized.
 func R(minX, minY, maxX, maxY float64) Rect {
 	return Rect{
-		Min: V(minX, minY),
-		Max: V(maxX, maxY),
+		Min: Vec{minX, minY},
+		Max: Vec{maxX, maxY},
 	}
 }
 
@@ -257,7 +257,7 @@ func (r Rect) Contains(u Vec) bool {
 	return r.Min.X <= u.X && u.X <= r.Max.X && r.Min.Y <= u.Y && u.Y <= r.Max.Y
 }
 
-// Union returns a minimal Rect which covers both r and s. Rects r and s should be normalized.
+// Union returns the minimal Rect which covers both r and s. Rects r and s must be normalized.
 func (r Rect) Union(s Rect) Rect {
 	return R(
 		math.Min(r.Min.X, s.Min.X),
@@ -265,6 +265,20 @@ func (r Rect) Union(s Rect) Rect {
 		math.Max(r.Max.X, s.Max.X),
 		math.Max(r.Max.Y, s.Max.Y),
 	)
+}
+
+// Intersect returns the maximal Rect which is covered by both r and s. Rects r and s must be normalized.
+func (r Rect) Intersect(s Rect) Rect {
+	t := R(
+		math.Min(r.Max.X, s.Max.X),
+		math.Min(r.Max.Y, s.Max.Y),
+		math.Max(r.Min.X, s.Min.X),
+		math.Max(r.Min.Y, s.Min.Y),
+	)
+	if t.Min.X >= t.Max.X || t.Min.Y >= t.Max.Y {
+		return Rect{}
+	}
+	return t
 }
 
 // Matrix is a 3x2 affine matrix that can be used for all kinds of spatial transforms, such
