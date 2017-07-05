@@ -203,6 +203,11 @@ func (r Rect) Size() Vec {
 	return V(r.W(), r.H())
 }
 
+// Area returns the area of r. If r is not normalized, area may be negative.
+func (r Rect) Area() float64 {
+	return r.W() * r.H()
+}
+
 // Center returns the position of the center of the Rect.
 func (r Rect) Center() Vec {
 	return Lerp(r.Min, r.Max, 0.5)
