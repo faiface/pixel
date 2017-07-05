@@ -2,9 +2,9 @@ package audio
 
 // SampleRate is the number of audio samples a Streamer should produce per one second of audio.
 //
-// This value should be set at most once before using audio package. It is safe to rely on the fact,
-// that this value does not change during runtime.
-var SampleRate = 48000
+// This value should be set at most once before using audio package. It is safe to assume that this
+// value does not change during runtime.
+var SampleRate float64 = 48000
 
 // Streamer is able to stream a finite or infinite sequence of audio samples.
 type Streamer interface {
@@ -35,4 +35,23 @@ type Streamer interface {
 	// The Streamer is drained and no more samples will come. Only this case may occur in the
 	// following calls.
 	Stream(samples [][2]float64) (n int, ok bool)
+}
+
+// StreamerFunc is a Streamer created by simply wrapping a streaming function (usually a closure,
+// which encloses a time tracking variable). This sometimes simplifies creating new streamers.
+//
+// Example:
+//
+//   noise := StreamerFunc(func(samples [][2]float64) (n int, ok bool) {
+//       for i := range samples {
+//           samples[i][0] = rand.Float64()*2 - 1
+//           samples[i][1] = rand.Float64()*2 - 1
+//       }
+//       return len(samples), true
+//   })
+type StreamerFunc func(samples [][2]float64) (n int, ok bool)
+
+// Stream calls the wrapped streaming function.
+func (sf StreamerFunc) Stream(samples [][2]float64) (n int, ok bool) {
+	return sf(samples)
 }

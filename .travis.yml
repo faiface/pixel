@@ -9,6 +9,7 @@ addons:
             - libxinerama-dev
             - libxcursor-dev
             - libxi-dev
+            - libasound2-dev
 go:
 - 1.8
 - 1.7.4
