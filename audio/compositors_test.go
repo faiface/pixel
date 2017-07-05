@@ -44,6 +44,22 @@ func collect(s audio.Streamer) [][2]float64 {
 	}
 }
 
+func TestTake(t *testing.T) {
+	for i := 0; i < 7; i++ {
+		total := time.Nanosecond * time.Duration(1e8+rand.Intn(1e9))
+		s, data := randomDataStreamer(total)
+		d := time.Nanosecond * time.Duration(rand.Int63n(total.Nanoseconds()))
+		numSamples := int(math.Ceil(d.Seconds() * audio.SampleRate))
+
+		want := data[:numSamples]
+		got := collect(audio.Take(d, s))
+
+		if !reflect.DeepEqual(want, got) {
+			t.Error("Take not working correctly")
+		}
+	}
+}
+
 func TestSeq(t *testing.T) {
 	var (
 		s    = make([]audio.Streamer, 7)
