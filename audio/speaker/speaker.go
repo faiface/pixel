@@ -84,7 +84,7 @@ func Update() error {
 			if val > +1 {
 				val = +1
 			}
-			valInt16 := int16(val * (1 << 15))
+			valInt16 := int16(val * (1<<15 - 1))
 			low := byte(valInt16 % (1 << 8))
 			high := byte(valInt16 / (1 << 8))
 			buf[i*4+c*2+0] = low
