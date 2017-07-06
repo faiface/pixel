@@ -64,7 +64,6 @@ func Play(s audio.Streamer) {
 // This function should be called at least once the duration of bufferSize given in Init, but it's
 // recommended to call it more frequently to avoid glitches.
 func Update() error {
-
 	// pull data from the streamer, if any
 	streamerMu.Lock()
 	n := 0
