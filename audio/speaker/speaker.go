@@ -64,8 +64,8 @@ func Play(s audio.Streamer) {
 // This function should be called at least once the duration of bufferSize given in Init, but it's
 // recommended to call it more frequently to avoid glitches.
 func Update() error {
-	// pull data from the streamer, if any
 	streamerMu.Lock()
+	// pull data from the streamer, if any
 	n := 0
 	if streamer != nil {
 		var ok bool
@@ -74,9 +74,6 @@ func Update() error {
 			streamer = nil
 		}
 	}
-	streamerMu.Unlock()
-
-	playerMu.Lock()
 	// convert samples to bytes
 	for i := range samples[:n] {
 		for c := range samples[i] {
@@ -98,7 +95,10 @@ func Update() error {
 	for i := n * 4; i < len(buf); i++ {
 		buf[i] = 0
 	}
+	streamerMu.Unlock()
+
 	// send data to speaker
+	playerMu.Lock()
 	player.Write(buf)
 	playerMu.Unlock()
 
