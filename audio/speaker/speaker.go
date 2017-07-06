@@ -77,6 +77,7 @@ func Update() error {
 	}
 	streamerMu.Unlock()
 
+	playerMu.Lock()
 	// convert samples to bytes
 	for i := range samples[:n] {
 		for c := range samples[i] {
@@ -94,13 +95,11 @@ func Update() error {
 			buf[i*4+c*2+1] = high
 		}
 	}
-
 	// fill the rest with silence
 	for i := n * 4; i < len(buf); i++ {
 		buf[i] = 0
 	}
-
-	playerMu.Lock()
+	// send data to speaker
 	player.Write(buf)
 	playerMu.Unlock()
 
