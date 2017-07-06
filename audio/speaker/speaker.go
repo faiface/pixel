@@ -11,10 +11,12 @@ import (
 )
 
 var (
-	mu       sync.Mutex
-	streamer audio.Streamer
-	samples  [][2]float64
-	buf      []byte
+	streamerMu sync.Mutex
+	streamer   audio.Streamer
+	samples    [][2]float64
+	buf        []byte
+
+	playerMu sync.Mutex
 	player   *oto.Player
 )
 
@@ -26,8 +28,8 @@ var (
 // bufferSize means lower CPU usage and more reliable playback. Lower bufferSize means better
 // responsiveness and less delay.
 func Init(bufferSize time.Duration) error {
-	mu.Lock()
-	defer mu.Unlock()
+	playerMu.Lock()
+	defer playerMu.Unlock()
 
 	if player != nil {
 		player.Close()
@@ -51,10 +53,9 @@ func Init(bufferSize time.Duration) error {
 
 // Play starts playing the provided Streamer through the speaker.
 func Play(s audio.Streamer) {
-	mu.Lock()
-	defer mu.Unlock()
-
+	streamerMu.Lock()
 	streamer = s
+	streamerMu.Unlock()
 }
 
 // Update pulls new data from the playing Streamers and sends it to the speaker. Blocks until the
@@ -63,23 +64,18 @@ func Play(s audio.Streamer) {
 // This function should be called at least once the duration of bufferSize given in Init, but it's
 // recommended to call it more frequently to avoid glitches.
 func Update() error {
-	mu.Lock()
-	defer mu.Unlock()
-
-	if player == nil {
-		panic("didn't call speaker.Init")
-	}
 
 	// pull data from the streamer, if any
+	streamerMu.Lock()
 	n := 0
 	if streamer != nil {
 		var ok bool
 		n, ok = streamer.Stream(samples)
 		if !ok {
 			streamer = nil
-			return nil
 		}
 	}
+	streamerMu.Unlock()
 
 	// convert samples to bytes
 	for i := range samples[:n] {
@@ -104,7 +100,9 @@ func Update() error {
 		buf[i] = 0
 	}
 
+	playerMu.Lock()
 	player.Write(buf)
+	playerMu.Unlock()
 
 	return nil
 }
