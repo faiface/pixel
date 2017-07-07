@@ -106,7 +106,6 @@ func update() {
 	for i := n * 4; i < len(buf); i++ {
 		buf[i] = 0
 	}
-
 	// send data to speaker
 	player.Write(buf)
 }
