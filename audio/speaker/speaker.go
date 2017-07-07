@@ -11,11 +11,11 @@ import (
 )
 
 var (
-	mu       sync.Mutex
-	streamer audio.Streamer
-	samples  [][2]float64
-	buf      []byte
-	player   *oto.Player
+	mu      sync.Mutex
+	mixer   audio.Mixer
+	samples [][2]float64
+	buf     []byte
+	player  *oto.Player
 )
 
 // Init initializes audio playback through speaker. Must be called before using this package. The
@@ -64,29 +64,21 @@ func Unlock() {
 	mu.Unlock()
 }
 
-// Play starts playing the provided Streamer through the speaker.
-func Play(s audio.Streamer) {
+// Play starts playing all provided Streamers through the speaker.
+func Play(s ...audio.Streamer) {
 	mu.Lock()
-	streamer = s
+	mixer.Play(s...)
 	mu.Unlock()
 }
 
 // update pulls new data from the playing Streamers and sends it to the speaker. Blocks until the
 // data is sent and started playing.
 func update() {
-	// pull data from the streamer, if any
-	n := 0
-	if streamer != nil {
-		var ok bool
-		mu.Lock()
-		n, ok = streamer.Stream(samples)
-		mu.Unlock()
-		if !ok {
-			streamer = nil
-		}
-	}
-	// convert samples to bytes
-	for i := range samples[:n] {
+	mu.Lock()
+	mixer.Stream(samples)
+	mu.Unlock()
+
+	for i := range samples {
 		for c := range samples[i] {
 			val := samples[i][c]
 			if val < -1 {
@@ -102,10 +94,6 @@ func update() {
 			buf[i*4+c*2+1] = high
 		}
 	}
-	// fill the rest with silence
-	for i := n * 4; i < len(buf); i++ {
-		buf[i] = 0
-	}
-	// send data to speaker
+
 	player.Write(buf)
 }
