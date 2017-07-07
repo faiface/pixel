@@ -11,29 +11,25 @@ import (
 )
 
 var (
-	streamerMu sync.Mutex
-	streamer   audio.Streamer
-	samples    [][2]float64
-	buf        []byte
-
-	playerMu sync.Mutex
+	mu       sync.Mutex
+	streamer audio.Streamer
+	samples  [][2]float64
+	buf      []byte
 	player   *oto.Player
 )
 
 // Init initializes audio playback through speaker. Must be called before using this package. The
 // value of audio.SampleRate must be set (or left to the default) before calling this function.
 //
-// The bufferSize argument specifies the length of the speaker's buffer. On calling Update, speaker
-// pulls this amount of data from the playing Streamers and starts playing this data. Bigger
-// bufferSize means lower CPU usage and more reliable playback. Lower bufferSize means better
-// responsiveness and less delay.
+// The bufferSize argument specifies the length of the speaker's buffer. Bigger bufferSize means
+// lower CPU usage and more reliable playback. Lower bufferSize means better responsiveness and less
+// delay.
 func Init(bufferSize time.Duration) error {
-	playerMu.Lock()
-	defer playerMu.Unlock()
+	mu.Lock()
+	defer mu.Unlock()
 
 	if player != nil {
-		player.Close()
-		player = nil
+		panic("already called Init")
 	}
 
 	numSamples := int(math.Ceil(bufferSize.Seconds() * audio.SampleRate))
@@ -48,28 +44,43 @@ func Init(bufferSize time.Duration) error {
 	samples = make([][2]float64, numSamples)
 	buf = make([]byte, numBytes)
 
+	go func() {
+		for {
+			update()
+		}
+	}()
+
 	return nil
+}
+
+// Lock locks the speaker. While locked, speaker won't pull new data from the playing Stramers. Lock
+// if you want to modify any currently playing Streamers to avoid race conditions.
+func Lock() {
+	mu.Lock()
+}
+
+// Unlock unlocks the speaker. Call after modifying any currently playing Streamer.
+func Unlock() {
+	mu.Unlock()
 }
 
 // Play starts playing the provided Streamer through the speaker.
 func Play(s audio.Streamer) {
-	streamerMu.Lock()
+	mu.Lock()
 	streamer = s
-	streamerMu.Unlock()
+	mu.Unlock()
 }
 
-// Update pulls new data from the playing Streamers and sends it to the speaker. Blocks until the
+// update pulls new data from the playing Streamers and sends it to the speaker. Blocks until the
 // data is sent and started playing.
-//
-// This function should be called at least once the duration of bufferSize given in Init, but it's
-// recommended to call it more frequently to avoid glitches.
-func Update() error {
-	streamerMu.Lock()
+func update() {
 	// pull data from the streamer, if any
 	n := 0
 	if streamer != nil {
 		var ok bool
+		mu.Lock()
 		n, ok = streamer.Stream(samples)
+		mu.Unlock()
 		if !ok {
 			streamer = nil
 		}
@@ -95,12 +106,7 @@ func Update() error {
 	for i := n * 4; i < len(buf); i++ {
 		buf[i] = 0
 	}
-	streamerMu.Unlock()
 
 	// send data to speaker
-	playerMu.Lock()
 	player.Write(buf)
-	playerMu.Unlock()
-
-	return nil
 }
