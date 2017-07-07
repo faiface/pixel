@@ -77,3 +77,28 @@ func TestSeq(t *testing.T) {
 		t.Error("Seq not working correctly")
 	}
 }
+
+func TestMix(t *testing.T) {
+	var (
+		s    = make([]audio.Streamer, 7)
+		want [][2]float64
+	)
+	for i := range s {
+		var data [][2]float64
+		s[i], data = randomDataStreamer(time.Nanosecond * time.Duration(1e8+rand.Intn(1e9)))
+		for j := range data {
+			if j >= len(want) {
+				want = append(want, data[j])
+				continue
+			}
+			want[j][0] += data[j][0]
+			want[j][1] += data[j][1]
+		}
+	}
+
+	got := collect(audio.Mix(s...))
+
+	if !reflect.DeepEqual(want, got) {
+		t.Error("Mix not working correctly")
+	}
+}

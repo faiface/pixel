@@ -38,3 +38,50 @@ func Seq(s ...Streamer) Streamer {
 		return n, ok
 	})
 }
+
+// Mix takes zero or more Streamers and returns a Streamer which streames them mixed together.
+func Mix(s ...Streamer) Streamer {
+	return StreamerFunc(func(samples [][2]float64) (n int, ok bool) {
+		var tmp, mix [512][2]float64
+
+		for len(samples) > 0 {
+			toStream := len(mix)
+			if toStream > len(samples) {
+				toStream = len(samples)
+			}
+
+			// clear the mix buffer
+			for i := range mix[:toStream] {
+				mix[i] = [2]float64{}
+			}
+
+			snMax := 0 // max number of streamed samples in this iteration
+			for _, st := range s {
+				// mix the stream
+				sn, sok := st.Stream(tmp[:toStream])
+				if sn > snMax {
+					snMax = sn
+				}
+				ok = ok || sok
+
+				for i := range tmp[:sn] {
+					mix[i][0] += tmp[i][0]
+					mix[i][1] += tmp[i][1]
+				}
+			}
+
+			// copy mix buffer into samples
+			for i := range mix[:snMax] {
+				samples[i] = mix[i]
+			}
+
+			n += snMax
+			if snMax < len(mix) {
+				break
+			}
+			samples = samples[snMax:]
+		}
+
+		return n, ok
+	})
+}
