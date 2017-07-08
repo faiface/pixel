@@ -4,6 +4,10 @@ type Mixer struct {
 	streamers []Streamer
 }
 
+func (m *Mixer) Len() int {
+	return len(m.streamers)
+}
+
 func (m *Mixer) Play(s ...Streamer) {
 	m.streamers = append(m.streamers, s...)
 }
