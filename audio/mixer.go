@@ -1,17 +1,23 @@
 package audio
 
+// Mixer allows for dynamic mixing of arbitrary number of Streamers. Mixer automatically removes
+// drained Streamers. Mixer's stream never drains, when empty, Mixer streams silence.
 type Mixer struct {
 	streamers []Streamer
 }
 
+// Len returns the number of Streamers currently playing in the Mixer.
 func (m *Mixer) Len() int {
 	return len(m.streamers)
 }
 
+// Play adds Streamers to the Mixer.
 func (m *Mixer) Play(s ...Streamer) {
 	m.streamers = append(m.streamers, s...)
 }
 
+// Stream streams all Streamers currently in the Mixer mixed together. This method always returns
+// len(samples), true. If there are no Streamers available, this methods streams silence.
 func (m *Mixer) Stream(samples [][2]float64) (n int, ok bool) {
 	var tmp [512][2]float64
 
