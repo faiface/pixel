@@ -16,6 +16,7 @@ var (
 	samples [][2]float64
 	buf     []byte
 	player  *oto.Player
+	done    chan struct{}
 )
 
 // Init initializes audio playback through speaker. Must be called before using this package. The
@@ -29,11 +30,18 @@ func Init(bufferSize time.Duration) error {
 	defer mu.Unlock()
 
 	if player != nil {
-		panic("already called Init")
+		done <- struct{}{}
+		<-done
+		player.Close()
 	}
+
+	mixer = audio.Mixer{}
 
 	numSamples := int(math.Ceil(bufferSize.Seconds() * audio.SampleRate))
 	numBytes := numSamples * 4
+
+	samples = make([][2]float64, numSamples)
+	buf = make([]byte, numBytes)
 
 	var err error
 	player, err = oto.NewPlayer(int(audio.SampleRate), 2, 2, numBytes)
@@ -41,12 +49,17 @@ func Init(bufferSize time.Duration) error {
 		return errors.Wrap(err, "failed to initialize speaker")
 	}
 
-	samples = make([][2]float64, numSamples)
-	buf = make([]byte, numBytes)
+	done = make(chan struct{})
 
 	go func() {
 		for {
-			update()
+			select {
+			default:
+				update()
+			case <-done:
+				done <- struct{}{}
+				return
+			}
 		}
 	}()
 
