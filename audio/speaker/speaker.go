@@ -31,7 +31,6 @@ func Init(bufferSize time.Duration) error {
 
 	if player != nil {
 		done <- struct{}{}
-		<-done
 		player.Close()
 	}
 
@@ -57,7 +56,6 @@ func Init(bufferSize time.Duration) error {
 			default:
 				update()
 			case <-done:
-				done <- struct{}{}
 				return
 			}
 		}
