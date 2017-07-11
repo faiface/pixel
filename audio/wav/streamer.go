@@ -1,9 +1,11 @@
 package wav
 
 import (
+	"fmt"
 	"io"
 	"time"
 
+	"github.com/faiface/pixel/audio"
 	"github.com/pkg/errors"
 )
 
@@ -19,6 +21,8 @@ type Streamer struct {
 	pos int32
 	err error
 }
+
+var _ audio.StreamSeekCloser = (*Streamer)(nil)
 
 func NewStreamer(rsc ReadSeekCloser) (s *Streamer, err error) {
 	var (
@@ -64,18 +68,18 @@ func (s *Streamer) Position() time.Duration {
 	return frameIndex * frameTime
 }
 
-func (s *Streamer) Seek(d time.Duration) {
+func (s *Streamer) Seek(d time.Duration) error {
 	if d < 0 || s.Duration() < d {
-		panic("wav: seek duration out of range")
+		return fmt.Errorf("wav: seek duration %v out of range [%v, %v]", d, 0, s.Duration())
 	}
 	frame := int32(d / (time.Second / time.Duration(s.h.sampleRate)))
 	pos := frame * int32(s.h.bytesPerFrame)
 	_, err := s.rsc.Seek(int64(pos)+44, io.SeekStart) // 44 is the size of the header
 	if err != nil {
-		s.err = err
-		return
+		return errors.Wrap(err, "wav: seek error")
 	}
 	s.pos = pos
+	return nil
 }
 
 func (s *Streamer) Stream(samples [][2]float64) (n int, ok bool) {
