@@ -70,7 +70,7 @@ func (s *Streamer) Seek(d time.Duration) {
 	}
 	frame := int32(d / (time.Second / time.Duration(s.h.sampleRate)))
 	pos := frame * int32(s.h.bytesPerFrame)
-	_, err := s.rsc.Seek(int64(pos), io.SeekStart)
+	_, err := s.rsc.Seek(int64(pos)+44, io.SeekStart) // 44 is the size of the header
 	if err != nil {
 		s.err = err
 		return
