@@ -5,7 +5,7 @@ import "time"
 type Ctrl struct {
 	Streamer Streamer
 	Paused   bool
-	Duration time.Duration
+	Position time.Duration
 }
 
 func (c *Ctrl) Stream(samples [][2]float64) (n int, ok bool) {
@@ -19,6 +19,6 @@ func (c *Ctrl) Stream(samples [][2]float64) (n int, ok bool) {
 		return len(samples), true
 	}
 	n, ok = c.Streamer.Stream(samples)
-	c.Duration += time.Duration(n) * time.Second / time.Duration(SampleRate)
+	c.Position += time.Duration(n) * time.Second / time.Duration(SampleRate)
 	return n, ok
 }
