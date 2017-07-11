@@ -99,8 +99,8 @@ func update() {
 				val = +1
 			}
 			valInt16 := int16(val * (1<<15 - 1))
-			low := byte(valInt16 % (1 << 8))
-			high := byte(valInt16 / (1 << 8))
+			low := byte(valInt16)
+			high := byte(valInt16 >> 8)
 			buf[i*4+c*2+0] = low
 			buf[i*4+c*2+1] = high
 		}
