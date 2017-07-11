@@ -61,7 +61,7 @@ func (d *Streamer) Stream(samples [][2]float64) (n int, ok bool) {
 		p := make([]byte, len(samples)*width)
 		n, err := d.rc.Read(p)
 		for i, j := 0, 0; i < n-width; i, j = i+width, j+1 {
-			val := float64(p[i])/255*2 - 1
+			val := float64(p[i])/(1<<8-1)*2 - 1
 			samples[j][0] = val
 			samples[j][1] = val
 		}
@@ -75,8 +75,8 @@ func (d *Streamer) Stream(samples [][2]float64) (n int, ok bool) {
 		p := make([]byte, len(samples)*width)
 		n, err := d.rc.Read(p)
 		for i, j := 0, 0; i < n-width; i, j = i+width, j+1 {
-			samples[j][0] = float64(p[i+0])/255*2 - 1
-			samples[j][1] = float64(p[i+1])/255*2 - 1
+			samples[j][0] = float64(p[i+0])/(1<<8-1)*2 - 1
+			samples[j][1] = float64(p[i+1])/(1<<8-1)*2 - 1
 		}
 		if err != nil {
 			d.err = err
