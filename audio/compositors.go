@@ -6,6 +6,8 @@ import (
 )
 
 // Take returns a Streamer which streams s for at most d duration.
+//
+// TODO: should Take propagate an error?
 func Take(d time.Duration, s Streamer) Streamer {
 	currSample := 0
 	numSamples := int(math.Ceil(d.Seconds() * SampleRate))
@@ -24,6 +26,8 @@ func Take(d time.Duration, s Streamer) Streamer {
 }
 
 // Seq takes zero or more Streamers and returns a Streamer which streams them one by one without pauses.
+//
+// Seq does not propagate errors from the Streamers.
 func Seq(s ...Streamer) Streamer {
 	i := 0
 	return StreamerFunc(func(samples [][2]float64) (n int, ok bool) {
@@ -40,6 +44,8 @@ func Seq(s ...Streamer) Streamer {
 }
 
 // Mix takes zero or more Streamers and returns a Streamer which streames them mixed together.
+//
+// Mix does not propagate errors from the Streamers.
 func Mix(s ...Streamer) Streamer {
 	return StreamerFunc(func(samples [][2]float64) (n int, ok bool) {
 		var tmp [512][2]float64

@@ -54,3 +54,12 @@ func (m *Mixer) Stream(samples [][2]float64) (n int, ok bool) {
 
 	return n, true
 }
+
+// Err always returns nil for Mixer.
+//
+// There are two reasons. The first one is that erroring Streamers are immediately drained and
+// removed from the Mixer. The second one is that one Streamer shouldn't break the whole Mixer and
+// you should handle the errors right where they can happen.
+func (m *Mixer) Err() error {
+	return nil
+}

@@ -22,3 +22,10 @@ func (c *Ctrl) Stream(samples [][2]float64) (n int, ok bool) {
 	c.Position += time.Duration(n) * time.Second / time.Duration(SampleRate)
 	return n, ok
 }
+
+func (c *Ctrl) Err() error {
+	if c.Streamer == nil {
+		return nil
+	}
+	return c.Err()
+}

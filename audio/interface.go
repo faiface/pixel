@@ -28,13 +28,24 @@ type Streamer interface {
 	//   2. 0 < n && n < len(samples) && ok
 	//
 	// Stream streamed n samples and drained the Streamer. Only case 3 may occur in the
-	// following calls.
+	// following calls. If Err return a non-nil error, only this case is valid.
 	//
 	//   3. n == 0 && !ok
 	//
 	// The Streamer is drained and no more samples will come. Only this case may occur in the
 	// following calls.
 	Stream(samples [][2]float64) (n int, ok bool)
+
+	// Err returns an error which occured during streaming. If no error occured, nil is
+	// returned.
+	//
+	// When an error occurs, Streamer must become drained and Stream must return 0, false
+	// forever.
+	//
+	// The reason why Stream doesn't return an error is that it dramatically simplifies
+	// programming with Streamer. It's not very important to catch the error right when it
+	// happens.
+	Err() error
 }
 
 // StreamerFunc is a Streamer created by simply wrapping a streaming function (usually a closure,
@@ -54,4 +65,9 @@ type StreamerFunc func(samples [][2]float64) (n int, ok bool)
 // Stream calls the wrapped streaming function.
 func (sf StreamerFunc) Stream(samples [][2]float64) (n int, ok bool) {
 	return sf(samples)
+}
+
+// Err always returns nil.
+func (sf StreamerFunc) Err() error {
+	return nil
 }
