@@ -1,5 +1,7 @@
 package audio
 
+import "time"
+
 // SampleRate is the number of audio samples a Streamer should produce per one second of audio.
 //
 // This value should be set at most once before using audio package. It is safe to assume that this
@@ -46,6 +48,43 @@ type Streamer interface {
 	// programming with Streamer. It's not very important to catch the error right when it
 	// happens.
 	Err() error
+}
+
+// StreamSeeker is a finite duration Streamer which supports seeking to an arbitrary position.
+type StreamSeeker interface {
+	Streamer
+
+	// Duration returns the total duration of the Streamer.
+	Duration() time.Duration
+
+	// Position returns the current position of the Streamer. This value is between 0 and the
+	// total duration.
+	Position() time.Duration
+
+	// Seek sets the position of the Streamer to the provided value.
+	//
+	// If an error occurs during seeking, the position remains unchanged. This error will not be
+	// returned through the Streamer's Err method.
+	Seek(d time.Duration) error
+}
+
+// StreamCloser is a Streamer streaming from a resource which needs to be released, such as a file
+// or a network connection.
+type StreamCloser interface {
+	Streamer
+
+	// Close closes the Streamer and releases it's resources. Streamer will no longer stream any
+	// samples.
+	Close() error
+}
+
+// StreamSeekCloser is a union of StreamSeeker and StreamCloser.
+type StreamSeekCloser interface {
+	Streamer
+	Duration() time.Duration
+	Position() time.Duration
+	Seek(d time.Duration) error
+	Close() error
 }
 
 // StreamerFunc is a Streamer created by simply wrapping a streaming function (usually a closure,
