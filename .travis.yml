@@ -10,6 +10,7 @@ addons:
             - libxcursor-dev
             - libxi-dev
             - libopenal-dev
+            - libasound2-dev
 go:
 - 1.8
 - 1.7.4
