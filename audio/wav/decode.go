@@ -1,3 +1,4 @@
+// Package wav implements audio data decoding in WAVE format through an audio.StreamSeekCloser.
 package wav
 
 import (
@@ -10,12 +11,18 @@ import (
 	"github.com/pkg/errors"
 )
 
+// ReadSeekCloser is a union of io.Reader, io.Seeker and io.Closer.
 type ReadSeekCloser interface {
 	io.Reader
 	io.Seeker
 	io.Closer
 }
 
+// Decode takes a ReadSeekCloser containing audio data in WAVE format and returns a
+// StreamSeekCloser, which streams that audio.
+//
+// Do not close the supplied ReadSeekCloser, instead, use the Close method of the returned
+// StreamSeekCloser when you want to release the resources.
 func Decode(rsc ReadSeekCloser) (s audio.StreamSeekCloser, err error) {
 	var d decoder
 	d.rsc = rsc
