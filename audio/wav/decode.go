@@ -24,8 +24,7 @@ type ReadSeekCloser interface {
 // Do not close the supplied ReadSeekCloser, instead, use the Close method of the returned
 // StreamSeekCloser when you want to release the resources.
 func Decode(rsc ReadSeekCloser) (s audio.StreamSeekCloser, err error) {
-	var d decoder
-	d.rsc = rsc
+	d := decoder{rsc: rsc}
 	defer func() { // hacky way to always close rsc if an error occured
 		if err != nil {
 			d.rsc.Close()
