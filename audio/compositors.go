@@ -30,9 +30,9 @@ func (t *take) Stream(samples [][2]float64) (n int, ok bool) {
 	if len(samples) < toStream {
 		toStream = len(samples)
 	}
-	sn, sok := t.s.Stream(samples[:toStream])
-	t.currSample += sn
-	return sn, sok
+	n, ok = t.s.Stream(samples[:toStream])
+	t.currSample += n
+	return n, ok
 }
 
 func (t *take) Err() error {
