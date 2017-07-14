@@ -94,15 +94,14 @@ func (s *decoder) Duration() time.Duration {
 
 func (s *decoder) Position() time.Duration {
 	frameIndex := time.Duration(s.pos / int32(s.h.BytesPerFrame))
-	frameTime := time.Second / time.Duration(s.h.SampleRate)
-	return frameIndex * frameTime
+	return frameIndex * time.Second / time.Duration(s.h.SampleRate)
 }
 
 func (s *decoder) Seek(d time.Duration) error {
 	if d < 0 || s.Duration() < d {
 		return fmt.Errorf("wav: seek duration %v out of range [%v, %v]", d, 0, s.Duration())
 	}
-	frame := int32(d / (time.Second / time.Duration(s.h.SampleRate)))
+	frame := int32(d * time.Duration(s.h.SampleRate) / time.Second)
 	pos := frame * int32(s.h.BytesPerFrame)
 	_, err := s.rsc.Seek(int64(pos)+44, io.SeekStart) // 44 is the size of the header
 	if err != nil {
