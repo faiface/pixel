@@ -146,6 +146,7 @@ func (s *decoder) Stream(samples [][2]float64) (n int, ok bool) {
 			samples[j][1] = float64(int16(p[i+2])+int16(p[i+3])*(1<<8)) / (1<<15 - 1)
 		}
 	}
+	s.pos += int32(n)
 	return n / bytesPerFrame, true
 }
 
