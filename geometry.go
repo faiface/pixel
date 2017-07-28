@@ -236,8 +236,8 @@ func (r Rect) Resized(anchor, size Vec) Rect {
 	}
 	fraction := Vec{size.X / r.W(), size.Y / r.H()}
 	return Rect{
-		Min: anchor.Add(r.Min.Sub(anchor)).ScaledXY(fraction),
-		Max: anchor.Add(r.Max.Sub(anchor)).ScaledXY(fraction),
+		Min: anchor.Add(r.Min.Sub(anchor).ScaledXY(fraction)),
+		Max: anchor.Add(r.Max.Sub(anchor).ScaledXY(fraction)),
 	}
 }
 
