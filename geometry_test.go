@@ -1,15 +1,11 @@
 package pixel_test
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/faiface/pixel"
 )
-
-type rectTestInput struct {
-	name string
-	rect pixel.Rect
-}
 
 type rectTestTransform struct {
 	name string
@@ -19,10 +15,10 @@ type rectTestTransform struct {
 func TestResizeRect(t *testing.T) {
 
 	// rectangles
-	squareAroundOrigin := rectTestInput{"square around origin", pixel.R(-10, -10, 10, 10)}
-	squareAround2020 := rectTestInput{"square around 20, 20", pixel.R(10, 10, 30, 30)}
-	rectangleAroundOrigin := rectTestInput{"rectangle around origin", pixel.R(-20, -10, 20, 10)}
-	rectangleAround2020 := rectTestInput{"rectangle around 20, 20", pixel.R(0, 10, 40, 30)}
+	squareAroundOrigin := pixel.R(-10, -10, 10, 10)
+	squareAround2020 := pixel.R(10, 10, 30, 30)
+	rectangleAroundOrigin := pixel.R(-20, -10, 20, 10)
+	rectangleAround2020 := pixel.R(0, 10, 40, 30)
 
 	// resize transformations
 	resizeByHalfAroundCenter := rectTestTransform{"by half around center", func(rect pixel.Rect) pixel.Rect {
@@ -42,7 +38,7 @@ func TestResizeRect(t *testing.T) {
 	}}
 
 	testCases := []struct {
-		input     rectTestInput
+		input     pixel.Rect
 		transform rectTestTransform
 		answer    pixel.Rect
 	}{
@@ -73,9 +69,11 @@ func TestResizeRect(t *testing.T) {
 	}
 
 	for _, testCase := range testCases {
-		testResult := testCase.transform.f(testCase.input.rect)
-		if testResult != testCase.answer {
-			t.Errorf("Resizing %s %s failed, got: %v, wanted: %v\n", testCase.input.name, testCase.transform.name, testResult, testCase.answer)
-		}
+		t.Run(fmt.Sprintf("Resize %v %s", testCase.input, testCase.transform.name), func(t *testing.T) {
+			testResult := testCase.transform.f(testCase.input)
+			if testResult != testCase.answer {
+				t.Errorf("Got: %v, wanted: %v\n", testResult, testCase.answer)
+			}
+		})
 	}
 }
