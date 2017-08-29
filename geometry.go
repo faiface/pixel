@@ -112,7 +112,7 @@ func (u Vec) Rotated(angle float64) Vec {
 
 // Normal returns a vector normal to u. Equivalent to u.Rotated(math.Pi / 2), but faster.
 func (u Vec) Normal() Vec {
-	return Vec{u.Y, -u.X}
+	return Vec{-u.Y, u.X}
 }
 
 // Dot returns the dot product of vectors u and v.
