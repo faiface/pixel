@@ -348,12 +348,12 @@ func (m Matrix) Rotated(around Vec, angle float64) Matrix {
 // after the transformations of this Matrix.
 func (m Matrix) Chained(next Matrix) Matrix {
 	return Matrix{
-		m[0]*next[0] + m[2]*next[1],
-		m[1]*next[0] + m[3]*next[1],
-		m[0]*next[2] + m[2]*next[3],
-		m[1]*next[2] + m[3]*next[3],
-		m[0]*next[4] + m[2]*next[5] + m[4],
-		m[1]*next[4] + m[3]*next[5] + m[5],
+		next[0]*m[0] + next[2]*m[1],
+		next[1]*m[0] + next[3]*m[1],
+		next[0]*m[2] + next[2]*m[3],
+		next[1]*m[2] + next[3]*m[3],
+		next[0]*m[4] + next[2]*m[5] + next[4],
+		next[1]*m[4] + next[3]*m[5] + next[5],
 	}
 }
 
