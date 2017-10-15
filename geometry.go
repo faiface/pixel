@@ -49,6 +49,11 @@ func V(x, y float64) Vec {
 	return Vec{x, y}
 }
 
+// Unit returns a vector of length 1 facing the given angle.
+func Unit(angle float64) Vec {
+	return Vec{1, 0}.Rotated(angle)
+}
+
 // String returns the string representation of the vector u.
 //
 //   u := pixel.V(4.5, -1.3)
