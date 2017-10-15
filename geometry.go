@@ -144,6 +144,14 @@ func (u Vec) Cross(v Vec) float64 {
 	return u.X*v.Y - v.X*u.Y
 }
 
+// Project returns a projection (or component) of vector u in the direction of vector v.
+//
+// Behaviour is undefined if v is a zero vector.
+func (u Vec) Project(v Vec) Vec {
+	len := u.Dot(v) / v.Len()
+	return v.Unit().Scaled(len)
+}
+
 // Map applies the function f to both x and y components of the vector u and returns the modified
 // vector.
 //
