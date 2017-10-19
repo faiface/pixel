@@ -110,6 +110,8 @@ possible!
 graphics. Because of that, OpenGL development libraries are needed for compilation. The dependencies
 are same as for [GLFW](https://github.com/go-gl/glfw).
 
+The OpenGL version used is **OpenGL 3.3**.
+
 - On macOS, you need Xcode or Command Line Tools for Xcode (`xcode-select --install`) for required
   headers and libraries.
 - On Ubuntu/Debian-like Linux distributions, you need `libgl1-mesa-dev` and `xorg-dev` packages.
