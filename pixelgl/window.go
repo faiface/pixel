@@ -318,6 +318,33 @@ func (w *Window) VSync() bool {
 	return w.vsync
 }
 
+// cursorMode uses magic numbers from https://github.com/glfw/glfw/blob/32e78aeb2edb5cb5add36ae575fc914f6c4fc7e5/include/GLFW/glfw3.h#L966
+type cursorMode int
+
+const (
+	// CursorNormal displays the regular cursor (or another set with glfw.SetCursor()), and
+	// does not limit cursor motion.
+	CursorNormal cursorMode = 0x00034001
+	// CursorHidden hides the cursor, and does not limit cursor motion.
+	CursorHidden cursorMode = 0x00034002
+	// CursorDisabled both hides the cursor, as well as limits cursor movement to the window.
+	CursorDisabled cursorMode = 0x00034003
+)
+
+// SetCursorMode determines how the mouse cursor appears and behaves.
+func (w *Window) SetCursorMode(cm cursorMode) {
+	mainthread.Call(func() {
+		switch cm {
+		case CursorNormal:
+			w.window.SetInputMode(glfw.CursorMode, glfw.CursorNormal)
+		case CursorHidden:
+			w.window.SetInputMode(glfw.CursorMode, glfw.CursorHidden)
+		case CursorDisabled:
+			w.window.SetInputMode(glfw.CursorMode, glfw.CursorDisabled)
+		}
+	})
+}
+
 // SetCursorVisible sets the visibility of the mouse cursor inside the Window client area.
 func (w *Window) SetCursorVisible(visible bool) {
 	w.cursorVisible = visible
