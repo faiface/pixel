@@ -233,6 +233,17 @@ func (w *Window) SetBounds(bounds pixel.Rect) {
 	})
 }
 
+// SetPos sets the position, in screen coordinates, of the upper-left corner
+// of the client area of the window. Position can be fractional, but the actual position
+// of the window will be rounded to integers.
+//
+// If it is a full screen window, this function does nothing.
+func (w *Window) SetPos(pos pixel.Vec) {
+	mainthread.Call(func() {
+		left, top := int(pos.X), int(pos.Y)
+		w.window.SetPos(left, top)
+	})
+}
 // Bounds returns the current bounds of the Window.
 func (w *Window) Bounds() pixel.Rect {
 	return w.bounds
