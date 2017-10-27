@@ -318,6 +318,18 @@ func (w *Window) VSync() bool {
 	return w.vsync
 }
 
+// SetCursorVisible sets the visibility of the mouse cursor inside the Window client area.
+func (w *Window) SetCursorVisible(visible bool) {
+	w.cursorVisible = visible
+	mainthread.Call(func() {
+		if visible {
+			w.window.SetInputMode(glfw.CursorMode, glfw.CursorNormal)
+		} else {
+			w.window.SetInputMode(glfw.CursorMode, glfw.CursorHidden)
+		}
+	})
+}
+
 // SetCursorDisabled both hides the cursor, as well as limits cursor movement to the Window client area.
 func (w *Window) SetCursorDisabled(disabled bool) {
 	w.cursorVisible = !disabled
