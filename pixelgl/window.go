@@ -324,12 +324,16 @@ func (w *Window) SetCursorVisible(visible bool) {
 	if !w.cursorDisabled {
 		w.cursorVisible = visible
 		mainthread.Call(func() {
-			if visible {
-				w.window.SetInputMode(glfw.CursorMode, glfw.CursorNormal)
-			} else {
-				w.window.SetInputMode(glfw.CursorMode, glfw.CursorHidden)
-			}
+			w.applyCursorVisibility()
 		})
+	}
+}
+
+func (w *Window) applyCursorVisibility() {
+	if w.cursorVisible {
+		w.window.SetInputMode(glfw.CursorMode, glfw.CursorNormal)
+	} else {
+		w.window.SetInputMode(glfw.CursorMode, glfw.CursorHidden)
 	}
 }
 
@@ -346,11 +350,7 @@ func (w *Window) SetCursorDisabled(disabled bool) {
 			w.cursorVisible = false
 			w.window.SetInputMode(glfw.CursorMode, glfw.CursorDisabled)
 		} else {
-			if w.cursorVisible {
-				w.window.SetInputMode(glfw.CursorMode, glfw.CursorNormal)
-			} else {
-				w.window.SetInputMode(glfw.CursorMode, glfw.CursorHidden)
-			}
+			w.applyCursorVisibility()
 		}
 	})
 }
