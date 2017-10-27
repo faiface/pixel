@@ -320,7 +320,7 @@ func (w *Window) VSync() bool {
 
 // SetCursorDisabled both hides the cursor, as well as limits cursor movement to the Window client area.
 func (w *Window) SetCursorDisabled(disabled bool) {
-	w.cursorVisible = false
+	w.cursorVisible = !disabled
 	mainthread.Call(func() {
 		if disabled {
 			w.window.SetInputMode(glfw.CursorMode, glfw.CursorDisabled)
