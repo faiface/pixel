@@ -32,6 +32,12 @@ func (gf *GLFrame) SetBounds(bounds pixel.Rect) {
 		oldF := gf.frame
 
 		_, _, w, h := intBounds(bounds)
+		if w <= 0 {
+			w = 1
+		}
+		if h <= 0 {
+			h = 1
+		}
 		gf.frame = glhf.NewFrame(w, h, false)
 
 		// preserve old content
