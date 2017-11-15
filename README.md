@@ -106,6 +106,10 @@ possible!
 
 ## Requirements
 
+If you're using Windows and having trouble building Pixel, please check [this
+guide](https://github.com/faiface/pixel/wiki/Building-Pixel-on-Windows) on the
+[wiki](https://github.com/faiface/pixel/wiki).
+
 [PixelGL](https://godoc.org/github.com/faiface/pixel/pixelgl) backend uses OpenGL to render
 graphics. Because of that, OpenGL development libraries are needed for compilation. The dependencies
 are same as for [GLFW](https://github.com/go-gl/glfw).
