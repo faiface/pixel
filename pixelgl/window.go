@@ -244,6 +244,18 @@ func (w *Window) SetPos(pos pixel.Vec) {
 		w.window.SetPos(left, top)
 	})
 }
+
+// GetPos gets the position, in screen coordinates, of the upper-left corner
+// of the client area of the window. The position is rounded to integers.
+func (w *Window) GetPos() pixel.Vec {
+	var v pixel.Vec
+	mainthread.Call(func() {
+		x, y := w.window.GetPos()
+		v = pixel.V(float64(x), float64(y))
+	})
+	return v
+}
+
 // Bounds returns the current bounds of the Window.
 func (w *Window) Bounds() pixel.Rect {
 	return w.bounds
