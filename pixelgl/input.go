@@ -372,7 +372,8 @@ func (w *Window) initInput() {
 	})
 }
 
-func (w *Window) updateInput() {
+// UpdateInput polls window events.
+func (w *Window) UpdateInput() {
 	mainthread.Call(func() {
 		glfw.PollEvents()
 	})
