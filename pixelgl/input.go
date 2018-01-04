@@ -372,7 +372,9 @@ func (w *Window) initInput() {
 	})
 }
 
-func (w *Window) updateInput() {
+// UpdateInput polls window events. Call this function to poll window events
+// without swapping buffers. Note that the Update method invokes UpdateInput.
+func (w *Window) UpdateInput() {
 	mainthread.Call(func() {
 		glfw.PollEvents()
 	})
