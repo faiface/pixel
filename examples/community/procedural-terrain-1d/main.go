@@ -2,7 +2,6 @@ package main
 
 import (
 	"image"
-	"log"
 	"math/rand"
 	"os"
 	"time"
@@ -86,7 +85,6 @@ func drawTerrain(win *pixelgl.Window, imd *imdraw.IMDraw) {
 	win.Clear(colornames.Skyblue)
 	for x := 0.; x < width; x++ {
 		y := p.Noise1D(x/waveLength)*scale + verticalOffset
-		log.Printf("%f\n", y)
 		renderTexturedLine(x, y, imd)
 	}
 	imd.Draw(win)
