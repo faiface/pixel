@@ -8,3 +8,5 @@ Press *space* to generate a random terrain.
 Uses [Go-Perlin](https://github.com/aquilax/go-perlin).
 
 Texture by [hh316](https://hhh316.deviantart.com/art/Seamless-stone-cliff-face-mountain-texture-377076626).
+
+![](result.png)
