@@ -1,4 +1,6 @@
-# Procedura 1D terrain generator
+# Procedural 1D terrain generator
+
+Created by [Sergio Vera](https://github.com/svera).
 
 This is a demo of a 1D terrain generator using [Perlin noise](https://en.wikipedia.org/wiki/Perlin_noise) algorithm.
 Press *space* to generate a random terrain.
