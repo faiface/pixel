@@ -45,6 +45,10 @@ Here are some screenshots from the examples!
 | --- | --- |
 | ![Smoke](examples/smoke/screenshot.png) | ![Typewriter](examples/typewriter/screenshot.png) |
 
+| [Raycaster](examples/community/raycaster) | [Starfield](examples/community/starfield) |
+| --- | --- |
+| ![Raycaster](examples/community/raycaster/screenshot.png) | ![Starfield](examples/community/starfield/screenshot.png) |
+
 ## Features
 
 Here's the list of the main features in Pixel. Although Pixel is still under heavy development,
