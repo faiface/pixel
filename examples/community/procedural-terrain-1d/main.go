@@ -10,8 +10,8 @@ import (
 
 	perlin "github.com/aquilax/go-perlin"
 	"github.com/faiface/pixel"
+	"github.com/faiface/pixel/imdraw"
 	"github.com/faiface/pixel/pixelgl"
-	"github.com/svera/pixel/imdraw"
 	"golang.org/x/image/colornames"
 )
 
