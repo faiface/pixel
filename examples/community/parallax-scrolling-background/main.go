@@ -46,7 +46,7 @@ func run() {
 		panic(err)
 	}
 
-	// Pic must have double the width of the window, as it will scroll to the left
+	// Pic must have double the width of the window, as it will scroll to the left or right
 	picBackground, err := loadPicture("background.png")
 	if err != nil {
 		panic(err)
