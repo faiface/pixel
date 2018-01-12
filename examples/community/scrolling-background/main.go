@@ -5,7 +5,7 @@ import (
 	"os"
 	"time"
 
-	_ "image/jpeg"
+	_ "image/png"
 
 	"github.com/faiface/pixel"
 	"github.com/faiface/pixel/pixelgl"
@@ -43,7 +43,7 @@ func run() {
 	}
 
 	// Pic must have double the width of the window, as it will scroll to the left
-	pic, err := loadPicture("gamebackground.jpg")
+	pic, err := loadPicture("gamebackground.png")
 	if err != nil {
 		panic(err)
 	}
@@ -54,8 +54,8 @@ func run() {
 
 	// In the beginning, vector1 will put background1 filling the whole window, while vector2 will
 	// put background2 just at the right side of the window, out of view
-	vector1 := pixel.V(windowWidth/2, (windowHeight/2)+1)
-	vector2 := pixel.V(windowWidth+(windowWidth/2), (windowHeight/2)+1)
+	vector1 := pixel.V(windowWidth/2, windowHeight/2)
+	vector2 := pixel.V(windowWidth+(windowWidth/2), windowHeight/2)
 
 	i := float64(0)
 	last := time.Now()
