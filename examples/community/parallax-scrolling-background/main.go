@@ -37,7 +37,7 @@ const (
 
 func run() {
 	cfg := pixelgl.WindowConfig{
-		Title:  "Scrolling background demo",
+		Title:  "Parallax scrolling demo",
 		Bounds: pixel.R(0, 0, windowWidth, windowHeight),
 		VSync:  true,
 	}
