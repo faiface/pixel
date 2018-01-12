@@ -54,8 +54,8 @@ func run() {
 
 	// In the beginning, vector1 will put background1 filling the whole window, while vector2 will
 	// put background2 just at the right side of the window, out of view
-	vector1 := pixel.V(windowWidth/2, (windowHeight / 2))
-	vector2 := pixel.V(windowWidth+(windowWidth/2), (windowHeight / 2))
+	vector1 := pixel.V(windowWidth/2, windowHeight/2)
+	vector2 := pixel.V(windowWidth+(windowWidth/2), windowHeight/2)
 
 	i := float64(0)
 	last := time.Now()
