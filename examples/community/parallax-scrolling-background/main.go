@@ -29,8 +29,10 @@ const (
 	windowHeight     = 450
 	foregroundHeight = 149
 	// This is the scrolling speed (pixels per second)
-	backgroundSpeed = 60
-	foregroundSpeed = 120
+	// Negative values will make background to scroll to the left,
+	// positive to the right.
+	backgroundSpeed = -60
+	foregroundSpeed = -120
 )
 
 func run() {
@@ -54,15 +56,15 @@ func run() {
 		panic(err)
 	}
 
-	background := newScrollingBackground(picBackground, windowWidth, windowHeight, windowWidth)
-	foreground := newScrollingBackground(picForeground, windowWidth, foregroundHeight, windowWidth)
+	background := NewScrollingBackground(picBackground, windowWidth, windowHeight, backgroundSpeed)
+	foreground := NewScrollingBackground(picForeground, windowWidth, foregroundHeight, foregroundSpeed)
 
 	last := time.Now()
 	for !win.Closed() {
 		dt := time.Since(last).Seconds()
 		last = time.Now()
-		background.update(win, backgroundSpeed, dt)
-		foreground.update(win, foregroundSpeed, dt)
+		background.Update(win, dt)
+		foreground.Update(win, dt)
 		win.Update()
 	}
 }
