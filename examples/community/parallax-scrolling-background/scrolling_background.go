@@ -40,13 +40,13 @@ func NewScrollingBackground(pic pixel.Picture, width, height, speed float64) *Sc
 func (sb *ScrollingBackground) positionImages() {
 	if sb.speed > 0 {
 		sb.positions = [2]pixel.Vec{
-			pixel.V(sb.width/2, (sb.height / 2)),
-			pixel.V((sb.width/2)-sb.width, (sb.height / 2)),
+			pixel.V(sb.width/2, sb.height/2),
+			pixel.V((sb.width/2)-sb.width, sb.height/2),
 		}
 	} else {
 		sb.positions = [2]pixel.Vec{
-			pixel.V(sb.width/2, (sb.height / 2)),
-			pixel.V(sb.width+(sb.width/2), (sb.height / 2)),
+			pixel.V(sb.width/2, sb.height/2),
+			pixel.V(sb.width+(sb.width/2), sb.height/2),
 		}
 	}
 }
