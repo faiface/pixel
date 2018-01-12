@@ -5,7 +5,7 @@ import (
 	"os"
 	"time"
 
-	_ "image/jpeg"
+	_ "image/png"
 
 	"github.com/faiface/pixel"
 	"github.com/faiface/pixel/pixelgl"
@@ -43,7 +43,7 @@ func run() {
 	}
 
 	// Pic must have double the width of the window, as it will scroll to the left
-	pic, err := loadPicture("gamebackground.jpg")
+	pic, err := loadPicture("gamebackground.png")
 	if err != nil {
 		panic(err)
 	}
