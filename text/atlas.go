@@ -9,7 +9,6 @@ import (
 
 	"github.com/faiface/pixel"
 	"golang.org/x/image/font"
-	"golang.org/x/image/font/basicfont"
 	"golang.org/x/image/math/fixed"
 )
 
@@ -173,10 +172,6 @@ func (a *Atlas) DrawRune(prevR, r rune, dot pixel.Vec) (rect, frame, bounds pixe
 	dot.X += glyph.Advance
 
 	return rect, glyph.Frame, bounds, dot
-}
-
-func new7x13Atlas(runeSets ...[]rune) *Atlas {
-	return NewAtlas(basicfont.Face7x13, runeSets...)
 }
 
 type fixedGlyph struct {

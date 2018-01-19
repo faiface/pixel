@@ -7,6 +7,7 @@ import (
 	"unicode/utf8"
 
 	"github.com/faiface/pixel"
+	"golang.org/x/image/font/basicfont"
 )
 
 // ASCII is a set of all ASCII runes. These runes are codepoints from 32 to 127 inclusive.
@@ -17,7 +18,7 @@ func init() {
 	for i := range ASCII {
 		ASCII[i] = rune(32 + i)
 	}
-	Atlas7x13 = new7x13Atlas(ASCII)
+	Atlas7x13 = NewAtlas(basicfont.Face7x13, ASCII)
 }
 
 // RangeTable takes a *unicode.RangeTable and generates a set of runes contained within that
