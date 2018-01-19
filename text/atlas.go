@@ -9,8 +9,12 @@ import (
 
 	"github.com/faiface/pixel"
 	"golang.org/x/image/font"
+	"golang.org/x/image/font/basicfont"
 	"golang.org/x/image/math/fixed"
 )
+
+// Atlas7x13 is an Atlas using basicfont.Face7x13 with the ASCII rune set
+var Atlas7x13 *Atlas
 
 // Glyph describes one glyph in an Atlas.
 type Glyph struct {
@@ -171,6 +175,10 @@ func (a *Atlas) DrawRune(prevR, r rune, dot pixel.Vec) (rect, frame, bounds pixe
 	return rect, glyph.Frame, bounds, dot
 }
 
+func new7x13Atlas(runeSets ...[]rune) *Atlas {
+	return NewAtlas(basicfont.Face7x13, runeSets...)
+}
+
 type fixedGlyph struct {
 	dot     fixed.Point26_6
 	frame   fixed.Rectangle26_6
@@ -242,8 +250,4 @@ func makeMapping(face font.Face, runes []rune, padding, width fixed.Int26_6) (ma
 
 func i2f(i fixed.Int26_6) float64 {
 	return float64(i) / (1 << 6)
-}
-
-func f2i(f float64) fixed.Int26_6 {
-	return fixed.Int26_6(f * (1 << 6))
 }
