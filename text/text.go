@@ -61,10 +61,7 @@ func RangeTable(table *unicode.RangeTable) []rune {
 // Text exports two important fields: Orig and Dot. Dot is the position where the next character
 // will be written. Dot is automatically moved when writing to a Text object, but you can also
 // manipulate it manually. Orig specifies the text origin, usually the top-left dot position. Dot is
-// always aligned to Orig when writing newlines.
-//
-// To reset the Dot to the Orig, just assign it:
-//   txt.Dot = txt.Orig
+// always aligned to Orig when writing newlines. The Clear method resets the Dot to Orig.
 type Text struct {
 	// Orig specifies the text origin, usually the top-left dot position. Dot is always aligned
 	// to Orig when writing newlines.
@@ -184,7 +181,7 @@ func (txt *Text) BoundsOf(s string) pixel.Rect {
 	return bounds
 }
 
-// Clear removes all written text from the Text.
+// Clear removes all written text from the Text. The Dot field is reset to Orig.
 func (txt *Text) Clear() {
 	txt.prevR = -1
 	txt.bounds = pixel.Rect{}
