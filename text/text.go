@@ -7,6 +7,7 @@ import (
 	"unicode/utf8"
 
 	"github.com/faiface/pixel"
+	"golang.org/x/image/font/basicfont"
 )
 
 // ASCII is a set of all ASCII runes. These runes are codepoints from 32 to 127 inclusive.
@@ -17,6 +18,7 @@ func init() {
 	for i := range ASCII {
 		ASCII[i] = rune(32 + i)
 	}
+	Atlas7x13 = NewAtlas(basicfont.Face7x13, ASCII)
 }
 
 // RangeTable takes a *unicode.RangeTable and generates a set of runes contained within that
@@ -60,10 +62,7 @@ func RangeTable(table *unicode.RangeTable) []rune {
 // Text exports two important fields: Orig and Dot. Dot is the position where the next character
 // will be written. Dot is automatically moved when writing to a Text object, but you can also
 // manipulate it manually. Orig specifies the text origin, usually the top-left dot position. Dot is
-// always aligned to Orig when writing newlines.
-//
-// To reset the Dot to the Orig, just assign it:
-//   txt.Dot = txt.Orig
+// always aligned to Orig when writing newlines. The Clear method resets the Dot to Orig.
 type Text struct {
 	// Orig specifies the text origin, usually the top-left dot position. Dot is always aligned
 	// to Orig when writing newlines.
@@ -183,12 +182,13 @@ func (txt *Text) BoundsOf(s string) pixel.Rect {
 	return bounds
 }
 
-// Clear removes all written text from the Text.
+// Clear removes all written text from the Text. The Dot field is reset to Orig.
 func (txt *Text) Clear() {
 	txt.prevR = -1
 	txt.bounds = pixel.Rect{}
 	txt.tris.SetLen(0)
 	txt.dirty = true
+	txt.Dot = txt.Orig
 }
 
 // Write writes a slice of bytes to the Text. This method never fails, always returns len(p), nil.

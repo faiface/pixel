@@ -12,6 +12,9 @@ import (
 	"golang.org/x/image/math/fixed"
 )
 
+// Atlas7x13 is an Atlas using basicfont.Face7x13 with the ASCII rune set
+var Atlas7x13 *Atlas
+
 // Glyph describes one glyph in an Atlas.
 type Glyph struct {
 	Dot     pixel.Vec
@@ -242,8 +245,4 @@ func makeMapping(face font.Face, runes []rune, padding, width fixed.Int26_6) (ma
 
 func i2f(i fixed.Int26_6) float64 {
 	return float64(i) / (1 << 6)
-}
-
-func f2i(f float64) fixed.Int26_6 {
-	return fixed.Int26_6(f * (1 << 6))
 }
