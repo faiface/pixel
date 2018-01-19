@@ -41,15 +41,15 @@ func (g *Grid) Set(x, y int, state bool) {
 func (g *Grid) Draw(imd *imdraw.IMDraw) {
 	for i := 0; i < g.h; i++ {
 		for j := 0; j < g.h; j++ {
-			imd.Push(
-				pixel.V(float64(i*g.cellSize), float64(j*g.cellSize)),
-				pixel.V(float64(i*g.cellSize+g.cellSize), float64(j*g.cellSize+g.cellSize)),
-			)
 			if g.Alive(i, j) {
 				imd.Color = colornames.Black
 			} else {
 				imd.Color = colornames.White
 			}
+			imd.Push(
+				pixel.V(float64(i*g.cellSize), float64(j*g.cellSize)),
+				pixel.V(float64(i*g.cellSize+g.cellSize), float64(j*g.cellSize+g.cellSize)),
+			)
 			imd.Rectangle(0)
 		}
 	}

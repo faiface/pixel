@@ -1,4 +1,4 @@
-// Package life is the manages the "game" state
+// Package life manages the "game" state
 // Shamelessly taken from https://golang.org/doc/play/life.go
 package life
 

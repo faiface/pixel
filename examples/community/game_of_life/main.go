@@ -16,14 +16,14 @@ import (
 var (
 	size       *int
 	windowSize *float64
-	frameRate  *int64
+	frameRate  *time.Duration
 )
 
 func init() {
 	rand.Seed(time.Now().UnixNano())
 	size = flag.Int("size", 5, "The size of each cell")
 	windowSize = flag.Float64("windowSize", 800, "The pixel size of one side of the grid")
-	frameRate = flag.Int64("frameRate", 33, "The framerate in milliseconds")
+	frameRate = flag.Duration("frameRate", 33*time.Millisecond, "The framerate in milliseconds")
 	flag.Parse()
 }
 
@@ -49,15 +49,15 @@ func run() {
 
 	gridDraw := imdraw.New(nil)
 	game := life.NewLife(rows, *size)
-	last := time.Now()
+	tick := time.Tick(*frameRate)
 	for !win.Closed() {
 		// game loop
-		if time.Since(last).Nanoseconds() > *frameRate {
+		select {
+		case <-tick:
 			gridDraw.Clear()
 			game.A.Draw(gridDraw)
 			gridDraw.Draw(win)
 			game.Step()
-			last = time.Now()
 		}
 		win.Update()
 	}
