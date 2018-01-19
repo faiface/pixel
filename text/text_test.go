@@ -14,6 +14,26 @@ import (
 	"github.com/golang/freetype/truetype"
 )
 
+func TestClear(t *testing.T) {
+	txt := text.New(pixel.ZV, text.Atlas7x13)
+
+	if got, want := txt.Dot, pixel.ZV; !eqVectors(got, want) {
+		t.Fatalf("txt.Dot = %v, want %v", got, want)
+	}
+
+	fmt.Fprint(txt, "Test\nClear")
+
+	if got, want := txt.Dot, pixel.V(35, -13); !eqVectors(got, want) {
+		t.Fatalf("txt.Dot = %v, want %v", got, want)
+	}
+
+	txt.Clear()
+
+	if got, want := txt.Dot, pixel.ZV; !eqVectors(got, want) {
+		t.Fatalf("txt.Dot = %v, want %v", got, want)
+	}
+}
+
 func BenchmarkNewAtlas(b *testing.B) {
 	runeSets := []struct {
 		name string
@@ -60,4 +80,8 @@ func BenchmarkTextWrite(b *testing.B) {
 			}
 		})
 	}
+}
+
+func eqVectors(a, b pixel.Vec) bool {
+	return (a.X == b.X && a.Y == b.Y)
 }

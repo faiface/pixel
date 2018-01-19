@@ -17,6 +17,7 @@ func init() {
 	for i := range ASCII {
 		ASCII[i] = rune(32 + i)
 	}
+	Atlas7x13 = new7x13Atlas(ASCII)
 }
 
 // RangeTable takes a *unicode.RangeTable and generates a set of runes contained within that
@@ -189,6 +190,7 @@ func (txt *Text) Clear() {
 	txt.bounds = pixel.Rect{}
 	txt.tris.SetLen(0)
 	txt.dirty = true
+	txt.Dot = txt.Orig
 }
 
 // Write writes a slice of bytes to the Text. This method never fails, always returns len(p), nil.
