@@ -61,6 +61,7 @@ Here's the list of the main features in Pixel. Although Pixel is still under hea
     lines, ...)
   - Optimized drawing with [Batch](https://github.com/faiface/pixel/wiki/Drawing-efficiently-with-Batch)
   - Text drawing with [text](https://godoc.org/github.com/faiface/pixel/text) package
+- Audio through a separate [Beep](https://github.com/faiface/beep) library.
 - Simple and convenient API
   - Drawing a sprite to a window is as simple as `sprite.Draw(window, matrix)`
   - Wanna know where the center of a window is? `window.Bounds().Center()`
@@ -96,7 +97,7 @@ Here's the list of the main features in Pixel. Although Pixel is still under hea
 
 Pixel is in development and still missing few critical features. Here're the most critical ones.
 
-- Audio
+- ~~Audio~~
 - ~~Drawing text~~
 - Antialiasing (filtering is supported, though)
 - ~~Advanced window manipulation (cursor hiding, window icon, ...)~~
@@ -148,8 +149,7 @@ requests. It just means that I might not like your idea. Or that your pull reque
 rewriting. That's perfectly fine, don't let it put you off. In the end, we'll just end up with a
 better result.
 
-**Don't start working on a pull request before submiting an issue or commenting on one. Proposals
-also take the form of issues.**
+Take a look at [CONTRIBUTING.md](CONTRIBUTING.md) for further information.
 
 For any kind of discussion, feel free to use our
 [Gitter](https://gitter.im/pixellib/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
