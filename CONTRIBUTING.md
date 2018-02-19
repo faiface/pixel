@@ -7,7 +7,7 @@
 1. **Make a community example** and place it inside the [examples/community](examples/community) folder.
 2. **Add tests**. There only few tests in Pixel at the moment. Take a look at them and make some similar.
 3. **Add a small feature or an improvement**. Feel like some small feature is missing? Just make a PR. Be ready that I might reject it, though, if I don't find it particularly appealing.
-4. **Join the big development** by joining the discussion at the [Gitter](https://gitter.im/pixellib/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge), where we can discuss bigger changes and implement them after that.
+4. **Join the big development** by joining the discussion at the [Gitter](https://gitter.im/pixellib/Lobby), where we can discuss bigger changes and implement them after that.
 
 ## How to make a pull request
 
