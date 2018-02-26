@@ -116,6 +116,7 @@ func NewWindow(cfg WindowConfig) (*Window, error) {
 
 		// enter the OpenGL context
 		w.begin()
+		glhf.Init()
 		w.end()
 
 		return nil
@@ -362,7 +363,6 @@ func (w *Window) CursorVisible() bool {
 func (w *Window) begin() {
 	if currWin != w {
 		w.window.MakeContextCurrent()
-		glhf.Init()
 		currWin = w
 	}
 }
