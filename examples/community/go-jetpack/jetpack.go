@@ -80,7 +80,7 @@ func run() {
 	}
 
 	// Importantr variables
-	var jetX, jetY, velX, velY, radians float64 = 0, 0, 0, 0, 0
+	var jetX, jetY, velX, velY, radians float64
 	flipped := 1.0
 	jetpackOn := false
 	gravity := 0.6 // Default: 0.004
