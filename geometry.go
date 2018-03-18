@@ -92,6 +92,11 @@ func (u Vec) To(v Vec) Vec {
 	}
 }
 
+// Equals returns is vector u and v equals. 
+func (u Vec) Equals(v Vec) bool {
+	return v.X == u.X && v.Y == u.Y	
+}
+
 // Scaled returns the vector u multiplied by c.
 func (u Vec) Scaled(c float64) Vec {
 	return Vec{u.X * c, u.Y * c}
@@ -292,6 +297,11 @@ func (r Rect) Union(s Rect) Rect {
 		math.Max(r.Max.X, s.Max.X),
 		math.Max(r.Max.Y, s.Max.Y),
 	)
+}
+
+// Equals checks if Rect r and s equals
+func (r Rect) Equals(s Rect) bool {
+	return r.Min.Equals(s.Min) && r.Max.Equals(s.Max)
 }
 
 // Intersect returns the maximal Rect which is covered by both r and s. Rects r and s must be normalized.
