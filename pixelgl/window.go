@@ -190,7 +190,7 @@ func (w *Window) Update() {
 		w.end()
 	})
 
-	w.updateInput()
+	w.UpdateInput()
 }
 
 // SetClosed sets the closed flag of the Window.
