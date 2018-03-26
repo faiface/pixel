@@ -152,7 +152,7 @@ better result.
 Take a look at [CONTRIBUTING.md](CONTRIBUTING.md) for further information.
 
 For any kind of discussion, feel free to use our
-[Gitter](https://gitter.im/pixellib/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+[Gitter](https://gitter.im/pixellib/Lobby)
 community.
 
 ## License
