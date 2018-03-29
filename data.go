@@ -165,13 +165,8 @@ func verticalFlip(rgba *image.RGBA) {
 //
 // The resulting PictureData's Bounds will be the equivalent of the supplied image.Image's Bounds.
 func PictureDataFromImage(img image.Image) *PictureData {
-	var rgba *image.RGBA
-	if rgbaImg, ok := img.(*image.RGBA); ok {
-		rgba = rgbaImg
-	} else {
-		rgba = image.NewRGBA(img.Bounds())
-		draw.Draw(rgba, rgba.Bounds(), img, img.Bounds().Min, draw.Src)
-	}
+	rgba := image.NewRGBA(img.Bounds())
+	draw.Draw(rgba, rgba.Bounds(), img, img.Bounds().Min, draw.Src)
 
 	verticalFlip(rgba)
 
