@@ -371,8 +371,8 @@ func (m Matrix) Rotated(around Vec, angle float64) Matrix {
 	return m
 }
 
-//Reflect reflects everything around a given point by the given angle in radians
-func (m Matrix) Reflect(around pixel.Vec, angle float64) pixel.Matrix {
+//Reflected reflects everything around a given point by the given angle in radians
+func (m Matrix) Reflected(around pixel.Vec, angle float64) pixel.Matrix {
 	sin2t, cos2t := math.Sincos(2 * angle)
 	m[4], m[5] = m[4]-around.X, m[5]-around.Y
 	m = m.Chained(pixel.Matrix{cos2t, sin2t, sin2t, -cos2t, 0, 0})
