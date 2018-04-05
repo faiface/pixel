@@ -3,8 +3,6 @@ package pixel
 import (
 	"fmt"
 	"math"
-
-	"github.com/scottwinkler/pixel"
 )
 
 // Clamp returns x clamped to the interval [min, max].
