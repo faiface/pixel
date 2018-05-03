@@ -10,6 +10,15 @@ type Monitor struct {
 	monitor *glfw.Monitor
 }
 
+// VideoMode represents all properties of a video mode and is attached
+// to a monitor if it is a fullscreen mode.
+type VideoMode struct {
+	*glfw.VidMode
+	// Monitor is a pointer to the monitor that owns this video mode.
+	// If Monitor is nil the video mode is windowed.
+	Monitor *Monitor
+}
+
 // PrimaryMonitor returns the main monitor (usually the one with the taskbar and stuff).
 func PrimaryMonitor() *Monitor {
 	var monitor *glfw.Monitor
@@ -93,5 +102,20 @@ func (m *Monitor) RefreshRate() (rate float64) {
 		mode = m.monitor.GetVideoMode()
 	})
 	rate = float64(mode.RefreshRate)
+	return
+}
+
+// VideoModes returns all available video modes for the monitor.
+func (m *Monitor) VideoModes() (vmodes []*VideoMode) {
+	var modes []*glfw.VidMode
+	mainthread.Call(func() {
+		modes = m.monitor.GetVideoModes()
+	})
+	for _, mode := range modes {
+		vmodes = append(vmodes, &VideoMode{
+			VidMode: mode,
+			Monitor: m,
+		})
+	}
 	return
 }
