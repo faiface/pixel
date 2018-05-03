@@ -424,3 +424,9 @@ func (w *Window) Clear(c color.Color) {
 func (w *Window) Color(at pixel.Vec) pixel.RGBA {
 	return w.canvas.Color(at)
 }
+
+// SetVideoMode applies the given video mode to this window.
+func (w *Window) SetVideoMode(vm VideoMode) {
+	w.SetMonitor(vm.Monitor)
+	w.SetBounds(pixel.R(0, 0, float64(vm.Width), float64(vm.Height)))
+}
