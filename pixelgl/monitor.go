@@ -10,6 +10,17 @@ type Monitor struct {
 	monitor *glfw.Monitor
 }
 
+// VideoMode represents all properties of a video mode and is
+// associated with a monitor if it is used in fullscreen mode.
+type VideoMode struct {
+	// Width is the width of the vide mode in pixels.
+	Width int
+	// Height is the height of the video mode in pixels.
+	Height int
+	// RefreshRate holds the refresh rate of the associated monitor in Hz.
+	RefreshRate int
+}
+
 // PrimaryMonitor returns the main monitor (usually the one with the taskbar and stuff).
 func PrimaryMonitor() *Monitor {
 	var monitor *glfw.Monitor
@@ -93,5 +104,21 @@ func (m *Monitor) RefreshRate() (rate float64) {
 		mode = m.monitor.GetVideoMode()
 	})
 	rate = float64(mode.RefreshRate)
+	return
+}
+
+// VideoModes returns all available video modes for the monitor.
+func (m *Monitor) VideoModes() (vmodes []VideoMode) {
+	var modes []*glfw.VidMode
+	mainthread.Call(func() {
+		modes = m.monitor.GetVideoModes()
+	})
+	for _, mode := range modes {
+		vmodes = append(vmodes, VideoMode{
+			Width:       mode.Width,
+			Height:      mode.Height,
+			RefreshRate: mode.RefreshRate,
+		})
+	}
 	return
 }
