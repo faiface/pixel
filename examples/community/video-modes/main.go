@@ -10,12 +10,17 @@ import (
 	"golang.org/x/image/font/basicfont"
 )
 
+type setting struct {
+	mode    *pixelgl.VideoMode
+	monitor *pixelgl.Monitor
+}
+
 var (
 	texts         []*text.Text
 	staticText    *text.Text
-	vmodes        []*pixelgl.VideoMode
-	activeMode    pixelgl.VideoMode
-	activeMonitor *pixelgl.Monitor
+	settings      []setting
+	activeSetting *setting
+	isFullScreen  = false
 )
 
 func run() {
@@ -38,14 +43,19 @@ func run() {
 	for i := 0; i < len(monitors); i++ {
 		// Retrieve all video modes for a specific monitor.
 		modes := monitors[i].VideoModes()
+		for j := 0; j < len(modes); j++ {
+			settings = append(settings, setting{
+				monitor: monitors[i],
+				mode:    &modes[j],
+			})
+		}
 
-		vmodes = append(vmodes, modes...)
 		texts[i] = text.New(pixel.V(10+250*float64(i), -20), atlas)
 		texts[i].Color = colornames.Black
 		texts[i].WriteString(fmt.Sprintf("MONITOR %s\n\n", monitors[i].Name()))
 
 		for _, v := range modes {
-			texts[i].WriteString(fmt.Sprintf("(%c) %dx%d @ %d hz, %d bpp\n", key, v.Width, v.Height, v.RefreshRate, v.BlueBits+v.RedBits+v.GreenBits))
+			texts[i].WriteString(fmt.Sprintf("(%c) %dx%d @ %d hz\n", key, v.Width, v.Height, v.RefreshRate))
 			key++
 		}
 	}
@@ -53,6 +63,8 @@ func run() {
 	staticText = text.New(pixel.V(10, 30), atlas)
 	staticText.Color = colornames.Black
 	staticText.WriteString("ESC to exit\nW toggles windowed/fullscreen")
+
+	activeSetting = &settings[0]
 
 	for !win.Closed() {
 		win.Clear(colornames.Antiquewhite)
@@ -67,27 +79,31 @@ func run() {
 		}
 
 		if win.JustPressed(pixelgl.KeyW) {
-			if activeMode.Monitor != nil {
+			if isFullScreen {
 				// Switch to windowed and backup the correct monitor.
-				activeMonitor = activeMode.Monitor
-				activeMode.Monitor = nil
-				win.SetVideoMode(activeMode)
+				win.SetMonitor(nil)
+				isFullScreen = false
 			} else {
 				// Switch to fullscreen.
-				activeMode.Monitor = activeMonitor
-				win.SetVideoMode(activeMode)
+				win.SetMonitor(activeSetting.monitor)
+				isFullScreen = true
 			}
+			win.SetBounds(pixel.R(0, 0, float64(activeSetting.mode.Width), float64(activeSetting.mode.Height)))
 		}
 
 		input := win.Typed()
 		if len(input) > 0 {
 			key := int(input[0]) - 48
 			fmt.Println(key)
-			if key >= 0 && key < len(vmodes) {
-				activeMode = *vmodes[key]
-				activeMonitor = activeMode.Monitor
-				fmt.Println("change to:", activeMode.Width, activeMode.Height)
-				win.SetVideoMode(activeMode)
+			if key >= 0 && key < len(settings) {
+				activeSetting = &settings[key]
+
+				if isFullScreen {
+					win.SetMonitor(activeSetting.monitor)
+				} else {
+					win.SetMonitor(nil)
+				}
+				win.SetBounds(pixel.R(0, 0, float64(activeSetting.mode.Width), float64(activeSetting.mode.Height)))
 			}
 		}
 
