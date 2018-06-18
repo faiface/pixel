@@ -17,7 +17,7 @@ import (
 // It supports TrianglesPosition, TrianglesColor, TrianglesPicture and PictureColor.
 type Canvas struct {
 	gf     *GLFrame
-	shader *glhf.Shader
+	shader *GLShader
 
 	cmp    pixel.ComposeMethod
 	mat    mgl32.Mat3
@@ -37,23 +37,9 @@ func NewCanvas(bounds pixel.Rect) *Canvas {
 		col: mgl32.Vec4{1, 1, 1, 1},
 	}
 
+	baseShader(c)
 	c.SetBounds(bounds)
-
-	var shader *glhf.Shader
-	mainthread.Call(func() {
-		var err error
-		shader, err = glhf.NewShader(
-			canvasVertexFormat,
-			canvasUniformFormat,
-			canvasVertexShader,
-			canvasFragmentShader,
-		)
-		if err != nil {
-			panic(errors.Wrap(err, "failed to create Canvas, there's a bug in the shader"))
-		}
-	})
-	c.shader = shader
-
+	c.shader.compile()
 	return c
 }
 
@@ -62,7 +48,7 @@ func NewCanvas(bounds pixel.Rect) *Canvas {
 // TrianglesPosition, TrianglesColor and TrianglesPicture are supported.
 func (c *Canvas) MakeTriangles(t pixel.Triangles) pixel.TargetTriangles {
 	return &canvasTriangles{
-		GLTriangles: NewGLTriangles(c.shader, t),
+		GLTriangles: NewGLTriangles(c.shader.s, t),
 		dst:         c,
 	}
 }
@@ -279,29 +265,33 @@ func (ct *canvasTriangles) draw(tex *glhf.Texture, bounds pixel.Rect) {
 
 	// save the current state vars to avoid race condition
 	cmp := ct.dst.cmp
+	smt := ct.dst.smooth
 	mat := ct.dst.mat
 	col := ct.dst.col
-	smt := ct.dst.smooth
 
 	mainthread.CallNonBlock(func() {
 		ct.dst.setGlhfBounds()
 		setBlendFunc(cmp)
 
 		frame := ct.dst.gf.Frame()
-		shader := ct.dst.shader
+		shader := ct.dst.shader.s
 
 		frame.Begin()
 		shader.Begin()
 
+		ct.dst.shader.uniformDefaults.transform = mat
+		ct.dst.shader.uniformDefaults.colormask = col
 		dstBounds := ct.dst.Bounds()
-		shader.SetUniformAttr(canvasBounds, mgl32.Vec4{
+		ct.dst.shader.uniformDefaults.bounds = mgl32.Vec4{
 			float32(dstBounds.Min.X),
 			float32(dstBounds.Min.Y),
 			float32(dstBounds.W()),
 			float32(dstBounds.H()),
-		})
-		shader.SetUniformAttr(canvasTransform, mat)
-		shader.SetUniformAttr(canvasColorMask, col)
+		}
+
+		for loc, u := range ct.dst.shader.uniforms {
+			ct.dst.shader.s.SetUniformAttr(loc, u.Value)
+		}
 
 		if tex == nil {
 			ct.vs.Begin()
@@ -311,7 +301,7 @@ func (ct *canvasTriangles) draw(tex *glhf.Texture, bounds pixel.Rect) {
 			tex.Begin()
 
 			bx, by, bw, bh := intBounds(bounds)
-			shader.SetUniformAttr(canvasTexBounds, mgl32.Vec4{
+			shader.SetUniformAttr(canvasTexBounds, &mgl32.Vec4{
 				float32(bx),
 				float32(by),
 				float32(bw),
@@ -358,7 +348,7 @@ const (
 	canvasIntensity
 )
 
-var canvasVertexFormat = glhf.AttrFormat{
+var defaultCanvasVertexFormat = glhf.AttrFormat{
 	canvasPosition:  {Name: "position", Type: glhf.Vec2},
 	canvasColor:     {Name: "color", Type: glhf.Vec4},
 	canvasTexCoords: {Name: "texCoords", Type: glhf.Vec2},
@@ -379,53 +369,14 @@ var canvasUniformFormat = glhf.AttrFormat{
 	canvasTexBounds: {Name: "texBounds", Type: glhf.Vec4},
 }
 
-var canvasVertexShader = `
-#version 330 core
-
-in vec2 position;
-in vec4 color;
-in vec2 texCoords;
-in float intensity;
-
-out vec4 Color;
-out vec2 TexCoords;
-out float Intensity;
-
-uniform mat3 transform;
-uniform vec4 bounds;
-
-void main() {
-	vec2 transPos = (transform * vec3(position, 1.0)).xy;
-	vec2 normPos = (transPos - bounds.xy) / bounds.zw * 2 - vec2(1, 1);
-	gl_Position = vec4(normPos, 0.0, 1.0);
-	Color = color;
-	TexCoords = texCoords;
-	Intensity = intensity;
+func (c *Canvas) BindUniform(Name string, Value interface{}) {
+	c.shader.AddUniform(Name, Value)
 }
-`
 
-var canvasFragmentShader = `
-#version 330 core
-
-in vec4 Color;
-in vec2 TexCoords;
-in float Intensity;
-
-out vec4 color;
-
-uniform vec4 colorMask;
-uniform vec4 texBounds;
-uniform sampler2D tex;
-
-void main() {
-	if (Intensity == 0) {
-		color = colorMask * Color;
-	} else {
-		color = vec4(0, 0, 0, 0);
-		color += (1 - Intensity) * Color;
-		vec2 t = (TexCoords - texBounds.xy) / texBounds.zw;
-		color += Intensity * Color * texture(tex, t);
-		color *= colorMask;
-	}
+func (c *Canvas) RecompileShader() {
+	c.shader.compile()
 }
-`
+
+func (c *Canvas) SetFragmentShader(fs string) {
+	c.shader.fs = fs
+}
