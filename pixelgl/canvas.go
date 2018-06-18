@@ -288,6 +288,13 @@ func (ct *canvasTriangles) draw(tex *glhf.Texture, bounds pixel.Rect) {
 			float32(dstBounds.W()),
 			float32(dstBounds.H()),
 		}
+		bx, by, bw, bh := intBounds(bounds)
+		ct.dst.shader.uniformDefaults.texbounds = mgl32.Vec4{
+			float32(bx),
+			float32(by),
+			float32(bw),
+			float32(bh),
+		}
 
 		for loc, u := range ct.dst.shader.uniforms {
 			ct.dst.shader.s.SetUniformAttr(loc, u.Value)
@@ -299,14 +306,6 @@ func (ct *canvasTriangles) draw(tex *glhf.Texture, bounds pixel.Rect) {
 			ct.vs.End()
 		} else {
 			tex.Begin()
-
-			bx, by, bw, bh := intBounds(bounds)
-			shader.SetUniformAttr(canvasTexBounds, &mgl32.Vec4{
-				float32(bx),
-				float32(by),
-				float32(bw),
-				float32(bh),
-			})
 
 			if tex.Smooth() != smt {
 				tex.SetSmooth(smt)

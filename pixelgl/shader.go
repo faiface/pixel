@@ -1,8 +1,6 @@
 package pixelgl
 
 import (
-	"fmt"
-
 	"github.com/faiface/glhf"
 	"github.com/faiface/mainthread"
 	"github.com/faiface/pixel"
@@ -67,7 +65,6 @@ func (gs *GLShader) GetUniform(Name string) int {
 }
 func (gs *GLShader) AddUniform(Name string, Value interface{}) {
 	Type := getUniformType(Value)
-	fmt.Println(Type)
 	if loc := gs.GetUniform(Name); loc > -1 {
 		gs.uniforms[loc].Name = Name
 		gs.uniforms[loc].Type = Type
