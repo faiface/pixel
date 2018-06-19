@@ -3,11 +3,13 @@ package pixelgl
 import (
 	"github.com/faiface/glhf"
 	"github.com/faiface/mainthread"
-	"github.com/faiface/pixel"
 	"github.com/go-gl/mathgl/mgl32"
 	"github.com/pkg/errors"
 )
 
+// GLShader is a type to assist with managing a canvas's underlying
+// shader configuration. This allows for customization of shaders on
+// a per canvas basis.
 type (
 	GLShader struct {
 		s      *glhf.Shader
@@ -31,7 +33,8 @@ type (
 	}
 )
 
-func (gs *GLShader) compile() {
+// reinitialize GLShader data and recompile the underlying gl shader object
+func (gs *GLShader) update() {
 	gs.uf = nil
 	for _, u := range gs.uniforms {
 		gs.uf = append(gs.uf, glhf.Attr{
@@ -55,7 +58,9 @@ func (gs *GLShader) compile() {
 
 	gs.s = shader
 }
-func (gs *GLShader) GetUniform(Name string) int {
+
+// gets the uniform index from GLShader
+func (gs *GLShader) getUniform(Name string) int {
 	for i, u := range gs.uniforms {
 		if u.Name == Name {
 			return i
@@ -63,9 +68,17 @@ func (gs *GLShader) GetUniform(Name string) int {
 	}
 	return -1
 }
+
+// AddUniform appends a custom uniform name and value to the shader
+//
+// To add a time uniform for example:
+//
+// utime := float32(time.Since(starttime)).Seconds())
+// mycanvas.shader.AddUniform("u_time", &utime)
+//
 func (gs *GLShader) AddUniform(Name string, Value interface{}) {
-	Type := getUniformType(Value)
-	if loc := gs.GetUniform(Name); loc > -1 {
+	Type := getAttrType(Value)
+	if loc := gs.getUniform(Name); loc > -1 {
 		gs.uniforms[loc].Name = Name
 		gs.uniforms[loc].Type = Type
 		gs.uniforms[loc].Value = Value
@@ -78,24 +91,9 @@ func (gs *GLShader) AddUniform(Name string, Value interface{}) {
 	})
 }
 
-func (c *Canvas) setUniforms(texbounds pixel.Rect) {
-	mat := c.mat
-	col := c.col
-	c.shader.uniformDefaults.transform = mat
-	c.shader.uniformDefaults.colormask = col
-	dstBounds := c.Bounds()
-	c.shader.uniformDefaults.bounds = mgl32.Vec4{
-		float32(dstBounds.Min.X),
-		float32(dstBounds.Min.Y),
-		float32(dstBounds.W()),
-		float32(dstBounds.H()),
-	}
-
-	for loc, u := range c.shader.uniforms {
-		c.shader.s.SetUniformAttr(loc, u.Value)
-	}
-}
-
+// Sets up a base shader with everything needed for a pixel
+// canvas to render correctly. The defaults can be overridden
+// by simply using AddUniform()
 func baseShader(c *Canvas) {
 	gs := &GLShader{
 		vf: defaultCanvasVertexFormat,
@@ -103,109 +101,13 @@ func baseShader(c *Canvas) {
 		fs: baseCanvasFragmentShader,
 	}
 
-	gs.AddUniform("transform", &gs.uniformDefaults.transform)
-	gs.AddUniform("colorMask", &gs.uniformDefaults.colormask)
-	gs.AddUniform("bounds", &gs.uniformDefaults.bounds)
-	gs.AddUniform("texBounds", &gs.uniformDefaults.texbounds)
+	gs.AddUniform("u_transform", &gs.uniformDefaults.transform)
+	gs.AddUniform("u_colormask", &gs.uniformDefaults.colormask)
+	gs.AddUniform("u_bounds", &gs.uniformDefaults.bounds)
+	gs.AddUniform("u_texbounds", &gs.uniformDefaults.texbounds)
 
 	c.shader = gs
 }
-func getUniformType(v interface{}) AttrType {
-	switch v.(type) {
-	case int32:
-		return Int
-	case float32:
-		return Float
-	case mgl32.Vec2:
-		return Vec2
-	case mgl32.Vec3:
-		return Vec3
-	case mgl32.Vec4:
-		return Vec4
-	case mgl32.Mat2:
-		return Mat2
-	case mgl32.Mat2x3:
-		return Mat23
-	case mgl32.Mat2x4:
-		return Mat24
-	case mgl32.Mat3:
-		return Mat3
-	case mgl32.Mat3x2:
-		return Mat32
-	case mgl32.Mat3x4:
-		return Mat34
-	case mgl32.Mat4:
-		return Mat4
-	case mgl32.Mat4x2:
-		return Mat42
-	case mgl32.Mat4x3:
-		return Mat43
-	case *mgl32.Vec2:
-		return Vec2p
-	case *mgl32.Vec3:
-		return Vec3p
-	case *mgl32.Vec4:
-		return Vec4p
-	case *mgl32.Mat2:
-		return Mat2p
-	case *mgl32.Mat2x3:
-		return Mat23p
-	case *mgl32.Mat2x4:
-		return Mat24p
-	case *mgl32.Mat3:
-		return Mat3p
-	case *mgl32.Mat3x2:
-		return Mat32p
-	case *mgl32.Mat3x4:
-		return Mat34p
-	case *mgl32.Mat4:
-		return Mat4p
-	case *mgl32.Mat4x2:
-		return Mat42p
-	case *mgl32.Mat4x3:
-		return Mat43p
-	case *int32:
-		return Intp
-	case *float32:
-		return Floatp
-	default:
-		panic("invalid AttrType")
-	}
-}
-
-type AttrType int
-
-// List of all possible attribute types.
-const (
-	Int AttrType = iota
-	Float
-	Vec2
-	Vec3
-	Vec4
-	Mat2
-	Mat23
-	Mat24
-	Mat3
-	Mat32
-	Mat34
-	Mat4
-	Mat42
-	Mat43
-	Intp
-	Floatp
-	Vec2p
-	Vec3p
-	Vec4p
-	Mat2p
-	Mat23p
-	Mat24p
-	Mat3p
-	Mat32p
-	Mat34p
-	Mat4p
-	Mat42p
-	Mat43p
-)
 
 var defaultCanvasVertexShader = `
 #version 330 core
@@ -216,18 +118,18 @@ in vec2 texCoords;
 in float intensity;
 
 out vec4 Color;
-out vec2 TexCoords;
+out vec2 texcoords;
 out float Intensity;
 
-uniform mat3 transform;
-uniform vec4 bounds;
+uniform mat3 u_transform;
+uniform vec4 u_bounds;
 
 void main() {
-	vec2 transPos = (transform * vec3(position, 1.0)).xy;
-	vec2 normPos = (transPos - bounds.xy) / bounds.zw * 2 - vec2(1, 1);
+	vec2 transPos = (u_transform * vec3(position, 1.0)).xy;
+	vec2 normPos = (transPos - u_bounds.xy) / u_bounds.zw * 2 - vec2(1, 1);
 	gl_Position = vec4(normPos, 0.0, 1.0);
 	Color = color;
-	TexCoords = texCoords;
+	texcoords = texCoords;
 	Intensity = intensity;
 }
 `
@@ -236,24 +138,24 @@ var baseCanvasFragmentShader = `
 #version 330 core
 
 in vec4 Color;
-in vec2 TexCoords;
+in vec2 texcoords;
 in float Intensity;
 
-out vec4 color;
+out vec4 fragColor;
 
-uniform vec4 colorMask;
-uniform vec4 texBounds;
-uniform sampler2D tex;
+uniform vec4 u_colormask;
+uniform vec4 u_texbounds;
+uniform sampler2D u_texture;
 
 void main() {
 	if (Intensity == 0) {
-		color = colorMask * Color;
+		fragColor = u_colormask * Color;
 	} else {
-		color = vec4(0, 0, 0, 0);
-		color += (1 - Intensity) * Color;
-		vec2 t = (TexCoords - texBounds.xy) / texBounds.zw;
-		color += Intensity * Color * texture(tex, t);
-		color *= colorMask;
+		fragColor = vec4(0, 0, 0, 0);
+		fragColor += (1 - Intensity) * Color;
+		vec2 t = (texcoords - u_texbounds.xy) / u_texbounds.zw;
+		fragColor += Intensity * Color * texture(u_texture, t);
+		fragColor *= u_colormask;
 	}
 }
 `

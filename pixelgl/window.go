@@ -424,3 +424,8 @@ func (w *Window) Clear(c color.Color) {
 func (w *Window) Color(at pixel.Vec) pixel.RGBA {
 	return w.canvas.Color(at)
 }
+
+// GetCanvas returns the window's underlying Canvas
+func (w *Window) GetCanvas() *Canvas {
+	return w.canvas
+}

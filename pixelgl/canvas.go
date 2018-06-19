@@ -39,8 +39,27 @@ func NewCanvas(bounds pixel.Rect) *Canvas {
 
 	baseShader(c)
 	c.SetBounds(bounds)
-	c.shader.compile()
+	c.shader.update()
 	return c
+}
+
+// BindUniform will add a uniform with any supported underlying variable
+// if the uniform already exists, including defaults, they will be reassigned
+// to the new value
+func (c *Canvas) BindUniform(Name string, Value interface{}) {
+	c.shader.AddUniform(Name, Value)
+}
+
+// UpdateShader needs to be called after any changes to the underlying GLShader
+// are made (ie, BindUniform(), SetFragmentShader()...)
+func (c *Canvas) UpdateShader() {
+	c.shader.update()
+}
+
+// SetFragmentShader allows you to define a new fragment shader on the underlying
+// GLShader. fs is the GLSL source, not a filename
+func (c *Canvas) SetFragmentShader(fs string) {
+	c.shader.fs = fs
 }
 
 // MakeTriangles creates a specialized copy of the supplied Triangles that draws onto this Canvas.
@@ -167,6 +186,25 @@ func setBlendFunc(cmp pixel.ComposeMethod) {
 		glhf.BlendFunc(glhf.One, glhf.Zero)
 	default:
 		panic(errors.New("Canvas: invalid compose method"))
+	}
+}
+
+// updates all uniform values for gl to consume
+func (c *Canvas) setUniforms(texbounds pixel.Rect) {
+	mat := c.mat
+	col := c.col
+	c.shader.uniformDefaults.transform = mat
+	c.shader.uniformDefaults.colormask = col
+	dstBounds := c.Bounds()
+	c.shader.uniformDefaults.bounds = mgl32.Vec4{
+		float32(dstBounds.Min.X),
+		float32(dstBounds.Min.Y),
+		float32(dstBounds.W()),
+		float32(dstBounds.H()),
+	}
+
+	for loc, u := range c.shader.uniforms {
+		c.shader.s.SetUniformAttr(loc, u.Value)
 	}
 }
 
@@ -352,30 +390,4 @@ var defaultCanvasVertexFormat = glhf.AttrFormat{
 	canvasColor:     {Name: "color", Type: glhf.Vec4},
 	canvasTexCoords: {Name: "texCoords", Type: glhf.Vec2},
 	canvasIntensity: {Name: "intensity", Type: glhf.Float},
-}
-
-const (
-	canvasTransform int = iota
-	canvasColorMask
-	canvasBounds
-	canvasTexBounds
-)
-
-var canvasUniformFormat = glhf.AttrFormat{
-	canvasTransform: {Name: "transform", Type: glhf.Mat3},
-	canvasColorMask: {Name: "colorMask", Type: glhf.Vec4},
-	canvasBounds:    {Name: "bounds", Type: glhf.Vec4},
-	canvasTexBounds: {Name: "texBounds", Type: glhf.Vec4},
-}
-
-func (c *Canvas) BindUniform(Name string, Value interface{}) {
-	c.shader.AddUniform(Name, Value)
-}
-
-func (c *Canvas) RecompileShader() {
-	c.shader.compile()
-}
-
-func (c *Canvas) SetFragmentShader(fs string) {
-	c.shader.fs = fs
 }
