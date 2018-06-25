@@ -95,16 +95,34 @@ func run() {
 	tilt := 0.01   // Default: 0.001
 	whichOn := false
 	onNumber := 0
-	jetpackName := "jetpack.png"
+	jetpackOffName := "jetpack.png"
+	jetpackOn1Name := "jetpack-on.png"
+	jetpackOn2Name := "jetpack-on2.png"
 	camVector := win.Bounds().Center()
+
+	InstallShader(win)
 
 	bg, _ := loadSprite("sky.png")
 
-	InstallShader(win)
+	// Jetpack - Rendering
+	jetpackOff, err := loadSprite(jetpackOffName)
+	if err != nil {
+		panic(err)
+	}
+	jetpackOn1, err := loadSprite(jetpackOn1Name)
+	if err != nil {
+		panic(err)
+	}
+	jetpackOn2, err := loadSprite(jetpackOn2Name)
+	if err != nil {
+		panic(err)
+	}
 
 	// Tutorial Text
 	txt := loadTTF("intuitive.ttf", 50, pixel.V(win.Bounds().Center().X-450, win.Bounds().Center().Y-200))
 	fmt.Fprintf(txt, "Explore the Skies with WASD or Arrow Keys!")
+
+	currentSprite := jetpackOff
 
 	// Game Loop
 	for !win.Closed() {
@@ -141,24 +159,18 @@ func run() {
 		if jetpackOn {
 			velY += jetAcc
 			whichOn = !whichOn
-			onNumber += 1
+			onNumber++
 			if onNumber == 5 { // every 5 frames, toggle anijetMation
 				onNumber = 0
 				if whichOn {
-					jetpackName = "jetpack-on.png"
+					currentSprite = jetpackOn1
 				} else {
-					jetpackName = "jetpack-on2.png"
+					currentSprite = jetpackOn2
 				}
 			}
 		} else {
-			jetpackName = "jetpack.png"
+			currentSprite = jetpackOff
 			velY -= gravity
-		}
-
-		// Jetpack - Rendering
-		jetpack, err := loadSprite(jetpackName)
-		if err != nil {
-			panic(err)
 		}
 
 		positionVector := pixel.V(win.Bounds().Center().X+jetX, win.Bounds().Center().Y+jetY-372)
@@ -194,7 +206,7 @@ func run() {
 		bg.Draw(win, pixel.IM.Moved(pixel.V(win.Bounds().Center().X, win.Bounds().Center().Y+766)).Scaled(pixel.ZV, 10))
 		txt.Draw(win, pixel.IM)
 		win.SetSmooth(false)
-		jetpack.Draw(win, jetMat)
+		currentSprite.Draw(win, jetMat)
 
 	}
 
@@ -206,26 +218,20 @@ func main() {
 
 var pixelateFragShader = `
 #version 330 core
-
 #ifdef GL_ES
 precision mediump float;
 precision mediump int;
 #endif
-
 in vec4 Color;
 in vec2 texcoords;
 in float Intensity;
-
 out vec4 fragColor;
-
 uniform vec4 u_colormask;
 uniform vec4 u_texbounds;
 uniform sampler2D u_texture;
-
 // varying vec4 vertTexCoord;
 // uniform sampler2D texture;
 // uniform vec2 pixels;
-
 void main(void)
 {
 	fragColor = vec4(0, 0, 0, 0);
@@ -233,9 +239,7 @@ void main(void)
 	vec2 t = (texcoords - u_texbounds.xy) / u_texbounds.zw;
 	fragColor += Intensity * Color * texture(u_texture, t);
 	fragColor *= u_colormask;
-
   	vec2 p = t.st;
-
 	p.x -= mod(texcoords.x, 1.0 / gl_FragCoord.x);
 	p.y -= mod(texcoords.y, 1.0 / gl_FragCoord.y);
     
