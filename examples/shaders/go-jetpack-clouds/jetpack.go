@@ -134,6 +134,7 @@ func run() {
 
 	// Tutorial Text
 	txt := loadTTF("intuitive.ttf", 50, pixel.V(win.Bounds().Center().X-450, win.Bounds().Center().Y-200))
+	txt.Color = colornames.Black
 	fmt.Fprintf(txt, "Explore the Skies with WASD or Arrow Keys!")
 
 	currentSprite := jetpackOff
@@ -203,8 +204,8 @@ func run() {
 
 		jetX += velX
 		jetY += velY
-		uGopherPos[0] = float32(jetX*0.01 + 1.0)
-		uGopherPos[1] = float32(jetY*0.01 + 1.0)
+		uGopherPos[0] = float32(jetX*0.00001 + 1.0)
+		uGopherPos[1] = float32(jetY*0.00001 + 1.0)
 		// Camera
 		camVector.X += (positionVector.X - camVector.X) * 0.2
 		camVector.Y += (positionVector.Y - camVector.Y) * 0.2
@@ -250,14 +251,14 @@ var cloudsFragmentShader = `
 precision highp float;
 #endif
 
-#define HOW_CLOUDY 0.4
-#define SHADOW_THRESHOLD 0.2
-#define SHADOW 0.2
+#define HOW_CLOUDY 0.2
+#define SHADOW_THRESHOLD 0.4
+#define SHADOW 0.3
 #define SUBSURFACE 1.0
-#define WIND_DIRECTION 5.0
-#define TIME_SCALE 1.7
-#define SCALE 0.3
-#define ENABLE_SHAFTS
+#define WIND_DIRECTION 0.3
+#define TIME_SCALE 0.6
+#define SCALE 0.1
+//#define ENABLE_SHAFTS
 in vec2 texcoords;
 out vec4 fragColor;
 mat2 RM = mat2(cos(WIND_DIRECTION), -sin(WIND_DIRECTION), sin(WIND_DIRECTION), cos(WIND_DIRECTION));
@@ -293,7 +294,7 @@ float fbm( vec3 p )
     f += 0.03500*noise( p ); p = p*4.01;
     f += 0.01250*noise( p ); p = p*4.04;
     f -= 0.00125*noise( p );
-    return f/0.984375;
+    return f/0.784375;
 }
  
 float cloud(vec3 p)
@@ -308,7 +309,7 @@ float shadow = 1.0;
  
 float clouds(vec2 p){
     float ic = cloud(vec3(p * 2.0, u_time*0.01 * TIME_SCALE)) / HOW_CLOUDY;
-    float init = smoothstep(0.1, 1.0, ic) * 10.0;
+    float init = smoothstep(0.1, 1.0, ic) * 5.0;
     shadow = smoothstep(0.0, SHADOW_THRESHOLD, ic) * SHADOW + (1.0 - SHADOW);
     init = (init * cloud(vec3(p * (6.0), u_time*0.01 * TIME_SCALE)) * ic);
     init = (init * (cloud(vec3(p * (11.0), u_time*0.01 * TIME_SCALE))*0.5 + 0.4) * init);
@@ -324,9 +325,10 @@ vec2 ratio = vec2(1.0, 1.0);
 vec4 getresult(){
 	vec2 uvmouse = (u_mouse/(texcoords - u_texbounds.xy));
 	vec2 t = (texcoords - u_texbounds.xy) / u_texbounds.zw;
-    vec2 surfacePosition = ((( t ) * vec2(u_gopherpos.x , u_gopherpos.y)) * 2.0 - 1.0)*SCALE;
-	vec2 position = ( surfacePosition);
-	vec2 sun = (uvmouse.xy * vec2(texcoords.x / texcoords.y+1.1, 1.0)*2.0-1.0) * SCALE;
+    //vec2 surfacePosition = ((( t ) * vec2(u_gopherpos.x , u_gopherpos.y)) * 2.0 - 1.0)*SCALE;
+	vec2 surfacePosition = t+u_gopherpos*10.0;
+	vec2 position = ( surfacePosition * SCALE);
+	vec2 sun = (uvmouse.xy * vec2(texcoords.x / texcoords.y, 1.0)*2.0-1.0) * SCALE;
     
     float dst = distance(sun * ratio, position * ratio);
     float suni = pow(dst + 1.0, -10.0);
@@ -347,7 +349,7 @@ vec4 getresult(){
     suni *= (shaft * 0.03);
     return vec4(pow(mix(vec3(shadow), pow(vec3(0.23, 0.33, 0.48), vec3(2.2)) + suni, c), vec3(1.0/2.2)), c*0.1 + 0.9);     
 }
- 
+
 void main( void ) {
     fragColor = getresult().rgba;
 }
