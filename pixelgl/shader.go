@@ -116,9 +116,9 @@ in vec2 position;
 in vec4 color;
 in vec2 texCoords;
 in float intensity;
-
 out vec4 Color;
 out vec2 texcoords;
+out vec2 glpos;
 out float Intensity;
 
 uniform mat3 u_transform;
@@ -131,6 +131,7 @@ void main() {
 	Color = color;
 	texcoords = texCoords;
 	Intensity = intensity;
+	glpos = transPos;
 }
 `
 
