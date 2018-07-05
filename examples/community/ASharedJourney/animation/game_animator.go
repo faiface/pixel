@@ -6,8 +6,8 @@ import (
 	"log"
 	"time"
 
-	"github.com/gandrin/ASharedJourney/mechanics"
-	"github.com/gandrin/ASharedJourney/shared"
+	"github.com/faiface/pixel/examples/community/ASharedJourneymechanics"
+	"github.com/faiface/pixel/examples/community/ASharedJourney/shared"
 )
 
 type Animator struct {

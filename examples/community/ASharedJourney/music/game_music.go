@@ -7,7 +7,7 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/gandrin/ASharedJourney/assets_manager"
+	"github.com/faiface/pixel/examples/community/ASharedJourney/assets_manager"
 
 	"github.com/faiface/beep"
 	"github.com/faiface/beep/mp3"

@@ -4,10 +4,10 @@ import (
 	"reflect"
 
 	"github.com/faiface/pixel"
-	"github.com/gandrin/ASharedJourney/menu"
-	"github.com/gandrin/ASharedJourney/music"
-	"github.com/gandrin/ASharedJourney/supervisor"
-	"github.com/gandrin/ASharedJourney/tiles"
+	"github.com/faiface/pixel/examples/community/ASharedJourney/menu"
+	"github.com/faiface/pixel/examples/community/ASharedJourney/music"
+	"github.com/faiface/pixel/examples/community/ASharedJourney/supervisor"
+	"github.com/faiface/pixel/examples/community/ASharedJourney/tiles"
 )
 
 //move function receives as input the data from a player direction channel

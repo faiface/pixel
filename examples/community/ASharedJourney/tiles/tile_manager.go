@@ -7,10 +7,8 @@ import (
 	"image"
 	"os"
 
-	"github.com/gandrin/ASharedJourney/assets_manager"
+	"github.com/faiface/pixel/examples/community/ASharedJourney/assets_manager"
 	tiled "github.com/lafriks/go-tiled"
-
-	"github.com/gandrin/ASharedJourney/shared"
 
 	_ "image/png"
 
@@ -20,8 +18,9 @@ import (
 
 	"github.com/faiface/pixel"
 	"github.com/faiface/pixel/pixelgl"
-	"github.com/gandrin/ASharedJourney/menu"
-	"github.com/gandrin/ASharedJourney/music"
+	"github.com/faiface/pixel/examples/community/ASharedJourney/menu"
+	"github.com/faiface/pixel/examples/community/ASharedJourney/music"
+	"github.com/faiface/pixel/examples/community/ASharedJourney/shared"
 )
 
 // Level names

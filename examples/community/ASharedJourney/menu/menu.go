@@ -7,13 +7,13 @@ import (
 	"log"
 	"time"
 
-	"github.com/gandrin/ASharedJourney/assets_manager"
+	"github.com/faiface/pixel/examples/community/ASharedJourney/assets_manager"
 
 	"github.com/faiface/pixel"
 	"github.com/faiface/pixel/pixelgl"
 	"github.com/faiface/pixel/text"
-	"github.com/gandrin/ASharedJourney/music"
-	"github.com/gandrin/ASharedJourney/shared"
+	"github.com/faiface/pixel/examples/community/ASharedJourney/music"
+	"github.com/faiface/pixel/examples/community/ASharedJourney/shared"
 	"golang.org/x/image/colornames"
 	"golang.org/x/image/font/basicfont"
 )

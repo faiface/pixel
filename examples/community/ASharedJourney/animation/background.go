@@ -4,7 +4,7 @@ import (
 
 	"log"
 
-	"github.com/gandrin/ASharedJourney/shared"
+	"github.com/faiface/pixel/examples/community/ASharedJourney/shared"
 )
 
 //placeholder

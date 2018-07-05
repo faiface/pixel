@@ -2,7 +2,7 @@ package supervisor
 
 import (
 	"github.com/faiface/pixel/pixelgl"
-	"github.com/gandrin/ASharedJourney/shared"
+	"github.com/faiface/pixel/examples/community/ASharedJourney/shared"
 )
 
 //transition Direction in x , y coordinates

@@ -6,12 +6,12 @@ import (
 	"log"
 	"time"
 
-	"github.com/gandrin/ASharedJourney/shared"
-	"github.com/gandrin/ASharedJourney/supervisor"
-	"github.com/gandrin/ASharedJourney/tiles"
-	"github.com/gandrin/ASharedJourney/menu"
+	"github.com/faiface/pixel/examples/community/ASharedJourney/shared"
+	"github.com/faiface/pixel/examples/community/ASharedJourney/supervisor"
+	"github.com/faiface/pixel/examples/community/ASharedJourney/tiles"
+	"github.com/faiface/pixel/examples/community/ASharedJourney/menu"
 	"github.com/faiface/pixel"
-	"github.com/gandrin/ASharedJourney/music"
+	"github.com/faiface/pixel/examples/community/ASharedJourney/music"
 	"image/color"
 )
 

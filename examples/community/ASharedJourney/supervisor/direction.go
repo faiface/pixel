@@ -2,7 +2,7 @@ package supervisor
 
 import (
 	"github.com/faiface/pixel"
-	"github.com/gandrin/ASharedJourney/tiles"
+	"github.com/faiface/pixel/examples/community/ASharedJourney/tiles"
 )
 
 //call motion

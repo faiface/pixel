@@ -4,7 +4,7 @@ package supervisor
 import (
 	"time"
 
-	"github.com/gandrin/ASharedJourney/shared"
+	"github.com/faiface/pixel/examples/community/ASharedJourney/shared"
 )
 
 type PlayerDirections struct {

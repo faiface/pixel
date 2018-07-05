@@ -1,7 +1,7 @@
 ﻿# ASharedJourney
 
 This is a fork of a project originally developed during the SFR game jam along side Pierre, Gabriel, Aurore & Fabio.
-
+Original repo can be found [here](https://github.com/gandrin/ASharedJourney).
 This project uses the go [pixel](https://github.com/faiface/pixel) package for sound management and sprites, go check them out.
 
 
@@ -19,27 +19,13 @@ This project uses the go [pixel](https://github.com/faiface/pixel) package for s
 
 ## Building and running
 
-### Installation
-
-- First, install the game and its dependencies
-
-```bash
-go get -u github.com/gandrin/ASharedJourney
-```
-
-- You will also need the `go-bindata` program to build the assets into the binary file
+- You will need the `go-bindata` program to build the assets into the binary file
 
 ```bash
 go get -u github.com/jteeuwen/go-bindata/...
 ```
 
-> Make sure your `$GOPATH` is set :wink:
-
-### Run
-
-```
-make run
-```
+> Make sure your `$GOPATH` is set to the root of pixel :wink:
 
 ### Releasing
 

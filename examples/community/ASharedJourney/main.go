@@ -3,17 +3,16 @@ package main
 import (
 	"time"
 
-	"github.com/gandrin/ASharedJourney/supervisor"
-
 	"github.com/faiface/pixel"
 	"github.com/faiface/pixel/pixelgl"
-	"github.com/gandrin/ASharedJourney/tiles"
+	"github.com/faiface/pixel/examples/community/ASharedJourney/tiles"
 	"golang.org/x/image/colornames"
 
-	"github.com/gandrin/ASharedJourney/mechanics"
-	"github.com/gandrin/ASharedJourney/menu"
-	"github.com/gandrin/ASharedJourney/music"
-	"github.com/gandrin/ASharedJourney/shared"
+	"github.com/faiface/pixel/examples/community/ASharedJourney/mechanics"
+	"github.com/faiface/pixel/examples/community/ASharedJourney/music"
+	"github.com/faiface/pixel/examples/community/ASharedJourney/shared"
+	"github.com/faiface/pixel/examples/community/ASharedJourney/menu"
+	"github.com/faiface/pixel/examples/community/ASharedJourney/supervisor"
 )
 
 const frameRate = 60
