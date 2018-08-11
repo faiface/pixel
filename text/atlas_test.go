@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/faiface/pixel/text"
+	"golang.org/x/image/font/inconsolata"
 )
 
 func TestAtlas7x13(t *testing.T) {
@@ -21,4 +22,8 @@ func TestAtlas7x13(t *testing.T) {
 			}
 		}
 	}
+}
+
+func TestAtlasInconsolata(t *testing.T) {
+	text.NewAtlas(inconsolata.Regular8x16, text.ASCII)
 }
