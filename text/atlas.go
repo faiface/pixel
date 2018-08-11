@@ -60,8 +60,9 @@ func NewAtlas(face font.Face, runeSets ...[]rune) *Atlas {
 	))
 
 	for r, fg := range fixedMapping {
-		dr, mask, maskp, _, _ := face.Glyph(fg.dot, r)
-		draw.Draw(atlasImg, dr, mask, maskp, draw.Src)
+		if dr, mask, maskp, _, ok := face.Glyph(fg.dot, r); ok {
+			draw.Draw(atlasImg, dr, mask, maskp, draw.Src)
+		}
 	}
 
 	bounds := pixel.R(
