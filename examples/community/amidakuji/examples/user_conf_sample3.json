@@ -1,0 +1,21 @@
+{
+    "window_width":  1800,
+    "window_height": 600,
+
+    "max_player":    50,
+    "max_level":     2000,
+
+    "width":         3000,
+    "height":        1000,
+    "zoom":          -3,
+    "rotate_degree": -360,
+
+    "margin_top":    50,
+    "margin_right":  50,
+    "margin_bottom": 50,
+    "margin_left":   100,
+
+    "font_size":     20,
+    "picks":         [],
+    "prizes":        []
+}

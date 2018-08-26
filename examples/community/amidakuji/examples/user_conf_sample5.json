@@ -1,0 +1,21 @@
+{
+    "window_width":  1800,
+    "window_height": 600,
+
+    "max_player":    8,
+    "max_level":     300,
+
+    "width":         3000,
+    "height":        1000,
+    "zoom":          -3,
+    "rotate_degree": -360,
+
+    "margin_top":    50,
+    "margin_right":  120,
+    "margin_bottom": 50,
+    "margin_left":   150,
+
+    "font_size":     18,
+    "picks":         ["Tauros", "Magikarp", "Gyarados", "Lapras", "Ditto", "Eevee", "Vaporeon", "Jolteon", "Flareon", "Porygon", "Omanyte"],
+    "prizes":        ["None","Master Ball","Ultra Ball","Great Ball","Poke Ball","Safari Ball","Net Ball","Dive Ball","Nest Ball","Repeat Ball","Timer Ball","Luxury Ball","Premier Ball","Dusk Ball","Heal Ball","Quick Ball","Cherish Ball"]
+}

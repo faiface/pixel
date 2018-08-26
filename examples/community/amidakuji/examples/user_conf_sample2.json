@@ -1,0 +1,21 @@
+{
+    "window_width":  1200,
+    "window_height": 800,
+
+    "max_player":    5,
+    "max_level":     100,
+
+    "width":         1500,
+    "height":        1000,
+    "zoom":          -2,
+    "rotate_degree": -360,
+
+    "margin_top":    50,
+    "margin_right":  100,
+    "margin_bottom": 50,
+    "margin_left":   150,
+
+    "font_size":     20,
+    "picks":         ["Psyduck","Golduck","Mankey","Primeape","Growlithe"],
+    "prizes":        ["None","Potion","Antidote","Burn Heal","Ice Heal","Awakening","Paralyze Heal","Full Restore","Max Potion","Hyper Potion","Super Potion","Full Heal","Revive","Max Revive","Fresh Water","Soda Pop","Lemonade","Moomoo Milk"]
+}
