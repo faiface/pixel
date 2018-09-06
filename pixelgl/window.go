@@ -55,10 +55,11 @@ type WindowConfig struct {
 type Window struct {
 	window *glfw.Window
 
-	bounds        pixel.Rect
-	canvas        *Canvas
-	vsync         bool
-	cursorVisible bool
+	bounds         pixel.Rect
+	canvas         *Canvas
+	vsync          bool
+	cursorVisible  bool
+	cursorDisabled bool
 
 	// need to save these to correctly restore a fullscreen window
 	restore struct {
@@ -344,19 +345,43 @@ func (w *Window) VSync() bool {
 
 // SetCursorVisible sets the visibility of the mouse cursor inside the Window client area.
 func (w *Window) SetCursorVisible(visible bool) {
-	w.cursorVisible = visible
-	mainthread.Call(func() {
-		if visible {
-			w.window.SetInputMode(glfw.CursorMode, glfw.CursorNormal)
-		} else {
-			w.window.SetInputMode(glfw.CursorMode, glfw.CursorHidden)
-		}
-	})
+	if !w.cursorDisabled {
+		w.cursorVisible = visible
+		mainthread.Call(func() {
+			w.applyCursorVisibility()
+		})
+	}
+}
+
+func (w *Window) applyCursorVisibility() {
+	if w.cursorVisible {
+		w.window.SetInputMode(glfw.CursorMode, glfw.CursorNormal)
+	} else {
+		w.window.SetInputMode(glfw.CursorMode, glfw.CursorHidden)
+	}
 }
 
 // CursorVisible returns the visibility status of the mouse cursor.
 func (w *Window) CursorVisible() bool {
 	return w.cursorVisible
+}
+
+// SetCursorDisabled both hides the cursor, as well as limits cursor movement to the Window client area.
+func (w *Window) SetCursorDisabled(disabled bool) {
+	w.cursorDisabled = disabled
+	mainthread.Call(func() {
+		if disabled {
+			w.cursorVisible = false
+			w.window.SetInputMode(glfw.CursorMode, glfw.CursorDisabled)
+		} else {
+			w.applyCursorVisibility()
+		}
+	})
+}
+
+// CursorDisabled returns the disabled status of the mouse cursor.
+func (w *Window) CursorDisabled() bool {
+	return w.cursorDisabled
 }
 
 // Note: must be called inside the main thread.
