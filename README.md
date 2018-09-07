@@ -23,31 +23,31 @@ covering several topics of Pixel. Here's the content of the tutorial parts so fa
 - [Drawing shapes with IMDraw](https://github.com/faiface/pixel/wiki/Drawing-shapes-with-IMDraw)
 - [Typing text on the screen](https://github.com/faiface/pixel/wiki/Typing-text-on-the-screen)
 
-## Examples
+## [Examples](https://github.com/faiface/pixel-examples)
 
-The [examples](https://github.com/faiface/pixel/tree/master/examples) directory contains a few
+The [examples](https://github.com/faiface/pixel-examples) repository contains a few
 examples demonstrating Pixel's functionality.
 
 **To run an example**, navigate to it's directory, then `go run` the `main.go` file. For example:
 
 ```
-$ cd examples/platformer
+$ cd pixel-examples/platformer
 $ go run main.go
 ```
 
 Here are some screenshots from the examples!
 
-| [Lights](examples/lights) | [Platformer](examples/platformer) |
+| [Lights](https://github.com/faiface/pixel-examples/lights) | [Platformer](https://github.com/faiface/pixel-examples/platformer) |
 | --- | --- |
-| ![Lights](examples/lights/screenshot.png) | ![Platformer](examples/platformer/screenshot.png) |
+| ![Lights](https://github.com/faiface/pixel-examples/lights/screenshot.png) | ![Platformer](https://github.com/faiface/pixel-examples/platformer/screenshot.png) |
 
-| [Smoke](examples/smoke) | [Typewriter](examples/typewriter) |
+| [Smoke](https://github.com/faiface/pixel-examples/smoke) | [Typewriter](https://github.com/faiface/pixel-examples/typewriter) |
 | --- | --- |
-| ![Smoke](examples/smoke/screenshot.png) | ![Typewriter](examples/typewriter/screenshot.png) |
+| ![Smoke](https://github.com/faiface/pixel-examples/smoke/screenshot.png) | ![Typewriter](https://github.com/faiface/pixel-examples/typewriter/screenshot.png) |
 
-| [Raycaster](examples/community/raycaster) | [Starfield](examples/community/starfield) |
+| [Raycaster](https://github.com/faiface/pixel-examples/community/raycaster) | [Starfield](https://github.com/faiface/pixel-examples/community/starfield) |
 | --- | --- |
-| ![Raycaster](examples/community/raycaster/screenshot.png) | ![Starfield](examples/community/starfield/screenshot.png) |
+| ![Raycaster](https://github.com/faiface/pixel-examples/community/raycaster/screenshot.png) | ![Starfield](https://github.com/faiface/pixel-examples/community/starfield/screenshot.png) |
 
 ## Features
 
