@@ -37,17 +37,17 @@ $ go run main.go
 
 Here are some screenshots from the examples!
 
-| [Lights](https://github.com/faiface/pixel-examples/lights) | [Platformer](https://github.com/faiface/pixel-examples/platformer) |
+| [Lights](https://github.com/faiface/pixel-examples/blob/master/lights) | [Platformer](https://github.com/faiface/pixel-examples/blob/master/platformer) |
 | --- | --- |
-| ![Lights](https://github.com/faiface/pixel-examples/lights/screenshot.png) | ![Platformer](https://github.com/faiface/pixel-examples/platformer/screenshot.png) |
+| ![Lights](https://github.com/faiface/pixel-examples/blob/master/lights/screenshot.png) | ![Platformer](https://github.com/faiface/pixel-examples/blob/master/platformer/screenshot.png) |
 
-| [Smoke](https://github.com/faiface/pixel-examples/smoke) | [Typewriter](https://github.com/faiface/pixel-examples/typewriter) |
+| [Smoke](https://github.com/faiface/pixel-examples/blob/master/smoke) | [Typewriter](https://github.com/faiface/pixel-examples/blob/master/typewriter) |
 | --- | --- |
-| ![Smoke](https://github.com/faiface/pixel-examples/smoke/screenshot.png) | ![Typewriter](https://github.com/faiface/pixel-examples/typewriter/screenshot.png) |
+| ![Smoke](https://github.com/faiface/pixel-examples/blob/master/smoke/screenshot.png) | ![Typewriter](https://github.com/faiface/pixel-examples/blob/master/typewriter/screenshot.png) |
 
-| [Raycaster](https://github.com/faiface/pixel-examples/community/raycaster) | [Starfield](https://github.com/faiface/pixel-examples/community/starfield) |
+| [Raycaster](https://github.com/faiface/pixel-examples/blob/master/community/raycaster) | [Starfield](https://github.com/faiface/pixel-examples/blob/master/community/starfield) |
 | --- | --- |
-| ![Raycaster](https://github.com/faiface/pixel-examples/community/raycaster/screenshot.png) | ![Starfield](https://github.com/faiface/pixel-examples/community/starfield/screenshot.png) |
+| ![Raycaster](https://github.com/faiface/pixel-examples/blob/master/community/raycaster/screenshot.png) | ![Starfield](https://github.com/faiface/pixel-examples/blob/master/community/starfield/screenshot.png) |
 
 ## Features
 
