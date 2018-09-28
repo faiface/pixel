@@ -6,6 +6,8 @@ import (
 	"io/ioutil"
 	"os"
 
+	"github.com/go-gl/mathgl/mgl32"
+
 	_ "image/png"
 
 	"github.com/faiface/pixel"
@@ -16,8 +18,11 @@ import (
 )
 
 // InstallShader ...
-func InstallShader(w *pixelgl.Window) {
+func InstallShader(w *pixelgl.Window, uAmount *float32, uResolution, uMouse *mgl32.Vec2) {
 	wc := w.GetCanvas()
+	wc.BindUniform("u_resolution", uResolution)
+	wc.BindUniform("u_mouse", uMouse)
+	wc.BindUniform("u_amount", uAmount)
 	wc.SetFragmentShader(pixelateFragShader)
 	wc.UpdateShader()
 }
@@ -100,7 +105,10 @@ func run() {
 	jetpackOn2Name := "jetpack-on2.png"
 	camVector := win.Bounds().Center()
 
-	InstallShader(win)
+	var uAmount float32
+	var uMouse, uResolution mgl32.Vec2
+
+	InstallShader(win, &uAmount, &uResolution, &uMouse)
 
 	bg, _ := loadSprite("sky.png")
 
@@ -124,10 +132,19 @@ func run() {
 
 	currentSprite := jetpackOff
 
+	canvas := pixelgl.NewCanvas(win.Bounds())
+	uResolution[0] = float32(win.Bounds().W())
+	uResolution[1] = float32(win.Bounds().H())
+	uAmount = 300.0
 	// Game Loop
 	for !win.Closed() {
-		win.Update()
-		win.Clear(colornames.Green)
+
+		mpos := win.MousePosition()
+		uMouse[0] = float32(mpos.X)
+		uMouse[1] = float32(mpos.Y)
+		win.SetTitle(fmt.Sprint(uAmount))
+		win.Clear(colornames.Blue)
+		canvas.Clear(colornames.Green)
 
 		// Jetpack - Controls
 		jetpackOn = win.Pressed(pixelgl.KeyUp) || win.Pressed(pixelgl.KeyW)
@@ -173,6 +190,13 @@ func run() {
 			velY -= gravity
 		}
 
+		if win.Pressed(pixelgl.KeyEqual) {
+			uAmount += 10
+		}
+		if win.Pressed(pixelgl.KeyMinus) {
+			uAmount -= 10
+		}
+
 		positionVector := pixel.V(win.Bounds().Center().X+jetX, win.Bounds().Center().Y+jetY-372)
 		jetMat := pixel.IM
 		jetMat = jetMat.Scaled(pixel.ZV, 4)
@@ -199,15 +223,16 @@ func run() {
 
 		cam := pixel.IM.Moved(win.Bounds().Center().Sub(camVector))
 
-		win.SetMatrix(cam)
+		canvas.SetMatrix(cam)
 
 		// Drawing to the screen
 		win.SetSmooth(true)
-		bg.Draw(win, pixel.IM.Moved(pixel.V(win.Bounds().Center().X, win.Bounds().Center().Y+766)).Scaled(pixel.ZV, 10))
-		txt.Draw(win, pixel.IM)
+		bg.Draw(canvas, pixel.IM.Moved(pixel.V(win.Bounds().Center().X, win.Bounds().Center().Y+766)).Scaled(pixel.ZV, 10))
+		txt.Draw(canvas, pixel.IM)
 		win.SetSmooth(false)
-		currentSprite.Draw(win, jetMat)
-
+		currentSprite.Draw(canvas, jetMat)
+		canvas.Draw(win, pixel.IM.Moved(win.Bounds().Center()))
+		win.Update()
 	}
 
 }
@@ -222,28 +247,60 @@ var pixelateFragShader = `
 precision mediump float;
 precision mediump int;
 #endif
+
 in vec4 Color;
 in vec2 texcoords;
-in float Intensity;
+in vec2 glpos;
+
 out vec4 fragColor;
+
 uniform vec4 u_colormask;
 uniform vec4 u_texbounds;
 uniform sampler2D u_texture;
-// varying vec4 vertTexCoord;
-// uniform sampler2D texture;
-// uniform vec2 pixels;
+uniform float u_amount;
+uniform vec2 u_mouse;
+uniform vec2 u_resolution;
+
 void main(void)
 {
-	fragColor = vec4(0, 0, 0, 0);
-	fragColor += (1 - Intensity) * Color;
 	vec2 t = (texcoords - u_texbounds.xy) / u_texbounds.zw;
-	fragColor += Intensity * Color * texture(u_texture, t);
-	fragColor *= u_colormask;
-  	vec2 p = t.st;
-	p.x -= mod(texcoords.x, 1.0 / gl_FragCoord.x);
-	p.y -= mod(texcoords.y, 1.0 / gl_FragCoord.y);
-    
-	fragColor = texture(u_texture, p).rgba;
 	
+	float d = 1.0 / u_amount;
+	float ar = u_resolution.x / u_resolution.y;
+	float u = floor( t.x / d ) * d;
+	d = ar / u_amount;
+	float v = floor( t.y / d ) * d;
+	fragColor = texture( u_texture, vec2( u, v ) );
 }
 `
+
+/*
+	//fragColor = vec4(1.0,0.0,0.0,1.0);
+	// float d = 1.0 / u_amount;
+	// float ar = u_resolution.x / u_resolution.y;
+	// float u = floor( texcoords.x / d ) * d;
+	// d = ar / u_amount;
+	// float v = floor( texcoords.y / d ) * d;
+	// fragColor = texture( u_texture, vec2( u, v ) );
+
+  	// vec2 p = t.st;
+	// p.x -= mod(t.x / glpos.x, t.x / glpos.x + 0.1);
+	// p.y -= mod(t.y / glpos.y, t.y / glpos.y + 0.1);
+
+	// fragColor = texture(u_texture, p).rgba;
+*/
+// varying vec2 vUv;
+// uniform sampler2D tInput;
+// uniform vec2 resolution;
+// uniform float amount;
+
+// void main() {
+
+// 	float d = 1.0 / amount;
+// 	float ar = resolution.x / resolution.y;
+// 	float u = floor( vUv.x / d ) * d;
+// 	d = ar / amount;
+// 	float v = floor( vUv.y / d ) * d;
+// 	gl_FragColor = texture2D( tInput, vec2( u, v ) );
+
+// }
