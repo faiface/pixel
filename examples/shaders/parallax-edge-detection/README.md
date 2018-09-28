@@ -1,0 +1,1 @@
+A terrible "edge-detecting" shader on top of the parallax demo. Adjust with the -/+ keys.
