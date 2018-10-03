@@ -425,7 +425,7 @@ func (w *Window) Color(at pixel.Vec) pixel.RGBA {
 	return w.canvas.Color(at)
 }
 
-// GetCanvas returns the window's underlying Canvas
-func (w *Window) GetCanvas() *Canvas {
+// Canvas returns the window's underlying Canvas
+func (w *Window) Canvas() *Canvas {
 	return w.canvas
 }

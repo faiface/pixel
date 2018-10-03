@@ -43,21 +43,21 @@ func NewCanvas(bounds pixel.Rect) *Canvas {
 	return c
 }
 
-// BindUniform will add a uniform with any supported underlying variable
-// if the uniform already exists, including defaults, they will be reassigned
-// to the new value
-func (c *Canvas) BindUniform(Name string, Value interface{}) {
+// SetUniform will update the named uniform with the value of any supported underlying
+// attribute variable. If the uniform already exists, including defaults, they will be reassigned
+// to the new value. The value can be a pointer.
+func (c *Canvas) SetUniform(Name string, Value interface{}) {
 	c.shader.AddUniform(Name, Value)
 }
 
 // UpdateShader needs to be called after any changes to the underlying GLShader
-// are made (ie, BindUniform(), SetFragmentShader()...)
+// are made, such as, SetUniform, SetFragmentShader...
 func (c *Canvas) UpdateShader() {
 	c.shader.update()
 }
 
-// SetFragmentShader allows you to define a new fragment shader on the underlying
-// GLShader. fs is the GLSL source, not a filename
+// SetFragmentShader allows you to set a new fragment shader on the underlying
+// framebuffer. Argument "fs" is the GLSL source, not a filename.
 func (c *Canvas) SetFragmentShader(fs string) {
 	c.shader.fs = fs
 }
@@ -204,7 +204,7 @@ func (c *Canvas) setUniforms(texbounds pixel.Rect) {
 	}
 
 	for loc, u := range c.shader.uniforms {
-		c.shader.s.SetUniformAttr(loc, u.Value)
+		c.shader.s.SetUniformAttr(loc, u.Value())
 	}
 }
 
@@ -336,7 +336,7 @@ func (ct *canvasTriangles) draw(tex *glhf.Texture, bounds pixel.Rect) {
 		}
 
 		for loc, u := range ct.dst.shader.uniforms {
-			ct.dst.shader.s.SetUniformAttr(loc, u.Value)
+			ct.dst.shader.s.SetUniformAttr(loc, u.Value())
 		}
 
 		if tex == nil {
