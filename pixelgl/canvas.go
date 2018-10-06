@@ -17,7 +17,7 @@ import (
 // It supports TrianglesPosition, TrianglesColor, TrianglesPicture and PictureColor.
 type Canvas struct {
 	gf     *GLFrame
-	shader *GLShader
+	shader *glShader
 
 	cmp    pixel.ComposeMethod
 	mat    mgl32.Mat3
@@ -47,19 +47,14 @@ func NewCanvas(bounds pixel.Rect) *Canvas {
 // attribute variable. If the uniform already exists, including defaults, they will be reassigned
 // to the new value. The value can be a pointer.
 func (c *Canvas) SetUniform(Name string, Value interface{}) {
-	c.shader.AddUniform(Name, Value)
-}
-
-// UpdateShader needs to be called after any changes to the underlying GLShader
-// are made, such as, SetUniform, SetFragmentShader...
-func (c *Canvas) UpdateShader() {
-	c.shader.update()
+	c.shader.SetUniform(Name, Value)
 }
 
 // SetFragmentShader allows you to set a new fragment shader on the underlying
 // framebuffer. Argument "fs" is the GLSL source, not a filename.
 func (c *Canvas) SetFragmentShader(fs string) {
 	c.shader.fs = fs
+	c.shader.update()
 }
 
 // MakeTriangles creates a specialized copy of the supplied Triangles that draws onto this Canvas.
@@ -186,25 +181,6 @@ func setBlendFunc(cmp pixel.ComposeMethod) {
 		glhf.BlendFunc(glhf.One, glhf.Zero)
 	default:
 		panic(errors.New("Canvas: invalid compose method"))
-	}
-}
-
-// updates all uniform values for gl to consume
-func (c *Canvas) setUniforms(texbounds pixel.Rect) {
-	mat := c.mat
-	col := c.col
-	c.shader.uniformDefaults.transform = mat
-	c.shader.uniformDefaults.colormask = col
-	dstBounds := c.Bounds()
-	c.shader.uniformDefaults.bounds = mgl32.Vec4{
-		float32(dstBounds.Min.X),
-		float32(dstBounds.Min.Y),
-		float32(dstBounds.W()),
-		float32(dstBounds.H()),
-	}
-
-	for loc, u := range c.shader.uniforms {
-		c.shader.s.SetUniformAttr(loc, u.Value())
 	}
 }
 

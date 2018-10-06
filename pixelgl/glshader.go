@@ -7,10 +7,10 @@ import (
 	"github.com/pkg/errors"
 )
 
-// GLShader is a type to assist with managing a canvas's underlying
+// glShader is a type to assist with managing a canvas's underlying
 // shader configuration. This allows for customization of shaders on
 // a per canvas basis.
-type GLShader struct {
+type glShader struct {
 	s      *glhf.Shader
 	vf, uf glhf.AttrFormat
 	vs, fs string
@@ -33,7 +33,7 @@ type gsUniformAttr struct {
 }
 
 // reinitialize GLShader data and recompile the underlying gl shader object
-func (gs *GLShader) update() {
+func (gs *glShader) update() {
 	gs.uf = nil
 	for _, u := range gs.uniforms {
 		gs.uf = append(gs.uf, glhf.Attr{
@@ -59,7 +59,7 @@ func (gs *GLShader) update() {
 }
 
 // gets the uniform index from GLShader
-func (gs *GLShader) getUniform(Name string) int {
+func (gs *glShader) getUniform(Name string) int {
 	for i, u := range gs.uniforms {
 		if u.Name == Name {
 			return i
@@ -68,14 +68,14 @@ func (gs *GLShader) getUniform(Name string) int {
 	return -1
 }
 
-// AddUniform appends a custom uniform name and value to the shader.
+// SetUniform appends a custom uniform name and value to the shader.
 // if the uniform already exists, it will simply be overwritten.
 //
 // example:
 //
 //   utime := float32(time.Since(starttime)).Seconds())
 //   mycanvas.shader.AddUniform("u_time", &utime)
-func (gs *GLShader) AddUniform(Name string, Value interface{}) {
+func (gs *glShader) SetUniform(Name string, Value interface{}) {
 	t, p := getAttrType(Value)
 	if loc := gs.getUniform(Name); loc > -1 {
 		gs.uniforms[loc].Name = Name
@@ -94,18 +94,18 @@ func (gs *GLShader) AddUniform(Name string, Value interface{}) {
 
 // Sets up a base shader with everything needed for a Pixel
 // canvas to render correctly. The defaults can be overridden
-// by simply using the AddUniform function.
+// by simply using the SetUniform function.
 func baseShader(c *Canvas) {
-	gs := &GLShader{
+	gs := &glShader{
 		vf: defaultCanvasVertexFormat,
 		vs: defaultCanvasVertexShader,
 		fs: baseCanvasFragmentShader,
 	}
 
-	gs.AddUniform("u_transform", &gs.uniformDefaults.transform)
-	gs.AddUniform("u_colormask", &gs.uniformDefaults.colormask)
-	gs.AddUniform("u_bounds", &gs.uniformDefaults.bounds)
-	gs.AddUniform("u_texbounds", &gs.uniformDefaults.texbounds)
+	gs.SetUniform("u_transform", &gs.uniformDefaults.transform)
+	gs.SetUniform("u_colormask", &gs.uniformDefaults.colormask)
+	gs.SetUniform("u_bounds", &gs.uniformDefaults.bounds)
+	gs.SetUniform("u_texbounds", &gs.uniformDefaults.texbounds)
 
 	c.shader = gs
 }
