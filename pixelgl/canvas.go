@@ -47,13 +47,13 @@ func NewCanvas(bounds pixel.Rect) *Canvas {
 // attribute variable. If the uniform already exists, including defaults, they will be reassigned
 // to the new value. The value can be a pointer.
 func (c *Canvas) SetUniform(Name string, Value interface{}) {
-	c.shader.SetUniform(Name, Value)
+	c.shader.setUniform(Name, Value)
 }
 
 // SetFragmentShader allows you to set a new fragment shader on the underlying
-// framebuffer. Argument "fs" is the GLSL source, not a filename.
-func (c *Canvas) SetFragmentShader(fs string) {
-	c.shader.fs = fs
+// framebuffer. Argument "src" is the GLSL source, not a filename.
+func (c *Canvas) SetFragmentShader(src string) {
+	c.shader.fs = src
 	c.shader.update()
 }
 

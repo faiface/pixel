@@ -75,20 +75,20 @@ func (gs *glShader) getUniform(Name string) int {
 //
 //   utime := float32(time.Since(starttime)).Seconds())
 //   mycanvas.shader.AddUniform("u_time", &utime)
-func (gs *glShader) SetUniform(Name string, Value interface{}) {
-	t, p := getAttrType(Value)
-	if loc := gs.getUniform(Name); loc > -1 {
-		gs.uniforms[loc].Name = Name
+func (gs *glShader) setUniform(name string, value interface{}) {
+	t, p := getAttrType(value)
+	if loc := gs.getUniform(name); loc > -1 {
+		gs.uniforms[loc].Name = name
 		gs.uniforms[loc].Type = t
 		gs.uniforms[loc].ispointer = p
-		gs.uniforms[loc].value = Value
+		gs.uniforms[loc].value = value
 		return
 	}
 	gs.uniforms = append(gs.uniforms, gsUniformAttr{
-		Name:      Name,
+		Name:      name,
 		Type:      t,
 		ispointer: p,
-		value:     Value,
+		value:     value,
 	})
 }
 
@@ -102,10 +102,10 @@ func baseShader(c *Canvas) {
 		fs: baseCanvasFragmentShader,
 	}
 
-	gs.SetUniform("u_transform", &gs.uniformDefaults.transform)
-	gs.SetUniform("u_colormask", &gs.uniformDefaults.colormask)
-	gs.SetUniform("u_bounds", &gs.uniformDefaults.bounds)
-	gs.SetUniform("u_texbounds", &gs.uniformDefaults.texbounds)
+	gs.setUniform("u_transform", &gs.uniformDefaults.transform)
+	gs.setUniform("u_colormask", &gs.uniformDefaults.colormask)
+	gs.setUniform("u_bounds", &gs.uniformDefaults.bounds)
+	gs.setUniform("u_texbounds", &gs.uniformDefaults.texbounds)
 
 	c.shader = gs
 }
