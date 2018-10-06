@@ -16,13 +16,6 @@ go:
 - 1.7.4
 - tip
 
-before_install:
-- echo "installing requirements for example/amidakuji"
-- sudo apt-get -qq install libpango1.0-dev libgtk2.0-dev
-- go get -v -u github.com/go-bindata/go-bindata/...
-- make glossary/asset.go --directory=$TRAVIS_BUILD_DIR/examples/community/amidakuji/
-- echo "end of before_install"
-
 install:
 - go get -t ./...
 
