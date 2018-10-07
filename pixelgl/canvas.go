@@ -46,8 +46,8 @@ func NewCanvas(bounds pixel.Rect) *Canvas {
 // SetUniform will update the named uniform with the value of any supported underlying
 // attribute variable. If the uniform already exists, including defaults, they will be reassigned
 // to the new value. The value can be a pointer.
-func (c *Canvas) SetUniform(Name string, Value interface{}) {
-	c.shader.setUniform(Name, Value)
+func (c *Canvas) SetUniform(name string, value interface{}) {
+	c.shader.setUniform(name, value)
 }
 
 // SetFragmentShader allows you to set a new fragment shader on the underlying
