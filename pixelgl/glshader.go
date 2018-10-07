@@ -98,14 +98,14 @@ func (gs *glShader) setUniform(name string, value interface{}) {
 func baseShader(c *Canvas) {
 	gs := &glShader{
 		vf: defaultCanvasVertexFormat,
-		vs: defaultCanvasVertexShader,
+		vs: baseCanvasVertexShader,
 		fs: baseCanvasFragmentShader,
 	}
 
-	gs.setUniform("u_transform", &gs.uniformDefaults.transform)
-	gs.setUniform("u_colormask", &gs.uniformDefaults.colormask)
-	gs.setUniform("u_bounds", &gs.uniformDefaults.bounds)
-	gs.setUniform("u_texbounds", &gs.uniformDefaults.texbounds)
+	gs.setUniform("uTransform", &gs.uniformDefaults.transform)
+	gs.setUniform("uColorMask", &gs.uniformDefaults.colormask)
+	gs.setUniform("uBounds", &gs.uniformDefaults.bounds)
+	gs.setUniform("uTexBounds", &gs.uniformDefaults.texbounds)
 
 	c.shader = gs
 }
@@ -215,54 +215,53 @@ func getAttrType(v interface{}) (glhf.AttrType, bool) {
 	}
 }
 
-var defaultCanvasVertexShader = `
+var baseCanvasVertexShader = `
 #version 330 core
 
-in vec2 position;
-in vec4 color;
-in vec2 texCoords;
-in float intensity;
-out vec4 Color;
-out vec2 texcoords;
-out vec2 glpos;
-out float Intensity;
+in vec2  aPosition;
+in vec4  aColor;
+in vec2  aTexCoords;
+in float aIntensity;
 
-uniform mat3 u_transform;
-uniform vec4 u_bounds;
+out vec4  vColor;
+out vec2  vTexCoords;
+out float vIntensity;
+
+uniform mat3 uTransform;
+uniform vec4 uBounds;
 
 void main() {
-	vec2 transPos = (u_transform * vec3(position, 1.0)).xy;
-	vec2 normPos = (transPos - u_bounds.xy) / u_bounds.zw * 2 - vec2(1, 1);
+	vec2 transPos = (uTransform * vec3(aPosition, 1.0)).xy;
+	vec2 normPos = (transPos - uBounds.xy) / uBounds.zw * 2 - vec2(1, 1);
 	gl_Position = vec4(normPos, 0.0, 1.0);
-	Color = color;
-	texcoords = texCoords;
-	Intensity = intensity;
-	glpos = transPos;
+	vColor = aColor;
+	vTexCoords = aTexCoords;
+	vIntensity = aIntensity;
 }
 `
 
 var baseCanvasFragmentShader = `
 #version 330 core
 
-in vec4 Color;
-in vec2 texcoords;
-in float Intensity;
+in vec4  vColor;
+in vec2  vTexCoords;
+in float vIntensity;
 
 out vec4 fragColor;
 
-uniform vec4 u_colormask;
-uniform vec4 u_texbounds;
-uniform sampler2D u_texture;
+uniform vec4 uColorMask;
+uniform vec4 uTexBounds;
+uniform sampler2D uTexture;
 
 void main() {
-	if (Intensity == 0) {
-		fragColor = u_colormask * Color;
+	if (vIntensity == 0) {
+		fragColor = uColorMask * vColor;
 	} else {
 		fragColor = vec4(0, 0, 0, 0);
-		fragColor += (1 - Intensity) * Color;
-		vec2 t = (texcoords - u_texbounds.xy) / u_texbounds.zw;
-		fragColor += Intensity * Color * texture(u_texture, t);
-		fragColor *= u_colormask;
+		fragColor += (1 - vIntensity) * vColor;
+		vec2 t = (vTexCoords - uTexBounds.xy) / uTexBounds.zw;
+		fragColor += vIntensity * vColor * texture(uTexture, t);
+		fragColor *= uColorMask;
 	}
 }
 `

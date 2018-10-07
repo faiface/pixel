@@ -363,8 +363,8 @@ const (
 )
 
 var defaultCanvasVertexFormat = glhf.AttrFormat{
-	canvasPosition:  {Name: "position", Type: glhf.Vec2},
-	canvasColor:     {Name: "color", Type: glhf.Vec4},
-	canvasTexCoords: {Name: "texCoords", Type: glhf.Vec2},
-	canvasIntensity: {Name: "intensity", Type: glhf.Float},
+	canvasPosition:  {Name: "aPosition", Type: glhf.Vec2},
+	canvasColor:     {Name: "aColor", Type: glhf.Vec4},
+	canvasTexCoords: {Name: "aTexCoords", Type: glhf.Vec2},
+	canvasIntensity: {Name: "aIntensity", Type: glhf.Float},
 }
