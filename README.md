@@ -50,6 +50,11 @@ Here are some screenshots from the examples!
 | --- | --- |
 | ![Raycaster](https://github.com/faiface/pixel-examples/blob/master/community/raycaster/screenshot.png) | ![Starfield](https://github.com/faiface/pixel-examples/blob/master/community/starfield/screenshot.png) |
 
+
+| [gonutz' No-Brain Jogging](https://github.com/gonutz/no-brain-jogging) |
+| --- |
+| ![NoBrainJogging](https://raw.githubusercontent.com/gonutz/no-brain-jogging/master/screenshots/screenshot.png) |
+
 ## Features
 
 Here's the list of the main features in Pixel. Although Pixel is still under heavy development,
