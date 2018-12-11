@@ -226,6 +226,7 @@ in float aIntensity;
 out vec4  vColor;
 out vec2  vTexCoords;
 out float vIntensity;
+out vec2  vPosition;
 
 uniform mat3 uTransform;
 uniform vec4 uBounds;
@@ -235,6 +236,7 @@ void main() {
 	vec2 normPos = (transPos - uBounds.xy) / uBounds.zw * 2 - vec2(1, 1);
 	gl_Position = vec4(normPos, 0.0, 1.0);
 	vColor = aColor;
+	vPosition = aPosition;
 	vTexCoords = aTexCoords;
 	vIntensity = aIntensity;
 }
