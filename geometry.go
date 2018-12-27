@@ -164,6 +164,11 @@ func (u Vec) Map(f func(float64) float64) Vec {
 	}
 }
 
+// Abs returns the absolute value (also called the modulus) of vector u.
+func (u Vec) Abs() float64 {
+	return math.Sqrt(math.Pow(u.X, 2) + math.Pow(u.Y, 2))
+}
+
 // Lerp returns a linear interpolation between vectors a and b.
 //
 // This function basically returns a point along the line between a and b and t chooses which one.
