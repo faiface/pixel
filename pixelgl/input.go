@@ -385,4 +385,6 @@ func (w *Window) UpdateInput() {
 	w.tempInp.repeat = [KeyLast + 1]bool{}
 	w.tempInp.scroll = pixel.ZV
 	w.tempInp.typed = ""
+
+	w.updateJoystickInput()
 }
