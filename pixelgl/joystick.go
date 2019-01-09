@@ -25,7 +25,6 @@ const (
 	Joystick14 = Joystick(glfw.Joystick14)
 	Joystick15 = Joystick(glfw.Joystick15)
 	Joystick16 = Joystick(glfw.Joystick16)
-	//JoystickLast = Joystick(glfw.JoystickLast)
 )
 
 // JoystickPresent returns if the joystick is currently connected.
