@@ -72,6 +72,8 @@ type Window struct {
 		scroll  pixel.Vec
 		typed   string
 	}
+
+	prevJoy, currJoy, tempJoy joystickState
 }
 
 var currWin *Window
