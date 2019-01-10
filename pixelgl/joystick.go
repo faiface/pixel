@@ -28,50 +28,62 @@ const (
 )
 
 // JoystickPresent returns if the joystick is currently connected.
+//
+// This API is experimental.
 func (w *Window) JoystickPresent(js Joystick) bool {
 	return w.currJoy.connected[js]
 }
 
 // JoystickName returns the name of the joystick. A disconnected joystick will return an
 // empty string.
+//
+// This API is experimental.
 func (w *Window) JoystickName(js Joystick) string {
 	return w.currJoy.name[js]
 }
 
 // JoystickButtonCount returns the number of buttons a connected joystick has.
+//
+// This API is experimental.
 func (w *Window) JoystickButtonCount(js Joystick) int {
 	return len(w.currJoy.buttons[js])
 }
 
 // JoystickAxisCount returns the number of axes a connected joystick has.
+//
+// This API is experimental.
 func (w *Window) JoystickAxisCount(js Joystick) int {
 	return len(w.currJoy.axis[js])
 }
 
 // JoystickPressed returns whether the joystick Button is currently pressed down.
-//
 // If the button index is out of range, this will return false.
+//
+// This API is experimental.
 func (w *Window) JoystickPressed(js Joystick, button int) bool {
 	return w.currJoy.getButton(js, button)
 }
 
 // JoystickJustPressed returns whether the joystick Button has just been pressed down.
-//
 // If the button index is out of range, this will return false.
+//
+// This API is experimental.
 func (w *Window) JoystickJustPressed(js Joystick, button int) bool {
 	return w.currJoy.getButton(js, button) && !w.prevJoy.getButton(js, button)
 }
 
 // JoystickJustReleased returns whether the joystick Button has just been released up.
-//
 // If the button index is out of range, this will return false.
+//
+// This API is experimental.
 func (w *Window) JoystickJustReleased(js Joystick, button int) bool {
 	return !w.currJoy.getButton(js, button) && w.prevJoy.getButton(js, button)
 }
 
 // JoystickAxis returns the value of a joystick axis at the last call to Window.Update.
-//
 // If the axis index is out of range, this will return 0.
+//
+// This API is experimental.
 func (w *Window) JoystickAxis(js Joystick, axis int) float64 {
 	return w.currJoy.getAxis(js, axis)
 }
