@@ -33,6 +33,32 @@ func (w *Window) MousePosition() pixel.Vec {
 	return w.currInp.mouse
 }
 
+// MousePreviousPosition returns the previous mouse position in the Window's Bounds.
+func (w *Window) MousePreviousPosition() pixel.Vec {
+	return w.prevInp.mouse
+}
+
+// SetMousePosition positions the mouse cursor anywhere within the Window's Bounds.
+func (w *Window) SetMousePosition(v pixel.Vec) {
+	mainthread.Call(func() {
+		if (v.X >= 0 && v.X <= w.bounds.W()) &&
+			(v.Y >= 0 && v.Y <= w.bounds.H()) {
+			w.window.SetCursorPos(
+				v.X+w.bounds.Min.X,
+				(w.bounds.H()-v.Y)+w.bounds.Min.Y,
+			)
+			w.prevInp.mouse = v
+			w.currInp.mouse = v
+			w.tempInp.mouse = v
+		}
+	})
+}
+
+// MouseEntered returns true if the mouse position is within the Window's Bounds.
+func (w *Window) MouseEntered() bool {
+	return w.cursorEntered
+}
+
 // MouseScroll returns the mouse scroll amount (in both axes) since the last call to Window.Update.
 func (w *Window) MouseScroll() pixel.Vec {
 	return w.currInp.scroll
@@ -352,6 +378,10 @@ func (w *Window) initInput() {
 			case glfw.Repeat:
 				w.tempInp.repeat[Button(key)] = true
 			}
+		})
+
+		w.window.SetCursorEnterCallback(func(_ *glfw.Window, entered bool) {
+			w.cursorEntered = entered
 		})
 
 		w.window.SetCursorPosCallback(func(_ *glfw.Window, x, y float64) {

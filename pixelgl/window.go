@@ -59,6 +59,7 @@ type Window struct {
 	canvas        *Canvas
 	vsync         bool
 	cursorVisible bool
+	cursorEntered bool
 
 	// need to save these to correctly restore a fullscreen window
 	restore struct {
