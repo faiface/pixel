@@ -55,10 +55,11 @@ type WindowConfig struct {
 type Window struct {
 	window *glfw.Window
 
-	bounds        pixel.Rect
-	canvas        *Canvas
-	vsync         bool
-	cursorVisible bool
+	bounds             pixel.Rect
+	canvas             *Canvas
+	vsync              bool
+	cursorVisible      bool
+	cursorInsideWindow bool
 
 	// need to save these to correctly restore a fullscreen window
 	restore struct {

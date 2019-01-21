@@ -84,6 +84,14 @@ func (u Vec) Sub(v Vec) Vec {
 	}
 }
 
+// Floor converts x and y to their integer equivalents.
+func (u Vec) Floor() Vec {
+	return Vec{
+		math.Floor(u.X),
+		math.Floor(u.Y),
+	}
+}
+
 // To returns the vector from u to v. Equivalent to v.Sub(u).
 func (u Vec) To(v Vec) Vec {
 	return Vec{
