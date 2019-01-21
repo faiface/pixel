@@ -55,8 +55,8 @@ func (w *Window) SetMousePosition(v pixel.Vec) {
 }
 
 // MouseEntered returns true if the mouse position is within the Window's Bounds.
-func (w *Window) MouseEntered() bool {
-	return w.cursorEntered
+func (w *Window) MouseInsideWindow() bool {
+	return w.cursorInsideWindow
 }
 
 // MouseScroll returns the mouse scroll amount (in both axes) since the last call to Window.Update.
@@ -381,7 +381,7 @@ func (w *Window) initInput() {
 		})
 
 		w.window.SetCursorEnterCallback(func(_ *glfw.Window, entered bool) {
-			w.cursorEntered = entered
+			w.cursorInsideWindow = entered
 		})
 
 		w.window.SetCursorPosCallback(func(_ *glfw.Window, x, y float64) {
