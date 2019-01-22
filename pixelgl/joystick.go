@@ -92,7 +92,7 @@ func (w *Window) JoystickAxis(js Joystick, axis int) float64 {
 
 // Used internally during Window.UpdateInput to update the state of the joysticks.
 func (w *Window) updateJoystickInput() {
-	for js := Joystick1; js <= Joystick16; js++ {
+	for js := Joystick1; js <= JoystickLast; js++ {
 		// Determine and store if the joystick was connected
 		joystickPresent := glfw.JoystickPresent(glfw.Joystick(js))
 		w.tempJoy.connected[js] = joystickPresent
@@ -120,10 +120,10 @@ func (w *Window) updateJoystickInput() {
 }
 
 type joystickState struct {
-	connected [Joystick16 + 1]bool
-	name      [Joystick16 + 1]string
-	buttons   [Joystick16 + 1][]byte
-	axis      [Joystick16 + 1][]float32
+	connected [JoystickLast + 1]bool
+	name      [JoystickLast + 1]string
+	buttons   [JoystickLast + 1][]byte
+	axis      [JoystickLast + 1][]float32
 }
 
 // Returns if a button on a joystick is down, returning false if the button or joystick is invalid.
