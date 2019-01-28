@@ -104,8 +104,9 @@ Pixel is in development and still missing few critical features. Here're the mos
 - ~~Advanced window manipulation (cursor hiding, window icon, ...)~~
 - Better support for Hi-DPI displays
 - Mobile (and perhaps HTML5?) backend
-- More advanced graphical effects (e.g. blur)
+- ~~More advanced graphical effects (e.g. blur)~~ (solved with the addition of GLSL effects)
 - Tests and benchmarks
+- Vulkan support
 
 **Implementing these features will get us to the 1.0 release.** Contribute, so that it's as soon as
 possible!
