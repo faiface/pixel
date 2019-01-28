@@ -2,6 +2,8 @@ package pixel_test
 
 import (
 	"fmt"
+	"math"
+	"reflect"
 	"testing"
 
 	"github.com/faiface/pixel"
@@ -73,6 +75,402 @@ func TestResizeRect(t *testing.T) {
 			testResult := testCase.transform.f(testCase.input)
 			if testResult != testCase.answer {
 				t.Errorf("Got: %v, wanted: %v\n", testResult, testCase.answer)
+			}
+		})
+	}
+}
+
+func TestC(t *testing.T) {
+	type args struct {
+		radius float64
+		center pixel.Vec
+	}
+	tests := []struct {
+		name string
+		args args
+		want pixel.Circle
+	}{
+		{
+			name: "C(): positive radius",
+			args: args{radius: 10, center: pixel.V(0, 0)},
+			want: pixel.Circle{Radius: 10, Center: pixel.V(0, 0)},
+		},
+		{
+			name: "C(): zero radius",
+			args: args{radius: 0, center: pixel.V(0, 0)},
+			want: pixel.Circle{Radius: 0, Center: pixel.V(0, 0)},
+		},
+		{
+			name: "C(): negative radius",
+			args: args{radius: -5, center: pixel.V(0, 0)},
+			want: pixel.Circle{Radius: -5, Center: pixel.V(0, 0)},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := pixel.C(tt.args.radius, tt.args.center); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("C() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestCircle_String(t *testing.T) {
+	type fields struct {
+		radius float64
+		center pixel.Vec
+	}
+	tests := []struct {
+		name   string
+		fields fields
+		want   string
+	}{
+		{
+			name:   "Circle.String(): positive radius",
+			fields: fields{radius: 10, center: pixel.V(0, 0)},
+			want:   "Circle(10.00, Vec(0, 0))",
+		},
+		{
+			name:   "Circle.String(): zero radius",
+			fields: fields{radius: 0, center: pixel.V(0, 0)},
+			want:   "Circle(0.00, Vec(0, 0))",
+		},
+		{
+			name:   "Circle.String(): negative radius",
+			fields: fields{radius: -5, center: pixel.V(0, 0)},
+			want:   "Circle(-5.00, Vec(0, 0))",
+		},
+		{
+			name:   "Circle.String(): irrational radius",
+			fields: fields{radius: math.Pi, center: pixel.V(0, 0)},
+			want:   "Circle(3.14, Vec(0, 0))",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			c := pixel.C(tt.fields.radius, tt.fields.center)
+			if got := c.String(); got != tt.want {
+				t.Errorf("Circle.String() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestCircle_Norm(t *testing.T) {
+	type fields struct {
+		radius float64
+		center pixel.Vec
+	}
+	tests := []struct {
+		name   string
+		fields fields
+		want   pixel.Circle
+	}{
+		{
+			name:   "Circle.Norm(): positive radius",
+			fields: fields{radius: 10, center: pixel.V(0, 0)},
+			want:   pixel.Circle{Radius: 10, Center: pixel.Vec{X: 0, Y: 0}},
+		},
+		{
+			name:   "Circle.Norm(): zero radius",
+			fields: fields{radius: 0, center: pixel.V(0, 0)},
+			want:   pixel.Circle{Radius: 0, Center: pixel.Vec{X: 0, Y: 0}},
+		},
+		{
+			name:   "Circle.Norm(): negative radius",
+			fields: fields{radius: -5, center: pixel.V(0, 0)},
+			want:   pixel.Circle{Radius: 5, Center: pixel.Vec{X: 0, Y: 0}},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			c := pixel.C(tt.fields.radius, tt.fields.center)
+			if got := c.Norm(); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("Circle.Norm() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestCircle_Diameter(t *testing.T) {
+	type fields struct {
+		radius float64
+		center pixel.Vec
+	}
+	tests := []struct {
+		name   string
+		fields fields
+		want   float64
+	}{
+		{
+			name:   "Circle.Diameter(): positive radius",
+			fields: fields{radius: 10, center: pixel.V(0, 0)},
+			want:   20,
+		},
+		{
+			name:   "Circle.Diameter(): zero radius",
+			fields: fields{radius: 0, center: pixel.V(0, 0)},
+			want:   0,
+		},
+		{
+			name:   "Circle.Diameter(): negative radius",
+			fields: fields{radius: -5, center: pixel.V(0, 0)},
+			want:   -10,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			c := pixel.C(tt.fields.radius, tt.fields.center)
+			if got := c.Diameter(); got != tt.want {
+				t.Errorf("Circle.Diameter() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestCircle_Area(t *testing.T) {
+	type fields struct {
+		radius float64
+		center pixel.Vec
+	}
+	tests := []struct {
+		name   string
+		fields fields
+		want   float64
+	}{
+		{
+			name:   "Circle.Area(): positive radius",
+			fields: fields{radius: 10, center: pixel.V(0, 0)},
+			want:   20 * math.Pi,
+		},
+		{
+			name:   "Circle.Area(): zero radius",
+			fields: fields{radius: 0, center: pixel.V(0, 0)},
+			want:   0,
+		},
+		{
+			name:   "Circle.Area(): negative radius",
+			fields: fields{radius: -5, center: pixel.V(0, 0)},
+			want:   -10 * math.Pi,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			c := pixel.C(tt.fields.radius, tt.fields.center)
+			if got := c.Area(); got != tt.want {
+				t.Errorf("Circle.Area() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestCircle_Moved(t *testing.T) {
+	type fields struct {
+		radius float64
+		center pixel.Vec
+	}
+	type args struct {
+		delta pixel.Vec
+	}
+	tests := []struct {
+		name   string
+		fields fields
+		args   args
+		want   pixel.Circle
+	}{
+		{
+			name:   "Circle.Moved(): positive movement",
+			fields: fields{radius: 10, center: pixel.V(0, 0)},
+			args:   args{delta: pixel.V(10, 20)},
+			want:   pixel.Circle{Radius: 10, Center: pixel.Vec{X: 10, Y: 20}},
+		},
+		{
+			name:   "Circle.Moved(): zero movement",
+			fields: fields{radius: 10, center: pixel.V(0, 0)},
+			args:   args{delta: pixel.ZV},
+			want:   pixel.Circle{Radius: 10, Center: pixel.Vec{X: 0, Y: 0}},
+		},
+		{
+			name:   "Circle.Moved(): negative movement",
+			fields: fields{radius: 10, center: pixel.V(0, 0)},
+			args:   args{delta: pixel.V(-5, -10)},
+			want:   pixel.Circle{Radius: 10, Center: pixel.Vec{X: -5, Y: -10}},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			c := pixel.C(tt.fields.radius, tt.fields.center)
+			if got := c.Moved(tt.args.delta); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("Circle.Moved() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestCircle_Resized(t *testing.T) {
+	type fields struct {
+		radius float64
+		center pixel.Vec
+	}
+	type args struct {
+		radiusDelta float64
+	}
+	tests := []struct {
+		name   string
+		fields fields
+		args   args
+		want   pixel.Circle
+	}{
+		{
+			name:   "Circle.Resized(): positive delta",
+			fields: fields{radius: 10, center: pixel.V(0, 0)},
+			args:   args{radiusDelta: 5},
+			want:   pixel.Circle{Radius: 15, Center: pixel.Vec{X: 0, Y: 0}},
+		},
+		{
+			name:   "Circle.Resized(): zero delta",
+			fields: fields{radius: 10, center: pixel.V(0, 0)},
+			args:   args{radiusDelta: 0},
+			want:   pixel.Circle{Radius: 10, Center: pixel.Vec{X: 0, Y: 0}},
+		},
+		{
+			name:   "Circle.Resized(): negative delta",
+			fields: fields{radius: 10, center: pixel.V(0, 0)},
+			args:   args{radiusDelta: -5},
+			want:   pixel.Circle{Radius: 5, Center: pixel.Vec{X: 0, Y: 0}},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			c := pixel.C(tt.fields.radius, tt.fields.center)
+			if got := c.Resized(tt.args.radiusDelta); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("Circle.Resized() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestCircle_Contains(t *testing.T) {
+	type fields struct {
+		radius float64
+		center pixel.Vec
+	}
+	type args struct {
+		u pixel.Vec
+	}
+	tests := []struct {
+		name   string
+		fields fields
+		args   args
+		want   bool
+	}{
+		{
+			name:   "Circle.Contains(): point on cicles' center",
+			fields: fields{radius: 10, center: pixel.ZV},
+			args:   args{u: pixel.ZV},
+			want:   true,
+		},
+		{
+			name:   "Circle.Contains(): point offcenter",
+			fields: fields{radius: 10, center: pixel.V(5, 0)},
+			args:   args{u: pixel.ZV},
+			want:   true,
+		},
+		{
+			name:   "Circle.Contains(): point on circumference",
+			fields: fields{radius: 10, center: pixel.V(10, 0)},
+			args:   args{u: pixel.ZV},
+			want:   true,
+		},
+		{
+			name:   "Circle.Contains(): point outside circle",
+			fields: fields{radius: 10, center: pixel.V(15, 0)},
+			args:   args{u: pixel.ZV},
+			want:   false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			c := pixel.C(tt.fields.radius, tt.fields.center)
+			if got := c.Contains(tt.args.u); got != tt.want {
+				t.Errorf("Circle.Contains() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestCircle_Union(t *testing.T) {
+	type fields struct {
+		radius float64
+		center pixel.Vec
+	}
+	type args struct {
+		d pixel.Circle
+	}
+	tests := []struct {
+		name   string
+		fields fields
+		args   args
+		want   pixel.Circle
+	}{
+		{
+			name:   "Circle.Union(): overlapping circles",
+			fields: fields{radius: 5, center: pixel.ZV},
+			args:   args{d: pixel.C(5, pixel.ZV)},
+			want:   pixel.C(5, pixel.ZV),
+		},
+		{
+			name:   "Circle.Union(): separate circles",
+			fields: fields{radius: 1, center: pixel.ZV},
+			args:   args{d: pixel.C(1, pixel.V(0, 2))},
+			want:   pixel.C(2, pixel.V(0, 1)),
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			c := pixel.C(tt.fields.radius, tt.fields.center)
+			if got := c.Union(tt.args.d); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("Circle.Union() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestCircle_Intersect(t *testing.T) {
+	type fields struct {
+		radius float64
+		center pixel.Vec
+	}
+	type args struct {
+		d pixel.Circle
+	}
+	tests := []struct {
+		name   string
+		fields fields
+		args   args
+		want   pixel.Circle
+	}{
+		{
+			name:   "Circle.Intersect(): intersecting circles",
+			fields: fields{radius: 1, center: pixel.V(0, 0)},
+			args:   args{d: pixel.C(1, pixel.V(1, 0))},
+			want:   pixel.C(1, pixel.V(0.5, 0)),
+		},
+		{
+			name:   "Circle.Intersect(): non-intersecting circles",
+			fields: fields{radius: 1, center: pixel.V(0, 0)},
+			args:   args{d: pixel.C(1, pixel.V(3, 3))},
+			want:   pixel.C(0, pixel.V(1.5, 1.5)),
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			c := pixel.C(
+				tt.fields.radius,
+				tt.fields.center,
+			)
+			if got := c.Intersect(tt.args.d); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("Circle.Intersect() = %v, want %v", got, tt.want)
 			}
 		})
 	}
