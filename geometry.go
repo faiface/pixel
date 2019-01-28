@@ -318,6 +318,125 @@ func (r Rect) Intersect(s Rect) Rect {
 	return t
 }
 
+// Circle is a 2D circle. It is defined by two properties:
+//  - Radius float64
+//  - Center vector
+type Circle struct {
+	Radius float64
+	Center Vec
+}
+
+// C returns a new Circle with the given radius and center coordinates.
+//
+// Note that a negative radius is valid.
+func C(radius float64, center Vec) Circle {
+	return Circle{
+		Radius: radius,
+		Center: center,
+	}
+}
+
+// String returns the string representation of the Circle.
+//
+//  c := pixel.C(10.1234, pixel.ZV)
+//  c.String()     // returns "Circle(10.12, Vec(0, 0))"
+//  fmt.Println(c) // Circle(10.12, Vec(0, 0))
+func (c Circle) String() string {
+	return fmt.Sprintf("Circle(%.2f, %s)", c.Radius, c.Center)
+}
+
+// Norm returns the Circle in normalized form - this is that the radius is set to an absolute version.
+//
+// c := pixel.C(-10, pixel.ZV)
+// c.Norm() // returns pixel.Circle{10, pixel.Vec{0, 0}}
+func (c Circle) Norm() Circle {
+	return Circle{
+		Radius: math.Abs(c.Radius),
+		Center: c.Center,
+	}
+}
+
+// Diameter returns the diameter of the Circle.
+func (c Circle) Diameter() float64 {
+	return c.Radius * 2
+}
+
+// Area returns the area of the Circle.
+func (c Circle) Area() float64 {
+	return math.Pi * c.Diameter()
+}
+
+// Moved returns the Circle moved by the given vector delta.
+func (c Circle) Moved(delta Vec) Circle {
+	return Circle{
+		Radius: c.Radius,
+		Center: c.Center.Add(delta),
+	}
+}
+
+// Resized returns the Circle resized by the given delta.
+//
+// c := pixel.C(10, pixel.ZV)
+// c.Resized(-5) // returns pixel.Circle{5, pixel.Vec{0, 0}}
+// c.Resized(25) // returns pixel.Circle{35, pixel.Vec{0, 0}}
+func (c Circle) Resized(radiusDelta float64) Circle {
+	return Circle{
+		Radius: c.Radius + radiusDelta,
+		Center: c.Center,
+	}
+}
+
+// Contains checks whether a vector `u` is contained within this Circle (including it's perimeter).
+func (c Circle) Contains(u Vec) bool {
+	toCenter := c.Center.To(u)
+	return c.Radius >= toCenter.Len()
+}
+
+// Union returns the minimal Circle which covers both `c` and `d`.
+func (c Circle) Union(d Circle) Circle {
+	biggerC := c
+	smallerC := d
+	if c.Radius < d.Radius {
+		biggerC = d
+		smallerC = c
+	}
+
+	// Get distance between centers
+	dist := c.Center.To(d.Center).Len()
+
+	// If the bigger Circle encompasses the smaller one, we have the result
+	if dist+smallerC.Radius <= biggerC.Radius {
+		return biggerC
+	}
+
+	// Calculate radius for encompassing Circle
+	r := (dist + biggerC.Radius + smallerC.Radius) / 2
+
+	// Calculate center for encompassing Circle
+	theta := .5 + (biggerC.Radius-smallerC.Radius)/(2*dist)
+	center := smallerC.Center.Scaled(1 - theta).Add(biggerC.Center.Scaled(theta))
+
+	return Circle{
+		Radius: r,
+		Center: center,
+	}
+}
+
+// Intersect returns the maximal Circle which is covered by both `c` and `d`.
+//
+// If `c` and `d` don't overlap, this function returns a zero-sized circle at the centerpoint between the two Circle's
+// centers.
+func (c Circle) Intersect(d Circle) Circle {
+	center := Lerp(c.Center, d.Center, 0.5)
+
+	radius := math.Min(0, c.Center.To(d.Center).Len()-(c.Radius+d.Radius))
+
+	return Circle{
+		Radius: math.Abs(radius),
+		Center: center,
+	}
+}
+
 // Matrix is a 2x3 affine matrix that can be used for all kinds of spatial transforms, such
 // as movement, scaling and rotations.
 //
