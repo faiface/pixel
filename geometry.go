@@ -358,14 +358,9 @@ func (c Circle) Norm() Circle {
 	}
 }
 
-// Diameter returns the diameter of the Circle.
-func (c Circle) Diameter() float64 {
-	return c.Radius * 2
-}
-
 // Area returns the area of the Circle.
 func (c Circle) Area() float64 {
-	return math.Pi * c.Diameter()
+	return math.Pi * c.Radius * 2
 }
 
 // Moved returns the Circle moved by the given vector delta.

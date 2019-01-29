@@ -191,42 +191,6 @@ func TestCircle_Norm(t *testing.T) {
 	}
 }
 
-func TestCircle_Diameter(t *testing.T) {
-	type fields struct {
-		radius float64
-		center pixel.Vec
-	}
-	tests := []struct {
-		name   string
-		fields fields
-		want   float64
-	}{
-		{
-			name:   "Circle.Diameter(): positive radius",
-			fields: fields{radius: 10, center: pixel.V(0, 0)},
-			want:   20,
-		},
-		{
-			name:   "Circle.Diameter(): zero radius",
-			fields: fields{radius: 0, center: pixel.V(0, 0)},
-			want:   0,
-		},
-		{
-			name:   "Circle.Diameter(): negative radius",
-			fields: fields{radius: -5, center: pixel.V(0, 0)},
-			want:   -10,
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			c := pixel.C(tt.fields.radius, tt.fields.center)
-			if got := c.Diameter(); got != tt.want {
-				t.Errorf("Circle.Diameter() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
-
 func TestCircle_Area(t *testing.T) {
 	type fields struct {
 		radius float64
