@@ -384,16 +384,16 @@ func (c Circle) Contains(u Vec) bool {
 	return c.Radius >= toCenter.Len()
 }
 
-// MaxCircle will return the larger circle based on the radius.
-func MaxCircle(c, d Circle) Circle {
+// maxCircle will return the larger circle based on the radius.
+func maxCircle(c, d Circle) Circle {
 	if c.Radius < d.Radius {
 		return d
 	}
 	return c
 }
 
-// MinCircle will return the smaller circle based on the radius.
-func MinCircle(c, d Circle) Circle {
+// minCircle will return the smaller circle based on the radius.
+func minCircle(c, d Circle) Circle {
 	if c.Radius < d.Radius {
 		return c
 	}
@@ -402,8 +402,8 @@ func MinCircle(c, d Circle) Circle {
 
 // Union returns the minimal Circle which covers both `c` and `d`.
 func (c Circle) Union(d Circle) Circle {
-	biggerC := MaxCircle(c, d)
-	smallerC := MinCircle(c, d)
+	biggerC := maxCircle(c, d)
+	smallerC := minCircle(c, d)
 
 	// Get distance between centers
 	dist := c.Center.To(d.Center).Len()
@@ -432,8 +432,8 @@ func (c Circle) Union(d Circle) Circle {
 // centers.
 func (c Circle) Intersect(d Circle) Circle {
 	// Check if one of the circles encompasses the other; if so, return that one
-	biggerC := MaxCircle(c, d)
-	smallerC := MinCircle(c, d)
+	biggerC := maxCircle(c, d)
+	smallerC := minCircle(c, d)
 
 	if biggerC.Radius >= biggerC.Center.To(smallerC.Center).Len()+smallerC.Radius {
 		return biggerC
