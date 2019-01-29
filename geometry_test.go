@@ -545,6 +545,24 @@ func TestCircle_Intersect(t *testing.T) {
 			args:   args{d: pixel.C(1, pixel.V(3, 3))},
 			want:   pixel.C(0, pixel.V(1.5, 1.5)),
 		},
+		{
+			name:   "Circle.Intersect(): first circle encompassing second",
+			fields: fields{radius: 10, center: pixel.V(0, 0)},
+			args:   args{d: pixel.C(1, pixel.V(3, 3))},
+			want:   pixel.C(10, pixel.V(0, 0)),
+		},
+		{
+			name:   "Circle.Intersect(): second circle encompassing first",
+			fields: fields{radius: 1, center: pixel.V(-1, -4)},
+			args:   args{d: pixel.C(10, pixel.V(0, 0))},
+			want:   pixel.C(10, pixel.V(0, 0)),
+		},
+		{
+			name:   "Circle.Intersect(): matching circles",
+			fields: fields{radius: 1, center: pixel.V(0, 0)},
+			args:   args{d: pixel.C(1, pixel.V(0, 0))},
+			want:   pixel.C(1, pixel.V(0, 0)),
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -554,6 +572,82 @@ func TestCircle_Intersect(t *testing.T) {
 			)
 			if got := c.Intersect(tt.args.d); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("Circle.Intersect() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestMaxCircle(t *testing.T) {
+	bigCircle := pixel.C(10, pixel.ZV)
+	smallCircle := pixel.C(1, pixel.ZV)
+
+	type args struct {
+		c pixel.Circle
+		d pixel.Circle
+	}
+	tests := []struct {
+		name string
+		args args
+		want pixel.Circle
+	}{
+		{
+			name: "MaxCircle(): first bigger",
+			args: args{c: bigCircle, d: smallCircle},
+			want: bigCircle,
+		},
+		{
+			name: "MaxCircle(): first smaller",
+			args: args{c: smallCircle, d: bigCircle},
+			want: bigCircle,
+		},
+		{
+			name: "MaxCircle(): both same size",
+			args: args{c: smallCircle, d: smallCircle},
+			want: smallCircle,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := pixel.MaxCircle(tt.args.c, tt.args.d); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("MaxCircle() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestMinCircle(t *testing.T) {
+	bigCircle := pixel.C(10, pixel.ZV)
+	smallCircle := pixel.C(1, pixel.ZV)
+
+	type args struct {
+		c pixel.Circle
+		d pixel.Circle
+	}
+	tests := []struct {
+		name string
+		args args
+		want pixel.Circle
+	}{
+		{
+			name: "MinCircle(): first bigger",
+			args: args{c: bigCircle, d: smallCircle},
+			want: smallCircle,
+		},
+		{
+			name: "MinCircle(): first smaller",
+			args: args{c: smallCircle, d: bigCircle},
+			want: smallCircle,
+		},
+		{
+			name: "MinCircle(): both same size",
+			args: args{c: smallCircle, d: smallCircle},
+			want: smallCircle,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := pixel.MinCircle(tt.args.c, tt.args.d); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("MinCircle() = %v, want %v", got, tt.want)
 			}
 		})
 	}
