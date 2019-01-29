@@ -431,7 +431,7 @@ func (c Circle) Union(d Circle) Circle {
 
 	// Calculate center for encompassing Circle
 	theta := .5 + (biggerC.Radius-smallerC.Radius)/(2*dist)
-	center := smallerC.Center.Scaled(1 - theta).Add(biggerC.Center.Scaled(theta))
+	center := Lerp(smallerC.Center, biggerC.Center, theta)
 
 	return Circle{
 		Radius: r,
