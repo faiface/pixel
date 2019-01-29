@@ -175,18 +175,18 @@ func TestC(t *testing.T) {
 	}{
 		{
 			name: "C(): positive radius",
-			args: args{radius: 10, center: pixel.V(0, 0)},
-			want: pixel.Circle{Radius: 10, Center: pixel.V(0, 0)},
+			args: args{radius: 10, center: pixel.ZV},
+			want: pixel.Circle{Radius: 10, Center: pixel.ZV},
 		},
 		{
 			name: "C(): zero radius",
-			args: args{radius: 0, center: pixel.V(0, 0)},
-			want: pixel.Circle{Radius: 0, Center: pixel.V(0, 0)},
+			args: args{radius: 0, center: pixel.ZV},
+			want: pixel.Circle{Radius: 0, Center: pixel.ZV},
 		},
 		{
 			name: "C(): negative radius",
-			args: args{radius: -5, center: pixel.V(0, 0)},
-			want: pixel.Circle{Radius: -5, Center: pixel.V(0, 0)},
+			args: args{radius: -5, center: pixel.ZV},
+			want: pixel.Circle{Radius: -5, Center: pixel.ZV},
 		},
 	}
 	for _, tt := range tests {
@@ -210,22 +210,22 @@ func TestCircle_String(t *testing.T) {
 	}{
 		{
 			name:   "Circle.String(): positive radius",
-			fields: fields{radius: 10, center: pixel.V(0, 0)},
+			fields: fields{radius: 10, center: pixel.ZV},
 			want:   "Circle(10.00, Vec(0, 0))",
 		},
 		{
 			name:   "Circle.String(): zero radius",
-			fields: fields{radius: 0, center: pixel.V(0, 0)},
+			fields: fields{radius: 0, center: pixel.ZV},
 			want:   "Circle(0.00, Vec(0, 0))",
 		},
 		{
 			name:   "Circle.String(): negative radius",
-			fields: fields{radius: -5, center: pixel.V(0, 0)},
+			fields: fields{radius: -5, center: pixel.ZV},
 			want:   "Circle(-5.00, Vec(0, 0))",
 		},
 		{
 			name:   "Circle.String(): irrational radius",
-			fields: fields{radius: math.Pi, center: pixel.V(0, 0)},
+			fields: fields{radius: math.Pi, center: pixel.ZV},
 			want:   "Circle(3.14, Vec(0, 0))",
 		},
 	}
@@ -251,18 +251,18 @@ func TestCircle_Norm(t *testing.T) {
 	}{
 		{
 			name:   "Circle.Norm(): positive radius",
-			fields: fields{radius: 10, center: pixel.V(0, 0)},
-			want:   pixel.Circle{Radius: 10, Center: pixel.Vec{X: 0, Y: 0}},
+			fields: fields{radius: 10, center: pixel.ZV},
+			want:   pixel.C(10, pixel.ZV),
 		},
 		{
 			name:   "Circle.Norm(): zero radius",
-			fields: fields{radius: 0, center: pixel.V(0, 0)},
-			want:   pixel.Circle{Radius: 0, Center: pixel.Vec{X: 0, Y: 0}},
+			fields: fields{radius: 0, center: pixel.ZV},
+			want:   pixel.C(0, pixel.ZV),
 		},
 		{
 			name:   "Circle.Norm(): negative radius",
-			fields: fields{radius: -5, center: pixel.V(0, 0)},
-			want:   pixel.Circle{Radius: 5, Center: pixel.Vec{X: 0, Y: 0}},
+			fields: fields{radius: -5, center: pixel.ZV},
+			want:   pixel.C(5, pixel.ZV),
 		},
 	}
 	for _, tt := range tests {
@@ -287,17 +287,17 @@ func TestCircle_Area(t *testing.T) {
 	}{
 		{
 			name:   "Circle.Area(): positive radius",
-			fields: fields{radius: 10, center: pixel.V(0, 0)},
+			fields: fields{radius: 10, center: pixel.ZV},
 			want:   20 * math.Pi,
 		},
 		{
 			name:   "Circle.Area(): zero radius",
-			fields: fields{radius: 0, center: pixel.V(0, 0)},
+			fields: fields{radius: 0, center: pixel.ZV},
 			want:   0,
 		},
 		{
 			name:   "Circle.Area(): negative radius",
-			fields: fields{radius: -5, center: pixel.V(0, 0)},
+			fields: fields{radius: -5, center: pixel.ZV},
 			want:   -10 * math.Pi,
 		},
 	}
@@ -327,21 +327,21 @@ func TestCircle_Moved(t *testing.T) {
 	}{
 		{
 			name:   "Circle.Moved(): positive movement",
-			fields: fields{radius: 10, center: pixel.V(0, 0)},
+			fields: fields{radius: 10, center: pixel.ZV},
 			args:   args{delta: pixel.V(10, 20)},
-			want:   pixel.Circle{Radius: 10, Center: pixel.Vec{X: 10, Y: 20}},
+			want:   pixel.C(10, pixel.V(10, 20)),
 		},
 		{
 			name:   "Circle.Moved(): zero movement",
-			fields: fields{radius: 10, center: pixel.V(0, 0)},
+			fields: fields{radius: 10, center: pixel.ZV},
 			args:   args{delta: pixel.ZV},
-			want:   pixel.Circle{Radius: 10, Center: pixel.Vec{X: 0, Y: 0}},
+			want:   pixel.C(10, pixel.V(0, 0)),
 		},
 		{
 			name:   "Circle.Moved(): negative movement",
-			fields: fields{radius: 10, center: pixel.V(0, 0)},
+			fields: fields{radius: 10, center: pixel.ZV},
 			args:   args{delta: pixel.V(-5, -10)},
-			want:   pixel.Circle{Radius: 10, Center: pixel.Vec{X: -5, Y: -10}},
+			want:   pixel.C(10, pixel.V(-5, -10)),
 		},
 	}
 	for _, tt := range tests {
@@ -370,21 +370,21 @@ func TestCircle_Resized(t *testing.T) {
 	}{
 		{
 			name:   "Circle.Resized(): positive delta",
-			fields: fields{radius: 10, center: pixel.V(0, 0)},
+			fields: fields{radius: 10, center: pixel.ZV},
 			args:   args{radiusDelta: 5},
-			want:   pixel.Circle{Radius: 15, Center: pixel.Vec{X: 0, Y: 0}},
+			want:   pixel.C(15, pixel.V(0, 0)),
 		},
 		{
 			name:   "Circle.Resized(): zero delta",
-			fields: fields{radius: 10, center: pixel.V(0, 0)},
+			fields: fields{radius: 10, center: pixel.ZV},
 			args:   args{radiusDelta: 0},
-			want:   pixel.Circle{Radius: 10, Center: pixel.Vec{X: 0, Y: 0}},
+			want:   pixel.C(10, pixel.V(0, 0)),
 		},
 		{
 			name:   "Circle.Resized(): negative delta",
-			fields: fields{radius: 10, center: pixel.V(0, 0)},
+			fields: fields{radius: 10, center: pixel.ZV},
 			args:   args{radiusDelta: -5},
-			want:   pixel.Circle{Radius: 5, Center: pixel.Vec{X: 0, Y: 0}},
+			want:   pixel.C(5, pixel.V(0, 0)),
 		},
 	}
 	for _, tt := range tests {
@@ -499,33 +499,33 @@ func TestCircle_Intersect(t *testing.T) {
 	}{
 		{
 			name:   "Circle.Intersect(): intersecting circles",
-			fields: fields{radius: 1, center: pixel.V(0, 0)},
+			fields: fields{radius: 1, center: pixel.ZV},
 			args:   args{d: pixel.C(1, pixel.V(1, 0))},
 			want:   pixel.C(1, pixel.V(0.5, 0)),
 		},
 		{
 			name:   "Circle.Intersect(): non-intersecting circles",
-			fields: fields{radius: 1, center: pixel.V(0, 0)},
+			fields: fields{radius: 1, center: pixel.ZV},
 			args:   args{d: pixel.C(1, pixel.V(3, 3))},
 			want:   pixel.C(0, pixel.V(1.5, 1.5)),
 		},
 		{
 			name:   "Circle.Intersect(): first circle encompassing second",
-			fields: fields{radius: 10, center: pixel.V(0, 0)},
+			fields: fields{radius: 10, center: pixel.ZV},
 			args:   args{d: pixel.C(1, pixel.V(3, 3))},
-			want:   pixel.C(10, pixel.V(0, 0)),
+			want:   pixel.C(10, pixel.ZV),
 		},
 		{
 			name:   "Circle.Intersect(): second circle encompassing first",
 			fields: fields{radius: 1, center: pixel.V(-1, -4)},
-			args:   args{d: pixel.C(10, pixel.V(0, 0))},
-			want:   pixel.C(10, pixel.V(0, 0)),
+			args:   args{d: pixel.C(10, pixel.ZV)},
+			want:   pixel.C(10, pixel.ZV),
 		},
 		{
 			name:   "Circle.Intersect(): matching circles",
-			fields: fields{radius: 1, center: pixel.V(0, 0)},
-			args:   args{d: pixel.C(1, pixel.V(0, 0))},
-			want:   pixel.C(1, pixel.V(0, 0)),
+			fields: fields{radius: 1, center: pixel.ZV},
+			args:   args{d: pixel.C(1, pixel.ZV)},
+			want:   pixel.C(1, pixel.ZV),
 		},
 	}
 	for _, tt := range tests {
@@ -557,43 +557,43 @@ func TestRect_IntersectsCircle(t *testing.T) {
 	}{
 		{
 			name:   "Rect.IntersectsCircle(): no overlap",
-			fields: fields{Min: pixel.V(0, 0), Max: pixel.V(10, 10)},
+			fields: fields{Min: pixel.ZV, Max: pixel.V(10, 10)},
 			args:   args{c: pixel.C(1, pixel.V(50, 50))},
 			want:   false,
 		},
 		{
 			name:   "Rect.IntersectsCircle(): circle contains rect",
-			fields: fields{Min: pixel.V(0, 0), Max: pixel.V(10, 10)},
+			fields: fields{Min: pixel.ZV, Max: pixel.V(10, 10)},
 			args:   args{c: pixel.C(10, pixel.V(5, 5))},
 			want:   true,
 		},
 		{
 			name:   "Rect.IntersectsCircle(): rect contains circle",
-			fields: fields{Min: pixel.V(0, 0), Max: pixel.V(10, 10)},
+			fields: fields{Min: pixel.ZV, Max: pixel.V(10, 10)},
 			args:   args{c: pixel.C(1, pixel.V(5, 5))},
 			want:   true,
 		},
 		{
 			name:   "Rect.IntersectsCircle(): circle overlaps one corner",
-			fields: fields{Min: pixel.V(0, 0), Max: pixel.V(10, 10)},
-			args:   args{c: pixel.C(1, pixel.V(0, 0))},
+			fields: fields{Min: pixel.ZV, Max: pixel.V(10, 10)},
+			args:   args{c: pixel.C(1, pixel.ZV)},
 			want:   true,
 		},
 		{
 			name:   "Rect.IntersectsCircle(): circle overlaps two corners",
-			fields: fields{Min: pixel.V(0, 0), Max: pixel.V(10, 10)},
+			fields: fields{Min: pixel.ZV, Max: pixel.V(10, 10)},
 			args:   args{c: pixel.C(6, pixel.V(0, 5))},
 			want:   true,
 		},
 		{
 			name:   "Rect.IntersectsCircle(): circle overlaps one edge",
-			fields: fields{Min: pixel.V(0, 0), Max: pixel.V(10, 10)},
+			fields: fields{Min: pixel.ZV, Max: pixel.V(10, 10)},
 			args:   args{c: pixel.C(1, pixel.V(0, 5))},
 			want:   true,
 		},
 		{
 			name:   "Rect.IntersectsCircle(): edge is tangent",
-			fields: fields{Min: pixel.V(0, 0), Max: pixel.V(10, 10)},
+			fields: fields{Min: pixel.ZV, Max: pixel.V(10, 10)},
 			args:   args{c: pixel.C(1, pixel.V(-1, 5))},
 			want:   true,
 		},
