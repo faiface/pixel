@@ -476,7 +476,7 @@ func (c Circle) Intersect(d Circle) Circle {
 func (c Circle) IntersectsRect(r Rect) bool {
 	// Checks if the c.Center is not in the diagonal quadrants of the rectangle
 	if (r.Min.X <= c.Center.X && c.Center.X <= r.Max.X) || (r.Min.Y <= c.Center.Y && c.Center.Y <= r.Max.Y) {
-		// 'grow' the Rect by c.Radius in each diagonal
+		// 'grow' the Rect by c.Radius in each orthagonal
 		return Rect{
 			Min: r.Min.Sub(V(c.Radius, c.Radius)),
 			Max: r.Max.Add(V(c.Radius, c.Radius)),
