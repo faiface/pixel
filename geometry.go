@@ -337,7 +337,7 @@ func (c Circle) String() string {
 	return fmt.Sprintf("Circle(%.2f, %s)", c.Radius, c.Center)
 }
 
-// Norm returns the Circle in normalized form - this is that the radius is set to an absolute version.
+// Norm returns the Circle in normalized form - this sets the radius to its absolute value.
 //
 // c := pixel.C(-10, pixel.ZV)
 // c.Norm() // returns pixel.Circle{10, pixel.Vec{0, 0}}
@@ -366,7 +366,7 @@ func (c Circle) Moved(delta Vec) Circle {
 	}
 }
 
-// Resized returns the Circle resized by the given delta.
+// Resized returns the Circle resized by the given delta.  The Circles center is use as the anchor.
 //
 // c := pixel.C(10, pixel.ZV)
 // c.Resized(-5) // returns pixel.Circle{5, pixel.Vec{0, 0}}
@@ -384,14 +384,26 @@ func (c Circle) Contains(u Vec) bool {
 	return c.Radius >= toCenter.Len()
 }
 
+// MaxCircle will return the larger circle based on the radius.
+func MaxCircle(c, d Circle) Circle {
+	if c.Radius < d.Radius {
+		return d
+	}
+	return c
+}
+
+// MinCircle will return the smaller circle based on the radius.
+func MinCircle(c, d Circle) Circle {
+	if c.Radius < d.Radius {
+		return c
+	}
+	return d
+}
+
 // Union returns the minimal Circle which covers both `c` and `d`.
 func (c Circle) Union(d Circle) Circle {
-	biggerC := c
-	smallerC := d
-	if c.Radius < d.Radius {
-		biggerC = d
-		smallerC = c
-	}
+	biggerC := MaxCircle(c, d)
+	smallerC := MinCircle(c, d)
 
 	// Get distance between centers
 	dist := c.Center.To(d.Center).Len()
@@ -419,7 +431,28 @@ func (c Circle) Union(d Circle) Circle {
 // If `c` and `d` don't overlap, this function returns a zero-sized circle at the centerpoint between the two Circle's
 // centers.
 func (c Circle) Intersect(d Circle) Circle {
-	center := Lerp(c.Center, d.Center, 0.5)
+	// Check if one of the circles encompasses the other; if so, return that one
+	biggerC := MaxCircle(c, d)
+	smallerC := MinCircle(c, d)
+
+	if biggerC.Radius >= biggerC.Center.To(smallerC.Center).Len()+smallerC.Radius {
+		return biggerC
+	}
+
+	// Calculate the midpoint between the two radii
+	// Distance between centers
+	dist := c.Center.To(d.Center).Len()
+	// Difference between radii
+	diff := dist - (c.Radius + d.Radius)
+	// Distance from c.Center to the weighted midpoint
+	distToMidpoint := c.Radius + 0.5*diff
+	// Weighted midpoint
+	center := Lerp(c.Center, d.Center, distToMidpoint/dist)
+
+	// No need to calculate radius if the circles do not overlap
+	if c.Center.To(d.Center).Len() >= c.Radius+d.Radius {
+		return C(0, center)
+	}
 
 	radius := math.Min(0, c.Center.To(d.Center).Len()-(c.Radius+d.Radius))
 
