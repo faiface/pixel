@@ -492,3 +492,73 @@ func TestCircle_Intersect(t *testing.T) {
 		})
 	}
 }
+
+func TestRect_IntersectsCircle(t *testing.T) {
+	type fields struct {
+		Min pixel.Vec
+		Max pixel.Vec
+	}
+	type args struct {
+		c pixel.Circle
+	}
+	tests := []struct {
+		name   string
+		fields fields
+		args   args
+		want   bool
+	}{
+		{
+			name:   "Rect.IntersectsCircle(): no overlap",
+			fields: fields{Min: pixel.V(0, 0), Max: pixel.V(10, 10)},
+			args:   args{c: pixel.C(1, pixel.V(50, 50))},
+			want:   false,
+		},
+		{
+			name:   "Rect.IntersectsCircle(): circle contains rect",
+			fields: fields{Min: pixel.V(0, 0), Max: pixel.V(10, 10)},
+			args:   args{c: pixel.C(10, pixel.V(5, 5))},
+			want:   true,
+		},
+		{
+			name:   "Rect.IntersectsCircle(): rect contains circle",
+			fields: fields{Min: pixel.V(0, 0), Max: pixel.V(10, 10)},
+			args:   args{c: pixel.C(1, pixel.V(5, 5))},
+			want:   true,
+		},
+		{
+			name:   "Rect.IntersectsCircle(): circle overlaps one corner",
+			fields: fields{Min: pixel.V(0, 0), Max: pixel.V(10, 10)},
+			args:   args{c: pixel.C(1, pixel.V(0, 0))},
+			want:   true,
+		},
+		{
+			name:   "Rect.IntersectsCircle(): circle overlaps two corner",
+			fields: fields{Min: pixel.V(0, 0), Max: pixel.V(10, 10)},
+			args:   args{c: pixel.C(11, pixel.V(0, 5))},
+			want:   true,
+		},
+		{
+			name:   "Rect.IntersectsCircle(): circle overlaps one edge",
+			fields: fields{Min: pixel.V(0, 0), Max: pixel.V(10, 10)},
+			args:   args{c: pixel.C(1, pixel.V(0, 5))},
+			want:   true,
+		},
+		{
+			name:   "Rect.IntersectsCircle(): edge is tangent",
+			fields: fields{Min: pixel.V(0, 0), Max: pixel.V(10, 10)},
+			args:   args{c: pixel.C(1, pixel.V(-1, 5))},
+			want:   true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			r := pixel.Rect{
+				Min: tt.fields.Min,
+				Max: tt.fields.Max,
+			}
+			if got := r.IntersectsCircle(tt.args.c); got != tt.want {
+				t.Errorf("Rect.IntersectsCircle() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}

@@ -310,6 +310,16 @@ func (r Rect) Intersect(s Rect) Rect {
 	return t
 }
 
+// IntersectsCircle returns whether the Circle and the Rect intersect.
+//
+// This function will return true if:
+//  - The Rect contains the Circle, partially or fully
+//  - The Circle contains the Rect, partially of fully
+//  - An edge of the Rect is a tangent to the Circle
+func (r Rect) IntersectsCircle(c Circle) bool {
+	return c.IntersectsRect(r)
+}
+
 // Circle is a 2D circle. It is defined by two properties:
 //  - Radius float64
 //  - Center vector
@@ -460,6 +470,28 @@ func (c Circle) Intersect(d Circle) Circle {
 		Radius: math.Abs(radius),
 		Center: center,
 	}
+}
+
+// IntersectsRect returns whether the Circle and the Rect intersect.
+//
+// This function will return true if:
+//  - The Rect contains the Circle, partially or fully
+//  - The Circle contains the Rect, partially of fully
+//  - An edge of the Rect is a tangent to the Circle
+func (c Circle) IntersectsRect(r Rect) bool {
+	// Checks if the c.Center is not in the diagonal quadrants of the rectangle
+	var grownR Rect
+	if (r.Min.X <= c.Center.X && c.Center.X <= r.Max.X) || (r.Min.Y <= c.Center.Y && c.Center.Y <= r.Max.Y) {
+		// 'grow' the Rect by c.Radius in each diagonal
+		grownR = Rect{
+			Min: r.Min.Sub(V(c.Radius, c.Radius)),
+			Max: r.Max.Add(V(c.Radius, c.Radius)),
+		}
+
+		return grownR.Contains(c.Center)
+	}
+	// The center is in the diagonal quadrants
+	return c.Center.To(r.Min).Len() <= c.Radius || c.Center.To(r.Max).Len() <= c.Radius
 }
 
 // Matrix is a 2x3 affine matrix that can be used for all kinds of spatial transforms, such
