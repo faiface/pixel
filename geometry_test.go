@@ -9,7 +9,7 @@ import (
 	"github.com/faiface/pixel"
 )
 
-func TestResizeRect(t *testing.T) {
+func TestRect_Resize(t *testing.T) {
 	type rectTestTransform struct {
 		name string
 		f    func(pixel.Rect) pixel.Rect
