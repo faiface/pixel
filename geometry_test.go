@@ -490,9 +490,15 @@ func TestRect_IntersectsCircle(t *testing.T) {
 			want:   true,
 		},
 		{
-			name:   "Rect.IntersectsCircle(): circle overlaps one corner",
+			name:   "Rect.IntersectsCircle(): circle overlaps bottom-left corner",
 			fields: fields{Min: pixel.ZV, Max: pixel.V(10, 10)},
-			args:   args{c: pixel.C(1, pixel.ZV)},
+			args:   args{c: pixel.C(1, pixel.V(-.5, -.5))},
+			want:   true,
+		},
+		{
+			name:   "Rect.IntersectsCircle(): circle overlaps top-left corner",
+			fields: fields{Min: pixel.ZV, Max: pixel.V(10, 10)},
+			args:   args{c: pixel.C(1, pixel.V(-.5, 10.5))},
 			want:   true,
 		},
 		{

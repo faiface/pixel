@@ -483,7 +483,8 @@ func (c Circle) IntersectsRect(r Rect) bool {
 		}.Contains(c.Center)
 	}
 	// The center is in the diagonal quadrants
-	return c.Center.To(r.Min).Len() <= c.Radius || c.Center.To(r.Max).Len() <= c.Radius
+	return c.Center.To(r.Min).Len() <= c.Radius || c.Center.To(r.Max).Len() <= c.Radius ||
+		c.Center.To(V(r.Min.X, r.Max.Y)).Len() <= c.Radius || c.Center.To(V(r.Max.X, r.Min.Y)).Len() <= c.Radius
 }
 
 // Matrix is a 2x3 affine matrix that can be used for all kinds of spatial transforms, such
