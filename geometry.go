@@ -407,8 +407,8 @@ func minCircle(c, d Circle) Circle {
 
 // Union returns the minimal Circle which covers both `c` and `d`.
 func (c Circle) Union(d Circle) Circle {
-	biggerC := maxCircle(c, d)
-	smallerC := minCircle(c, d)
+	biggerC := maxCircle(c.Norm(), d.Norm())
+	smallerC := minCircle(c.Norm(), d.Norm())
 
 	// Get distance between centers
 	dist := c.Center.To(d.Center).Len()
@@ -437,8 +437,8 @@ func (c Circle) Union(d Circle) Circle {
 // centers.
 func (c Circle) Intersect(d Circle) Circle {
 	// Check if one of the circles encompasses the other; if so, return that one
-	biggerC := maxCircle(c, d)
-	smallerC := minCircle(c, d)
+	biggerC := maxCircle(c.Norm(), d.Norm())
+	smallerC := minCircle(c.Norm(), d.Norm())
 
 	if biggerC.Radius >= biggerC.Center.To(smallerC.Center).Len()+smallerC.Radius {
 		return biggerC
