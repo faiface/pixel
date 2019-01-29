@@ -459,7 +459,7 @@ func (c Circle) Intersect(d Circle) Circle {
 		return C(0, center)
 	}
 
-	radius := math.Min(0, c.Center.To(d.Center).Len()-(c.Radius+d.Radius))
+	radius := c.Center.To(d.Center).Len() - (c.Radius + d.Radius)
 
 	return Circle{
 		Radius: math.Abs(radius),
