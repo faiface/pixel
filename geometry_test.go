@@ -10,12 +10,12 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-type rectTestTransform struct {
-	name string
-	f    func(pixel.Rect) pixel.Rect
-}
-
 func TestRect_Resize(t *testing.T) {
+	type rectTestTransform struct {
+		name string
+		f    func(pixel.Rect) pixel.Rect
+	}
+
 	// rectangles
 	squareAroundOrigin := pixel.R(-10, -10, 10, 10)
 	squareAround2020 := pixel.R(10, 10, 30, 30)
