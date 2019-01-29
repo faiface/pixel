@@ -9,12 +9,11 @@ import (
 	"github.com/faiface/pixel"
 )
 
-type rectTestTransform struct {
-	name string
-	f    func(pixel.Rect) pixel.Rect
-}
-
 func TestResizeRect(t *testing.T) {
+	type rectTestTransform struct {
+		name string
+		f    func(pixel.Rect) pixel.Rect
+	}
 
 	// rectangles
 	squareAroundOrigin := pixel.R(-10, -10, 10, 10)
