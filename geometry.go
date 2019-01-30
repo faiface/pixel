@@ -360,7 +360,7 @@ func (c Circle) Norm() Circle {
 
 // Area returns the area of the Circle.
 func (c Circle) Area() float64 {
-	return math.Pi * c.Radius * 2
+	return math.Pi * math.Pow(c.Radius, 2)
 }
 
 // Moved returns the Circle moved by the given vector delta.
