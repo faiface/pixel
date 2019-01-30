@@ -329,20 +329,20 @@ func (r Rect) IntersectsCircle(c Circle) bool {
 }
 
 // Circle is a 2D circle. It is defined by two properties:
-//  - Radius float64
 //  - Center vector
+//  - Radius float64
 type Circle struct {
-	Radius float64
 	Center Vec
+	Radius float64
 }
 
 // C returns a new Circle with the given radius and center coordinates.
 //
 // Note that a negative radius is valid.
-func C(radius float64, center Vec) Circle {
+func C(center Vec, radius float64) Circle {
 	return Circle{
-		Radius: radius,
 		Center: center,
+		Radius: radius,
 	}
 }
 
@@ -352,17 +352,17 @@ func C(radius float64, center Vec) Circle {
 //  c.String()     // returns "Circle(10.12, Vec(0, 0))"
 //  fmt.Println(c) // Circle(10.12, Vec(0, 0))
 func (c Circle) String() string {
-	return fmt.Sprintf("Circle(%.2f, %s)", c.Radius, c.Center)
+	return fmt.Sprintf("Circle(%s, %.2f)", c.Center, c.Radius)
 }
 
 // Norm returns the Circle in normalized form - this sets the radius to its absolute value.
 //
 // c := pixel.C(-10, pixel.ZV)
-// c.Norm() // returns pixel.Circle{10, pixel.Vec{0, 0}}
+// c.Norm() // returns pixel.Circle{pixel.Vec{0, 0}, 10}
 func (c Circle) Norm() Circle {
 	return Circle{
-		Radius: math.Abs(c.Radius),
 		Center: c.Center,
+		Radius: math.Abs(c.Radius),
 	}
 }
 
@@ -374,20 +374,20 @@ func (c Circle) Area() float64 {
 // Moved returns the Circle moved by the given vector delta.
 func (c Circle) Moved(delta Vec) Circle {
 	return Circle{
-		Radius: c.Radius,
 		Center: c.Center.Add(delta),
+		Radius: c.Radius,
 	}
 }
 
 // Resized returns the Circle resized by the given delta.  The Circles center is use as the anchor.
 //
-// c := pixel.C(10, pixel.ZV)
-// c.Resized(-5) // returns pixel.Circle{5, pixel.Vec{0, 0}}
-// c.Resized(25) // returns pixel.Circle{35, pixel.Vec{0, 0}}
+// c := pixel.C(pixel.ZV, 10)
+// c.Resized(-5) // returns pixel.Circle{pixel.Vec{0, 0}, 5}
+// c.Resized(25) // returns pixel.Circle{pixel.Vec{0, 0}, 35}
 func (c Circle) Resized(radiusDelta float64) Circle {
 	return Circle{
-		Radius: c.Radius + radiusDelta,
 		Center: c.Center,
+		Radius: c.Radius + radiusDelta,
 	}
 }
 
@@ -434,8 +434,8 @@ func (c Circle) Union(d Circle) Circle {
 	center := Lerp(smallerC.Center, biggerC.Center, theta)
 
 	return Circle{
-		Radius: r,
 		Center: center,
+		Radius: r,
 	}
 }
 
@@ -464,14 +464,14 @@ func (c Circle) Intersect(d Circle) Circle {
 
 	// No need to calculate radius if the circles do not overlap
 	if c.Center.To(d.Center).Len() >= c.Radius+d.Radius {
-		return C(0, center)
+		return C(center, 0)
 	}
 
 	radius := c.Center.To(d.Center).Len() - (c.Radius + d.Radius)
 
 	return Circle{
-		Radius: math.Abs(radius),
 		Center: center,
+		Radius: math.Abs(radius),
 	}
 }
 
