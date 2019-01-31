@@ -469,55 +469,85 @@ func TestRect_IntersectsCircle(t *testing.T) {
 		name   string
 		fields fields
 		args   args
-		want   bool
+		want   pixel.Vec
 	}{
 		{
 			name:   "Rect.IntersectsCircle(): no overlap",
 			fields: fields{Min: pixel.ZV, Max: pixel.V(10, 10)},
 			args:   args{c: pixel.C(pixel.V(50, 50), 1)},
-			want:   false,
+			want:   pixel.ZV,
 		},
 		{
 			name:   "Rect.IntersectsCircle(): circle contains rect",
 			fields: fields{Min: pixel.ZV, Max: pixel.V(10, 10)},
 			args:   args{c: pixel.C(pixel.V(5, 5), 10)},
-			want:   true,
+			want:   pixel.V(-15, 0),
 		},
 		{
 			name:   "Rect.IntersectsCircle(): rect contains circle",
 			fields: fields{Min: pixel.ZV, Max: pixel.V(10, 10)},
 			args:   args{c: pixel.C(pixel.V(5, 5), 1)},
-			want:   true,
+			want:   pixel.V(-6, 0),
 		},
 		{
 			name:   "Rect.IntersectsCircle(): circle overlaps bottom-left corner",
 			fields: fields{Min: pixel.ZV, Max: pixel.V(10, 10)},
-			args:   args{c: pixel.C(pixel.V(-.5, -.5), 1)},
-			want:   true,
+			args:   args{c: pixel.C(pixel.V(0, 0), 1)},
+			want:   pixel.V(1, 0),
 		},
 		{
 			name:   "Rect.IntersectsCircle(): circle overlaps top-left corner",
 			fields: fields{Min: pixel.ZV, Max: pixel.V(10, 10)},
-			args:   args{c: pixel.C(pixel.V(-.5, 10.5), 1)},
-			want:   true,
+			args:   args{c: pixel.C(pixel.V(0, 10), 1)},
+			want:   pixel.V(1, 0),
+		},
+		{
+			name:   "Rect.IntersectsCircle(): circle overlaps bottom-right corner",
+			fields: fields{Min: pixel.ZV, Max: pixel.V(10, 10)},
+			args:   args{c: pixel.C(pixel.V(10, 0), 1)},
+			want:   pixel.V(-1, 0),
+		},
+		{
+			name:   "Rect.IntersectsCircle(): circle overlaps top-right corner",
+			fields: fields{Min: pixel.ZV, Max: pixel.V(10, 10)},
+			args:   args{c: pixel.C(pixel.V(10, 10), 1)},
+			want:   pixel.V(-1, 0),
 		},
 		{
 			name:   "Rect.IntersectsCircle(): circle overlaps two corners",
 			fields: fields{Min: pixel.ZV, Max: pixel.V(10, 10)},
 			args:   args{c: pixel.C(pixel.V(0, 5), 6)},
-			want:   true,
+			want:   pixel.V(6, 0),
 		},
 		{
-			name:   "Rect.IntersectsCircle(): circle overlaps one edge",
+			name:   "Rect.IntersectsCircle(): circle overlaps left edge",
 			fields: fields{Min: pixel.ZV, Max: pixel.V(10, 10)},
 			args:   args{c: pixel.C(pixel.V(0, 5), 1)},
-			want:   true,
+			want:   pixel.V(1, 0),
+		},
+		{
+			name:   "Rect.IntersectsCircle(): circle overlaps bottom edge",
+			fields: fields{Min: pixel.ZV, Max: pixel.V(10, 10)},
+			args:   args{c: pixel.C(pixel.V(5, 0), 1)},
+			want:   pixel.V(0, 1),
+		},
+		{
+			name:   "Rect.IntersectsCircle(): circle overlaps right edge",
+			fields: fields{Min: pixel.ZV, Max: pixel.V(10, 10)},
+			args:   args{c: pixel.C(pixel.V(10, 5), 1)},
+			want:   pixel.V(-1, 0),
+		},
+		{
+			name:   "Rect.IntersectsCircle(): circle overlaps top edge",
+			fields: fields{Min: pixel.ZV, Max: pixel.V(10, 10)},
+			args:   args{c: pixel.C(pixel.V(5, 10), 1)},
+			want:   pixel.V(0, -1),
 		},
 		{
 			name:   "Rect.IntersectsCircle(): edge is tangent",
 			fields: fields{Min: pixel.ZV, Max: pixel.V(10, 10)},
 			args:   args{c: pixel.C(pixel.V(-1, 5), 1)},
-			want:   true,
+			want:   pixel.ZV,
 		},
 	}
 	for _, tt := range tests {
