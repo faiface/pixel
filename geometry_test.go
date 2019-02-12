@@ -2,6 +2,8 @@ package pixel_test
 
 import (
 	"fmt"
+	"github.com/stretchr/testify/assert"
+	"math"
 	"testing"
 
 	"github.com/faiface/pixel"
@@ -76,4 +78,31 @@ func TestResizeRect(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestMatrix_Unproject(t *testing.T) {
+	t.Run("for rotated matrix", func(t *testing.T) {
+		matrix := pixel.IM.Rotated(pixel.ZV, math.Pi/2)
+		unprojected := matrix.Unproject(pixel.V(0, 1))
+		assert.InDelta(t, unprojected.X, 1, 0.01)
+		assert.InDelta(t, unprojected.Y, 0, 0.01)
+	})
+	t.Run("for moved matrix", func(t *testing.T) {
+		matrix := pixel.IM.Moved(pixel.V(5, 5))
+		unprojected := matrix.Unproject(pixel.V(0, 0))
+		assert.InDelta(t, unprojected.X, -5, 0.01)
+		assert.InDelta(t, unprojected.Y, -5, 0.01)
+	})
+	t.Run("for scaled matrix", func(t *testing.T) {
+		matrix := pixel.IM.Scaled(pixel.ZV, 2)
+		unprojected := matrix.Unproject(pixel.V(4, 4))
+		assert.InDelta(t, unprojected.X, 2, 0.01)
+		assert.InDelta(t, unprojected.Y, 2, 0.01)
+	})
+	t.Run("for singular matrix", func(t *testing.T) {
+		matrix := pixel.Matrix{0, 0, 0, 0, 0, 0}
+		unprojected := matrix.Unproject(pixel.ZV)
+		assert.True(t, math.IsNaN(unprojected.X))
+		assert.True(t, math.IsNaN(unprojected.Y))
+	})
 }
