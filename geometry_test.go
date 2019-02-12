@@ -83,31 +83,39 @@ func TestResizeRect(t *testing.T) {
 func TestMatrix_Unproject(t *testing.T) {
 	const delta = 4e-16
 	t.Run("for rotated matrix", func(t *testing.T) {
-		matrix := pixel.IM.Rotated(pixel.ZV, math.Pi/2)
+		matrix := pixel.IM.
+			Rotated(pixel.ZV, math.Pi/2)
 		unprojected := matrix.Unproject(pixel.V(0, 1))
 		assert.InDelta(t, unprojected.X, 1, delta)
 		assert.InDelta(t, unprojected.Y, 0, delta)
 	})
 	t.Run("for moved matrix", func(t *testing.T) {
-		matrix := pixel.IM.Moved(pixel.V(5, 5))
+		matrix := pixel.IM.
+			Moved(pixel.V(5, 5))
 		unprojected := matrix.Unproject(pixel.V(0, 0))
 		assert.InDelta(t, unprojected.X, -5, delta)
 		assert.InDelta(t, unprojected.Y, -5, delta)
 	})
 	t.Run("for scaled matrix", func(t *testing.T) {
-		matrix := pixel.IM.Scaled(pixel.ZV, 2)
+		matrix := pixel.IM.
+			Scaled(pixel.ZV, 2)
 		unprojected := matrix.Unproject(pixel.V(4, 4))
 		assert.InDelta(t, unprojected.X, 2, delta)
 		assert.InDelta(t, unprojected.Y, 2, delta)
 	})
 	t.Run("for scaled, rotated and moved matrix", func(t *testing.T) {
-		matrix := pixel.IM.Scaled(pixel.ZV, 2).Rotated(pixel.ZV, math.Pi/2).Moved(pixel.V(2, 2))
+		matrix := pixel.IM.
+			Scaled(pixel.ZV, 2).
+			Rotated(pixel.ZV, math.Pi/2).
+			Moved(pixel.V(2, 2))
 		unprojected := matrix.Unproject(pixel.V(-2, 6))
 		assert.InDelta(t, unprojected.X, 2, delta)
 		assert.InDelta(t, unprojected.Y, 2, delta)
 	})
 	t.Run("for rotated and moved matrix", func(t *testing.T) {
-		matrix := pixel.IM.Rotated(pixel.ZV, math.Pi/2).Moved(pixel.V(1, 1))
+		matrix := pixel.IM.
+			Rotated(pixel.ZV, math.Pi/2).
+			Moved(pixel.V(1, 1))
 		unprojected := matrix.Unproject(pixel.V(1, 2))
 		assert.InDelta(t, unprojected.X, 1, delta)
 		assert.InDelta(t, unprojected.Y, 0, delta)
