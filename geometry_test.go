@@ -100,6 +100,12 @@ func TestMatrix_Unproject(t *testing.T) {
 		assert.InDelta(t, unprojected.X, 2, delta)
 		assert.InDelta(t, unprojected.Y, 2, delta)
 	})
+	t.Run("for rotated and moved matrix", func(t *testing.T) {
+		matrix := pixel.IM.Rotated(pixel.ZV, math.Pi/2).Moved(pixel.V(1, 1))
+		unprojected := matrix.Unproject(pixel.V(1, 2))
+		assert.InDelta(t, unprojected.X, 1, delta)
+		assert.InDelta(t, unprojected.Y, 0, delta)
+	})
 	t.Run("for singular matrix", func(t *testing.T) {
 		matrix := pixel.Matrix{0, 0, 0, 0, 0, 0}
 		unprojected := matrix.Unproject(pixel.ZV)
