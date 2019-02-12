@@ -81,23 +81,24 @@ func TestResizeRect(t *testing.T) {
 }
 
 func TestMatrix_Unproject(t *testing.T) {
+	const delta = 4e-16
 	t.Run("for rotated matrix", func(t *testing.T) {
 		matrix := pixel.IM.Rotated(pixel.ZV, math.Pi/2)
 		unprojected := matrix.Unproject(pixel.V(0, 1))
-		assert.InDelta(t, unprojected.X, 1, 0.01)
-		assert.InDelta(t, unprojected.Y, 0, 0.01)
+		assert.InDelta(t, unprojected.X, 1, delta)
+		assert.InDelta(t, unprojected.Y, 0, delta)
 	})
 	t.Run("for moved matrix", func(t *testing.T) {
 		matrix := pixel.IM.Moved(pixel.V(5, 5))
 		unprojected := matrix.Unproject(pixel.V(0, 0))
-		assert.InDelta(t, unprojected.X, -5, 0.01)
-		assert.InDelta(t, unprojected.Y, -5, 0.01)
+		assert.InDelta(t, unprojected.X, -5, delta)
+		assert.InDelta(t, unprojected.Y, -5, delta)
 	})
 	t.Run("for scaled matrix", func(t *testing.T) {
 		matrix := pixel.IM.Scaled(pixel.ZV, 2)
 		unprojected := matrix.Unproject(pixel.V(4, 4))
-		assert.InDelta(t, unprojected.X, 2, 0.01)
-		assert.InDelta(t, unprojected.Y, 2, 0.01)
+		assert.InDelta(t, unprojected.X, 2, delta)
+		assert.InDelta(t, unprojected.Y, 2, delta)
 	})
 	t.Run("for singular matrix", func(t *testing.T) {
 		matrix := pixel.Matrix{0, 0, 0, 0, 0, 0}
