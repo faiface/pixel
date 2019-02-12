@@ -405,7 +405,7 @@ func (m Matrix) Project(u Vec) Vec {
 func (m Matrix) Unproject(u Vec) Vec {
 	det := m[0]*m[3] - m[2]*m[1]
 	return Vec{
-		m[3]/det*u.X - m[2]/det*u.Y + (m[2]*m[5]-m[3]*m[4])/det,
-		-m[1]/det*u.X + m[0]/det*u.Y + (m[1]*m[4]-m[0]*m[5])/det,
+		(m[3]*u.X - m[2]*u.Y + m[2]*m[5] - m[3]*m[4]) / det,
+		(-m[1]*u.X + m[0]*u.Y + m[1]*m[4] - m[0]*m[5]) / det,
 	}
 }
