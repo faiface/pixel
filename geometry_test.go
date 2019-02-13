@@ -121,7 +121,7 @@ func TestMatrix_Unproject(t *testing.T) {
 		assert.InDelta(t, unprojected.Y, 0, delta)
 	})
 	t.Run("for projected vertices using all kinds of matrices", func(t *testing.T) {
-		namedMatrices := []struct {
+		namedMatrices := [...]struct {
 			name   string
 			matrix pixel.Matrix
 		}{
