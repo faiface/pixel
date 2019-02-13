@@ -121,19 +121,16 @@ func TestMatrix_Unproject(t *testing.T) {
 		assert.InDelta(t, unprojected.Y, 0, delta)
 	})
 	t.Run("for projected vertices using all kinds of matrices", func(t *testing.T) {
-		namedMatrices := [...]struct {
-			name   string
-			matrix pixel.Matrix
-		}{
-			{"IM", pixel.IM},
-			{"Scaled", pixel.IM.Scaled(pixel.ZV, 0.5)},
-			{"Scaled x 2", pixel.IM.Scaled(pixel.ZV, 2)},
-			{"Rotated", pixel.IM.Rotated(pixel.ZV, math.Pi/4)},
-			{"Moved", pixel.IM.Moved(pixel.V(0.5, 1))},
-			{"Moved 2", pixel.IM.Moved(pixel.V(-1, -0.5))},
-			{"Scaled and Rotated", pixel.IM.Scaled(pixel.ZV, 0.5).Rotated(pixel.ZV, math.Pi/4)},
-			{"Scaled, Rotated and Moved", pixel.IM.Scaled(pixel.ZV, 0.5).Rotated(pixel.ZV, math.Pi/4).Moved(pixel.V(1, 2))},
-			{"Rotated and Moved", pixel.IM.Rotated(pixel.ZV, math.Pi/4).Moved(pixel.V(1, 2))},
+		namedMatrices := map[string]pixel.Matrix{
+			"IM":                        pixel.IM,
+			"Scaled":                    pixel.IM.Scaled(pixel.ZV, 0.5),
+			"Scaled x 2":                pixel.IM.Scaled(pixel.ZV, 2),
+			"Rotated":                   pixel.IM.Rotated(pixel.ZV, math.Pi/4),
+			"Moved":                     pixel.IM.Moved(pixel.V(0.5, 1)),
+			"Moved 2":                   pixel.IM.Moved(pixel.V(-1, -0.5)),
+			"Scaled and Rotated":        pixel.IM.Scaled(pixel.ZV, 0.5).Rotated(pixel.ZV, math.Pi/4),
+			"Scaled, Rotated and Moved": pixel.IM.Scaled(pixel.ZV, 0.5).Rotated(pixel.ZV, math.Pi/4).Moved(pixel.V(1, 2)),
+			"Rotated and Moved":         pixel.IM.Rotated(pixel.ZV, math.Pi/4).Moved(pixel.V(1, 2)),
 		}
 		vertices := [...]pixel.Vec{
 			pixel.V(0, 0),
@@ -146,11 +143,10 @@ func TestMatrix_Unproject(t *testing.T) {
 			pixel.V(0, -10),
 			pixel.V(5, -10),
 		}
-		for _, namedMatrix := range namedMatrices {
+		for matrixName, matrix := range namedMatrices {
 			for _, vertex := range vertices {
-				testCase := fmt.Sprintf("for matrix %s and vertex %v", namedMatrix.name, vertex)
+				testCase := fmt.Sprintf("for matrix %s and vertex %v", matrixName, vertex)
 				t.Run(testCase, func(t *testing.T) {
-					matrix := namedMatrix.matrix
 					projected := matrix.Project(vertex)
 					unprojected := matrix.Unproject(projected)
 					assert.InDelta(t, vertex.X, unprojected.X, delta)
