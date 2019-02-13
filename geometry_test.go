@@ -81,7 +81,7 @@ func TestResizeRect(t *testing.T) {
 }
 
 func TestMatrix_Unproject(t *testing.T) {
-	const delta = 4e-16
+	const delta = 1e-15
 	t.Run("for rotated matrix", func(t *testing.T) {
 		matrix := pixel.IM.
 			Rotated(pixel.ZV, math.Pi/2)
@@ -91,16 +91,16 @@ func TestMatrix_Unproject(t *testing.T) {
 	})
 	t.Run("for moved matrix", func(t *testing.T) {
 		matrix := pixel.IM.
-			Moved(pixel.V(5, 5))
-		unprojected := matrix.Unproject(pixel.V(0, 0))
-		assert.InDelta(t, unprojected.X, -5, delta)
-		assert.InDelta(t, unprojected.Y, -5, delta)
+			Moved(pixel.V(1, 2))
+		unprojected := matrix.Unproject(pixel.V(2, 5))
+		assert.InDelta(t, unprojected.X, 1, delta)
+		assert.InDelta(t, unprojected.Y, 3, delta)
 	})
 	t.Run("for scaled matrix", func(t *testing.T) {
 		matrix := pixel.IM.
 			Scaled(pixel.ZV, 2)
-		unprojected := matrix.Unproject(pixel.V(4, 4))
-		assert.InDelta(t, unprojected.X, 2, delta)
+		unprojected := matrix.Unproject(pixel.V(2, 4))
+		assert.InDelta(t, unprojected.X, 1, delta)
 		assert.InDelta(t, unprojected.Y, 2, delta)
 	})
 	t.Run("for scaled, rotated and moved matrix", func(t *testing.T) {
@@ -119,6 +119,41 @@ func TestMatrix_Unproject(t *testing.T) {
 		unprojected := matrix.Unproject(pixel.V(1, 2))
 		assert.InDelta(t, unprojected.X, 1, delta)
 		assert.InDelta(t, unprojected.Y, 0, delta)
+	})
+	t.Run("for projected vertices using all kinds of matrices", func(t *testing.T) {
+		matrices := [...]pixel.Matrix{
+			pixel.IM,
+			pixel.IM.Scaled(pixel.ZV, 0.5),
+			pixel.IM.Scaled(pixel.ZV, 2),
+			pixel.IM.Rotated(pixel.ZV, math.Pi/4),
+			pixel.IM.Moved(pixel.V(0.5, 1)),
+			pixel.IM.Moved(pixel.V(-1, -0.5)),
+			pixel.IM.Scaled(pixel.ZV, 0.5).Rotated(pixel.ZV, math.Pi/4),
+			pixel.IM.Scaled(pixel.ZV, 0.5).Rotated(pixel.ZV, math.Pi/4).Moved(pixel.V(1, 2)),
+			pixel.IM.Rotated(pixel.ZV, math.Pi/4).Moved(pixel.V(1, 2)),
+		}
+		vertices := [...]pixel.Vec{
+			pixel.V(0, 0),
+			pixel.V(5, 0),
+			pixel.V(5, 10),
+			pixel.V(0, 10),
+			pixel.V(-5, 10),
+			pixel.V(-5, 0),
+			pixel.V(-5, -10),
+			pixel.V(0, -10),
+			pixel.V(5, -10),
+		}
+		for _, matrix := range matrices {
+			for _, vertex := range vertices {
+				testCase := fmt.Sprintf("for matrix %v and vertex %v", matrix, vertex)
+				t.Run(testCase, func(t *testing.T) {
+					projected := matrix.Project(vertex)
+					unprojected := matrix.Unproject(projected)
+					assert.InDelta(t, vertex.X, unprojected.X, delta)
+					assert.InDelta(t, vertex.Y, unprojected.Y, delta)
+				})
+			}
+		}
 	})
 	t.Run("for singular matrix", func(t *testing.T) {
 		matrix := pixel.Matrix{0, 0, 0, 0, 0, 0}
