@@ -310,15 +310,15 @@ func (r Rect) Intersect(s Rect) Rect {
 	return t
 }
 
-// IntersectsCircle returns a minimal required Vector, such that moving the circle by that vector would stop the Circle
+// IntersectCircle returns a minimal required Vector, such that moving the circle by that vector would stop the Circle
 // and the Rect intersecting.  This function returns a zero-vector if the Circle and Rect do not overlap, and if only
 // the perimeters touch.
 //
 // This function will return true if:
 //  - The Rect contains the Circle, partially or fully
 //  - The Circle contains the Rect, partially of fully
-func (r Rect) IntersectsCircle(c Circle) Vec {
-	return c.IntersectsRect(r).Scaled(-1)
+func (r Rect) IntersectCircle(c Circle) Vec {
+	return c.IntersectRect(r).Scaled(-1)
 }
 
 // Circle is a 2D circle. It is defined by two properties:
@@ -468,14 +468,14 @@ func (c Circle) Intersect(d Circle) Circle {
 	}
 }
 
-// IntersectsRect returns a minimal required Vector, such that moving the circle by that vector would stop the Circle
+// IntersectRect returns a minimal required Vector, such that moving the circle by that vector would stop the Circle
 // and the Rect intersecting.  This function returns a zero-vector if the Circle and Rect do not overlap, and if only
 // the perimeters touch.
 //
 // This function will return true if:
 //  - The Rect contains the Circle, partially or fully
 //  - The Circle contains the Rect, partially of fully
-func (c Circle) IntersectsRect(r Rect) Vec {
+func (c Circle) IntersectRect(r Rect) Vec {
 	// h and v will hold the minimum horizontal and vertical distances (respectively) to avoid overlapping
 	var h, v float64
 

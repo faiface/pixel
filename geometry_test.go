@@ -457,7 +457,7 @@ func TestCircle_Intersect(t *testing.T) {
 	}
 }
 
-func TestRect_IntersectsCircle(t *testing.T) {
+func TestRect_IntersectCircle(t *testing.T) {
 	type fields struct {
 		Min pixel.Vec
 		Max pixel.Vec
@@ -472,79 +472,79 @@ func TestRect_IntersectsCircle(t *testing.T) {
 		want   pixel.Vec
 	}{
 		{
-			name:   "Rect.IntersectsCircle(): no overlap",
+			name:   "Rect.IntersectCircle(): no overlap",
 			fields: fields{Min: pixel.ZV, Max: pixel.V(10, 10)},
 			args:   args{c: pixel.C(pixel.V(50, 50), 1)},
 			want:   pixel.ZV,
 		},
 		{
-			name:   "Rect.IntersectsCircle(): circle contains rect",
+			name:   "Rect.IntersectCircle(): circle contains rect",
 			fields: fields{Min: pixel.ZV, Max: pixel.V(10, 10)},
 			args:   args{c: pixel.C(pixel.V(5, 5), 10)},
 			want:   pixel.V(-15, 0),
 		},
 		{
-			name:   "Rect.IntersectsCircle(): rect contains circle",
+			name:   "Rect.IntersectCircle(): rect contains circle",
 			fields: fields{Min: pixel.ZV, Max: pixel.V(10, 10)},
 			args:   args{c: pixel.C(pixel.V(5, 5), 1)},
 			want:   pixel.V(-6, 0),
 		},
 		{
-			name:   "Rect.IntersectsCircle(): circle overlaps bottom-left corner",
+			name:   "Rect.IntersectCircle(): circle overlaps bottom-left corner",
 			fields: fields{Min: pixel.ZV, Max: pixel.V(10, 10)},
 			args:   args{c: pixel.C(pixel.V(0, 0), 1)},
 			want:   pixel.V(1, 0),
 		},
 		{
-			name:   "Rect.IntersectsCircle(): circle overlaps top-left corner",
+			name:   "Rect.IntersectCircle(): circle overlaps top-left corner",
 			fields: fields{Min: pixel.ZV, Max: pixel.V(10, 10)},
 			args:   args{c: pixel.C(pixel.V(0, 10), 1)},
 			want:   pixel.V(1, 0),
 		},
 		{
-			name:   "Rect.IntersectsCircle(): circle overlaps bottom-right corner",
+			name:   "Rect.IntersectCircle(): circle overlaps bottom-right corner",
 			fields: fields{Min: pixel.ZV, Max: pixel.V(10, 10)},
 			args:   args{c: pixel.C(pixel.V(10, 0), 1)},
 			want:   pixel.V(-1, 0),
 		},
 		{
-			name:   "Rect.IntersectsCircle(): circle overlaps top-right corner",
+			name:   "Rect.IntersectCircle(): circle overlaps top-right corner",
 			fields: fields{Min: pixel.ZV, Max: pixel.V(10, 10)},
 			args:   args{c: pixel.C(pixel.V(10, 10), 1)},
 			want:   pixel.V(-1, 0),
 		},
 		{
-			name:   "Rect.IntersectsCircle(): circle overlaps two corners",
+			name:   "Rect.IntersectCircle(): circle overlaps two corners",
 			fields: fields{Min: pixel.ZV, Max: pixel.V(10, 10)},
 			args:   args{c: pixel.C(pixel.V(0, 5), 6)},
 			want:   pixel.V(6, 0),
 		},
 		{
-			name:   "Rect.IntersectsCircle(): circle overlaps left edge",
+			name:   "Rect.IntersectCircle(): circle overlaps left edge",
 			fields: fields{Min: pixel.ZV, Max: pixel.V(10, 10)},
 			args:   args{c: pixel.C(pixel.V(0, 5), 1)},
 			want:   pixel.V(1, 0),
 		},
 		{
-			name:   "Rect.IntersectsCircle(): circle overlaps bottom edge",
+			name:   "Rect.IntersectCircle(): circle overlaps bottom edge",
 			fields: fields{Min: pixel.ZV, Max: pixel.V(10, 10)},
 			args:   args{c: pixel.C(pixel.V(5, 0), 1)},
 			want:   pixel.V(0, 1),
 		},
 		{
-			name:   "Rect.IntersectsCircle(): circle overlaps right edge",
+			name:   "Rect.IntersectCircle(): circle overlaps right edge",
 			fields: fields{Min: pixel.ZV, Max: pixel.V(10, 10)},
 			args:   args{c: pixel.C(pixel.V(10, 5), 1)},
 			want:   pixel.V(-1, 0),
 		},
 		{
-			name:   "Rect.IntersectsCircle(): circle overlaps top edge",
+			name:   "Rect.IntersectCircle(): circle overlaps top edge",
 			fields: fields{Min: pixel.ZV, Max: pixel.V(10, 10)},
 			args:   args{c: pixel.C(pixel.V(5, 10), 1)},
 			want:   pixel.V(0, -1),
 		},
 		{
-			name:   "Rect.IntersectsCircle(): edge is tangent",
+			name:   "Rect.IntersectCircle(): edge is tangent",
 			fields: fields{Min: pixel.ZV, Max: pixel.V(10, 10)},
 			args:   args{c: pixel.C(pixel.V(-1, 5), 1)},
 			want:   pixel.ZV,
@@ -556,8 +556,8 @@ func TestRect_IntersectsCircle(t *testing.T) {
 				Min: tt.fields.Min,
 				Max: tt.fields.Max,
 			}
-			if got := r.IntersectsCircle(tt.args.c); got != tt.want {
-				t.Errorf("Rect.IntersectsCircle() = %v, want %v", got, tt.want)
+			if got := r.IntersectCircle(tt.args.c); got != tt.want {
+				t.Errorf("Rect.IntersectCircle() = %v, want %v", got, tt.want)
 			}
 		})
 	}
