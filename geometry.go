@@ -314,7 +314,7 @@ func (r Rect) Intersect(s Rect) Rect {
 // and the Rect intersecting.  This function returns a zero-vector if the Circle and Rect do not overlap, and if only
 // the perimeters touch.
 //
-// This function will return true if:
+// This function will return a non-zero vector if:
 //  - The Rect contains the Circle, partially or fully
 //  - The Circle contains the Rect, partially of fully
 func (r Rect) IntersectCircle(c Circle) Vec {
@@ -472,7 +472,7 @@ func (c Circle) Intersect(d Circle) Circle {
 // and the Rect intersecting.  This function returns a zero-vector if the Circle and Rect do not overlap, and if only
 // the perimeters touch.
 //
-// This function will return true if:
+// This function will return a non-zero vector if:
 //  - The Rect contains the Circle, partially or fully
 //  - The Circle contains the Rect, partially of fully
 func (c Circle) IntersectRect(r Rect) Vec {
