@@ -628,9 +628,39 @@ func TestRect_IntersectCircle(t *testing.T) {
 			want:   pixel.V(0, -1),
 		},
 		{
-			name:   "Rect.IntersectCircle(): edge is tangent",
+			name:   "Rect.IntersectCircle(): edge is tangent of left side",
 			fields: fields{Min: pixel.ZV, Max: pixel.V(10, 10)},
 			args:   args{c: pixel.C(pixel.V(-1, 5), 1)},
+			want:   pixel.ZV,
+		},
+		{
+			name:   "Rect.IntersectCircle(): edge is tangent of top side",
+			fields: fields{Min: pixel.ZV, Max: pixel.V(10, 10)},
+			args:   args{c: pixel.C(pixel.V(5, -1), 1)},
+			want:   pixel.ZV,
+		},
+		{
+			name:   "Rect.IntersectCircle(): circle above rectangle",
+			fields: fields{Min: pixel.ZV, Max: pixel.V(10, 10)},
+			args:   args{c: pixel.C(pixel.V(5, 12), 1)},
+			want:   pixel.ZV,
+		},
+		{
+			name:   "Rect.IntersectCircle(): circle below rectangle",
+			fields: fields{Min: pixel.ZV, Max: pixel.V(10, 10)},
+			args:   args{c: pixel.C(pixel.V(5, -2), 1)},
+			want:   pixel.ZV,
+		},
+		{
+			name:   "Rect.IntersectCircle(): circle left of rectangle",
+			fields: fields{Min: pixel.ZV, Max: pixel.V(10, 10)},
+			args:   args{c: pixel.C(pixel.V(-1, 5), 1)},
+			want:   pixel.ZV,
+		},
+		{
+			name:   "Rect.IntersectCircle(): circle right of rectangle",
+			fields: fields{Min: pixel.ZV, Max: pixel.V(10, 10)},
+			args:   args{c: pixel.C(pixel.V(11, 5), 1)},
 			want:   pixel.ZV,
 		},
 	}
