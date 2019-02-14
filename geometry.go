@@ -401,13 +401,11 @@ func (m Matrix) Project(u Vec) Vec {
 
 // Unproject does the inverse operation to Project.
 //
-// It turns out that multiplying a vector by the inverse matrix of m can be nearly-accomplished by
-// subtracting the translate part of the matrix and multplying by the inverse of the top-left 2x2
-// matrix, and the inverse of a 2x2 matrix is simple enough to just be inlined in the computation.
-//
 // Time complexity is O(1).
 func (m Matrix) Unproject(u Vec) Vec {
-	d := (m[0] * m[3]) - (m[1] * m[2])
-	u.X, u.Y = (u.X-m[4])/d, (u.Y-m[5])/d
-	return Vec{u.X*m[3] - u.Y*m[1], u.Y*m[0] - u.X*m[2]}
+	det := m[0]*m[3] - m[2]*m[1]
+	return Vec{
+		(m[3]*(u.X-m[4]) - m[2]*(u.Y-m[5])) / det,
+		(-m[1]*(u.X-m[4]) + m[0]*(u.Y-m[5])) / det,
+	}
 }
