@@ -204,7 +204,7 @@ func TestCircle_Area(t *testing.T) {
 		{
 			name:   "Circle.Area(): positive radius",
 			fields: fields{radius: 10, center: pixel.ZV},
-			want:   20 * math.Pi,
+			want:   100 * math.Pi,
 		},
 		{
 			name:   "Circle.Area(): zero radius",
@@ -214,7 +214,7 @@ func TestCircle_Area(t *testing.T) {
 		{
 			name:   "Circle.Area(): negative radius",
 			fields: fields{radius: -5, center: pixel.ZV},
-			want:   -10 * math.Pi,
+			want:   25 * math.Pi,
 		},
 	}
 	for _, tt := range tests {
