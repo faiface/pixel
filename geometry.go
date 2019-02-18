@@ -484,9 +484,6 @@ func (c Circle) Intersect(d Circle) Circle {
 //  - The Rect contains the Circle, partially or fully
 //  - The Circle contains the Rect, partially of fully
 func (c Circle) IntersectRect(r Rect) Vec {
-	// h and v will hold the minimum horizontal and vertical distances (respectively) to avoid overlapping
-	var h, v float64
-
 	// Checks if the c.Center is not in the diagonal quadrants of the rectangle
 	if (r.Min.X <= c.Center.X && c.Center.X <= r.Max.X) || (r.Min.Y <= c.Center.Y && c.Center.Y <= r.Max.Y) {
 		// 'grow' the Rect by c.Radius in each orthagonal
@@ -498,8 +495,8 @@ func (c Circle) IntersectRect(r Rect) Vec {
 
 		// Get minimum distance to travel out of Rect
 		rToC := r.Center().To(c.Center)
-		h = c.Radius - math.Abs(rToC.X) + (r.W() / 2)
-		v = c.Radius - math.Abs(rToC.Y) + (r.H() / 2)
+		h := c.Radius - math.Abs(rToC.X) + (r.W() / 2)
+		v := c.Radius - math.Abs(rToC.Y) + (r.H() / 2)
 
 		if rToC.X < 0 {
 			h = -h
@@ -507,48 +504,52 @@ func (c Circle) IntersectRect(r Rect) Vec {
 		if rToC.Y < 0 {
 			v = -v
 		}
+
+		// No intersect
+		if h == 0 && v == 0 {
+			return ZV
+		}
+
+		if math.Abs(h) > math.Abs(v) {
+			// Vertical distance shorter
+			return V(0, v)
+		}
+		return V(h, 0)
 	} else {
 		// The center is in the diagonal quadrants
+
+		// Helper points to make code below easy to read.
+		rectTopLeft := V(r.Min.X, r.Max.Y)
+		rectBottomRight := V(r.Max.X, r.Min.Y)
+
+		// Check for overlap.
+		if !(c.Contains(r.Min) || c.Contains(r.Max) || c.Contains(rectTopLeft) || c.Contains(rectBottomRight)) {
+			// No overlap.
+			return ZV
+		}
+
+		var centerToCorner Vec
 		if c.Center.To(r.Min).Len() <= c.Radius {
 			// Closest to bottom-left
-			cornerToCenter := r.Min.To(c.Center)
-			// Get the horizontal and vertical overlaps
-			h = c.Radius - math.Sqrt(math.Pow(c.Radius, 2)-math.Pow(cornerToCenter.Y, 2))
-			v = -1 * (c.Radius + math.Sqrt(math.Pow(c.Radius, 2)-math.Pow(cornerToCenter.X, 2)))
+			centerToCorner = c.Center.To(r.Min)
 		}
 		if c.Center.To(r.Max).Len() <= c.Radius {
 			// Closest to top-right
-			cornerToCenter := r.Max.To(c.Center)
-			// Get the horizontal and vertical overlaps
-			h = c.Radius - math.Sqrt(math.Pow(c.Radius, 2)-math.Pow(cornerToCenter.Y, 2))
-			v = c.Radius - math.Sqrt(math.Pow(c.Radius, 2)-math.Pow(cornerToCenter.X, 2))
+			centerToCorner = c.Center.To(r.Max)
 		}
-		if c.Center.To(V(r.Min.X, r.Max.Y)).Len() <= c.Radius {
+		if c.Center.To(rectTopLeft).Len() <= c.Radius {
 			// Closest to top-left
-			cornerToCenter := V(r.Min.X, r.Max.Y).To(c.Center)
-			// Get the horizontal and vertical overlaps
-			h = -1 * (c.Radius + math.Sqrt(math.Pow(c.Radius, 2)-math.Pow(cornerToCenter.Y, 2)))
-			v = c.Radius - math.Sqrt(math.Pow(c.Radius, 2)-math.Pow(cornerToCenter.X, 2))
+			centerToCorner = c.Center.To(rectTopLeft)
 		}
-		if c.Center.To(V(r.Max.X, r.Min.Y)).Len() <= c.Radius {
+		if c.Center.To(rectBottomRight).Len() <= c.Radius {
 			// Closest to bottom-right
-			cornerToCenter := V(r.Max.X, r.Min.Y).To(c.Center)
-			// Get the horizontal and vertical overlaps
-			h = -1 * (c.Radius + math.Sqrt(math.Pow(c.Radius, 2)-math.Pow(cornerToCenter.Y, 2)))
-			v = -1 * (c.Radius + math.Sqrt(math.Pow(c.Radius, 2)-math.Pow(cornerToCenter.X, 2)))
+			centerToCorner = c.Center.To(rectBottomRight)
 		}
-	}
 
-	// No intersect
-	if h == 0 && v == 0 {
-		return ZV
-	}
+		cornerToCircumferenceLen := c.Radius - centerToCorner.Len()
 
-	if math.Abs(h) > math.Abs(v) {
-		// Vertical distance shorter
-		return V(0, v)
+		return centerToCorner.Unit().Scaled(cornerToCircumferenceLen)
 	}
-	return V(h, 0)
 }
 
 // Matrix is a 2x3 affine matrix that can be used for all kinds of spatial transforms, such
