@@ -542,6 +542,19 @@ func TestCircle_Intersect(t *testing.T) {
 }
 
 func TestRect_IntersectCircle(t *testing.T) {
+	// closeEnough will shift the decimal point by the accuracy required, truncates the results and compares them.
+	// Effectively this compares two floats to a given decimal point.
+	//  Example:
+	//  closeEnough(100.125342432, 100.125, 2) == true
+	//  closeEnough(math.Pi, 3.14, 2) == true
+	//  closeEnough(0.1234, 0.1245, 3) == false
+	closeEnough := func(got, expected float64, decimalAccuracy int) bool {
+		gotShifted := got * math.Pow10(decimalAccuracy)
+		expectedShifted := expected * math.Pow10(decimalAccuracy)
+
+		return math.Trunc(gotShifted) == math.Trunc(expectedShifted)
+	}
+
 	type fields struct {
 		Min pixel.Vec
 		Max pixel.Vec
@@ -576,26 +589,26 @@ func TestRect_IntersectCircle(t *testing.T) {
 		{
 			name:   "Rect.IntersectCircle(): circle overlaps bottom-left corner",
 			fields: fields{Min: pixel.ZV, Max: pixel.V(10, 10)},
-			args:   args{c: pixel.C(pixel.V(0, 0), 1)},
-			want:   pixel.V(1, 0),
+			args:   args{c: pixel.C(pixel.V(-0.5, -0.5), 1)},
+			want:   pixel.V(-0.2, -0.2),
 		},
 		{
 			name:   "Rect.IntersectCircle(): circle overlaps top-left corner",
 			fields: fields{Min: pixel.ZV, Max: pixel.V(10, 10)},
-			args:   args{c: pixel.C(pixel.V(0, 10), 1)},
-			want:   pixel.V(1, 0),
+			args:   args{c: pixel.C(pixel.V(-0.5, 10.5), 1)},
+			want:   pixel.V(-0.2, 0.2),
 		},
 		{
 			name:   "Rect.IntersectCircle(): circle overlaps bottom-right corner",
 			fields: fields{Min: pixel.ZV, Max: pixel.V(10, 10)},
-			args:   args{c: pixel.C(pixel.V(10, 0), 1)},
-			want:   pixel.V(-1, 0),
+			args:   args{c: pixel.C(pixel.V(10.5, -0.5), 1)},
+			want:   pixel.V(0.2, -0.2),
 		},
 		{
 			name:   "Rect.IntersectCircle(): circle overlaps top-right corner",
 			fields: fields{Min: pixel.ZV, Max: pixel.V(10, 10)},
-			args:   args{c: pixel.C(pixel.V(10, 10), 1)},
-			want:   pixel.V(-1, 0),
+			args:   args{c: pixel.C(pixel.V(10.5, 10.5), 1)},
+			want:   pixel.V(0.2, 0.2),
 		},
 		{
 			name:   "Rect.IntersectCircle(): circle overlaps two corners",
@@ -670,7 +683,8 @@ func TestRect_IntersectCircle(t *testing.T) {
 				Min: tt.fields.Min,
 				Max: tt.fields.Max,
 			}
-			if got := r.IntersectCircle(tt.args.c); got != tt.want {
+			got := r.IntersectCircle(tt.args.c)
+			if !closeEnough(got.X, tt.want.X, 2) || !closeEnough(got.Y, tt.want.Y, 2) {
 				t.Errorf("Rect.IntersectCircle() = %v, want %v", got, tt.want)
 			}
 		})
