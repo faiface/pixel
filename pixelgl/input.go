@@ -54,7 +54,7 @@ func (w *Window) SetMousePosition(v pixel.Vec) {
 	})
 }
 
-// MouseEntered returns true if the mouse position is within the Window's Bounds.
+// MouseInsideWindow returns true if the mouse position is within the Window's Bounds.
 func (w *Window) MouseInsideWindow() bool {
 	return w.cursorInsideWindow
 }
