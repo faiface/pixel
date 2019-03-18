@@ -46,9 +46,9 @@ Here are some screenshots from the examples!
 | --- | --- |
 | ![Smoke](https://github.com/faiface/pixel-examples/blob/master/smoke/screenshot.png) | ![Typewriter](https://github.com/faiface/pixel-examples/blob/master/typewriter/screenshot.png) |
 
-| [Raycaster](https://github.com/faiface/pixel-examples/blob/master/community/raycaster) | [gonutz' No-Brain Jogging](https://github.com/gonutz/no-brain-jogging) |
+| [Raycaster](https://github.com/faiface/pixel-examples/blob/master/community/raycaster) | [Gizmo](https://github.com/Lallassu/gizmo) |
 | --- | --- |
-| ![Raycaster](https://github.com/faiface/pixel-examples/blob/master/community/raycaster/screenshot.png) | ![NoBrainJogging](https://raw.githubusercontent.com/gonutz/no-brain-jogging/master/screenshots/screenshot.png) |
+| ![Raycaster](https://github.com/faiface/pixel-examples/blob/master/community/raycaster/screenshot.png) | ![Gizmo](https://github.com/Lallassu/gizmo/blob/master/preview.png) |
 
 ## Features
 
