@@ -2,6 +2,7 @@ package pixel_test
 
 import (
 	"math/rand"
+	"reflect"
 	"testing"
 
 	"github.com/faiface/pixel"
@@ -60,4 +61,171 @@ func BenchmarkMatrix(b *testing.B) {
 			u = m.Unproject(u)
 		}
 	})
+}
+
+func TestMatrix_String(t *testing.T) {
+	tests := []struct {
+		name string
+		m    pixel.Matrix
+		want string
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := tt.m.String(); got != tt.want {
+				t.Errorf("Matrix.String() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestMatrix_Moved(t *testing.T) {
+	type args struct {
+		delta pixel.Vec
+	}
+	tests := []struct {
+		name string
+		m    pixel.Matrix
+		args args
+		want pixel.Matrix
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := tt.m.Moved(tt.args.delta); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("Matrix.Moved() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestMatrix_ScaledXY(t *testing.T) {
+	type args struct {
+		around pixel.Vec
+		scale  pixel.Vec
+	}
+	tests := []struct {
+		name string
+		m    pixel.Matrix
+		args args
+		want pixel.Matrix
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := tt.m.ScaledXY(tt.args.around, tt.args.scale); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("Matrix.ScaledXY() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestMatrix_Scaled(t *testing.T) {
+	type args struct {
+		around pixel.Vec
+		scale  float64
+	}
+	tests := []struct {
+		name string
+		m    pixel.Matrix
+		args args
+		want pixel.Matrix
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := tt.m.Scaled(tt.args.around, tt.args.scale); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("Matrix.Scaled() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestMatrix_Rotated(t *testing.T) {
+	type args struct {
+		around pixel.Vec
+		angle  float64
+	}
+	tests := []struct {
+		name string
+		m    pixel.Matrix
+		args args
+		want pixel.Matrix
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := tt.m.Rotated(tt.args.around, tt.args.angle); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("Matrix.Rotated() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestMatrix_Chained(t *testing.T) {
+	type args struct {
+		next pixel.Matrix
+	}
+	tests := []struct {
+		name string
+		m    pixel.Matrix
+		args args
+		want pixel.Matrix
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := tt.m.Chained(tt.args.next); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("Matrix.Chained() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestMatrix_Project(t *testing.T) {
+	type args struct {
+		u pixel.Vec
+	}
+	tests := []struct {
+		name string
+		m    pixel.Matrix
+		args args
+		want pixel.Vec
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := tt.m.Project(tt.args.u); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("Matrix.Project() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestMatrix_Unproject(t *testing.T) {
+	type args struct {
+		u pixel.Vec
+	}
+	tests := []struct {
+		name string
+		m    pixel.Matrix
+		args args
+		want pixel.Vec
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := tt.m.Unproject(tt.args.u); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("Matrix.Unproject() = %v, want %v", got, tt.want)
+			}
+		})
+	}
 }
