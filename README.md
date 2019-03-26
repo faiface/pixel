@@ -95,6 +95,12 @@ Here's the list of the main features in Pixel. Although Pixel is still under hea
   arbitrarily crazy stuff (e.g. graphical effects)
 - Small codebase, ~5K lines of code, including the backend [glhf](https://github.com/faiface/glhf)
   package
+  
+## Related repositories
+
+Here are some packages which use Pixel:
+ - [TilePix](https://github.com/bcvery1/tilepix) Makes handling TMX files built with [Tiled](https://www.mapeditor.org/)
+ trivially easy to work with using Pixel.
 
 ## Missing features
 
