@@ -10,6 +10,31 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func TestRect_Edges(t *testing.T) {
+	type fields struct {
+		Min pixel.Vec
+		Max pixel.Vec
+	}
+	tests := []struct {
+		name   string
+		fields fields
+		want   [4]pixel.Line
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			r := pixel.Rect{
+				Min: tt.fields.Min,
+				Max: tt.fields.Max,
+			}
+			if got := r.Edges(); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("Rect.Edges() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
 func TestRect_Resize(t *testing.T) {
 	type rectTestTransform struct {
 		name string
@@ -75,6 +100,31 @@ func TestRect_Resize(t *testing.T) {
 			testResult := testCase.transform.f(testCase.input)
 			if testResult != testCase.answer {
 				t.Errorf("Got: %v, wanted: %v\n", testResult, testCase.answer)
+			}
+		})
+	}
+}
+
+func TestRect_Vertices(t *testing.T) {
+	type fields struct {
+		Min pixel.Vec
+		Max pixel.Vec
+	}
+	tests := []struct {
+		name   string
+		fields fields
+		want   [4]pixel.Vec
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			r := pixel.Rect{
+				Min: tt.fields.Min,
+				Max: tt.fields.Max,
+			}
+			if got := r.Vertices(); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("Rect.Vertices() = %v, want %v", got, tt.want)
 			}
 		})
 	}
