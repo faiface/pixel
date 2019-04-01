@@ -526,8 +526,8 @@ func (r Rect) IntersectLine(l Line) Vec {
 func (r Rect) Vertices() [4]Vec {
 	return [4]Vec{
 		r.Min,
-		r.Max,
 		V(r.Min.X, r.Max.Y),
+		r.Max,
 		V(r.Max.X, r.Min.Y),
 	}
 }
