@@ -20,7 +20,16 @@ func TestRect_Edges(t *testing.T) {
 		fields fields
 		want   [4]pixel.Line
 	}{
-		// TODO: Add test cases.
+		{
+			name:   "Get edges",
+			fields: fields{Min: pixel.V(0, 0), Max: pixel.V(10, 10)},
+			want: [4]pixel.Line{
+				pixel.L(pixel.V(0, 0), pixel.V(0, 10)),
+				pixel.L(pixel.V(0, 10), pixel.V(10, 10)),
+				pixel.L(pixel.V(10, 10), pixel.V(10, 0)),
+				pixel.L(pixel.V(10, 0), pixel.V(0, 0)),
+			},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -115,7 +124,16 @@ func TestRect_Vertices(t *testing.T) {
 		fields fields
 		want   [4]pixel.Vec
 	}{
-		// TODO: Add test cases.
+		{
+			name:   "Get corners",
+			fields: fields{Min: pixel.V(0, 0), Max: pixel.V(10, 10)},
+			want: [4]pixel.Vec{
+				pixel.V(0, 0),
+				pixel.V(0, 10),
+				pixel.V(10, 10),
+				pixel.V(10, 0),
+			},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
