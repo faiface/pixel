@@ -186,6 +186,14 @@ type Line struct {
 	A, B Vec
 }
 
+// L creates and returns a new Line object.
+func L(from, to Vec) Line {
+	return Line{
+		A: from,
+		B: to,
+	}
+}
+
 // Bounds returns the lines bounding box.  This is in the form of a normalized `Rect`.
 func (l Line) Bounds() Rect {
 	return R(l.A.X, l.A.Y, l.B.X, l.B.Y).Norm()
