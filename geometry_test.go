@@ -690,3 +690,372 @@ func TestRect_IntersectCircle(t *testing.T) {
 		})
 	}
 }
+
+func TestLine_Bounds(t *testing.T) {
+	type fields struct {
+		A pixel.Vec
+		B pixel.Vec
+	}
+	tests := []struct {
+		name   string
+		fields fields
+		want   pixel.Rect
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			l := pixel.Line{
+				A: tt.fields.A,
+				B: tt.fields.B,
+			}
+			if got := l.Bounds(); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("Line.Bounds() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestLine_Center(t *testing.T) {
+	type fields struct {
+		A pixel.Vec
+		B pixel.Vec
+	}
+	tests := []struct {
+		name   string
+		fields fields
+		want   pixel.Vec
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			l := pixel.Line{
+				A: tt.fields.A,
+				B: tt.fields.B,
+			}
+			if got := l.Center(); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("Line.Center() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestLine_Closest(t *testing.T) {
+	type fields struct {
+		A pixel.Vec
+		B pixel.Vec
+	}
+	type args struct {
+		v pixel.Vec
+	}
+	tests := []struct {
+		name   string
+		fields fields
+		args   args
+		want   pixel.Vec
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			l := pixel.Line{
+				A: tt.fields.A,
+				B: tt.fields.B,
+			}
+			if got := l.Closest(tt.args.v); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("Line.Closest() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestLine_Contains(t *testing.T) {
+	type fields struct {
+		A pixel.Vec
+		B pixel.Vec
+	}
+	type args struct {
+		v pixel.Vec
+	}
+	tests := []struct {
+		name   string
+		fields fields
+		args   args
+		want   bool
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			l := pixel.Line{
+				A: tt.fields.A,
+				B: tt.fields.B,
+			}
+			if got := l.Contains(tt.args.v); got != tt.want {
+				t.Errorf("Line.Contains() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestLine_Formula(t *testing.T) {
+	type fields struct {
+		A pixel.Vec
+		B pixel.Vec
+	}
+	tests := []struct {
+		name   string
+		fields fields
+		wantM  float64
+		wantB  float64
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			l := pixel.Line{
+				A: tt.fields.A,
+				B: tt.fields.B,
+			}
+			gotM, gotB := l.Formula()
+			if gotM != tt.wantM {
+				t.Errorf("Line.Formula() gotM = %v, want %v", gotM, tt.wantM)
+			}
+			if gotB != tt.wantB {
+				t.Errorf("Line.Formula() gotB = %v, want %v", gotB, tt.wantB)
+			}
+		})
+	}
+}
+
+func TestLine_Intersect(t *testing.T) {
+	type fields struct {
+		A pixel.Vec
+		B pixel.Vec
+	}
+	type args struct {
+		k pixel.Line
+	}
+	tests := []struct {
+		name   string
+		fields fields
+		args   args
+		want   pixel.Vec
+		want1  bool
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			l := pixel.Line{
+				A: tt.fields.A,
+				B: tt.fields.B,
+			}
+			got, got1 := l.Intersect(tt.args.k)
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("Line.Intersect() got = %v, want %v", got, tt.want)
+			}
+			if got1 != tt.want1 {
+				t.Errorf("Line.Intersect() got1 = %v, want %v", got1, tt.want1)
+			}
+		})
+	}
+}
+
+func TestLine_IntersectCircle(t *testing.T) {
+	type fields struct {
+		A pixel.Vec
+		B pixel.Vec
+	}
+	type args struct {
+		c pixel.Circle
+	}
+	tests := []struct {
+		name   string
+		fields fields
+		args   args
+		want   pixel.Vec
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			l := pixel.Line{
+				A: tt.fields.A,
+				B: tt.fields.B,
+			}
+			if got := l.IntersectCircle(tt.args.c); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("Line.IntersectCircle() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestLine_IntersectRect(t *testing.T) {
+	type fields struct {
+		A pixel.Vec
+		B pixel.Vec
+	}
+	type args struct {
+		r pixel.Rect
+	}
+	tests := []struct {
+		name   string
+		fields fields
+		args   args
+		want   pixel.Vec
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			l := pixel.Line{
+				A: tt.fields.A,
+				B: tt.fields.B,
+			}
+			if got := l.IntersectRect(tt.args.r); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("Line.IntersectRect() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestLine_Len(t *testing.T) {
+	type fields struct {
+		A pixel.Vec
+		B pixel.Vec
+	}
+	tests := []struct {
+		name   string
+		fields fields
+		want   float64
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			l := pixel.Line{
+				A: tt.fields.A,
+				B: tt.fields.B,
+			}
+			if got := l.Len(); got != tt.want {
+				t.Errorf("Line.Len() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestLine_Rotated(t *testing.T) {
+	type fields struct {
+		A pixel.Vec
+		B pixel.Vec
+	}
+	type args struct {
+		around pixel.Vec
+		angle  float64
+	}
+	tests := []struct {
+		name   string
+		fields fields
+		args   args
+		want   pixel.Line
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			l := pixel.Line{
+				A: tt.fields.A,
+				B: tt.fields.B,
+			}
+			if got := l.Rotated(tt.args.around, tt.args.angle); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("Line.Rotated() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestLine_Scaled(t *testing.T) {
+	type fields struct {
+		A pixel.Vec
+		B pixel.Vec
+	}
+	type args struct {
+		scale float64
+	}
+	tests := []struct {
+		name   string
+		fields fields
+		args   args
+		want   pixel.Line
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			l := pixel.Line{
+				A: tt.fields.A,
+				B: tt.fields.B,
+			}
+			if got := l.Scaled(tt.args.scale); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("Line.Scaled() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestLine_ScaledXY(t *testing.T) {
+	type fields struct {
+		A pixel.Vec
+		B pixel.Vec
+	}
+	type args struct {
+		around pixel.Vec
+		scale  float64
+	}
+	tests := []struct {
+		name   string
+		fields fields
+		args   args
+		want   pixel.Line
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			l := pixel.Line{
+				A: tt.fields.A,
+				B: tt.fields.B,
+			}
+			if got := l.ScaledXY(tt.args.around, tt.args.scale); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("Line.ScaledXY() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestLine_String(t *testing.T) {
+	type fields struct {
+		A pixel.Vec
+		B pixel.Vec
+	}
+	tests := []struct {
+		name   string
+		fields fields
+		want   string
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			l := pixel.Line{
+				A: tt.fields.A,
+				B: tt.fields.B,
+			}
+			if got := l.String(); got != tt.want {
+				t.Errorf("Line.String() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
