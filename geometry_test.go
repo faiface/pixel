@@ -769,7 +769,16 @@ func TestLine_Bounds(t *testing.T) {
 		fields fields
 		want   pixel.Rect
 	}{
-		// TODO: Add test cases.
+		{
+			name:   "Positive slope",
+			fields: fields{A: pixel.V(0, 0), B: pixel.V(10, 10)},
+			want:   pixel.R(0, 0, 10, 10),
+		},
+		{
+			name:   "Negative slope",
+			fields: fields{A: pixel.V(10, 10), B: pixel.V(0, 0)},
+			want:   pixel.R(0, 0, 10, 10),
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -794,7 +803,16 @@ func TestLine_Center(t *testing.T) {
 		fields fields
 		want   pixel.Vec
 	}{
-		// TODO: Add test cases.
+		{
+			name:   "Positive slope",
+			fields: fields{A: pixel.V(0, 0), B: pixel.V(10, 10)},
+			want:   pixel.V(5, 5),
+		},
+		{
+			name:   "Negative slope",
+			fields: fields{A: pixel.V(10, 10), B: pixel.V(0, 0)},
+			want:   pixel.V(5, 5),
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -823,7 +841,24 @@ func TestLine_Closest(t *testing.T) {
 		args   args
 		want   pixel.Vec
 	}{
-		// TODO: Add test cases.
+		{
+			name:   "Point on line",
+			fields: fields{A: pixel.V(0, 0), B: pixel.V(10, 10)},
+			args:   args{v: pixel.V(5, 5)},
+			want:   pixel.V(5, 5),
+		},
+		{
+			name:   "Point on next to line",
+			fields: fields{A: pixel.V(0, 0), B: pixel.V(10, 10)},
+			args:   args{v: pixel.V(0, 10)},
+			want:   pixel.V(5, 5),
+		},
+		{
+			name:   "Point on inline with line",
+			fields: fields{A: pixel.V(0, 0), B: pixel.V(10, 10)},
+			args:   args{v: pixel.V(20, 20)},
+			want:   pixel.V(10, 10),
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -852,7 +887,18 @@ func TestLine_Contains(t *testing.T) {
 		args   args
 		want   bool
 	}{
-		// TODO: Add test cases.
+		{
+			name:   "Point on line",
+			fields: fields{A: pixel.V(0, 0), B: pixel.V(10, 10)},
+			args:   args{v: pixel.V(5, 5)},
+			want:   true,
+		},
+		{
+			name:   "Point not on line",
+			fields: fields{A: pixel.V(0, 0), B: pixel.V(10, 10)},
+			args:   args{v: pixel.V(0, 10)},
+			want:   false,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -878,7 +924,24 @@ func TestLine_Formula(t *testing.T) {
 		wantM  float64
 		wantB  float64
 	}{
-		// TODO: Add test cases.
+		{
+			name:   "Getting formula - 45 degs",
+			fields: fields{A: pixel.V(0, 0), B: pixel.V(10, 10)},
+			wantM:  1,
+			wantB:  0,
+		},
+		{
+			name:   "Getting formula - 90 degs",
+			fields: fields{A: pixel.V(0, 0), B: pixel.V(0, 10)},
+			wantM:  math.Inf(1),
+			wantB:  math.NaN(),
+		},
+		{
+			name:   "Getting formula - 0 degs",
+			fields: fields{A: pixel.V(0, 0), B: pixel.V(10, 0)},
+			wantM:  0,
+			wantB:  0,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
