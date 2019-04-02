@@ -975,7 +975,27 @@ func TestLine_Intersect(t *testing.T) {
 		want   pixel.Vec
 		want1  bool
 	}{
-		// TODO: Add test cases.
+		{
+			name:   "Lines intersect",
+			fields: fields{A: pixel.V(0, 0), B: pixel.V(10, 10)},
+			args:   args{k: pixel.L(pixel.V(0, 10), pixel.V(10, 0))},
+			want:   pixel.V(5, 5),
+			want1:  true,
+		},
+		{
+			name:   "Lines don't intersect",
+			fields: fields{A: pixel.V(0, 0), B: pixel.V(10, 10)},
+			args:   args{k: pixel.L(pixel.V(0, 10), pixel.V(1, 20))},
+			want:   pixel.ZV,
+			want1:  false,
+		},
+		{
+			name:   "Lines parallel",
+			fields: fields{A: pixel.V(0, 0), B: pixel.V(10, 10)},
+			args:   args{k: pixel.L(pixel.V(0, 1), pixel.V(10, 11))},
+			want:   pixel.ZV,
+			want1:  false,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
