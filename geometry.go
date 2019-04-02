@@ -206,15 +206,28 @@ func (l Line) Center() Vec {
 
 // Closest will return the point on the line which is closest to the `Vec` provided.
 func (l Line) Closest(v Vec) Vec {
-	lenSquared := math.Pow(l.Len(), 2)
+	// Check if the point is within the lines' bounding box, if not, one of the endpoints will be the closest point
+	if !l.Bounds().Contains(v) {
+		// Not within bounding box
+		toStart := v.To(l.A)
+		toEnd := v.To(l.B)
 
-	if lenSquared == 0 {
-		return l.A
+		if toStart.Len() < toEnd.Len() {
+			return l.A
+		}
+		return l.B
 	}
 
-	t := math.Max(0, math.Min(1, l.A.Sub(v).Dot(l.B.Sub(v))/lenSquared))
-	projection := l.A.Add(l.B.Sub(v).Scaled(t))
-	return v.To(projection)
+	// Closest point will be on a line, perpendicular to this line
+	m, b := l.Formula()
+	perpendicularM := -1 / m
+	perpendicularB := v.Y - (perpendicularM * v.X)
+
+	// Coordinates of intersect (of infinite lines)
+	x := (perpendicularB - b) / (m - perpendicularM)
+	y := m*x - b
+
+	return V(x, y)
 }
 
 // Contains returns whether the provided `Vec` lies on the line
