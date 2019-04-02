@@ -894,6 +894,12 @@ func TestLine_Contains(t *testing.T) {
 			want:   true,
 		},
 		{
+			name:   "Point on negative sloped line",
+			fields: fields{A: pixel.V(0, 10), B: pixel.V(10, 0)},
+			args:   args{v: pixel.V(5, 5)},
+			want:   true,
+		},
+		{
 			name:   "Point not on line",
 			fields: fields{A: pixel.V(0, 0), B: pixel.V(10, 10)},
 			args:   args{v: pixel.V(0, 10)},

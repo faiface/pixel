@@ -222,10 +222,17 @@ func (l Line) Closest(v Vec) Vec {
 	m, b := l.Formula()
 	perpendicularM := -1 / m
 	perpendicularB := v.Y - (perpendicularM * v.X)
+	fmt.Println(m)
+	fmt.Println(b)
+	fmt.Println(perpendicularM)
+	fmt.Println(perpendicularB)
 
 	// Coordinates of intersect (of infinite lines)
 	x := (perpendicularB - b) / (m - perpendicularM)
 	y := m*x - b
+
+	fmt.Println(x)
+	fmt.Println(y)
 
 	return V(x, y)
 }
@@ -246,10 +253,13 @@ func (l Line) Formula() (m, b float64) {
 // Intersect will return the point of intersection for the two line segments.  If the line segments do not intersect,
 // this function will return the zero-vector and `false`.
 func (l Line) Intersect(k Line) (Vec, bool) {
+	fmt.Printf("%v, %v\n", l, k)
 	// Check if the lines are parallel
 	lDir := l.A.To(l.B)
 	kDir := k.A.To(k.B)
-	if math.Abs(lDir.X) == math.Abs(kDir.X) && math.Abs(lDir.Y) == math.Abs(kDir.Y) {
+	fmt.Printf("%v, %v\n", lDir, kDir)
+	if lDir.X == kDir.X && lDir.Y == kDir.Y {
+		fmt.Println("p")
 		return ZV, false
 	}
 
@@ -257,11 +267,14 @@ func (l Line) Intersect(k Line) (Vec, bool) {
 	// Get the intersection point for the lines if they were infinitely long, check if the point exists on both of the
 	// segments
 	lm, lb := l.Formula()
-	km, kb := l.Formula()
+	km, kb := k.Formula()
+	fmt.Printf("%.2f, %.2f -- %.2f, %.2f\n", lm, lb, km, kb)
 
 	// Coordinates of intersect
 	x := (kb - lb) / (lm - km)
 	y := lm*x + lb
+	fmt.Printf("(%.2f, %.2f)\n", x, y)
+	fmt.Printf("%t %t\n", l.Contains(V(x, y)), k.Contains(V(x, y)))
 
 	if l.Contains(V(x, y)) && k.Contains(V(x, y)) {
 		// The intersect point is on both line segments, they intersect.
