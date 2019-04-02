@@ -954,7 +954,9 @@ func TestLine_Formula(t *testing.T) {
 				t.Errorf("Line.Formula() gotM = %v, want %v", gotM, tt.wantM)
 			}
 			if gotB != tt.wantB {
-				t.Errorf("Line.Formula() gotB = %v, want %v", gotB, tt.wantB)
+				if math.IsNaN(tt.wantB) && !math.IsNaN(gotB) {
+					t.Errorf("Line.Formula() gotB = %v, want %v", gotB, tt.wantB)
+				}
 			}
 		})
 	}
