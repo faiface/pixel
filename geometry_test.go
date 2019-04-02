@@ -1222,7 +1222,30 @@ func TestLine_Scaled(t *testing.T) {
 		args   args
 		want   pixel.Line
 	}{
-		// TODO: Add test cases.
+		{
+			name:   "Scaling by 1",
+			fields: fields{A: pixel.V(0, 0), B: pixel.V(10, 10)},
+			args:   args{scale: 1},
+			want:   pixel.L(pixel.V(0, 0), pixel.V(10, 10)),
+		},
+		{
+			name:   "Scaling by >1",
+			fields: fields{A: pixel.V(0, 0), B: pixel.V(10, 10)},
+			args:   args{scale: 2},
+			want:   pixel.L(pixel.V(-5, -5), pixel.V(15, 15)),
+		},
+		{
+			name:   "Scaling by <1",
+			fields: fields{A: pixel.V(0, 0), B: pixel.V(10, 10)},
+			args:   args{scale: 0.5},
+			want:   pixel.L(pixel.V(2.5, 2.5), pixel.V(7.5, 7.5)),
+		},
+		{
+			name:   "Scaling by -1",
+			fields: fields{A: pixel.V(0, 0), B: pixel.V(10, 10)},
+			args:   args{scale: -1},
+			want:   pixel.L(pixel.V(10, 10), pixel.V(0, 0)),
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -1252,7 +1275,30 @@ func TestLine_ScaledXY(t *testing.T) {
 		args   args
 		want   pixel.Line
 	}{
-		// TODO: Add test cases.
+		{
+			name:   "Scaling by 1 around origin",
+			fields: fields{A: pixel.V(0, 0), B: pixel.V(10, 10)},
+			args:   args{around: pixel.ZV, scale: 1},
+			want:   pixel.L(pixel.V(0, 0), pixel.V(10, 10)),
+		},
+		{
+			name:   "Scaling by >1 around origin",
+			fields: fields{A: pixel.V(0, 0), B: pixel.V(10, 10)},
+			args:   args{around: pixel.ZV, scale: 2},
+			want:   pixel.L(pixel.V(0, 0), pixel.V(20, 20)),
+		},
+		{
+			name:   "Scaling by <1 around origin",
+			fields: fields{A: pixel.V(0, 0), B: pixel.V(10, 10)},
+			args:   args{around: pixel.ZV, scale: 0.5},
+			want:   pixel.L(pixel.V(0, 0), pixel.V(5, 5)),
+		},
+		{
+			name:   "Scaling by -1 around origin",
+			fields: fields{A: pixel.V(0, 0), B: pixel.V(10, 10)},
+			args:   args{around: pixel.ZV, scale: -1},
+			want:   pixel.L(pixel.V(0, 0), pixel.V(-10, -10)),
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
