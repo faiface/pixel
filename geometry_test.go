@@ -1028,7 +1028,18 @@ func TestLine_IntersectCircle(t *testing.T) {
 		args   args
 		want   pixel.Vec
 	}{
-		// TODO: Add test cases.
+		{
+			name:   "Cirle intersects",
+			fields: fields{A: pixel.V(0, 0), B: pixel.V(10, 10)},
+			args:   args{c: pixel.C(pixel.V(5, 5), 1)},
+			want:   pixel.V(1, -1),
+		},
+		{
+			name:   "Cirle doesn't intersects",
+			fields: fields{A: pixel.V(0, 0), B: pixel.V(10, 10)},
+			args:   args{c: pixel.C(pixel.V(0, 5), 1)},
+			want:   pixel.ZV,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -1057,7 +1068,36 @@ func TestLine_IntersectRect(t *testing.T) {
 		args   args
 		want   pixel.Vec
 	}{
-		// TODO: Add test cases.
+		{
+			name:   "Line through rect vertically",
+			fields: fields{A: pixel.V(0, 0), B: pixel.V(0, 10)},
+			args:   args{r: pixel.R(-1, 1, 5, 5)},
+			want:   pixel.V(-1, 0),
+		},
+		{
+			name:   "Line through rect horizontally",
+			fields: fields{A: pixel.V(-5, 0), B: pixel.V(5, 0)},
+			args:   args{r: pixel.R(-2, -5, 2, 1)},
+			want:   pixel.V(0, 1),
+		},
+		{
+			name:   "Line through rect diagonally bottom and left edges",
+			fields: fields{A: pixel.V(0, 0), B: pixel.V(10, 10)},
+			args:   args{r: pixel.R(0, 2, 3, 3)},
+			want:   pixel.V(1, -1),
+		},
+		{
+			name:   "Line through rect diagonally top and right edges",
+			fields: fields{A: pixel.V(10, 0), B: pixel.V(0, 10)},
+			args:   args{r: pixel.R(5, 0, 8, 3)},
+			want:   pixel.V(-1, -1),
+		},
+		{
+			name:   "Line with not rect intersect",
+			fields: fields{A: pixel.V(0, 0), B: pixel.V(10, 10)},
+			args:   args{r: pixel.R(20, 20, 21, 21)},
+			want:   pixel.ZV,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -1082,7 +1122,31 @@ func TestLine_Len(t *testing.T) {
 		fields fields
 		want   float64
 	}{
-		// TODO: Add test cases.
+		{
+			name:   "End right-up of start",
+			fields: fields{A: pixel.V(0, 0), B: pixel.V(3, 4)},
+			want:   5,
+		},
+		{
+			name:   "End left-up of start",
+			fields: fields{A: pixel.V(0, 0), B: pixel.V(-3, 4)},
+			want:   5,
+		},
+		{
+			name:   "End right-down of start",
+			fields: fields{A: pixel.V(0, 0), B: pixel.V(3, -4)},
+			want:   5,
+		},
+		{
+			name:   "End left-down of start",
+			fields: fields{A: pixel.V(0, 0), B: pixel.V(-3, -4)},
+			want:   5,
+		},
+		{
+			name:   "End same as start",
+			fields: fields{A: pixel.V(0, 0), B: pixel.V(0, 0)},
+			want:   0,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -1112,7 +1176,24 @@ func TestLine_Rotated(t *testing.T) {
 		args   args
 		want   pixel.Line
 	}{
-		// TODO: Add test cases.
+		{
+			name:   "Rotating around line center",
+			fields: fields{A: pixel.V(1, 1), B: pixel.V(3, 3)},
+			args:   args{around: pixel.V(2, 2), angle: 2 * math.Pi},
+			want:   pixel.L(pixel.V(1, 1), pixel.V(3, 3)),
+		},
+		{
+			name:   "Rotating around x-y origin",
+			fields: fields{A: pixel.V(1, 1), B: pixel.V(3, 3)},
+			args:   args{around: pixel.V(0, 0), angle: 2 * math.Pi},
+			want:   pixel.L(pixel.V(-1, -1), pixel.V(-3, -3)),
+		},
+		{
+			name:   "Rotating around line end",
+			fields: fields{A: pixel.V(1, 1), B: pixel.V(3, 3)},
+			args:   args{around: pixel.V(1, 1), angle: 2 * math.Pi},
+			want:   pixel.L(pixel.V(1, 1), pixel.V(-2, -2)),
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -1196,7 +1277,11 @@ func TestLine_String(t *testing.T) {
 		fields fields
 		want   string
 	}{
-		// TODO: Add test cases.
+		{
+			name:   "Getting string",
+			fields: fields{A: pixel.V(0, 0), B: pixel.V(1, 1)},
+			want:   "Line(Vec(0, 0), Vec(1, 1))",
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
