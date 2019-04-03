@@ -1202,6 +1202,15 @@ func TestLine_Len(t *testing.T) {
 }
 
 func TestLine_Rotated(t *testing.T) {
+	// round returns the nearest integer, rounding ties away from zero.
+	// This is required because `math.Round` wasn't introduced until Go1.10
+	round := func(x float64) float64 {
+		t := math.Trunc(x)
+		if math.Abs(x-t) >= 0.5 {
+			return t + math.Copysign(1, x)
+		}
+		return t
+	}
 	type fields struct {
 		A pixel.Vec
 		B pixel.Vec
@@ -1244,10 +1253,10 @@ func TestLine_Rotated(t *testing.T) {
 			// Have to round the results, due to floating-point in accuracies.  Results are correct to approximately
 			// 10 decimal places.
 			got := l.Rotated(tt.args.around, tt.args.angle)
-			if math.Round(got.A.X) != tt.want.A.X ||
-				math.Round(got.B.X) != tt.want.B.X ||
-				math.Round(got.A.Y) != tt.want.A.Y ||
-				math.Round(got.B.Y) != tt.want.B.Y {
+			if round(got.A.X) != tt.want.A.X ||
+				round(got.B.X) != tt.want.B.X ||
+				round(got.A.Y) != tt.want.A.Y ||
+				round(got.B.Y) != tt.want.B.Y {
 				t.Errorf("Line.Rotated() = %v, want %v", got, tt.want)
 			}
 		})
