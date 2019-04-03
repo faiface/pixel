@@ -354,8 +354,8 @@ func (l Line) Intersect(k Line) (Vec, bool) {
 	return ZV, false
 }
 
-// IntersectCircle will return the shortest `Vec` such that the Line and Circle no longer intesect.  If they do not
-// intersect at all, this function will return a zero-vector.
+// IntersectCircle will return the shortest `Vec` such that moving the Line by that Vec will cause the Line and Circle
+// to no longer intesect.  If they do not intersect at all, this function will return a zero-vector.
 func (l Line) IntersectCircle(c Circle) Vec {
 	// Get the point on the line closest to the center of the circle.
 	closest := l.Closest(c.Center)
@@ -368,8 +368,8 @@ func (l Line) IntersectCircle(c Circle) Vec {
 	return cirToClosest.Scaled(cirToClosest.Len() - c.Radius)
 }
 
-// IntersectRect will return the shortest `Vec` such that the Line and Rect no longer intesect.  If they do not
-// intersect at all, this function will return a zero-vector.
+// IntersectRect will return the shortest `Vec` such that moving the Line by that Vec will cause  the Line and Rect to
+// no longer intesect.  If they do not intersect at all, this function will return a zero-vector.
 func (l Line) IntersectRect(r Rect) Vec {
 	// Check if either end of the line segment are within the rectangle
 	if r.Contains(l.A) || r.Contains(l.B) {
