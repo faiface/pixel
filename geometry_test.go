@@ -609,6 +609,35 @@ func TestCircle_Intersect(t *testing.T) {
 	}
 }
 
+func TestCircle_IntersectPoints(t *testing.T) {
+	type fields struct {
+		Center pixel.Vec
+		Radius float64
+	}
+	type args struct {
+		l pixel.Line
+	}
+	tests := []struct {
+		name   string
+		fields fields
+		args   args
+		want   []pixel.Vec
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			c := pixel.Circle{
+				Center: tt.fields.Center,
+				Radius: tt.fields.Radius,
+			}
+			if got := c.IntersectionPoints(tt.args.l); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("Circle.IntersectPoints() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
 func TestRect_IntersectCircle(t *testing.T) {
 	// closeEnough will shift the decimal point by the accuracy required, truncates the results and compares them.
 	// Effectively this compares two floats to a given decimal point.
@@ -754,6 +783,52 @@ func TestRect_IntersectCircle(t *testing.T) {
 			got := r.IntersectCircle(tt.args.c)
 			if !closeEnough(got.X, tt.want.X, 2) || !closeEnough(got.Y, tt.want.Y, 2) {
 				t.Errorf("Rect.IntersectCircle() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestRect_IntersectionPoints(t *testing.T) {
+	type fields struct {
+		Min pixel.Vec
+		Max pixel.Vec
+	}
+	type args struct {
+		l pixel.Line
+	}
+	tests := []struct {
+		name   string
+		fields fields
+		args   args
+		want   []pixel.Vec
+	}{
+		{
+			name:   "No intersection points",
+			fields: fields{Min: pixel.V(1, 1), Max: pixel.V(5, 5)},
+			args:   args{l: pixel.L(pixel.V(-5, 0), pixel.V(-2, 2))},
+			want:   []pixel.Vec{},
+		},
+		// {
+		// 	name:   "One intersection point",
+		// 	fields: fields{Min: pixel.V(1, 1), Max: pixel.V(5, 5)},
+		// 	args:   args{l: pixel.L(pixel.V(2, 0), pixel.V(2, 2))},
+		// 	want:   []pixel.Vec{pixel.V(2, 1)},
+		// },
+		// {
+		// 	name:   "Two intersection points",
+		// 	fields: fields{Min: pixel.V(1, 1), Max: pixel.V(5, 5)},
+		// 	args:   args{l: pixel.L(pixel.V(0, 2), pixel.V(6, 2))},
+		// 	want:   []pixel.Vec{pixel.V(1, 2), pixel.V(5, 2)},
+		// },
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			r := pixel.Rect{
+				Min: tt.fields.Min,
+				Max: tt.fields.Max,
+			}
+			if got := r.IntersectionPoints(tt.args.l); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("Rect.IntersectPoints() = %v, want %v", got, tt.want)
 			}
 		})
 	}
@@ -1007,6 +1082,13 @@ func TestLine_Intersect(t *testing.T) {
 			args:   args{k: pixel.L(pixel.V(0, 10), pixel.V(10, 0))},
 			want:   pixel.V(5, 5),
 			want1:  true,
+		},
+		{
+			name:   "Lines intersect 2",
+			fields: fields{A: pixel.V(1, 1), B: pixel.V(1, 5)},
+			args:   args{k: pixel.L(pixel.V(-5, 0), pixel.V(-2, 2))},
+			want:   pixel.ZV,
+			want1:  false,
 		},
 		{
 			name:   "Line intersect with vertical",

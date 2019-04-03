@@ -314,37 +314,25 @@ func (l Line) Intersect(k Line) (Vec, bool) {
 		return ZV, false
 	}
 
+	var x, y float64
+
 	if math.IsInf(math.Abs(lm), 1) || math.IsInf(math.Abs(km), 1) {
 		// One line is vertical
 		intersectM := lm
 		intersectB := lb
-		verticalLine := k
 
 		if math.IsInf(math.Abs(lm), 1) {
 			intersectM = km
 			intersectB = kb
-			verticalLine = l
 		}
 
-		maxVerticalY := verticalLine.A.Y
-		minVerticalY := verticalLine.B.Y
-		if verticalLine.B.Y > maxVerticalY {
-			maxVerticalY = verticalLine.B.Y
-			minVerticalY = verticalLine.A.Y
-		}
-
-		y := intersectM*l.A.X + intersectB
-		if y > maxVerticalY || y < minVerticalY {
-			// Point is not on the horizontal line
-			return ZV, false
-		}
-
-		return V(l.A.X, y), true
+		y = intersectM*l.A.X + intersectB
+		x = l.A.X
+	} else {
+		// Coordinates of intersect
+		x = (kb - lb) / (lm - km)
+		y = lm*x + lb
 	}
-
-	// Coordinates of intersect
-	x := (kb - lb) / (lm - km)
-	y := lm*x + lb
 
 	if l.Contains(V(x, y)) && k.Contains(V(x, y)) {
 		// The intersect point is on both line segments, they intersect.
@@ -619,6 +607,28 @@ func (r Rect) IntersectLine(l Line) Vec {
 	return l.IntersectRect(r).Scaled(-1)
 }
 
+// IntersectionPoints returns all the points where the Rect intersects with the line provided.  This can be zero, one or
+// two points, depending on the location of the shapes.
+func (r Rect) IntersectionPoints(l Line) []Vec {
+	// Use map keys to ensure unique points
+	pointMap := make(map[Vec]struct{})
+
+	for _, edge := range r.Edges() {
+		if intersect, ok := edge.Intersect(l); ok {
+			fmt.Println(edge)
+			fmt.Println(l)
+			fmt.Println(intersect)
+			pointMap[intersect] = struct{}{}
+		}
+	}
+
+	points := make([]Vec, 0, len(pointMap))
+	for point := range pointMap {
+		points = append(points, point)
+	}
+	return points
+}
+
 // Vertices returns a slice of the four corners which make up the rectangle.
 func (r Rect) Vertices() [4]Vec {
 	return [4]Vec{
@@ -856,6 +866,12 @@ func (c Circle) IntersectRect(r Rect) Vec {
 
 		return centerToCorner.Unit().Scaled(cornerToCircumferenceLen)
 	}
+}
+
+// IntersectionPoints returns all the points where the Circle intersects with the line provided.  This can be zero, one or
+// two points, depending on the location of the shapes.
+func (c Circle) IntersectionPoints(l Line) []Vec {
+	return []Vec{}
 }
 
 // Matrix is a 2x3 affine matrix that can be used for all kinds of spatial transforms, such
