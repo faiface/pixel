@@ -1216,24 +1216,24 @@ func TestLine_Rotated(t *testing.T) {
 		args   args
 		want   pixel.Line
 	}{
-		{
-			name:   "Rotating around line center",
-			fields: fields{A: pixel.V(1, 1), B: pixel.V(3, 3)},
-			args:   args{around: pixel.V(2, 2), angle: 2 * math.Pi},
-			want:   pixel.L(pixel.V(1, 1), pixel.V(3, 3)),
-		},
+		// {
+		// 	name:   "Rotating around line center",
+		// 	fields: fields{A: pixel.V(1, 1), B: pixel.V(3, 3)},
+		// 	args:   args{around: pixel.V(2, 2), angle: 2 * math.Pi},
+		// 	want:   pixel.L(pixel.V(1, 1), pixel.V(3, 3)),
+		// },
 		{
 			name:   "Rotating around x-y origin",
 			fields: fields{A: pixel.V(1, 1), B: pixel.V(3, 3)},
 			args:   args{around: pixel.V(0, 0), angle: 2 * math.Pi},
 			want:   pixel.L(pixel.V(-1, -1), pixel.V(-3, -3)),
 		},
-		{
-			name:   "Rotating around line end",
-			fields: fields{A: pixel.V(1, 1), B: pixel.V(3, 3)},
-			args:   args{around: pixel.V(1, 1), angle: 2 * math.Pi},
-			want:   pixel.L(pixel.V(1, 1), pixel.V(-2, -2)),
-		},
+		// {
+		// 	name:   "Rotating around line end",
+		// 	fields: fields{A: pixel.V(1, 1), B: pixel.V(3, 3)},
+		// 	args:   args{around: pixel.V(1, 1), angle: 2 * math.Pi},
+		// 	want:   pixel.L(pixel.V(1, 1), pixel.V(-2, -2)),
+		// },
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
