@@ -206,8 +206,30 @@ func (l Line) Center() Vec {
 
 // Closest will return the point on the line which is closest to the `Vec` provided.
 func (l Line) Closest(v Vec) Vec {
+	// Closest point will be on a line, perpendicular to this line
+	m, b := l.Formula()
+
+	// Account for horizontal lines
+	if m == 0 {
+		fmt.Println("h", l)
+		x := v.X
+		y := l.A.Y
+		fmt.Println(x, y)
+		return V(x, y)
+	}
+
+	// Account for vertical lines
+	if math.IsInf(math.Abs(m), 1) {
+		fmt.Println("v", l)
+		x := l.A.X
+		y := v.Y
+		fmt.Println(x, y)
+		return V(x, y)
+	}
+
 	// Check if the point is within the lines' bounding box, if not, one of the endpoints will be the closest point
 	if !l.Bounds().Contains(v) {
+		fmt.Println("out")
 		// Not within bounding box
 		toStart := v.To(l.A)
 		toEnd := v.To(l.B)
@@ -218,14 +240,14 @@ func (l Line) Closest(v Vec) Vec {
 		return l.B
 	}
 
-	// Closest point will be on a line, perpendicular to this line
-	m, b := l.Formula()
 	perpendicularM := -1 / m
 	perpendicularB := v.Y - (perpendicularM * v.X)
+	fmt.Println(m, b, perpendicularM, perpendicularB)
 
 	// Coordinates of intersect (of infinite lines)
 	x := (perpendicularB - b) / (m - perpendicularM)
 	y := m*x + b
+	fmt.Println(x, y)
 
 	return V(x, y)
 }
@@ -237,6 +259,11 @@ func (l Line) Contains(v Vec) bool {
 
 // Formula will return the values that represent the line in the formula: y = mx + b
 func (l Line) Formula() (m, b float64) {
+	// Account for horizontal lines
+	if l.B.Y == l.A.Y {
+		return 0, l.A.Y
+	}
+
 	m = (l.B.Y - l.A.Y) / (l.B.X - l.A.X)
 	b = l.A.Y - (m * l.A.X)
 
@@ -246,9 +273,11 @@ func (l Line) Formula() (m, b float64) {
 // Intersect will return the point of intersection for the two line segments.  If the line segments do not intersect,
 // this function will return the zero-vector and `false`.
 func (l Line) Intersect(k Line) (Vec, bool) {
+	fmt.Println(l, k)
 	// Check if the lines are parallel
 	lDir := l.A.To(l.B)
 	kDir := k.A.To(k.B)
+	fmt.Println(lDir, kDir)
 	if lDir.X == kDir.X && lDir.Y == kDir.Y {
 		return ZV, false
 	}
@@ -258,10 +287,47 @@ func (l Line) Intersect(k Line) (Vec, bool) {
 	// segments
 	lm, lb := l.Formula()
 	km, kb := k.Formula()
+	fmt.Println(lm, lb, km, kb)
+
+	// Account for vertical lines
+	if math.IsInf(math.Abs(lm), 1) && math.IsInf(math.Abs(km), 1) {
+		// Both vertical, therefore parallel
+		return ZV, false
+	}
+
+	if math.IsInf(math.Abs(lm), 1) || math.IsInf(math.Abs(km), 1) {
+		// One line is vertical
+		intersectM := lm
+		intersectB := lb
+		verticalLine := k
+
+		if math.IsInf(math.Abs(lm), 1) {
+			intersectM = km
+			intersectB = kb
+			verticalLine = l
+		}
+
+		maxVerticalY := verticalLine.A.Y
+		minVerticalY := verticalLine.B.Y
+		if verticalLine.B.Y > maxVerticalY {
+			maxVerticalY = verticalLine.B.Y
+			minVerticalY = verticalLine.A.Y
+		}
+
+		y := intersectM*l.A.X + intersectB
+		if y > maxVerticalY || y < minVerticalY {
+			// Point is not on the horizontal line
+			return ZV, false
+		}
+
+		return V(l.A.X, y), true
+	}
 
 	// Coordinates of intersect
 	x := (kb - lb) / (lm - km)
 	y := lm*x + lb
+	fmt.Println(x, y)
+	fmt.Println(l.Contains(V(x, y)), k.Contains(V(x, y)))
 
 	if l.Contains(V(x, y)) && k.Contains(V(x, y)) {
 		// The intersect point is on both line segments, they intersect.
@@ -290,18 +356,22 @@ func (l Line) IntersectCircle(c Circle) Vec {
 func (l Line) IntersectRect(r Rect) Vec {
 	// Check if either end of the line segment are within the rectangle
 	if r.Contains(l.A) || r.Contains(l.B) {
+		fmt.Println("yes1")
 		// Use the `Rect.Intersect` to get minimal return value
 		rIntersect := l.Bounds().Intersect(r)
 		if rIntersect.H() > rIntersect.W() {
+			fmt.Println("yes2")
 			// Go vertical
 			return V(0, rIntersect.H())
 		}
 		return V(rIntersect.W(), 0)
 	}
+	fmt.Println("No")
 
 	// Check if any of the rectangles' edges intersect with this line.
 	for _, edge := range r.Edges() {
 		if _, ok := l.Intersect(edge); ok {
+			fmt.Println(edge)
 			// Get the closest points on the line to each corner, where:
 			//  - the point is contained by the rectangle
 			//  - the point is not the corner itself
@@ -315,6 +385,9 @@ func (l Line) IntersectRect(r Rect) Vec {
 					closestCorner = c
 				}
 			}
+
+			fmt.Println(closest)
+			fmt.Println(closestCorner)
 
 			return closest.To(closestCorner)
 		}
