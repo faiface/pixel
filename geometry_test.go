@@ -1216,24 +1216,24 @@ func TestLine_Rotated(t *testing.T) {
 		args   args
 		want   pixel.Line
 	}{
-		// {
-		// 	name:   "Rotating around line center",
-		// 	fields: fields{A: pixel.V(1, 1), B: pixel.V(3, 3)},
-		// 	args:   args{around: pixel.V(2, 2), angle: 2 * math.Pi},
-		// 	want:   pixel.L(pixel.V(1, 1), pixel.V(3, 3)),
-		// },
+		{
+			name:   "Rotating around line center",
+			fields: fields{A: pixel.V(1, 1), B: pixel.V(3, 3)},
+			args:   args{around: pixel.V(2, 2), angle: math.Pi},
+			want:   pixel.L(pixel.V(3, 3), pixel.V(1, 1)),
+		},
 		{
 			name:   "Rotating around x-y origin",
 			fields: fields{A: pixel.V(1, 1), B: pixel.V(3, 3)},
-			args:   args{around: pixel.V(0, 0), angle: 2 * math.Pi},
+			args:   args{around: pixel.V(0, 0), angle: math.Pi},
 			want:   pixel.L(pixel.V(-1, -1), pixel.V(-3, -3)),
 		},
-		// {
-		// 	name:   "Rotating around line end",
-		// 	fields: fields{A: pixel.V(1, 1), B: pixel.V(3, 3)},
-		// 	args:   args{around: pixel.V(1, 1), angle: 2 * math.Pi},
-		// 	want:   pixel.L(pixel.V(1, 1), pixel.V(-2, -2)),
-		// },
+		{
+			name:   "Rotating around line end",
+			fields: fields{A: pixel.V(1, 1), B: pixel.V(3, 3)},
+			args:   args{around: pixel.V(1, 1), angle: math.Pi},
+			want:   pixel.L(pixel.V(1, 1), pixel.V(-1, -1)),
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -1241,7 +1241,13 @@ func TestLine_Rotated(t *testing.T) {
 				A: tt.fields.A,
 				B: tt.fields.B,
 			}
-			if got := l.Rotated(tt.args.around, tt.args.angle); !reflect.DeepEqual(got, tt.want) {
+			// Have to round the results, due to floating-point in accuracies.  Results are correct to approximately
+			// 10 decimal places.
+			got := l.Rotated(tt.args.around, tt.args.angle)
+			if math.Round(got.A.X) != tt.want.A.X ||
+				math.Round(got.B.X) != tt.want.B.X ||
+				math.Round(got.A.Y) != tt.want.A.Y ||
+				math.Round(got.B.Y) != tt.want.B.Y {
 				t.Errorf("Line.Rotated() = %v, want %v", got, tt.want)
 			}
 		})
