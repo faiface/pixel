@@ -866,6 +866,12 @@ func TestLine_Closest(t *testing.T) {
 			want:   pixel.V(5, 5),
 		},
 		{
+			name:   "Point far from line",
+			fields: fields{A: pixel.V(0, 0), B: pixel.V(10, 10)},
+			args:   args{v: pixel.V(80, -70)},
+			want:   pixel.V(5, 5),
+		},
+		{
 			name:   "Point on inline with line",
 			fields: fields{A: pixel.V(0, 0), B: pixel.V(10, 10)},
 			args:   args{v: pixel.V(20, 20)},
@@ -1108,30 +1114,30 @@ func TestLine_IntersectRect(t *testing.T) {
 			args:   args{r: pixel.R(-1, 1, 5, 5)},
 			want:   pixel.V(-1, 0),
 		},
-		// {
-		// 	name:   "Line through rect horizontally",
-		// 	fields: fields{A: pixel.V(-5, 0), B: pixel.V(5, 0)},
-		// 	args:   args{r: pixel.R(-2, -5, 2, 1)},
-		// 	want:   pixel.V(0, 1),
-		// },
-		// {
-		// 	name:   "Line through rect diagonally bottom and left edges",
-		// 	fields: fields{A: pixel.V(0, 0), B: pixel.V(10, 10)},
-		// 	args:   args{r: pixel.R(0, 2, 3, 3)},
-		// 	want:   pixel.V(1, -1),
-		// },
-		// {
-		// 	name:   "Line through rect diagonally top and right edges",
-		// 	fields: fields{A: pixel.V(10, 0), B: pixel.V(0, 10)},
-		// 	args:   args{r: pixel.R(5, 0, 8, 3)},
-		// 	want:   pixel.V(-1, -1),
-		// },
-		// {
-		// 	name:   "Line with not rect intersect",
-		// 	fields: fields{A: pixel.V(0, 0), B: pixel.V(10, 10)},
-		// 	args:   args{r: pixel.R(20, 20, 21, 21)},
-		// 	want:   pixel.ZV,
-		// },
+		{
+			name:   "Line through rect horizontally",
+			fields: fields{A: pixel.V(0, 1), B: pixel.V(10, 1)},
+			args:   args{r: pixel.R(1, 0, 5, 5)},
+			want:   pixel.V(0, -1),
+		},
+		{
+			name:   "Line through rect diagonally bottom and left edges",
+			fields: fields{A: pixel.V(0, 0), B: pixel.V(10, 10)},
+			args:   args{r: pixel.R(0, 2, 3, 3)},
+			want:   pixel.V(-1, 1),
+		},
+		{
+			name:   "Line through rect diagonally top and right edges",
+			fields: fields{A: pixel.V(10, 0), B: pixel.V(0, 10)},
+			args:   args{r: pixel.R(5, 0, 8, 3)},
+			want:   pixel.V(-2.5, -2.5),
+		},
+		{
+			name:   "Line with not rect intersect",
+			fields: fields{A: pixel.V(0, 0), B: pixel.V(10, 10)},
+			args:   args{r: pixel.R(20, 20, 21, 21)},
+			want:   pixel.ZV,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
