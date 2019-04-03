@@ -206,20 +206,48 @@ func (l Line) Center() Vec {
 
 // Closest will return the point on the line which is closest to the `Vec` provided.
 func (l Line) Closest(v Vec) Vec {
-	// Closest point will be on a line, perpendicular to this line
+	// between is a helper function which determines whether 'x' is greater than min(a, b) and less than max(a, b)
+	between := func(a, b, x float64) bool {
+		min := math.Min(a, b)
+		max := math.Max(a, b)
+		return min < x && x < max
+	}
+
+	// Closest point will be on a line which perpendicular to this line.
+	// If and only if the infinite perpendicular line intersects the segment.
 	m, b := l.Formula()
 
 	// Account for horizontal lines
 	if m == 0 {
 		x := v.X
 		y := l.A.Y
-		return V(x, y)
+
+		// check if the X coordinate of v is on the line
+		if between(l.A.X, l.B.X, v.X) {
+			return V(x, y)
+		}
+
+		// Otherwise get the closest endpoint
+		if l.A.To(v).Len() < l.B.To(v).Len() {
+			return l.A
+		}
+		return l.B
 	}
 
 	// Account for vertical lines
 	if math.IsInf(math.Abs(m), 1) {
 		x := l.A.X
 		y := v.Y
+
+		// check if the Y coordinate of v is on the line
+		if between(l.A.Y, l.B.Y, v.Y) {
+			return V(x, y)
+		}
+
+		// Otherwise get the closest endpoint
+		if l.A.To(v).Len() < l.B.To(v).Len() {
+			return l.A
+		}
 		return V(x, y)
 	}
 
@@ -229,13 +257,6 @@ func (l Line) Closest(v Vec) Vec {
 	// Coordinates of intersect (of infinite lines)
 	x := (perpendicularB - b) / (m - perpendicularM)
 	y := m*x + b
-
-	// between is a helper function which determines whether 'x' is greater than min(a, b) and less than max(a, b)
-	between := func(a, b, x float64) bool {
-		min := math.Min(a, b)
-		max := math.Max(a, b)
-		return min < x && x < max
-	}
 
 	// Check if the point lies between the x and y bounds of the segment
 	if !between(l.A.X, l.B.X, x) && !between(l.A.Y, l.B.Y, y) {
