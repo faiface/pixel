@@ -1039,8 +1039,8 @@ func TestLine_IntersectCircle(t *testing.T) {
 		{
 			name:   "Cirle intersects",
 			fields: fields{A: pixel.V(0, 0), B: pixel.V(10, 10)},
-			args:   args{c: pixel.C(pixel.V(5, 5), 1)},
-			want:   pixel.V(1, -1),
+			args:   args{c: pixel.C(pixel.V(6, 4), 2)},
+			want:   pixel.V(0.5857864376269049, -0.5857864376269049),
 		},
 		{
 			name:   "Cirle doesn't intersects",

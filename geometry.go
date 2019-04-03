@@ -250,7 +250,6 @@ func (l Line) Intersect(k Line) (Vec, bool) {
 	lDir := l.A.To(l.B)
 	kDir := k.A.To(k.B)
 	if lDir.X == kDir.X && lDir.Y == kDir.Y {
-		fmt.Println("p")
 		return ZV, false
 	}
 
