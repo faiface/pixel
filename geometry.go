@@ -279,6 +279,7 @@ func (l Line) Contains(v Vec) bool {
 }
 
 // Formula will return the values that represent the line in the formula: y = mx + b
+// This function will return `math.Inf+, math.Inf-` for a vertical line.
 func (l Line) Formula() (m, b float64) {
 	// Account for horizontal lines
 	if l.B.Y == l.A.Y {
