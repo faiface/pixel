@@ -403,11 +403,6 @@ func (l Line) Rotated(around Vec, angle float64) Line {
 	// Move the line so we can use `Vec.Rotated`
 	lineShifted := l.Moved(around.Scaled(-1))
 
-	fmt.Println(around.Scaled(-1))
-	fmt.Println(lineShifted)
-	fmt.Println(lineShifted.A.Rotated(angle))
-	fmt.Println(lineShifted.B.Rotated(angle))
-
 	lineRotated := Line{
 		A: lineShifted.A.Rotated(angle),
 		B: lineShifted.B.Rotated(angle),
