@@ -808,18 +808,18 @@ func TestRect_IntersectionPoints(t *testing.T) {
 			args:   args{l: pixel.L(pixel.V(-5, 0), pixel.V(-2, 2))},
 			want:   []pixel.Vec{},
 		},
-		// {
-		// 	name:   "One intersection point",
-		// 	fields: fields{Min: pixel.V(1, 1), Max: pixel.V(5, 5)},
-		// 	args:   args{l: pixel.L(pixel.V(2, 0), pixel.V(2, 2))},
-		// 	want:   []pixel.Vec{pixel.V(2, 1)},
-		// },
-		// {
-		// 	name:   "Two intersection points",
-		// 	fields: fields{Min: pixel.V(1, 1), Max: pixel.V(5, 5)},
-		// 	args:   args{l: pixel.L(pixel.V(0, 2), pixel.V(6, 2))},
-		// 	want:   []pixel.Vec{pixel.V(1, 2), pixel.V(5, 2)},
-		// },
+		{
+			name:   "One intersection point",
+			fields: fields{Min: pixel.V(1, 1), Max: pixel.V(5, 5)},
+			args:   args{l: pixel.L(pixel.V(2, 0), pixel.V(2, 3))},
+			want:   []pixel.Vec{pixel.V(2, 1)},
+		},
+		{
+			name:   "Two intersection points",
+			fields: fields{Min: pixel.V(1, 1), Max: pixel.V(5, 5)},
+			args:   args{l: pixel.L(pixel.V(0, 2), pixel.V(6, 2))},
+			want:   []pixel.Vec{pixel.V(1, 2), pixel.V(5, 2)},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -1085,10 +1085,10 @@ func TestLine_Intersect(t *testing.T) {
 		},
 		{
 			name:   "Lines intersect 2",
-			fields: fields{A: pixel.V(1, 1), B: pixel.V(1, 5)},
-			args:   args{k: pixel.L(pixel.V(-5, 0), pixel.V(-2, 2))},
-			want:   pixel.ZV,
-			want1:  false,
+			fields: fields{A: pixel.V(5, 1), B: pixel.V(1, 1)},
+			args:   args{k: pixel.L(pixel.V(2, 0), pixel.V(2, 3))},
+			want:   pixel.V(2, 1),
+			want1:  true,
 		},
 		{
 			name:   "Line intersect with vertical",
@@ -1108,6 +1108,20 @@ func TestLine_Intersect(t *testing.T) {
 			name:   "Lines don't intersect",
 			fields: fields{A: pixel.V(0, 0), B: pixel.V(10, 10)},
 			args:   args{k: pixel.L(pixel.V(0, 10), pixel.V(1, 20))},
+			want:   pixel.ZV,
+			want1:  false,
+		},
+		{
+			name:   "Lines don't intersect 2",
+			fields: fields{A: pixel.V(1, 1), B: pixel.V(1, 5)},
+			args:   args{k: pixel.L(pixel.V(-5, 0), pixel.V(-2, 2))},
+			want:   pixel.ZV,
+			want1:  false,
+		},
+		{
+			name:   "Lines don't intersect 3",
+			fields: fields{A: pixel.V(2, 0), B: pixel.V(2, 3)},
+			args:   args{k: pixel.L(pixel.V(1, 5), pixel.V(5, 5))},
 			want:   pixel.ZV,
 			want1:  false,
 		},

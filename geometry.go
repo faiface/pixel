@@ -248,7 +248,7 @@ func (l Line) Closest(v Vec) Vec {
 		if l.A.To(v).Len() < l.B.To(v).Len() {
 			return l.A
 		}
-		return V(x, y)
+		return l.B
 	}
 
 	perpendicularM := -1 / m
@@ -320,14 +320,16 @@ func (l Line) Intersect(k Line) (Vec, bool) {
 		// One line is vertical
 		intersectM := lm
 		intersectB := lb
+		verticalLine := k
 
 		if math.IsInf(math.Abs(lm), 1) {
 			intersectM = km
 			intersectB = kb
+			verticalLine = l
 		}
 
-		y = intersectM*l.A.X + intersectB
-		x = l.A.X
+		y = intersectM*verticalLine.A.X + intersectB
+		x = verticalLine.A.X
 	} else {
 		// Coordinates of intersect
 		x = (kb - lb) / (lm - km)
@@ -614,10 +616,7 @@ func (r Rect) IntersectionPoints(l Line) []Vec {
 	pointMap := make(map[Vec]struct{})
 
 	for _, edge := range r.Edges() {
-		if intersect, ok := edge.Intersect(l); ok {
-			fmt.Println(edge)
-			fmt.Println(l)
-			fmt.Println(intersect)
+		if intersect, ok := l.Intersect(edge); ok {
 			pointMap[intersect] = struct{}{}
 		}
 	}
