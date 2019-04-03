@@ -409,7 +409,7 @@ func (l Line) IntersectRect(r Rect) Vec {
 
 // Len returns the length of the line segment.
 func (l Line) Len() float64 {
-	return l.A.Sub(l.B).Len()
+	return l.A.To(l.B).Len()
 }
 
 // Moved will return a line moved by the delta `Vec` provided.
