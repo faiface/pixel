@@ -181,7 +181,7 @@ func Lerp(a, b Vec, t float64) Vec {
 	return a.Scaled(1 - t).Add(b.Scaled(t))
 }
 
-// Line is a 2D line segment, between points `A` and `B`.
+// Line is a 2D line segment, between points A and B.
 type Line struct {
 	A, B Vec
 }
