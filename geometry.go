@@ -880,7 +880,8 @@ func (c Circle) IntersectRect(r Rect) Vec {
 }
 
 // IntersectionPoints returns all the points where the Circle intersects with the line provided.  This can be zero, one or
-// two points, depending on the location of the shapes.
+// two points, depending on the location of the shapes.  The points of intersection will be returned in order of
+// closest-to-l.A to closest-to-l.B.
 func (c Circle) IntersectionPoints(l Line) []Vec {
 	cContainsA := c.Contains(l.A)
 	cContainsB := c.Contains(l.B)
@@ -965,7 +966,10 @@ func (c Circle) IntersectionPoints(l Line) []Vec {
 	first := closestToCenter.Add(closestToCenter.To(l.A).Unit().Scaled(a))
 	second := closestToCenter.Add(closestToCenter.To(l.B).Unit().Scaled(a))
 
-	return []Vec{first, second}
+	points := []Vec{first, second}
+	sort.Slice(points, func(i, j int) bool { return points[i].To(l.A).Len() < points[j].To(l.A).Len() })
+
+	return points
 }
 
 // Matrix is a 2x3 affine matrix that can be used for all kinds of spatial transforms, such
