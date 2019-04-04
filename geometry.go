@@ -707,6 +707,12 @@ func (c Circle) Contains(u Vec) bool {
 	return c.Radius >= toCenter.Len()
 }
 
+// Formula returns the values of h and k, for the equation of the circle: (x-h)^2 + (y-k)^2 = r^2
+// where r is the radius of the circle.
+func (c Circle) Formula() (h, k float64) {
+	return c.Center.X, c.Center.Y
+}
+
 // maxCircle will return the larger circle based on the radius.
 func maxCircle(c, d Circle) Circle {
 	if c.Radius < d.Radius {
@@ -870,7 +876,90 @@ func (c Circle) IntersectRect(r Rect) Vec {
 // IntersectionPoints returns all the points where the Circle intersects with the line provided.  This can be zero, one or
 // two points, depending on the location of the shapes.
 func (c Circle) IntersectionPoints(l Line) []Vec {
-	return []Vec{}
+	cContainsA := c.Contains(l.A)
+	cContainsB := c.Contains(l.B)
+
+	// Special case for both endpoint being contained within the circle
+	if cContainsA && cContainsB {
+		return []Vec{}
+	}
+
+	// Get closest point on the line to this circles' center
+	closestToCenter := l.Closest(c.Center)
+
+	// If the distance to the closest point is greater than the radius, there are no points of intersection
+	if closestToCenter.To(c.Center).Len() > c.Radius {
+		return []Vec{}
+	}
+
+	// If the distance to the closest point is equal to the radius, the line is tangent and the closest point is the
+	// point at which it touches the circle.
+	if closestToCenter.To(c.Center).Len() == c.Radius {
+		return []Vec{closestToCenter}
+	}
+
+	// Special case for endpoint being on the circles' center
+	if c.Center == l.A || c.Center == l.B {
+		otherEnd := l.B
+		if c.Center == l.B {
+			otherEnd = l.A
+		}
+		intersect := c.Center.Add(c.Center.To(otherEnd).Unit().Scaled(c.Radius))
+		return []Vec{intersect}
+	}
+
+	// This means the distance to the closest point is less than the radius, so there is at least one intersection,
+	// possibly two.
+
+	// If one of the end points exists within the circle, there is only one intersection
+	if cContainsA || cContainsB {
+		containedPoint := l.A
+		otherEnd := l.B
+		if cContainsB {
+			containedPoint = l.B
+			otherEnd = l.A
+		}
+
+		// Use trigonometry to get the length of the line between the contained point and the intersection point.
+		// The following is used to describe the triangle formed:
+		//  - a is the side between contained point and circle center
+		//  - b is the side between the center and the intersection point (radius)
+		//  - c is the side between the contained point and the intersection point
+		// The captials of these letters are used as the angles opposite the respective sides.
+		// a and b are known
+		a := containedPoint.To(c.Center).Len()
+		b := c.Radius
+		// B can be calculated by subtracting the angle of b (to the x-axis) from the angle of c (to the x-axis)
+		B := containedPoint.To(c.Center).Angle() - containedPoint.To(otherEnd).Angle()
+		// Using the Sin rule we can get A
+		A := math.Asin((a * math.Sin(B)) / b)
+		// Using the rule that there are 180 degrees (or Pi radians) in a triangle, we can now get C
+		C := math.Pi - A + B
+		// If C is zero, the line segment is in-line with the center-intersect line.
+		var c float64
+		if C == 0 {
+			c = b - a
+		} else {
+			// Using the Sine rule again, we can now get c
+			c = (a * math.Sin(C)) / math.Sin(A)
+		}
+		// Travelling from the contained point to the other end by length of a will provide the intersection point.
+		return []Vec{
+			containedPoint.Add(containedPoint.To(otherEnd).Unit().Scaled(c)),
+		}
+	}
+
+	// Otherwise the endpoints exist outside of the circle, and the line segment intersects in two locations.
+	// The vector formed by going from the closest point to the center of the circle will be perpendicular to the line;
+	// this forms a right-angled triangle with the intersection points, with the radius as the hypotenuse.
+	// Calculate the other triangles' sides' length.
+	a := math.Sqrt(math.Pow(c.Radius, 2) - math.Pow(closestToCenter.To(c.Center).Len(), 2))
+
+	// Travelling in both directions from the closest point by length of a will provide the two intersection points.
+	first := closestToCenter.Add(closestToCenter.To(l.A).Unit().Scaled(a))
+	second := closestToCenter.Add(closestToCenter.To(l.B).Unit().Scaled(a))
+
+	return []Vec{first, second}
 }
 
 // Matrix is a 2x3 affine matrix that can be used for all kinds of spatial transforms, such

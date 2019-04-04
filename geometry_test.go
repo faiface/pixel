@@ -10,6 +10,19 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+// closeEnough will shift the decimal point by the accuracy required, truncates the results and compares them.
+// Effectively this compares two floats to a given decimal point.
+//  Example:
+//  closeEnough(100.125342432, 100.125, 2) == true
+//  closeEnough(math.Pi, 3.14, 2) == true
+//  closeEnough(0.1234, 0.1245, 3) == false
+func closeEnough(got, expected float64, decimalAccuracy int) bool {
+	gotShifted := got * math.Pow10(decimalAccuracy)
+	expectedShifted := expected * math.Pow10(decimalAccuracy)
+
+	return math.Trunc(gotShifted) == math.Trunc(expectedShifted)
+}
+
 func TestRect_Edges(t *testing.T) {
 	type fields struct {
 		Min pixel.Vec
@@ -623,7 +636,54 @@ func TestCircle_IntersectPoints(t *testing.T) {
 		args   args
 		want   []pixel.Vec
 	}{
-		// TODO: Add test cases.
+		{
+			name:   "Line intersects circle at two points",
+			fields: fields{Center: pixel.V(2, 2), Radius: 1},
+			args:   args{pixel.L(pixel.V(0, 0), pixel.V(10, 10))},
+			want:   []pixel.Vec{pixel.V(1.292, 1.292), pixel.V(2.707, 2.707)},
+		},
+		{
+			name:   "Line intersects circle at one point",
+			fields: fields{Center: pixel.V(-0.5, -0.5), Radius: 1},
+			args:   args{pixel.L(pixel.V(0, 0), pixel.V(10, 10))},
+			want:   []pixel.Vec{pixel.V(0.207, 0.207)},
+		},
+		{
+			name:   "Line endpoint is circle center",
+			fields: fields{Center: pixel.V(0, 0), Radius: 1},
+			args:   args{pixel.L(pixel.V(0, 0), pixel.V(10, 10))},
+			want:   []pixel.Vec{pixel.V(0.707, 0.707)},
+		},
+		{
+			name:   "Both line endpoints within circle",
+			fields: fields{Center: pixel.V(0, 0), Radius: 1},
+			args:   args{pixel.L(pixel.V(0.2, 0.2), pixel.V(0.5, 0.5))},
+			want:   []pixel.Vec{},
+		},
+		{
+			name:   "Line does not intersect circle",
+			fields: fields{Center: pixel.V(10, 0), Radius: 1},
+			args:   args{pixel.L(pixel.V(0, 0), pixel.V(10, 10))},
+			want:   []pixel.Vec{},
+		},
+		{
+			name:   "Horizontal line intersects circle at two points",
+			fields: fields{Center: pixel.V(5, 5), Radius: 1},
+			args:   args{pixel.L(pixel.V(0, 5), pixel.V(10, 5))},
+			want:   []pixel.Vec{pixel.V(4, 5), pixel.V(6, 5)},
+		},
+		{
+			name:   "Vertical line intersects circle at two points",
+			fields: fields{Center: pixel.V(5, 5), Radius: 1},
+			args:   args{pixel.L(pixel.V(5, 0), pixel.V(5, 10))},
+			want:   []pixel.Vec{pixel.V(5, 4), pixel.V(5, 6)},
+		},
+		{
+			name:   "Left and down line intersects circle at two points",
+			fields: fields{Center: pixel.V(5, 5), Radius: 1},
+			args:   args{pixel.L(pixel.V(10, 10), pixel.V(0, 0))},
+			want:   []pixel.Vec{pixel.V(5.707, 5.707), pixel.V(4.292, 4.292)},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -631,27 +691,17 @@ func TestCircle_IntersectPoints(t *testing.T) {
 				Center: tt.fields.Center,
 				Radius: tt.fields.Radius,
 			}
-			if got := c.IntersectionPoints(tt.args.l); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("Circle.IntersectPoints() = %v, want %v", got, tt.want)
+			got := c.IntersectionPoints(tt.args.l)
+			for i, v := range got {
+				if !closeEnough(v.X, tt.want[i].X, 2) || !closeEnough(v.Y, tt.want[i].Y, 2) {
+					t.Errorf("Circle.IntersectPoints() = %v, want %v", v, tt.want[i])
+				}
 			}
 		})
 	}
 }
 
 func TestRect_IntersectCircle(t *testing.T) {
-	// closeEnough will shift the decimal point by the accuracy required, truncates the results and compares them.
-	// Effectively this compares two floats to a given decimal point.
-	//  Example:
-	//  closeEnough(100.125342432, 100.125, 2) == true
-	//  closeEnough(math.Pi, 3.14, 2) == true
-	//  closeEnough(0.1234, 0.1245, 3) == false
-	closeEnough := func(got, expected float64, decimalAccuracy int) bool {
-		gotShifted := got * math.Pow10(decimalAccuracy)
-		expectedShifted := expected * math.Pow10(decimalAccuracy)
-
-		return math.Trunc(gotShifted) == math.Trunc(expectedShifted)
-	}
-
 	type fields struct {
 		Min pixel.Vec
 		Max pixel.Vec
