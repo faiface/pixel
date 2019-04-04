@@ -630,7 +630,7 @@ func (r Rect) IntersectionPoints(l Line) []Vec {
 	// Order the points
 	if len(points) == 2 {
 		if points[1].To(l.A).Len() < points[0].To(l.A).Len() {
-			return []Vec{points[1], points[2]}
+			return []Vec{points[1], points[0]}
 		}
 	}
 
