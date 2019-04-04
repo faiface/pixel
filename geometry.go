@@ -3,6 +3,7 @@ package pixel
 import (
 	"fmt"
 	"math"
+	"sort"
 )
 
 // Clamp returns x clamped to the interval [min, max].
@@ -610,7 +611,8 @@ func (r Rect) IntersectLine(l Line) Vec {
 }
 
 // IntersectionPoints returns all the points where the Rect intersects with the line provided.  This can be zero, one or
-// two points, depending on the location of the shapes.
+// two points, depending on the location of the shapes.  The points of intersection will be returned in order of
+// closest-to-l.A to closest-to-l.B.
 func (r Rect) IntersectionPoints(l Line) []Vec {
 	// Use map keys to ensure unique points
 	pointMap := make(map[Vec]struct{})
@@ -625,6 +627,10 @@ func (r Rect) IntersectionPoints(l Line) []Vec {
 	for point := range pointMap {
 		points = append(points, point)
 	}
+
+	// Order the points
+	sort.Slice(points, func(i, j int) bool { return points[i].To(l.A).Len() < points[j].To(l.A).Len() })
+
 	return points
 }
 

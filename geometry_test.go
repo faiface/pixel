@@ -839,16 +839,6 @@ func TestRect_IntersectCircle(t *testing.T) {
 }
 
 func TestRect_IntersectionPoints(t *testing.T) {
-	in := func(v pixel.Vec, vs []pixel.Vec) bool {
-		for _, vec := range vs {
-			if vec == v {
-				return true
-			}
-		}
-
-		return false
-	}
-
 	type fields struct {
 		Min pixel.Vec
 		Max pixel.Vec
@@ -887,14 +877,8 @@ func TestRect_IntersectionPoints(t *testing.T) {
 				Min: tt.fields.Min,
 				Max: tt.fields.Max,
 			}
-			got := r.IntersectionPoints(tt.args.l)
-			if len(got) != len(tt.want) {
-				t.Errorf("Rect.IntersectPoints() has incorrect length.  Expected %d, got %d", len(tt.want), len(got))
-			}
-			for _, v := range got {
-				if !in(v, tt.want) {
-					t.Errorf("Rect.IntersectPoints(): got unexpected result = %v", v)
-				}
+			if got := r.IntersectionPoints(tt.args.l); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("Rect.IntersectPoints() = %v, want %v", got, tt.want)
 			}
 		})
 	}
