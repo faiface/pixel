@@ -181,6 +181,268 @@ func Lerp(a, b Vec, t float64) Vec {
 	return a.Scaled(1 - t).Add(b.Scaled(t))
 }
 
+// Line is a 2D line segment, between points A and B.
+type Line struct {
+	A, B Vec
+}
+
+// L creates and returns a new Line.
+func L(from, to Vec) Line {
+	return Line{
+		A: from,
+		B: to,
+	}
+}
+
+// Bounds returns the lines bounding box.  This is in the form of a normalized Rect.
+func (l Line) Bounds() Rect {
+	return R(l.A.X, l.A.Y, l.B.X, l.B.Y).Norm()
+}
+
+// Center will return the point at center of the line; that is, the point equidistant from either end.
+func (l Line) Center() Vec {
+	return l.A.Add(l.A.To(l.B).Scaled(0.5))
+}
+
+// Closest will return the point on the line which is closest to the Vec provided.
+func (l Line) Closest(v Vec) Vec {
+	// between is a helper function which determines whether x is greater than min(a, b) and less than max(a, b)
+	between := func(a, b, x float64) bool {
+		min := math.Min(a, b)
+		max := math.Max(a, b)
+		return min < x && x < max
+	}
+
+	// Closest point will be on a line which perpendicular to this line.
+	// If and only if the infinite perpendicular line intersects the segment.
+	m, b := l.Formula()
+
+	// Account for horizontal lines
+	if m == 0 {
+		x := v.X
+		y := l.A.Y
+
+		// check if the X coordinate of v is on the line
+		if between(l.A.X, l.B.X, v.X) {
+			return V(x, y)
+		}
+
+		// Otherwise get the closest endpoint
+		if l.A.To(v).Len() < l.B.To(v).Len() {
+			return l.A
+		}
+		return l.B
+	}
+
+	// Account for vertical lines
+	if math.IsInf(math.Abs(m), 1) {
+		x := l.A.X
+		y := v.Y
+
+		// check if the Y coordinate of v is on the line
+		if between(l.A.Y, l.B.Y, v.Y) {
+			return V(x, y)
+		}
+
+		// Otherwise get the closest endpoint
+		if l.A.To(v).Len() < l.B.To(v).Len() {
+			return l.A
+		}
+		return l.B
+	}
+
+	perpendicularM := -1 / m
+	perpendicularB := v.Y - (perpendicularM * v.X)
+
+	// Coordinates of intersect (of infinite lines)
+	x := (perpendicularB - b) / (m - perpendicularM)
+	y := m*x + b
+
+	// Check if the point lies between the x and y bounds of the segment
+	if !between(l.A.X, l.B.X, x) && !between(l.A.Y, l.B.Y, y) {
+		// Not within bounding box
+		toStart := v.To(l.A)
+		toEnd := v.To(l.B)
+
+		if toStart.Len() < toEnd.Len() {
+			return l.A
+		}
+		return l.B
+	}
+
+	return V(x, y)
+}
+
+// Contains returns whether the provided Vec lies on the line.
+func (l Line) Contains(v Vec) bool {
+	return l.Closest(v) == v
+}
+
+// Formula will return the values that represent the line in the formula: y = mx + b
+// This function will return math.Inf+, math.Inf- for a vertical line.
+func (l Line) Formula() (m, b float64) {
+	// Account for horizontal lines
+	if l.B.Y == l.A.Y {
+		return 0, l.A.Y
+	}
+
+	m = (l.B.Y - l.A.Y) / (l.B.X - l.A.X)
+	b = l.A.Y - (m * l.A.X)
+
+	return m, b
+}
+
+// Intersect will return the point of intersection for the two line segments.  If the line segments do not intersect,
+// this function will return the zero-vector and false.
+func (l Line) Intersect(k Line) (Vec, bool) {
+	// Check if the lines are parallel
+	lDir := l.A.To(l.B)
+	kDir := k.A.To(k.B)
+	if lDir.X == kDir.X && lDir.Y == kDir.Y {
+		return ZV, false
+	}
+
+	// The lines intersect - but potentially not within the line segments.
+	// Get the intersection point for the lines if they were infinitely long, check if the point exists on both of the
+	// segments
+	lm, lb := l.Formula()
+	km, kb := k.Formula()
+
+	// Account for vertical lines
+	if math.IsInf(math.Abs(lm), 1) && math.IsInf(math.Abs(km), 1) {
+		// Both vertical, therefore parallel
+		return ZV, false
+	}
+
+	var x, y float64
+
+	if math.IsInf(math.Abs(lm), 1) || math.IsInf(math.Abs(km), 1) {
+		// One line is vertical
+		intersectM := lm
+		intersectB := lb
+		verticalLine := k
+
+		if math.IsInf(math.Abs(lm), 1) {
+			intersectM = km
+			intersectB = kb
+			verticalLine = l
+		}
+
+		y = intersectM*verticalLine.A.X + intersectB
+		x = verticalLine.A.X
+	} else {
+		// Coordinates of intersect
+		x = (kb - lb) / (lm - km)
+		y = lm*x + lb
+	}
+
+	if l.Contains(V(x, y)) && k.Contains(V(x, y)) {
+		// The intersect point is on both line segments, they intersect.
+		return V(x, y), true
+	}
+
+	return ZV, false
+}
+
+// IntersectCircle will return the shortest Vec such that moving the Line by that Vec will cause the Line and Circle
+// to no longer intesect.  If they do not intersect at all, this function will return a zero-vector.
+func (l Line) IntersectCircle(c Circle) Vec {
+	// Get the point on the line closest to the center of the circle.
+	closest := l.Closest(c.Center)
+	cirToClosest := c.Center.To(closest)
+
+	if cirToClosest.Len() >= c.Radius {
+		return ZV
+	}
+
+	return cirToClosest.Scaled(cirToClosest.Len() - c.Radius)
+}
+
+// IntersectRect will return the shortest Vec such that moving the Line by that Vec will cause  the Line and Rect to
+// no longer intesect.  If they do not intersect at all, this function will return a zero-vector.
+func (l Line) IntersectRect(r Rect) Vec {
+	// Check if either end of the line segment are within the rectangle
+	if r.Contains(l.A) || r.Contains(l.B) {
+		// Use the Rect.Intersect to get minimal return value
+		rIntersect := l.Bounds().Intersect(r)
+		if rIntersect.H() > rIntersect.W() {
+			// Go vertical
+			return V(0, rIntersect.H())
+		}
+		return V(rIntersect.W(), 0)
+	}
+
+	// Check if any of the rectangles' edges intersect with this line.
+	for _, edge := range r.Edges() {
+		if _, ok := l.Intersect(edge); ok {
+			// Get the closest points on the line to each corner, where:
+			//  - the point is contained by the rectangle
+			//  - the point is not the corner itself
+			corners := r.Vertices()
+			closest := ZV
+			closestCorner := corners[0]
+			for _, c := range corners {
+				cc := l.Closest(c)
+				if closest == ZV || (closest.Len() > cc.Len() && r.Contains(cc)) {
+					closest = cc
+					closestCorner = c
+				}
+			}
+
+			return closest.To(closestCorner)
+		}
+	}
+
+	// No intersect
+	return ZV
+}
+
+// Len returns the length of the line segment.
+func (l Line) Len() float64 {
+	return l.A.To(l.B).Len()
+}
+
+// Moved will return a line moved by the delta Vec provided.
+func (l Line) Moved(delta Vec) Line {
+	return Line{
+		A: l.A.Add(delta),
+		B: l.B.Add(delta),
+	}
+}
+
+// Rotated will rotate the line around the provided Vec.
+func (l Line) Rotated(around Vec, angle float64) Line {
+	// Move the line so we can use `Vec.Rotated`
+	lineShifted := l.Moved(around.Scaled(-1))
+
+	lineRotated := Line{
+		A: lineShifted.A.Rotated(angle),
+		B: lineShifted.B.Rotated(angle),
+	}
+
+	return lineRotated.Moved(around)
+}
+
+// Scaled will return the line scaled around the center point.
+func (l Line) Scaled(scale float64) Line {
+	return l.ScaledXY(l.Center(), scale)
+}
+
+// ScaledXY will return the line scaled around the Vec provided.
+func (l Line) ScaledXY(around Vec, scale float64) Line {
+	toA := around.To(l.A).Scaled(scale)
+	toB := around.To(l.B).Scaled(scale)
+
+	return Line{
+		A: around.Add(toA),
+		B: around.Add(toB),
+	}
+}
+
+func (l Line) String() string {
+	return fmt.Sprintf("Line(%v, %v)", l.A, l.B)
+}
+
 // Rect is a 2D rectangle aligned with the axes of the coordinate system. It is defined by two
 // points, Min and Max.
 //
@@ -241,6 +503,18 @@ func (r Rect) Size() Vec {
 // Area returns the area of r. If r is not normalized, area may be negative.
 func (r Rect) Area() float64 {
 	return r.W() * r.H()
+}
+
+// Edges will return the four lines which make up the edges of the rectangle.
+func (r Rect) Edges() [4]Line {
+	corners := r.Vertices()
+
+	return [4]Line{
+		{A: corners[0], B: corners[1]},
+		{A: corners[1], B: corners[2]},
+		{A: corners[2], B: corners[3]},
+		{A: corners[3], B: corners[0]},
+	}
 }
 
 // Center returns the position of the center of the Rect.
@@ -329,6 +603,50 @@ func (r Rect) IntersectCircle(c Circle) Vec {
 	return c.IntersectRect(r).Scaled(-1)
 }
 
+// IntersectLine will return the shortest Vec such that if the Rect is moved by the Vec returned, the Line and Rect no
+// longer intersect.
+func (r Rect) IntersectLine(l Line) Vec {
+	return l.IntersectRect(r).Scaled(-1)
+}
+
+// IntersectionPoints returns all the points where the Rect intersects with the line provided.  This can be zero, one or
+// two points, depending on the location of the shapes.  The points of intersection will be returned in order of
+// closest-to-l.A to closest-to-l.B.
+func (r Rect) IntersectionPoints(l Line) []Vec {
+	// Use map keys to ensure unique points
+	pointMap := make(map[Vec]struct{})
+
+	for _, edge := range r.Edges() {
+		if intersect, ok := l.Intersect(edge); ok {
+			pointMap[intersect] = struct{}{}
+		}
+	}
+
+	points := make([]Vec, 0, len(pointMap))
+	for point := range pointMap {
+		points = append(points, point)
+	}
+
+	// Order the points
+	if len(points) == 2 {
+		if points[1].To(l.A).Len() < points[0].To(l.A).Len() {
+			return []Vec{points[1], points[0]}
+		}
+	}
+
+	return points
+}
+
+// Vertices returns a slice of the four corners which make up the rectangle.
+func (r Rect) Vertices() [4]Vec {
+	return [4]Vec{
+		r.Min,
+		V(r.Min.X, r.Max.Y),
+		r.Max,
+		V(r.Max.X, r.Min.Y),
+	}
+}
+
 // Circle is a 2D circle. It is defined by two properties:
 //  - Center vector
 //  - Radius float64
@@ -396,6 +714,12 @@ func (c Circle) Resized(radiusDelta float64) Circle {
 func (c Circle) Contains(u Vec) bool {
 	toCenter := c.Center.To(u)
 	return c.Radius >= toCenter.Len()
+}
+
+// Formula returns the values of h and k, for the equation of the circle: (x-h)^2 + (y-k)^2 = r^2
+// where r is the radius of the circle.
+func (c Circle) Formula() (h, k float64) {
+	return c.Center.X, c.Center.Y
 }
 
 // maxCircle will return the larger circle based on the radius.
@@ -476,6 +800,12 @@ func (c Circle) Intersect(d Circle) Circle {
 	}
 }
 
+// IntersectLine will return the shortest Vec such that if the Rect is moved by the Vec returned, the Line and Rect no
+// longer intersect.
+func (c Circle) IntersectLine(l Line) Vec {
+	return l.IntersectCircle(c).Scaled(-1)
+}
+
 // IntersectRect returns a minimal required Vector, such that moving the circle by that vector would stop the Circle
 // and the Rect intersecting.  This function returns a zero-vector if the Circle and Rect do not overlap, and if only
 // the perimeters touch.
@@ -550,6 +880,99 @@ func (c Circle) IntersectRect(r Rect) Vec {
 
 		return centerToCorner.Unit().Scaled(cornerToCircumferenceLen)
 	}
+}
+
+// IntersectionPoints returns all the points where the Circle intersects with the line provided.  This can be zero, one or
+// two points, depending on the location of the shapes.  The points of intersection will be returned in order of
+// closest-to-l.A to closest-to-l.B.
+func (c Circle) IntersectionPoints(l Line) []Vec {
+	cContainsA := c.Contains(l.A)
+	cContainsB := c.Contains(l.B)
+
+	// Special case for both endpoint being contained within the circle
+	if cContainsA && cContainsB {
+		return []Vec{}
+	}
+
+	// Get closest point on the line to this circles' center
+	closestToCenter := l.Closest(c.Center)
+
+	// If the distance to the closest point is greater than the radius, there are no points of intersection
+	if closestToCenter.To(c.Center).Len() > c.Radius {
+		return []Vec{}
+	}
+
+	// If the distance to the closest point is equal to the radius, the line is tangent and the closest point is the
+	// point at which it touches the circle.
+	if closestToCenter.To(c.Center).Len() == c.Radius {
+		return []Vec{closestToCenter}
+	}
+
+	// Special case for endpoint being on the circles' center
+	if c.Center == l.A || c.Center == l.B {
+		otherEnd := l.B
+		if c.Center == l.B {
+			otherEnd = l.A
+		}
+		intersect := c.Center.Add(c.Center.To(otherEnd).Unit().Scaled(c.Radius))
+		return []Vec{intersect}
+	}
+
+	// This means the distance to the closest point is less than the radius, so there is at least one intersection,
+	// possibly two.
+
+	// If one of the end points exists within the circle, there is only one intersection
+	if cContainsA || cContainsB {
+		containedPoint := l.A
+		otherEnd := l.B
+		if cContainsB {
+			containedPoint = l.B
+			otherEnd = l.A
+		}
+
+		// Use trigonometry to get the length of the line between the contained point and the intersection point.
+		// The following is used to describe the triangle formed:
+		//  - a is the side between contained point and circle center
+		//  - b is the side between the center and the intersection point (radius)
+		//  - c is the side between the contained point and the intersection point
+		// The captials of these letters are used as the angles opposite the respective sides.
+		// a and b are known
+		a := containedPoint.To(c.Center).Len()
+		b := c.Radius
+		// B can be calculated by subtracting the angle of b (to the x-axis) from the angle of c (to the x-axis)
+		B := containedPoint.To(c.Center).Angle() - containedPoint.To(otherEnd).Angle()
+		// Using the Sin rule we can get A
+		A := math.Asin((a * math.Sin(B)) / b)
+		// Using the rule that there are 180 degrees (or Pi radians) in a triangle, we can now get C
+		C := math.Pi - A + B
+		// If C is zero, the line segment is in-line with the center-intersect line.
+		var c float64
+		if C == 0 {
+			c = b - a
+		} else {
+			// Using the Sine rule again, we can now get c
+			c = (a * math.Sin(C)) / math.Sin(A)
+		}
+		// Travelling from the contained point to the other end by length of a will provide the intersection point.
+		return []Vec{
+			containedPoint.Add(containedPoint.To(otherEnd).Unit().Scaled(c)),
+		}
+	}
+
+	// Otherwise the endpoints exist outside of the circle, and the line segment intersects in two locations.
+	// The vector formed by going from the closest point to the center of the circle will be perpendicular to the line;
+	// this forms a right-angled triangle with the intersection points, with the radius as the hypotenuse.
+	// Calculate the other triangles' sides' length.
+	a := math.Sqrt(math.Pow(c.Radius, 2) - math.Pow(closestToCenter.To(c.Center).Len(), 2))
+
+	// Travelling in both directions from the closest point by length of a will provide the two intersection points.
+	first := closestToCenter.Add(closestToCenter.To(l.A).Unit().Scaled(a))
+	second := closestToCenter.Add(closestToCenter.To(l.B).Unit().Scaled(a))
+
+	if first.To(l.A).Len() < second.To(l.A).Len() {
+		return []Vec{first, second}
+	}
+	return []Vec{second, first}
 }
 
 // Matrix is a 2x3 affine matrix that can be used for all kinds of spatial transforms, such
