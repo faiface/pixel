@@ -3,7 +3,6 @@ package pixel
 import (
 	"fmt"
 	"math"
-	"sort"
 )
 
 // Clamp returns x clamped to the interval [min, max].
@@ -629,7 +628,11 @@ func (r Rect) IntersectionPoints(l Line) []Vec {
 	}
 
 	// Order the points
-	sort.Slice(points, func(i, j int) bool { return points[i].To(l.A).Len() < points[j].To(l.A).Len() })
+	if len(points) == 2 {
+		if points[1].To(l.A).Len() < points[0].To(l.A).Len() {
+			return []Vec{points[1], points[2]}
+		}
+	}
 
 	return points
 }
@@ -966,10 +969,10 @@ func (c Circle) IntersectionPoints(l Line) []Vec {
 	first := closestToCenter.Add(closestToCenter.To(l.A).Unit().Scaled(a))
 	second := closestToCenter.Add(closestToCenter.To(l.B).Unit().Scaled(a))
 
-	points := []Vec{first, second}
-	sort.Slice(points, func(i, j int) bool { return points[i].To(l.A).Len() < points[j].To(l.A).Len() })
-
-	return points
+	if first.To(l.A).Len() < second.To(l.A).Len() {
+		return []Vec{first, second}
+	}
+	return []Vec{second, first}
 }
 
 // Matrix is a 2x3 affine matrix that can be used for all kinds of spatial transforms, such
