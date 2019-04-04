@@ -273,7 +273,7 @@ func (l Line) Closest(v Vec) Vec {
 	return V(x, y)
 }
 
-// Contains returns whether the provided Vec lies on the line
+// Contains returns whether the provided Vec lies on the line.
 func (l Line) Contains(v Vec) bool {
 	return l.Closest(v) == v
 }
