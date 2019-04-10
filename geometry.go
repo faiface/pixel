@@ -49,6 +49,33 @@ func V(x, y float64) Vec {
 	return Vec{x, y}
 }
 
+// nearlyEqual compares two float64s and returns whether they are equal, accounting for rounding errors.At worst, the
+// result is correct to 7 significant digits.
+func nearlyEqual(a, b float64) bool {
+	epsilon := 0.000001
+
+	if a == b {
+		return true
+	}
+
+	diff := math.Abs(a - b)
+
+	if a == 0.0 || b == 0.0 || diff < math.SmallestNonzeroFloat64 {
+		return diff < (epsilon * math.SmallestNonzeroFloat64)
+	}
+
+	absA := math.Abs(a)
+	absB := math.Abs(b)
+
+	return diff/math.Min(absA+absB, math.MaxFloat64) < epsilon
+}
+
+// Eq will compare two vectors and return whether they are equal accounting for rounding errors.  At worst, the result
+// is correct to 7 significant digits.
+func (u Vec) Eq(v Vec) bool {
+	return nearlyEqual(u.X, v.X) && nearlyEqual(u.Y, v.Y)
+}
+
 // Unit returns a vector of length 1 facing the given angle.
 func Unit(angle float64) Vec {
 	return Vec{1, 0}.Rotated(angle)
@@ -275,7 +302,7 @@ func (l Line) Closest(v Vec) Vec {
 
 // Contains returns whether the provided Vec lies on the line.
 func (l Line) Contains(v Vec) bool {
-	return l.Closest(v) == v
+	return l.Closest(v).Eq(v)
 }
 
 // Formula will return the values that represent the line in the formula: y = mx + b
