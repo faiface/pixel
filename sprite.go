@@ -102,15 +102,10 @@ func (s *Sprite) calcData() {
 	(*s.tri)[5].Position = Vec{}.Sub(horizontal).Add(vertical)
 
 	for i := range *s.tri {
+		(*s.tri)[i].Position = s.matrix.Project((*s.tri)[i].Position)
 		(*s.tri)[i].Color = s.mask
 		(*s.tri)[i].Picture = center.Add((*s.tri)[i].Position)
 		(*s.tri)[i].Intensity = 1
-	}
-
-	// matrix and mask
-	for i := range *s.tri {
-		(*s.tri)[i].Position = s.matrix.Project((*s.tri)[i].Position)
-		(*s.tri)[i].Color = s.mask
 	}
 
 	s.d.Dirty()
