@@ -11,14 +11,17 @@ addons:
             - libxi-dev
             - libopenal-dev
             - libasound2-dev
+            - xvfb
 go:
-- 1.8
-- 1.7.4
-- tip
+    - tip
+    - 1.8.x
+    - 1.7.4
 
 install:
-- go get -t ./...
+    - export DISPLAY=':99.0'
+    - Xvfb :99 -screen 0 1920x1080x24 > /dev/null 2&>1 &
+    - go get -t ./...
 
 script:
-- go test -i -race ./...
-- go test -v -race ./...
+    - go test -i -race ./...
+    - go test -v -race ./...
