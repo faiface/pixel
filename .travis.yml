@@ -1,4 +1,6 @@
 language: go
+# https://github.com/golang/go/issues/31293
+dist: xenial
 sudo: false
 addons:
     apt:
