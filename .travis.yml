@@ -1,4 +1,6 @@
 language: go
+# https://github.com/golang/go/issues/31293
+dist: xenial
 sudo: false
 addons:
     apt:
@@ -11,14 +13,19 @@ addons:
             - libxi-dev
             - libopenal-dev
             - libasound2-dev
+            - libgl1-mesa-dev
+
+services:
+    - xvfb
+
 go:
-- 1.8
-- 1.7.4
-- tip
+    - tip
+    - 1.8.x
+    - 1.7.4
 
 install:
-- go get -t ./...
+    - go get -t ./...
 
 script:
-- go test -i -race ./...
-- go test -v -race ./...
+    - go test -i -race ./...
+    - go test -v -race ./...

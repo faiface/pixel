@@ -77,7 +77,7 @@ func (gt *GLTriangles) SetLen(length int) {
 	default:
 		return
 	}
-	mainthread.CallNonBlock(func() {
+	mainthread.Call(func() {
 		gt.vs.Begin()
 		gt.vs.SetLen(length)
 		gt.vs.End()
