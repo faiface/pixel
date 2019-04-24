@@ -50,15 +50,10 @@ func (td *TrianglesData) Len() int {
 // values ((0, 0), white, (0, 0), 0).
 func (td *TrianglesData) SetLen(len int) {
 	if len > td.Len() {
-		newTD := make(TrianglesData, len)
-		copy(newTD, *td)
-
 		needAppend := len - td.Len()
-		for i := td.Len(); i < needAppend; i++ {
-			newTD[i] = zeroValueTriangleData
+		for i := 0; i < needAppend; i++ {
+			*td = append(*td, zeroValueTriangleData)
 		}
-
-		*td = newTD
 	}
 	if len < td.Len() {
 		*td = (*td)[:len]
