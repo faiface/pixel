@@ -6,6 +6,30 @@ import (
 	"github.com/faiface/pixel"
 )
 
+func BenchmarkMakeTrianglesData(b *testing.B) {
+	tests := []struct {
+		name string
+		len  int
+	}{
+		{
+			name: "Small slice",
+			len:  10,
+		},
+		{
+			name: "Large slice",
+			len:  10000,
+		},
+	}
+
+	for _, tt := range tests {
+		b.Run(tt.name, func(b *testing.B) {
+			for i := 0; i < b.N; i++ {
+				_ = pixel.MakeTrianglesData(tt.len)
+			}
+		})
+	}
+}
+
 func BenchmarkTrianglesData_Len(b *testing.B) {
 	tests := []struct {
 		name  string
