@@ -8,6 +8,16 @@ import (
 	"math"
 )
 
+var (
+	// zeroValueTriangleData is the default value of a TriangleData element
+	zeroValueTriangleData = struct {
+		Position  Vec
+		Color     RGBA
+		Picture   Vec
+		Intensity float64
+	}{Color: RGBA{1, 1, 1, 1}}
+)
+
 // TrianglesData specifies a list of Triangles vertices with three common properties:
 // TrianglesPosition, TrianglesColor and TrianglesPicture.
 type TrianglesData []struct {
@@ -22,9 +32,11 @@ type TrianglesData []struct {
 // Prefer this function to make(TrianglesData, len), because make zeros them, while this function
 // does the correct intialization.
 func MakeTrianglesData(len int) *TrianglesData {
-	td := &TrianglesData{}
-	td.SetLen(len)
-	return td
+	td := make(TrianglesData, len)
+	for i := 0; i < len; i++ {
+		td[i] = zeroValueTriangleData
+	}
+	return &td
 }
 
 // Len returns the number of vertices in TrianglesData.
@@ -38,15 +50,15 @@ func (td *TrianglesData) Len() int {
 // values ((0, 0), white, (0, 0), 0).
 func (td *TrianglesData) SetLen(len int) {
 	if len > td.Len() {
+		newTD := make(TrianglesData, len)
+		copy(newTD, *td)
+
 		needAppend := len - td.Len()
-		for i := 0; i < needAppend; i++ {
-			*td = append(*td, struct {
-				Position  Vec
-				Color     RGBA
-				Picture   Vec
-				Intensity float64
-			}{Color: RGBA{1, 1, 1, 1}})
+		for i := td.Len(); i < needAppend; i++ {
+			newTD[i] = zeroValueTriangleData
 		}
+
+		*td = newTD
 	}
 	if len < td.Len() {
 		*td = (*td)[:len]
@@ -96,10 +108,9 @@ func (td *TrianglesData) Update(t Triangles) {
 
 // Copy returns an exact independent copy of this TrianglesData.
 func (td *TrianglesData) Copy() Triangles {
-	copyTd := TrianglesData{}
-	copyTd.SetLen(td.Len())
+	copyTd := MakeTrianglesData(td.Len())
 	copyTd.Update(td)
-	return &copyTd
+	return copyTd
 }
 
 // Position returns the position property of i-th vertex.
