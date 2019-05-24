@@ -479,6 +479,9 @@ type Rect struct {
 	Min, Max Vec
 }
 
+// ZR is a zero rectangle.
+var ZR = Rect{Min:ZV, Max:ZV}
+
 // R returns a new Rect with given the Min and Max coordinates.
 //
 // Note that the returned rectangle is not automatically normalized.
