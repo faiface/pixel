@@ -608,7 +608,7 @@ func (r Rect) Union(s Rect) Rect {
 
 // Intersect returns the maximal Rect which is covered by both r and s. Rects r and s must be normalized.
 //
-// If r and s don't overlap, this function returns a ZR.
+// If r and s don't overlap, this function returns a zero-rectangle.
 func (r Rect) Intersect(s Rect) Rect {
 	t := R(
 		math.Max(r.Min.X, s.Min.X),
