@@ -480,7 +480,7 @@ type Rect struct {
 }
 
 // ZR is a zero rectangle.
-var ZR = Rect{Min:ZV, Max:ZV}
+var ZR = Rect{Min: ZV, Max: ZV}
 
 // R returns a new Rect with given the Min and Max coordinates.
 //
@@ -608,7 +608,7 @@ func (r Rect) Union(s Rect) Rect {
 
 // Intersect returns the maximal Rect which is covered by both r and s. Rects r and s must be normalized.
 //
-// If r and s don't overlap, this function returns R(0, 0, 0, 0).
+// If r and s don't overlap, this function returns a ZR.
 func (r Rect) Intersect(s Rect) Rect {
 	t := R(
 		math.Max(r.Min.X, s.Min.X),
@@ -617,7 +617,7 @@ func (r Rect) Intersect(s Rect) Rect {
 		math.Min(r.Max.Y, s.Max.Y),
 	)
 	if t.Min.X >= t.Max.X || t.Min.Y >= t.Max.Y {
-		return Rect{}
+		return ZR
 	}
 	return t
 }
