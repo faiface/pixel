@@ -10,6 +10,14 @@ do.
 go get github.com/faiface/pixel
 ```
 
+If you are using Modules (Go 1.11 or higher) and want a mutable copy of the source code:
+
+```
+git clone https://github.com/faiface/pixel ;# clone outside of GOPATH
+cd pixel
+go install ./...
+```
+
 See [requirements](#requirements) for the list of libraries necessary for compilation.
 
 ## Tutorial
