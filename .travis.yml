@@ -20,12 +20,7 @@ services:
 
 go:
     - tip
-    - 1.8.x
-    - 1.7.4
-
-install:
-    - go get -t ./...
+    - 1.12.x
 
 script:
-    - go test -i -race ./...
-    - go test -v -race ./...
+    - go test -v -race -mod=readonly ./...
