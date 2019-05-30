@@ -18,6 +18,9 @@ addons:
 services:
     - xvfb
 
+env:
+    - GO111MODULE=on
+
 go:
     - tip
     - 1.12.x
