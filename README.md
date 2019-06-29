@@ -20,7 +20,7 @@ go install ./...
 
 See [requirements](#requirements) for the list of libraries necessary for compilation.
 
-All significant (e.g. breaking) changes are documented in the [CHANGELOG.md](CHANGELOG.md).
+All significant changes are documented in [CHANGELOG.md](CHANGELOG.md).
 
 ## Tutorial
 
