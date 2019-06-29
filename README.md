@@ -20,6 +20,8 @@ go install ./...
 
 See [requirements](#requirements) for the list of libraries necessary for compilation.
 
+All significant changes are documented in [CHANGELOG.md](CHANGELOG.md).
+
 ## Tutorial
 
 The [Wiki of this repo](https://github.com/faiface/pixel/wiki) contains an extensive tutorial
