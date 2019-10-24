@@ -622,7 +622,7 @@ func (r Rect) Intersect(s Rect) Rect {
 	return t
 }
 
-// IntersectCircle returns a minimal required Vector, such that moving the circle by that vector would stop the Circle
+// IntersectCircle returns a minimal required Vector, such that moving the rect by that vector would stop the Circle
 // and the Rect intersecting.  This function returns a zero-vector if the Circle and Rect do not overlap, and if only
 // the perimeters touch.
 //
@@ -830,7 +830,7 @@ func (c Circle) Intersect(d Circle) Circle {
 	}
 }
 
-// IntersectLine will return the shortest Vec such that if the Rect is moved by the Vec returned, the Line and Rect no
+// IntersectLine will return the shortest Vec such that if the Circle is moved by the Vec returned, the Line and Rect no
 // longer intersect.
 func (c Circle) IntersectLine(l Line) Vec {
 	return l.IntersectCircle(c).Scaled(-1)
