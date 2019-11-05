@@ -18,14 +18,17 @@ addons:
 services:
     - xvfb
 
+env:
+    - GO111MODULE=on
+
 go:
     - tip
-    - 1.8.x
-    - 1.7.4
+    - 1.12.x
 
 install:
-    - go get -t ./...
+    - # Do nothing. This is needed to prevent the default install action
+      # "go get -t -v ./..." from happening here because we want it to happen
+      # inside script step.
 
 script:
-    - go test -i -race ./...
-    - go test -v -race ./...
+    - go test -v -race -mod=readonly ./...

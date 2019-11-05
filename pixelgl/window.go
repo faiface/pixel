@@ -46,6 +46,16 @@ type WindowConfig struct {
 	// Undecorated Window ommits the borders and decorations (close button, etc.).
 	Undecorated bool
 
+	// NoIconify specifies whether fullscreen windows should not automatically
+	// iconify (and restore the previous video mode) on focus loss.
+	NoIconify bool
+
+	// AlwaysOnTop specifies whether the windowed mode window will be floating
+	// above other regular windows, also called topmost or always-on-top.
+	// This is intended primarily for debugging purposes and cannot be used to
+	// implement proper full screen windows.
+	AlwaysOnTop bool
+
 	// VSync (vertical synchronization) synchronizes Window's framerate with the framerate of
 	// the monitor.
 	VSync bool
@@ -100,6 +110,8 @@ func NewWindow(cfg WindowConfig) (*Window, error) {
 
 		glfw.WindowHint(glfw.Resizable, bool2int[cfg.Resizable])
 		glfw.WindowHint(glfw.Decorated, bool2int[!cfg.Undecorated])
+		glfw.WindowHint(glfw.Floating, bool2int[cfg.AlwaysOnTop])
+		glfw.WindowHint(glfw.AutoIconify, bool2int[!cfg.NoIconify])
 
 		var share *glfw.Window
 		if currWin != nil {
