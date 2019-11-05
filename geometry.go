@@ -624,7 +624,7 @@ func (r Rect) Intersect(s Rect) Rect {
 
 // Intersects returns whether or not the given Rect intersects at any point with this Rect.
 //
-// This function is overall about 5x faster then Intersect, so it is better
+// This function is overall about 5x faster than Intersect, so it is better
 // to use if you have no need for the returned Rect from Intersect.
 func (r Rect) Intersects(s Rect) bool {
 	return !(s.Max.X < r.Min.X ||
