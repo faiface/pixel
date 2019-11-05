@@ -1574,7 +1574,7 @@ func BenchmarkRect_IsIntersect(b *testing.B) {
 	inter := pixel.R(11, 11, 15, 15)
 
 	for i := 0; i < b.N; i++ {
-		if root.IsIntersect(inter) {
+		if root.Intersects(inter) {
 			// do a thing
 		}
 
