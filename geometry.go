@@ -841,7 +841,7 @@ func (c Circle) Intersect(d Circle) Circle {
 	}
 }
 
-// IntersectLine will return the shortest Vec such that if the Circle is moved by the Vec returned, the Line and Rect no
+// IntersectLine will return the shortest Vec such that if the Rect is moved by the Vec returned, the Line and Rect no
 // longer intersect.
 func (c Circle) IntersectLine(l Line) Vec {
 	return l.IntersectCircle(c).Scaled(-1)
