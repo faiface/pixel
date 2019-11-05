@@ -1555,3 +1555,29 @@ func TestLine_String(t *testing.T) {
 		})
 	}
 }
+
+func BenchmarkRect_Intersect(b *testing.B) {
+	root := pixel.R(10, 10, 50, 50)
+	inter := pixel.R(11, 11, 15, 15)
+
+	for i := 0; i < b.N; i++ {
+		if root.Intersect(inter) != pixel.ZR {
+			// do a thing
+		}
+
+		// do a thing
+	}
+}
+
+func BenchmarkRect_IsIntersect(b *testing.B) {
+	root := pixel.R(10, 10, 50, 50)
+	inter := pixel.R(11, 11, 15, 15)
+
+	for i := 0; i < b.N; i++ {
+		if root.Intersects(inter) {
+			// do a thing
+		}
+
+		// do a thing
+	}
+}
