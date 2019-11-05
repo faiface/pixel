@@ -622,6 +622,17 @@ func (r Rect) Intersect(s Rect) Rect {
 	return t
 }
 
+// Intersects returns whether or not the given Rect intersects at any point with this Rect.
+//
+// This function is overall about 5x faster then Intersect, so it is better
+// to use if you have no need for the returned Rect from Intersect.
+func (r Rect) Intersects(s Rect) bool {
+	return !(s.Max.X < r.Min.X ||
+		s.Min.X > r.Max.X ||
+		s.Max.Y < r.Min.Y ||
+		s.Min.Y > r.Max.Y)
+}
+
 // IntersectCircle returns a minimal required Vector, such that moving the circle by that vector would stop the Circle
 // and the Rect intersecting.  This function returns a zero-vector if the Circle and Rect do not overlap, and if only
 // the perimeters touch.
