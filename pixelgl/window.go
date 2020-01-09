@@ -369,6 +369,14 @@ func (w *Window) SetCursorVisible(visible bool) {
 	})
 }
 
+// DisableCursor hides the cursor and provides unlimited virtual cursor movement
+func (w *Window) DisableCursor() {
+    w.cursorVisible = false
+    mainthread.Call(func() {
+        w.window.SetInputMode(glfw.CursorMode, glfw.CursorDisabled)
+    })
+}
+
 // CursorVisible returns the visibility status of the mouse cursor.
 func (w *Window) CursorVisible() bool {
 	return w.cursorVisible
