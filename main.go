@@ -26,9 +26,11 @@ func run() {
 	start := time.Now()
 
 	for !w.Closed() && !s.gameOver {
-		w.Clear(colornames.Peru)
-		s = updateState(s)
-		render(s, w, time.Since(start), colors)
+		if w.JustPressed(pixelgl.KeySpace) {
+			w.Clear(colornames.Peru)
+			s = updateState(s)
+			render(s, w, time.Since(start), colors)
+		}
 		w.Update()
 	}
 }

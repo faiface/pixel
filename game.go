@@ -85,7 +85,7 @@ func gameOver(s state) bool {
 }
 
 const (
-	steps    = 500
+	steps    = 40
 	numBots  = 10
 	numTeams = 4
 )
