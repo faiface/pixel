@@ -1,6 +1,7 @@
 package main
 
 import (
+	"log"
 	"time"
 
 	"github.com/faiface/pixel"
@@ -25,11 +26,14 @@ func run() {
 
 	start := time.Now()
 
-	for !w.Closed() {
+	for !w.Closed() && !s.won {
 		w.Clear(colornames.Peru)
 		s = updateState(s)
 		render(s, w, time.Since(start))
 		w.Update()
+		if s.won {
+			log.Println("You win!")
+		}
 	}
 }
 
@@ -62,6 +66,7 @@ func render(s state, w *pixelgl.Window, d time.Duration) {
 
 type state struct {
 	bots []bot
+	won  bool
 }
 
 func newState() state {
@@ -81,25 +86,27 @@ type bot struct {
 func updateState(sOld state) state {
 	s := sOld
 
+	var active *bot
 	for i := range s.bots {
-		updateBot(&s.bots[i], sOld)
+		if !s.bots[i].active {
+			continue
+		}
+		active = &s.bots[i]
 	}
+
+	active.pos++
+	maybePassBaton(active, &s)
+	if won(*active, s) {
+		s.won = true
+	}
+
 	return s
 }
 
-func updateBot(b *bot, s state) {
-	if !b.active {
-		return
-	}
-
-	b.pos++
-	maybePassBaton(b, s)
-}
-
-func maybePassBaton(b *bot, s state) {
+func maybePassBaton(b *bot, s *state) {
 	for i, bb := range s.bots {
-		if b.pos == bb.pos {
-			continue // same bot
+		if b == &bb {
+			continue
 		}
 		if bb.pos-b.pos == 1 {
 			b.active = false
@@ -109,4 +116,8 @@ func maybePassBaton(b *bot, s state) {
 	}
 }
 
-const steps = 500
+func won(b bot, s state) bool {
+	return b.pos == steps
+}
+
+const steps = 150
