@@ -26,14 +26,11 @@ func run() {
 
 	start := time.Now()
 
-	for !w.Closed() && !s.won {
+	for !w.Closed() && !s.gameOver {
 		w.Clear(colornames.Peru)
 		s = updateState(s)
 		render(s, w, time.Since(start))
 		w.Update()
-		if s.won {
-			log.Println("You win!")
-		}
 	}
 }
 
@@ -43,78 +40,94 @@ func main() {
 
 func render(s state, w *pixelgl.Window, d time.Duration) {
 	b := w.Bounds()
-	i := imdraw.New(nil)
-	offset := b.Size().X / steps
+	im := imdraw.New(nil)
+	hOffset := b.Size().X / steps
+	vOffset := b.Size().Y / (numTeams + 1)
 
-	for _, bot := range s.bots {
-		if bot.active {
-			i.Color = pixel.RGB(0, 1, 0)
-		} else {
-			i.Color = pixel.RGB(1, 0, 0)
+	for i, t := range s.teams {
+		for j, bot := range t.bots {
+			if &t.bots[j] == t.baton.holder {
+				im.Color = pixel.RGB(0, 1, 0)
+			} else {
+				im.Color = pixel.RGB(1, 0, 0)
+			}
+			from := pixel.V(b.Min.X+25, b.Min.Y+float64(i+1)*vOffset)
+			pos := from.Add(pixel.V(float64(bot.pos)*hOffset, 0))
+
+			im.Push(pos)
+
+			im.Clear()
+			im.Circle(50, 0)
+
+			im.Draw(w)
 		}
-		from := pixel.V(b.Min.X+25, b.Center().Y)
-		pos := from.Add(pixel.V(float64(bot.pos)*offset, 0))
-
-		i.Push(pos)
-
-		i.Clear()
-		i.Circle(50, 0)
-
-		i.Draw(w)
 	}
 }
 
 type state struct {
-	bots []bot
-	won  bool
+	teams    []team
+	gameOver bool
 }
 
 func newState() state {
-	var bots []bot
-	for i := 0; i < numBots; i++ {
-		bots = append(bots, bot{pos: i * (steps / numBots)})
+	var teams []team
+	for i := 0; i < numTeams; i++ {
+		var bots []bot
+		for j := 0; j < numBots; j++ {
+			bots = append(bots, bot{pos: j * (steps / numBots)})
+		}
+		teams = append(teams, team{
+			bots:  bots,
+			baton: baton{holder: &bots[0]},
+		})
 	}
 
-	bots[0].active = true
-
 	return state{
-		bots: bots,
+		teams: teams,
 	}
 }
 
+type team struct {
+	bots  []bot
+	baton baton
+	won   bool
+}
+
 type bot struct {
-	pos    int
-	active bool
+	pos int
+}
+
+type baton struct {
+	holder *bot
 }
 
 func updateState(sOld state) state {
 	s := sOld
 
-	var active *bot
-	for i := range s.bots {
-		if !s.bots[i].active {
-			continue
-		}
-		active = &s.bots[i]
+	for _, t := range s.teams {
+		b := t.baton.holder
+		b.pos++
+		maybePassBaton(t)
 	}
 
-	active.pos++
-	maybePassBaton(active, &s)
-	if won(*active, s) {
-		s.won = true
+	for _, t := range s.teams {
+		if won(*t.baton.holder, s) {
+			s.gameOver = true
+		}
 	}
 
 	return s
 }
 
-func maybePassBaton(b *bot, s *state) {
-	for i, bb := range s.bots {
-		if b == &bb {
+func maybePassBaton(t team) {
+	for i, b := range t.bots {
+		h := t.baton.holder
+		if h == &b {
 			continue
 		}
-		if bb.pos-b.pos == 1 {
-			b.active = false
-			s.bots[i].active = true
+		if b.pos-h.pos == 1 {
+			t.baton.holder = &t.bots[i]
+			log.Println("pass!")
 			return
 		}
 	}
@@ -124,7 +137,17 @@ func won(b bot, s state) bool {
 	return b.pos == steps
 }
 
+func gameOver(s state) bool {
+	for _, t := range s.teams {
+		if t.won {
+			return true
+		}
+	}
+	return false
+}
+
 const (
-	steps   = 150
-	numBots = 5
+	steps    = 150
+	numBots  = 5
+	numTeams = 2
 )
