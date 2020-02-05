@@ -70,11 +70,15 @@ type state struct {
 }
 
 func newState() state {
+	var bots []bot
+	for i := 0; i < numBots; i++ {
+		bots = append(bots, bot{pos: i * (steps / numBots)})
+	}
+
+	bots[0].active = true
+
 	return state{
-		bots: []bot{
-			{pos: 0, active: true},
-			{pos: steps / 2},
-		},
+		bots: bots,
 	}
 }
 
@@ -120,4 +124,7 @@ func won(b bot, s state) bool {
 	return b.pos == steps
 }
 
-const steps = 150
+const (
+	steps   = 150
+	numBots = 5
+)
