@@ -56,11 +56,23 @@ func updateState(sOld state) state {
 		b := t.baton.holder
 
 		if b.a == 0 {
-			b.a = 10
+			b.a = 1
 		}
 		b.a += rand.Intn(3) - 1
+		if b.a < -maxA {
+			b.a = -maxA
+		}
+		if b.a > maxA {
+			b.a = maxA
+		}
 
 		b.v += b.a
+		if b.v > maxV {
+			b.v = maxV
+		}
+		if b.v < -maxV {
+			b.v = -maxV
+		}
 		b.pos += b.v
 
 		maybePassBaton(&s.teams[i])
@@ -78,7 +90,7 @@ func updateState(sOld state) state {
 func maybePassBaton(t *team) {
 	for i, b := range t.bots {
 		h := t.baton.holder
-		if h == &t.bots[i] {
+		if h.id >= b.id {
 			continue
 		}
 		if abs(b.pos-h.pos) <= 10 {
@@ -109,6 +121,8 @@ const (
 	steps    = 400
 	numBots  = 10
 	numTeams = 1
+	maxA     = 3
+	maxV     = 20
 )
 
 func abs(n int) int {
