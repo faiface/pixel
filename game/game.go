@@ -108,7 +108,7 @@ const (
 func maybePassBaton(t *Team) {
 	for i, b := range t.Bots {
 		h := t.Baton.Holder
-		if h.id >= b.id {
+		if h.id >= b.id || h.Lane != b.Lane {
 			continue
 		}
 		if abs(b.Pos-h.Pos) <= passDistance {
