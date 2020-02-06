@@ -11,11 +11,13 @@ import (
 )
 
 func render(s state, w *pixelgl.Window, d time.Duration, colors map[*team]pixel.RGBA) {
+	renderBots(s, w, d, colors)
+	renderObstacles(s, w)
+}
+
+func renderBots(s state, w *pixelgl.Window, d time.Duration, colors map[*team]pixel.RGBA) {
 	b := w.Bounds()
 	im := imdraw.New(nil)
-	hOffset := b.Size().X / steps
-	vOffset := b.Size().Y / (numTeams + 1)
-	width := 20
 
 	for i, t := range s.teams {
 		for j, bot := range t.bots {
@@ -24,16 +26,42 @@ func render(s state, w *pixelgl.Window, d time.Duration, colors map[*team]pixel.
 			} else {
 				im.Color = colors[&s.teams[i]]
 			}
-			from := pixel.V(b.Min.X+float64(width)/2, b.Min.Y+float64(i+1)*vOffset)
-			pos := from.Add(pixel.V(float64(bot.pos)*hOffset, 0))
+
+			pos := lanePos(bot.pos, i, botWidth, b)
 
 			im.Push(pos)
 
 			im.Clear()
-			im.Circle(float64(width), 0)
+			im.Circle(float64(botWidth), 0)
 
 			im.Draw(w)
 		}
+	}
+}
+
+func lanePos(pos, lane int, width float64, bounds pixel.Rect) pixel.Vec {
+	hOffset := bounds.Size().X / steps
+	vOffset := bounds.Size().Y / (numTeams + 1)
+
+	return pixel.V(bounds.Min.X+width/2+float64(pos)*hOffset,
+		bounds.Min.Y+float64(lane+1)*vOffset)
+}
+
+func renderObstacles(s state, w *pixelgl.Window) {
+	b := w.Bounds()
+	im := imdraw.New(nil)
+
+	for _, o := range s.obstacles {
+		im.Color = pixel.RGB(1, 0, 1)
+
+		pos := lanePos(o.pos, o.lane, botWidth, b)
+
+		im.Push(pos)
+
+		im.Clear()
+		im.Circle(float64(botWidth), 0)
+
+		im.Draw(w)
 	}
 }
 
@@ -55,3 +83,7 @@ func teamColors(ts []team) map[*team]pixel.RGBA {
 	}
 	return m
 }
+
+const (
+	botWidth float64 = 20
+)

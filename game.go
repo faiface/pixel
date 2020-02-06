@@ -6,8 +6,9 @@ import (
 )
 
 type state struct {
-	teams    []team
-	gameOver bool
+	teams     []team
+	obstacles []obstacle
+	gameOver  bool
 }
 
 func newState() state {
@@ -29,6 +30,12 @@ func newState() state {
 
 	return state{
 		teams: teams,
+		obstacles: []obstacle{
+			{
+				lane: 0,
+				pos:  steps / 3,
+			},
+		},
 	}
 }
 
@@ -47,6 +54,11 @@ type bot struct {
 
 type baton struct {
 	holder *bot
+}
+
+type obstacle struct {
+	lane int
+	pos  int
 }
 
 func updateState(sOld state) state {
@@ -120,7 +132,7 @@ func gameOver(s state) bool {
 const (
 	steps    = 400
 	numBots  = 10
-	numTeams = 1
+	numTeams = 2
 	maxA     = 3
 	maxV     = 20
 )
