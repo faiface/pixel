@@ -2,7 +2,7 @@ package game
 
 import "math/rand"
 
-func moveBot(b *Bot, s State) {
+func accelerate(b *Bot) {
 	if b.a == 0 {
 		b.a = 1
 	}
@@ -21,7 +21,9 @@ func moveBot(b *Bot, s State) {
 	if b.v < -maxV {
 		b.v = -maxV
 	}
+}
 
+func moveBot(b *Bot, s State) {
 	for i := 0; i < b.v; i++ {
 		if !collide(b.id, b.Pos+1, b.Lane, s) {
 			b.Pos++

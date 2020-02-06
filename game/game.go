@@ -35,6 +35,10 @@ func NewState() State {
 				Lane: 0,
 				Pos:  Steps / 3,
 			},
+			{
+				Lane: 1,
+				Pos:  Steps * 2 / 3,
+			},
 		},
 	}
 }
@@ -66,6 +70,7 @@ func UpdateState(sOld State) State {
 	s := sOld
 
 	for i, t := range s.Teams {
+		accelerate(t.Baton.Holder)
 		moveBot(t.Baton.Holder, sOld)
 		maybePassBaton(&s.Teams[i])
 	}
