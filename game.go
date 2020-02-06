@@ -69,11 +69,11 @@ func updateState(sOld state) state {
 func maybePassBaton(t *team) {
 	for i, b := range t.bots {
 		h := t.baton.holder
-		if h == &b {
+		if h == &t.bots[i] {
 			continue
 		}
-		if b.pos-h.pos == 10 {
-			log.Printf("pass from %v to %v!", t.baton.holder, &t.bots[i])
+		if abs(b.pos-h.pos) <= 10 {
+			log.Printf("pass from %p to %p!", t.baton.holder, &t.bots[i])
 			t.baton.holder.v = 0
 			t.baton.holder.a = 0
 			t.baton.holder = &t.bots[i]
@@ -101,3 +101,10 @@ const (
 	numBots  = 10
 	numTeams = 4
 )
+
+func abs(n int) int {
+	if n < 0 {
+		return -n
+	}
+	return n
+}
