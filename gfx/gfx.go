@@ -1,7 +1,8 @@
-package main
+package gfx
 
 import (
 	"image/color"
+	"relay/game"
 	"time"
 
 	"github.com/faiface/pixel"
@@ -10,24 +11,25 @@ import (
 	"golang.org/x/image/colornames"
 )
 
-func render(s state, w *pixelgl.Window, d time.Duration, colors map[*team]pixel.RGBA) {
+func Render(s game.State, w *pixelgl.Window, d time.Duration) {
+	colors := teamColors(s.Teams)
 	renderBots(s, w, d, colors)
 	renderObstacles(s, w)
 }
 
-func renderBots(s state, w *pixelgl.Window, d time.Duration, colors map[*team]pixel.RGBA) {
+func renderBots(s game.State, w *pixelgl.Window, d time.Duration, colors map[*game.Team]pixel.RGBA) {
 	b := w.Bounds()
 	im := imdraw.New(nil)
 
-	for i, t := range s.teams {
-		for j, bot := range t.bots {
-			if &t.bots[j] == t.baton.holder {
+	for i, t := range s.Teams {
+		for j, bot := range t.Bots {
+			if &t.Bots[j] == t.Baton.Holder {
 				im.Color = pixel.RGB(0, 1, 0)
 			} else {
-				im.Color = colors[&s.teams[i]]
+				im.Color = colors[&s.Teams[i]]
 			}
 
-			pos := lanePos(bot.pos, i, botWidth, b)
+			pos := lanePos(bot.Pos, i, botWidth, b)
 
 			im.Push(pos)
 
@@ -40,21 +42,21 @@ func renderBots(s state, w *pixelgl.Window, d time.Duration, colors map[*team]pi
 }
 
 func lanePos(pos, lane int, width float64, bounds pixel.Rect) pixel.Vec {
-	hOffset := bounds.Size().X / steps
-	vOffset := bounds.Size().Y / (numTeams + 1)
+	hOffset := bounds.Size().X / game.Steps
+	vOffset := bounds.Size().Y / (game.NumTeams + 1)
 
 	return pixel.V(bounds.Min.X+width/2+float64(pos)*hOffset,
 		bounds.Min.Y+float64(lane+1)*vOffset)
 }
 
-func renderObstacles(s state, w *pixelgl.Window) {
+func renderObstacles(s game.State, w *pixelgl.Window) {
 	b := w.Bounds()
 	im := imdraw.New(nil)
 
-	for _, o := range s.obstacles {
+	for _, o := range s.Obstacles {
 		im.Color = pixel.RGB(1, 0, 1)
 
-		pos := lanePos(o.pos, o.lane, botWidth, b)
+		pos := lanePos(o.Pos, o.Lane, botWidth, b)
 
 		im.Push(pos)
 
@@ -65,8 +67,8 @@ func renderObstacles(s state, w *pixelgl.Window) {
 	}
 }
 
-func teamColors(ts []team) map[*team]pixel.RGBA {
-	m := make(map[*team]pixel.RGBA)
+func teamColors(ts []game.Team) map[*game.Team]pixel.RGBA {
+	m := make(map[*game.Team]pixel.RGBA)
 	for i := range ts {
 		var c color.RGBA
 		switch i {

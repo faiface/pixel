@@ -2,6 +2,8 @@ package main
 
 import (
 	"math/rand"
+	"relay/game"
+	"relay/gfx"
 	"time"
 
 	"github.com/faiface/pixel"
@@ -23,20 +25,19 @@ func run() {
 
 	rand.Seed(time.Now().UnixNano())
 
-	s := newState()
-	colors := teamColors(s.teams)
+	s := game.NewState()
 
 	start := time.Now()
 
-	for !w.Closed() && !s.gameOver {
+	for !w.Closed() && !s.GameOver {
 		w.Clear(colornames.Peru)
 		switch {
 		case w.JustPressed(pixelgl.KeyQ):
 			return
 		case w.JustPressed(pixelgl.KeySpace):
-			s = updateState(s)
+			s = game.UpdateState(s)
 		}
-		render(s, w, time.Since(start), colors)
+		gfx.Render(s, w, time.Since(start))
 		w.Update()
 	}
 }
