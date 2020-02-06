@@ -73,6 +73,8 @@ func UpdateState(sOld State) State {
 		switch chooseCommand(t, sOld) {
 		case speedUp:
 			accelerate(t.Baton.Holder)
+		case left:
+			t.Baton.Holder.Lane++
 		}
 
 		moveBot(t.Baton.Holder, sOld)
@@ -89,6 +91,10 @@ func UpdateState(sOld State) State {
 }
 
 func chooseCommand(t Team, s State) command {
+	h := t.Baton.Holder
+	if collide(h.Pos+1, h.Lane, s) {
+		return left
+	}
 	return speedUp
 }
 
@@ -96,6 +102,7 @@ type command int
 
 const (
 	speedUp command = iota
+	left
 )
 
 func maybePassBaton(t *Team) {

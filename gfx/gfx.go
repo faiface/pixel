@@ -29,7 +29,7 @@ func renderBots(s game.State, w *pixelgl.Window, d time.Duration, colors map[*ga
 				im.Color = colors[&s.Teams[i]]
 			}
 
-			pos := lanePos(bot.Pos, i, botWidth, b)
+			pos := lanePos(bot.Pos, bot.Lane, botWidth, b)
 
 			im.Push(pos)
 
