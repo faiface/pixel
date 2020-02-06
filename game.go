@@ -105,7 +105,7 @@ func maybePassBaton(t *team) {
 }
 
 func won(b bot, s state) bool {
-	return b.pos == steps
+	return b.pos >= steps
 }
 
 func gameOver(s state) bool {
