@@ -2,6 +2,7 @@ package game
 
 import (
 	"log"
+	"math/rand"
 )
 
 type State struct {
@@ -70,13 +71,7 @@ func UpdateState(sOld State) State {
 	s := sOld
 
 	for i, t := range s.Teams {
-		switch chooseCommand(t, sOld) {
-		case speedUp:
-			accelerate(t.Baton.Holder)
-		case left:
-			t.Baton.Holder.Lane++
-		}
-
+		doCommand(chooseCommand(t, sOld), t.Baton.Holder)
 		moveBot(t.Baton.Holder, sOld)
 		maybePassBaton(&s.Teams[i])
 	}
@@ -90,11 +85,45 @@ func UpdateState(sOld State) State {
 	return s
 }
 
+func doCommand(cmd command, b *Bot) {
+	da := 1
+	da += rand.Intn(3) - 1
+
+	switch cmd {
+	case speedUp:
+		b.a += da
+		accelerate(b)
+	case slowDown:
+		b.a -= da
+		accelerate(b)
+	case left:
+		b.Lane++
+	}
+}
+
 func chooseCommand(t Team, s State) command {
 	h := t.Baton.Holder
 	if collide(h.Pos+1, h.Lane, s) {
 		return left
 	}
+
+	var nextBot *Bot
+	for i, b := range t.Bots {
+		if b.id == h.id+1 {
+			nextBot = &t.Bots[i]
+			break
+		}
+	}
+
+	if nextBot != nil {
+		if h.Lane != nextBot.Lane {
+			if abs(nextBot.Pos-h.Pos) < h.v {
+				log.Println("WHOOOOOOA")
+				return slowDown
+			}
+		}
+	}
+
 	return speedUp
 }
 
@@ -102,6 +131,7 @@ type command int
 
 const (
 	speedUp command = iota
+	slowDown
 	left
 )
 
@@ -140,7 +170,7 @@ const (
 	numBots  = 5
 	NumTeams = 2
 	maxA     = 3
-	maxV     = 2
+	maxV     = 10
 )
 
 func abs(n int) int {

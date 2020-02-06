@@ -1,12 +1,6 @@
 package game
 
-import "math/rand"
-
 func accelerate(b *Bot) {
-	if b.a == 0 {
-		b.a = 1
-	}
-	b.a += rand.Intn(3) - 1
 	if b.a < -maxA {
 		b.a = -maxA
 	}
