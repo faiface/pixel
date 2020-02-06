@@ -65,28 +65,7 @@ func updateState(sOld state) state {
 	s := sOld
 
 	for i, t := range s.teams {
-		b := t.baton.holder
-
-		if b.a == 0 {
-			b.a = 1
-		}
-		b.a += rand.Intn(3) - 1
-		if b.a < -maxA {
-			b.a = -maxA
-		}
-		if b.a > maxA {
-			b.a = maxA
-		}
-
-		b.v += b.a
-		if b.v > maxV {
-			b.v = maxV
-		}
-		if b.v < -maxV {
-			b.v = -maxV
-		}
-		b.pos += b.v
-
+		moveBot(t.baton.holder)
 		maybePassBaton(&s.teams[i])
 	}
 
@@ -97,6 +76,28 @@ func updateState(sOld state) state {
 	}
 
 	return s
+}
+
+func moveBot(b *bot) {
+	if b.a == 0 {
+		b.a = 1
+	}
+	b.a += rand.Intn(3) - 1
+	if b.a < -maxA {
+		b.a = -maxA
+	}
+	if b.a > maxA {
+		b.a = maxA
+	}
+
+	b.v += b.a
+	if b.v > maxV {
+		b.v = maxV
+	}
+	if b.v < -maxV {
+		b.v = -maxV
+	}
+	b.pos += b.v
 }
 
 func maybePassBaton(t *team) {
