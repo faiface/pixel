@@ -37,10 +37,17 @@ func collide(id, pos, lane int, s State) bool {
 			return true
 		}
 	}
+	for _, t := range s.Teams {
+		for _, b := range t.Bots {
+			if b.Pos == pos && b.Lane == lane {
+				return true
+			}
+		}
+	}
 	return false
 }
 
 const (
-	passDistance = 2
+	passDistance = 1
 	baseAccel    = 1
 )
