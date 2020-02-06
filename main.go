@@ -1,6 +1,7 @@
 package main
 
 import (
+	"math/rand"
 	"time"
 
 	"github.com/faiface/pixel"
@@ -19,6 +20,8 @@ func run() {
 	if err != nil {
 		panic(err)
 	}
+
+	rand.Seed(time.Now().UnixNano())
 
 	s := newState()
 	colors := teamColors(s.teams)

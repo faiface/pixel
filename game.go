@@ -1,6 +1,9 @@
 package main
 
-import "log"
+import (
+	"log"
+	"math/rand"
+)
 
 type state struct {
 	teams    []team
@@ -12,7 +15,11 @@ func newState() state {
 	for i := 0; i < numTeams; i++ {
 		var bots []bot
 		for j := 0; j < numBots; j++ {
-			bots = append(bots, bot{pos: j * (steps / numBots)})
+			b := bot{
+				id:  i*numTeams + j,
+				pos: j * (steps / numBots),
+			}
+			bots = append(bots, b)
 		}
 		teams = append(teams, team{
 			bots:  bots,
@@ -32,6 +39,7 @@ type team struct {
 }
 
 type bot struct {
+	id  int
 	pos int
 	v   int
 	a   int
@@ -50,6 +58,7 @@ func updateState(sOld state) state {
 		if b.a == 0 {
 			b.a = 10
 		}
+		b.a += rand.Intn(3) - 1
 
 		b.v += b.a
 		b.pos += b.v
@@ -73,7 +82,7 @@ func maybePassBaton(t *team) {
 			continue
 		}
 		if abs(b.pos-h.pos) <= 10 {
-			log.Printf("pass from %p to %p!", t.baton.holder, &t.bots[i])
+			log.Printf("pass from %v to %v!", h.id, b.id)
 			t.baton.holder.v = 0
 			t.baton.holder.a = 0
 			t.baton.holder = &t.bots[i]
@@ -99,7 +108,7 @@ func gameOver(s state) bool {
 const (
 	steps    = 400
 	numBots  = 10
-	numTeams = 4
+	numTeams = 1
 )
 
 func abs(n int) int {
