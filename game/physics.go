@@ -22,9 +22,10 @@ func moveBot(b *Bot, s State) {
 		b.v = -maxV
 	}
 
-	newPos := b.Pos + b.v
-	if !collide(b.id, newPos, b.Lane, s) {
-		b.Pos = newPos
+	for i := 0; i < b.v; i++ {
+		if !collide(b.id, b.Pos+1, b.Lane, s) {
+			b.Pos++
+		}
 	}
 }
 
