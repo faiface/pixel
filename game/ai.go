@@ -5,7 +5,10 @@ import "log"
 func chooseCommand(t Team, s State) command {
 	h := t.Baton.Holder
 	if collide(h.Pos+1, h.Lane, s) {
-		return left
+		if h.Lane <= t.Lane {
+			return left
+		}
+		return right
 	}
 
 	var nextBot *Bot

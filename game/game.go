@@ -2,7 +2,6 @@ package game
 
 import (
 	"log"
-	"math/rand"
 )
 
 type State struct {
@@ -26,6 +25,7 @@ func NewState() State {
 		teams = append(teams, Team{
 			Bots:  bots,
 			Baton: Baton{Holder: &bots[0]},
+			Lane:  i,
 		})
 	}
 
@@ -48,6 +48,7 @@ type Team struct {
 	Bots  []Bot
 	Baton Baton
 	won   bool
+	Lane  int
 }
 
 type Bot struct {
@@ -84,30 +85,6 @@ func UpdateState(sOld State) State {
 
 	return s
 }
-
-func doCommand(cmd command, b *Bot) {
-	da := 1
-	da += rand.Intn(3) - 1
-
-	switch cmd {
-	case speedUp:
-		b.a += da
-		accelerate(b)
-	case slowDown:
-		b.a -= da
-		accelerate(b)
-	case left:
-		b.Lane++
-	}
-}
-
-type command int
-
-const (
-	speedUp command = iota
-	slowDown
-	left
-)
 
 func maybePassBaton(t *Team) {
 	for i, b := range t.Bots {
