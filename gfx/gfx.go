@@ -18,27 +18,35 @@ func Render(s game.State, w *pixelgl.Window, d time.Duration) {
 }
 
 func renderBots(s game.State, w *pixelgl.Window, d time.Duration, colors map[*game.Team]pixel.RGBA) {
-	b := w.Bounds()
+	bounds := w.Bounds()
 	im := imdraw.New(nil)
 
 	for i, t := range s.Teams {
 		for j, bot := range t.Bots {
-			if &t.Bots[j] == t.Baton.Holder {
-				im.Color = pixel.RGB(0, 1, 0)
-			} else {
-				im.Color = colors[&s.Teams[i]]
-			}
+			im.Color = colors[&s.Teams[i]]
 
-			pos := lanePos(bot.Pos, bot.Lane, botWidth, b)
+			pos := lanePos(bot.Pos, bot.Lane, botWidth, bounds)
 
 			im.Push(pos)
 
 			im.Clear()
-			im.Circle(float64(botWidth), 0)
+			im.Circle(botWidth, 0)
 
 			im.Draw(w)
+			if &t.Bots[j] == t.Baton.Holder {
+				renderBaton(pos, w)
+			}
 		}
 	}
+}
+
+func renderBaton(pos pixel.Vec, w *pixelgl.Window) {
+	im := imdraw.New(nil)
+	im.Color = pixel.RGB(0, 0, 0)
+	im.Push(pos)
+	im.Clear()
+	im.Circle(batonWidth, 3)
+	im.Draw(w)
 }
 
 func lanePos(pos, lane int, width float64, bounds pixel.Rect) pixel.Vec {
@@ -87,5 +95,6 @@ func teamColors(ts []game.Team) map[*game.Team]pixel.RGBA {
 }
 
 const (
-	botWidth float64 = 20
+	botWidth   float64 = 20
+	batonWidth float64 = 12
 )
