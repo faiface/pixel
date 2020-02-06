@@ -70,7 +70,11 @@ func UpdateState(sOld State) State {
 	s := sOld
 
 	for i, t := range s.Teams {
-		accelerate(t.Baton.Holder)
+		switch chooseCommand(t, sOld) {
+		case speedUp:
+			accelerate(t.Baton.Holder)
+		}
+
 		moveBot(t.Baton.Holder, sOld)
 		maybePassBaton(&s.Teams[i])
 	}
@@ -83,6 +87,16 @@ func UpdateState(sOld State) State {
 
 	return s
 }
+
+func chooseCommand(t Team, s State) command {
+	return speedUp
+}
+
+type command int
+
+const (
+	speedUp command = iota
+)
 
 func maybePassBaton(t *Team) {
 	for i, b := range t.Bots {
