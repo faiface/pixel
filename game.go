@@ -32,8 +32,9 @@ type team struct {
 }
 
 type bot struct {
-	pos   int
-	speed int
+	pos int
+	v   int
+	a   int
 }
 
 type baton struct {
@@ -46,11 +47,13 @@ func updateState(sOld state) state {
 	for i, t := range s.teams {
 		b := t.baton.holder
 
-		if b.speed == 0 {
-			b.speed = 1
+		if b.a == 0 {
+			b.a = 1
 		}
 
-		b.pos += b.speed
+		b.v += b.a
+		b.pos += b.v
+
 		maybePassBaton(&s.teams[i])
 	}
 
@@ -71,9 +74,10 @@ func maybePassBaton(t *team) {
 		}
 		if b.pos-h.pos == 1 {
 			log.Printf("pass from %v to %v!", t.baton.holder, &t.bots[i])
-			t.baton.holder.speed = 0
+			t.baton.holder.v = 0
+			t.baton.holder.a = 0
 			t.baton.holder = &t.bots[i]
-			t.bots[i].speed = 1
+			t.bots[i].a = 1
 			return
 		}
 	}
