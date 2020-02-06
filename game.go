@@ -42,10 +42,10 @@ type baton struct {
 func updateState(sOld state) state {
 	s := sOld
 
-	for _, t := range s.teams {
+	for i, t := range s.teams {
 		b := t.baton.holder
 		b.pos++
-		maybePassBaton(t)
+		maybePassBaton(&s.teams[i])
 	}
 
 	for _, t := range s.teams {
@@ -57,7 +57,7 @@ func updateState(sOld state) state {
 	return s
 }
 
-func maybePassBaton(t team) {
+func maybePassBaton(t *team) {
 	for i, b := range t.bots {
 		h := t.baton.holder
 		if h == &b {
