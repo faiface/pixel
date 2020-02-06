@@ -48,7 +48,7 @@ func updateState(sOld state) state {
 		b := t.baton.holder
 
 		if b.a == 0 {
-			b.a = 1
+			b.a = 10
 		}
 
 		b.v += b.a
@@ -72,12 +72,12 @@ func maybePassBaton(t *team) {
 		if h == &b {
 			continue
 		}
-		if b.pos-h.pos == 1 {
+		if b.pos-h.pos == 10 {
 			log.Printf("pass from %v to %v!", t.baton.holder, &t.bots[i])
 			t.baton.holder.v = 0
 			t.baton.holder.a = 0
 			t.baton.holder = &t.bots[i]
-			t.bots[i].a = 1
+			t.bots[i].a = 10
 			return
 		}
 	}
@@ -97,7 +97,7 @@ func gameOver(s state) bool {
 }
 
 const (
-	steps    = 40
+	steps    = 400
 	numBots  = 10
 	numTeams = 4
 )
