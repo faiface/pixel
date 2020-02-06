@@ -143,6 +143,7 @@ const (
 	Steps    = 50
 	numBots  = 5
 	NumTeams = 2
+	NumLanes = 4
 	maxA     = 3
 	maxV     = 10
 )

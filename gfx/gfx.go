@@ -23,7 +23,10 @@ func renderBots(s game.State, w *pixelgl.Window, d time.Duration, colors map[*ga
 
 	for i, t := range s.Teams {
 		for j, bot := range t.Bots {
-			im.Color = colors[&s.Teams[i]]
+			c := colors[&s.Teams[i]]
+			c.R += 0.2 * float64(j)
+			c.G -= 0.1 * float64(j)
+			im.Color = c
 
 			pos := lanePos(bot.Pos, bot.Lane, botWidth, bounds)
 
@@ -51,7 +54,7 @@ func renderBaton(pos pixel.Vec, w *pixelgl.Window) {
 
 func lanePos(pos, lane int, width float64, bounds pixel.Rect) pixel.Vec {
 	hOffset := bounds.Size().X / game.Steps
-	vOffset := bounds.Size().Y / (game.NumTeams + 1)
+	vOffset := bounds.Size().Y / (game.NumLanes + 1)
 
 	return pixel.V(bounds.Min.X+width/2+float64(pos)*hOffset,
 		bounds.Min.Y+float64(lane+1)*vOffset)
