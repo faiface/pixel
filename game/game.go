@@ -16,8 +16,9 @@ func NewState() State {
 		var bots []Bot
 		for j := 0; j < numBots; j++ {
 			b := Bot{
-				id:  i*NumTeams + j,
-				Pos: j * (Steps / numBots),
+				id:   i*NumTeams + j,
+				Lane: i,
+				Pos:  j * (Steps / numBots),
 			}
 			bots = append(bots, b)
 		}
@@ -45,10 +46,11 @@ type Team struct {
 }
 
 type Bot struct {
-	id  int
-	Pos int
-	v   int
-	a   int
+	id   int
+	Lane int
+	Pos  int
+	v    int
+	a    int
 }
 
 type Baton struct {
@@ -64,7 +66,7 @@ func UpdateState(sOld State) State {
 	s := sOld
 
 	for i, t := range s.Teams {
-		moveBot(t.Baton.Holder)
+		moveBot(t.Baton.Holder, sOld)
 		maybePassBaton(&s.Teams[i])
 	}
 
@@ -108,11 +110,11 @@ func gameOver(s State) bool {
 }
 
 const (
-	Steps    = 400
-	numBots  = 10
+	Steps    = 50
+	numBots  = 5
 	NumTeams = 2
 	maxA     = 3
-	maxV     = 20
+	maxV     = 2
 )
 
 func abs(n int) int {
