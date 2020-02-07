@@ -118,6 +118,6 @@ func teamColors(ts []game.Team) map[*game.Team]pixel.RGBA {
 }
 
 const (
-	botWidth   float64 = 20
+	botWidth   float64 = 17
 	batonWidth float64 = 12
 )

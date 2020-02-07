@@ -1,9 +1,5 @@
 package game
 
-import (
-	"math/rand"
-)
-
 type command int
 
 const (
@@ -15,7 +11,7 @@ const (
 
 func doCommand(cmd command, s State, teamID int) State {
 	da := 1
-	da += rand.Intn(3) - 1
+	//da += rand.Intn(3) - 1
 
 	b := activeBot(s.Teams[teamID])
 	if b == nil {

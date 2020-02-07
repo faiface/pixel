@@ -25,6 +25,7 @@ func moveBot(s State, teamID int, b Bot) State {
 	for i := 0; i < b.v; i++ {
 		if o := collide(b.Pos+1, b.Lane, s); o != nil {
 			log.Printf("bot %d crashed into %#v!", b.ID, o)
+			break
 		} else {
 			b.Pos++
 		}
