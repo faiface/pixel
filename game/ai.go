@@ -4,7 +4,7 @@ func chooseCommand(s State, teamID int) command {
 	t := s.Teams[teamID]
 	h := t.BatonHolder()
 	if collide(h.Pos+1, h.Lane, s) {
-		if h.Lane <= t.Lane {
+		if h.Lane <= t.Lane && h.Lane < NumLanes-1 {
 			return left
 		}
 		return right

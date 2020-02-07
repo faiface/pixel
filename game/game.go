@@ -188,7 +188,7 @@ const (
 	Steps    = 60
 	numBots  = 5
 	NumTeams = 4
-	NumLanes = 6
+	NumLanes = 4
 	maxA     = 2
 	maxV     = 8
 )

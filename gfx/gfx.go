@@ -27,7 +27,7 @@ func Render(rs RenderState, sOld, sNew game.State, w *pixelgl.Window, d time.Dur
 	renderObstacles(sNew, w)
 
 	rs.Frame++
-	if rs.Frame >= rs.Frames {
+	if rs.Frame > rs.Frames {
 		rs.Animating = false
 	}
 	return rs
@@ -40,8 +40,6 @@ func renderBots(sOld, sNew game.State, tween float64, w *pixelgl.Window, _ time.
 	for i, t := range sNew.Teams {
 		for j, bot := range t.Bots {
 			c := colors[&sNew.Teams[i]]
-			c.R += 0.2 * float64(j)
-			c.G -= 0.1 * float64(j)
 			im.Color = c
 
 			oldBot := sOld.Teams[i].Bots[j]
@@ -113,7 +111,7 @@ func teamColors(ts []game.Team) map[*game.Team]pixel.RGBA {
 		case 2:
 			c = colornames.Lavender
 		case 3:
-			c = colornames.Indigo
+			c = colornames.Maroon
 		}
 		m[&ts[i]] = pixel.ToRGBA(c)
 	}

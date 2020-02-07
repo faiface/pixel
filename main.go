@@ -35,7 +35,6 @@ func run() {
 		Animating: false,
 		Frames:    20,
 	}
-
 	sOld := s
 
 	for !w.Closed() && !s.GameOver {
@@ -47,7 +46,7 @@ func run() {
 			if !rs.Animating {
 				sOld = s
 			}
-		default:
+		case w.Pressed(pixelgl.KeySpace):
 			rs.Animating = true
 			rs.Frame = 0
 			s = game.UpdateState(s, sOld)
