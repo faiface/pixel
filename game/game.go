@@ -6,7 +6,7 @@ func UpdateState(s State, sOld State) State {
 		if b := activeBot(s.Teams[i]); b != nil {
 			s = moveBot(s, i, *b)
 		}
-		s = maybePassBaton(s, i)
+		s = maybePassBaton(s, sOld, i)
 	}
 
 	for _, t := range s.Teams {
@@ -18,7 +18,7 @@ func UpdateState(s State, sOld State) State {
 	return s
 }
 
-func maybePassBaton(s State, teamID int) State {
+func maybePassBaton(s State, sOld State, teamID int) State {
 	t := s.Teams[teamID]
 	h := activeBot(t)
 	if h == nil {
@@ -36,8 +36,8 @@ func maybePassBaton(s State, teamID int) State {
 			newH := t.Bots[i]
 			newH.a = baseAccel
 			t.Baton.HolderID = newH.ID
-			s = updateTeam(s, t)
-			return updateBot(s, s, teamID, newH)
+			s = updateTeam(s, sOld, t)
+			return updateBot(s, sOld, teamID, newH)
 		}
 	}
 
@@ -65,12 +65,16 @@ func updateBot(s State, sOld State, teamID int, b Bot) State {
 		}
 	}
 
-	s = updateTeam(s, t)
+	s = updateTeam(s, sOld, t)
 	return s
 }
 
-func updateTeam(s State, t Team) State {
-	s.Teams = append(s.Teams[:t.id], append([]Team{t}, s.Teams[t.id+1:]...)...)
+func updateTeam(s State, sOld State, t Team) State {
+	teams := append([]Team{}, s.Teams[:t.id]...)
+	teams = append(teams, t)
+	teams = append(teams, s.Teams[t.id+1:]...)
+	s.Teams = teams
+
 	return s
 }
 

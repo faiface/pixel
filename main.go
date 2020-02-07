@@ -1,7 +1,6 @@
 package main
 
 import (
-	"log"
 	"math/rand"
 	"relay/game"
 	"relay/gfx"
@@ -36,7 +35,7 @@ func run() {
 
 		rs := gfx.RenderState{
 			Animating: false,
-			Frames:    3,
+			Frames:    20,
 		}
 
 		switch {
@@ -47,7 +46,6 @@ func run() {
 			s = game.UpdateState(s, sOld)
 		}
 		for rs.Animating {
-			log.Println("anim loop")
 			rs = gfx.Render(rs, sOld, s, w, time.Since(start))
 			w.Update()
 		}
