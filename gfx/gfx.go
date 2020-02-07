@@ -50,7 +50,7 @@ func renderBots(s game.State, w *pixelgl.Window, d time.Duration, colors map[*ga
 			im.Circle(botWidth, 0)
 
 			im.Draw(w)
-			if &t.Bots[j] == t.Baton.Holder {
+			if t.Bots[j].ID == t.Baton.HolderID {
 				renderBaton(pos, w)
 			}
 		}

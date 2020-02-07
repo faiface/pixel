@@ -1,6 +1,6 @@
 package game
 
-func accelerate(b *Bot) {
+func accelerate(b Bot) Bot {
 	if b.a < -maxA {
 		b.a = -maxA
 	}
@@ -15,14 +15,18 @@ func accelerate(b *Bot) {
 	if b.v < -maxV {
 		b.v = -maxV
 	}
+
+	return b
 }
 
-func moveBot(b *Bot, s State) {
+func moveBot(s State, teamID int, b Bot) State {
 	for i := 0; i < b.v; i++ {
 		if !collide(b.Pos+1, b.Lane, s) {
 			b.Pos++
 		}
 	}
+
+	return updateBot(s, teamID, b)
 }
 
 func collide(pos, lane int, s State) bool {

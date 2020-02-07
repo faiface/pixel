@@ -2,8 +2,9 @@ package game
 
 import "log"
 
-func chooseCommand(t Team, s State) command {
-	h := t.Baton.Holder
+func chooseCommand(s State, teamID int) command {
+	t := s.Teams[teamID]
+	h := t.BatonHolder()
 	if collide(h.Pos+1, h.Lane, s) {
 		if h.Lane <= t.Lane {
 			return left
@@ -13,7 +14,7 @@ func chooseCommand(t Team, s State) command {
 
 	var nextBot *Bot
 	for i, b := range t.Bots {
-		if b.id == h.id+1 {
+		if b.ID == h.ID+1 {
 			nextBot = &t.Bots[i]
 			break
 		}
