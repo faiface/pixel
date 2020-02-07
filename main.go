@@ -53,7 +53,6 @@ func run() {
 			rs = gfx.Render(rs, sOld, s, w, time.Since(start))
 			w.Update()
 		}
-		w.Update()
 	}
 }
 
