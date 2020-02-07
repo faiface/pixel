@@ -1,5 +1,7 @@
 package game
 
+import "log"
+
 func UpdateState(s State, sOld State) State {
 	for i := range s.Teams {
 		s = doCommand(chooseCommand(s, i), s, i)
@@ -11,6 +13,7 @@ func UpdateState(s State, sOld State) State {
 
 	for _, t := range s.Teams {
 		if b := activeBot(t); b != nil && won(*b, s) {
+			log.Printf("team %d won", t.id)
 			s.GameOver = true
 		}
 	}
@@ -182,10 +185,10 @@ func NewState() State {
 }
 
 const (
-	Steps    = 50
+	Steps    = 60
 	numBots  = 5
 	NumTeams = 4
 	NumLanes = 6
-	maxA     = 3
-	maxV     = 10
+	maxA     = 2
+	maxV     = 8
 )

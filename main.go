@@ -30,29 +30,34 @@ func run() {
 	start := time.Now()
 
 	w.Clear(colornames.Peachpuff)
+
+	rs := gfx.RenderState{
+		Animating: false,
+		Frames:    20,
+	}
+
+	sOld := s
+
 	for !w.Closed() && !s.GameOver {
-		sOld := s
-
-		rs := gfx.RenderState{
-			Animating: false,
-			Frames:    20,
-		}
-
 		switch {
 		case w.Pressed(pixelgl.KeyQ):
 			return
-		case w.JustPressed(pixelgl.KeySpace) || true:
+		case rs.Animating:
+			rs = gfx.Render(rs, sOld, s, w, time.Since(start))
+			if !rs.Animating {
+				sOld = s
+			}
+		default:
 			rs.Animating = true
+			rs.Frame = 0
 			s = game.UpdateState(s, sOld)
 			if s.GameOver {
 				s = game.NewState()
 				sOld = s
 			}
 		}
-		for rs.Animating {
-			rs = gfx.Render(rs, sOld, s, w, time.Since(start))
-			w.Update()
-		}
+
+		w.Update()
 	}
 }
 
