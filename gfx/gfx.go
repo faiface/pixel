@@ -2,7 +2,6 @@ package gfx
 
 import (
 	"image/color"
-	"log"
 	"relay/game"
 	"time"
 
@@ -19,8 +18,6 @@ type RenderState struct {
 }
 
 func Render(rs RenderState, sOld, sNew game.State, w *pixelgl.Window, d time.Duration) RenderState {
-	//	log.Printf("ENTER render sOld: %+v", sOld)
-	//	log.Printf("ENTER render sNew: %+v", sNew)
 	w.Clear(colornames.Peru)
 
 	tween := float64(rs.Frame) / float64(rs.Frames)
@@ -36,11 +33,9 @@ func Render(rs RenderState, sOld, sNew game.State, w *pixelgl.Window, d time.Dur
 	return rs
 }
 
-func renderBots(sOld, sNew game.State, tween float64, w *pixelgl.Window, d time.Duration, colors map[*game.Team]pixel.RGBA) {
+func renderBots(sOld, sNew game.State, tween float64, w *pixelgl.Window, _ time.Duration, colors map[*game.Team]pixel.RGBA) {
 	bounds := w.Bounds()
 	im := imdraw.New(nil)
-
-	//log.Println("sOld.Teams:", sOld.Teams)
 
 	for i, t := range sNew.Teams {
 		for j, bot := range t.Bots {
@@ -50,13 +45,8 @@ func renderBots(sOld, sNew game.State, tween float64, w *pixelgl.Window, d time.
 			im.Color = c
 
 			oldBot := sOld.Teams[i].Bots[j]
-			//log.Printf("oldBot: %+v", oldBot)
-			//log.Printf("newBot: %+v", bot)
 			oldPos := lanePos(oldBot.Pos, oldBot.Lane, botWidth, bounds)
 			newPos := lanePos(bot.Pos, bot.Lane, botWidth, bounds)
-
-			log.Println("oldPos:", oldPos)
-			log.Println("newPos:", newPos)
 
 			pos := pixel.Vec{
 				X: oldPos.X + tween*(newPos.X-oldPos.X),
@@ -72,7 +62,6 @@ func renderBots(sOld, sNew game.State, tween float64, w *pixelgl.Window, d time.
 			if t.Bots[j].ID == t.Baton.HolderID {
 				renderBaton(pos, w)
 			}
-			//log.Println("sOld.Teams[i].Bots[j]:", sOld.Teams[i].Bots[j])
 		}
 	}
 }

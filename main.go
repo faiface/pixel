@@ -39,11 +39,15 @@ func run() {
 		}
 
 		switch {
-		case w.JustPressed(pixelgl.KeyQ):
+		case w.Pressed(pixelgl.KeyQ):
 			return
-		case w.JustPressed(pixelgl.KeySpace):
+		case w.JustPressed(pixelgl.KeySpace) || true:
 			rs.Animating = true
 			s = game.UpdateState(s, sOld)
+			if s.GameOver {
+				s = game.NewState()
+				sOld = s
+			}
 		}
 		for rs.Animating {
 			rs = gfx.Render(rs, sOld, s, w, time.Since(start))

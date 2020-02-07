@@ -1,7 +1,5 @@
 package game
 
-import "log"
-
 func chooseCommand(s State, teamID int) command {
 	t := s.Teams[teamID]
 	h := t.BatonHolder()
@@ -23,7 +21,6 @@ func chooseCommand(s State, teamID int) command {
 	if nextBot != nil {
 		if h.Lane != nextBot.Lane {
 			if abs(nextBot.Pos-h.Pos) < h.v {
-				log.Println("WHOOOOOOA")
 				return slowDown
 			}
 		}
