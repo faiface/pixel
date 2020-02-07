@@ -17,32 +17,50 @@ type RenderState struct {
 	frame     int
 }
 
-func Render(rs RenderState, s game.State, w *pixelgl.Window, d time.Duration) RenderState {
-	//tween := float64(rs.frame) / float64(rs.Frames)
+func Render(rs RenderState, sOld, sNew game.State, w *pixelgl.Window, d time.Duration) RenderState {
+	//log.Println("render")
+	w.Clear(colornames.Peru)
 
-	colors := teamColors(s.Teams)
-	renderBots(s, w, d, colors)
-	renderObstacles(s, w)
+	tween := float64(rs.frame) / float64(rs.Frames)
+
+	colors := teamColors(sNew.Teams)
+	renderBots(sOld, sNew, tween, w, d, colors)
+	renderObstacles(sNew, w)
 
 	rs.frame++
+	//log.Println("frame", rs.frame)
 	if rs.frame >= rs.Frames {
 		rs.Animating = false
 	}
 	return rs
 }
 
-func renderBots(s game.State, w *pixelgl.Window, d time.Duration, colors map[*game.Team]pixel.RGBA) {
+func renderBots(sOld, sNew game.State, tween float64, w *pixelgl.Window, d time.Duration, colors map[*game.Team]pixel.RGBA) {
 	bounds := w.Bounds()
 	im := imdraw.New(nil)
 
-	for i, t := range s.Teams {
+	//log.Println("sOld.Teams:", sOld.Teams)
+
+	for i, t := range sNew.Teams {
 		for j, bot := range t.Bots {
-			c := colors[&s.Teams[i]]
+			c := colors[&sNew.Teams[i]]
 			c.R += 0.2 * float64(j)
 			c.G -= 0.1 * float64(j)
 			im.Color = c
 
-			pos := lanePos(bot.Pos, bot.Lane, botWidth, bounds)
+			oldBot := sOld.Teams[i].Bots[j]
+			// log.Println("oldBot:", oldBot)
+			// log.Println("bot:", bot)
+			oldPos := lanePos(oldBot.Pos, oldBot.Lane, botWidth, bounds)
+			newPos := lanePos(bot.Pos, bot.Lane, botWidth, bounds)
+
+			// log.Println("oldPos:", oldPos)
+			// log.Println("newPos:", newPos)
+
+			pos := pixel.Vec{
+				X: oldPos.X + tween*(newPos.X-oldPos.X),
+				Y: oldPos.Y + tween*(newPos.Y-oldPos.Y),
+			}
 
 			im.Push(pos)
 
@@ -53,6 +71,7 @@ func renderBots(s game.State, w *pixelgl.Window, d time.Duration, colors map[*ga
 			if t.Bots[j].ID == t.Baton.HolderID {
 				renderBaton(pos, w)
 			}
+			//log.Println("sOld.Teams[i].Bots[j]:", sOld.Teams[i].Bots[j])
 		}
 	}
 }

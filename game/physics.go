@@ -26,7 +26,8 @@ func moveBot(s State, teamID int, b Bot) State {
 		}
 	}
 
-	return updateBot(s, teamID, b)
+	s = updateBot(s, s, teamID, b)
+	return s
 }
 
 func collide(pos, lane int, s State) bool {

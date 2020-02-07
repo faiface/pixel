@@ -1,6 +1,7 @@
 package main
 
 import (
+	"log"
 	"math/rand"
 	"relay/game"
 	"relay/gfx"
@@ -29,23 +30,26 @@ func run() {
 
 	start := time.Now()
 
+	w.Clear(colornames.Peachpuff)
 	for !w.Closed() && !s.GameOver {
-		w.Clear(colornames.Peru)
+		sOld := s
 
-		//sOld := s
+		rs := gfx.RenderState{
+			Animating: false,
+			Frames:    3,
+		}
 
 		switch {
 		case w.JustPressed(pixelgl.KeyQ):
 			return
 		case w.JustPressed(pixelgl.KeySpace):
-			s = game.UpdateState(s)
-		}
-		rs := gfx.RenderState{
-			Animating: true,
-			Frames:    10,
+			rs.Animating = true
+			s = game.UpdateState(s, sOld)
 		}
 		for rs.Animating {
-			rs = gfx.Render(rs, s, w, time.Since(start))
+			log.Println("anim loop")
+			rs = gfx.Render(rs, sOld, s, w, time.Since(start))
+			w.Update()
 		}
 		w.Update()
 	}

@@ -1,13 +1,137 @@
 package game
 
-import (
-	"log"
-)
+func UpdateState(s State, sOld State) State {
+	for i := range s.Teams {
+		s = doCommand(chooseCommand(s, i), s, sOld, i)
+		if b := activeBot(s.Teams[i]); b != nil {
+			s = moveBot(s, i, *b)
+		}
+		s = maybePassBaton(s, i)
+	}
+
+	for _, t := range s.Teams {
+		if b := activeBot(t); b != nil && won(*b, s) {
+			s.GameOver = true
+		}
+	}
+
+	return s
+}
+
+func maybePassBaton(s State, teamID int) State {
+	t := s.Teams[teamID]
+	h := activeBot(t)
+	if h == nil {
+		return s
+	}
+
+	for i, b := range t.Bots {
+		if h.ID >= b.ID || h.Lane != b.Lane {
+			continue
+		}
+		if abs(b.Pos-h.Pos) <= passDistance {
+			h.v = 0
+			h.a = 0
+			s = updateBot(s, s, teamID, *h)
+			newH := t.Bots[i]
+			newH.a = baseAccel
+			t.Baton.HolderID = newH.ID
+			s = updateTeam(s, t)
+			return updateBot(s, s, teamID, newH)
+		}
+	}
+
+	return s
+}
+
+func activeBot(t Team) *Bot {
+	for _, b := range t.Bots {
+		if b.ID == t.Baton.HolderID {
+			return &b
+		}
+	}
+	return nil
+}
+
+func updateBot(s State, sOld State, teamID int, b Bot) State {
+	t := s.Teams[teamID]
+	for i, bb := range t.Bots {
+		if bb.ID == b.ID {
+			bots := append([]Bot{}, t.Bots[:i]...)
+			bots = append(bots, b)
+			bots = append(bots, t.Bots[i+1:]...)
+			t.Bots = bots
+			break
+		}
+	}
+
+	s = updateTeam(s, t)
+	return s
+}
+
+func updateTeam(s State, t Team) State {
+	s.Teams = append(s.Teams[:t.id], append([]Team{t}, s.Teams[t.id+1:]...)...)
+	return s
+}
+
+func won(b Bot, s State) bool {
+	return b.Pos >= Steps
+}
+
+func gameOver(s State) bool {
+	for _, t := range s.Teams {
+		if t.won {
+			return true
+		}
+	}
+	return false
+}
+
+func abs(n int) int {
+	if n < 0 {
+		return -n
+	}
+	return n
+}
 
 type State struct {
 	Teams     []Team
 	Obstacles []Obstacle
 	GameOver  bool
+}
+
+type Team struct {
+	id    int
+	Bots  []Bot
+	Baton Baton
+	won   bool
+	Lane  int
+}
+
+func (t Team) BatonHolder() *Bot {
+	for _, b := range t.Bots {
+		if b.ID == t.Baton.HolderID {
+			return &b
+		}
+	}
+	return nil
+}
+
+type Bot struct {
+	ID   int
+	Lane int
+	Pos  int
+	v    int
+	a    int
+}
+
+type Baton struct {
+	HolderID int
+}
+
+type Obstacle struct {
+	Lane int
+	Pos  int
 }
 
 func NewState() State {
@@ -53,124 +177,6 @@ func NewState() State {
 	}
 }
 
-type Team struct {
-	id    int
-	Bots  []Bot
-	Baton Baton
-	won   bool
-	Lane  int
-}
-
-func (t Team) BatonHolder() *Bot {
-	for _, b := range t.Bots {
-		if b.ID == t.Baton.HolderID {
-			return &b
-		}
-	}
-	return nil
-}
-
-type Bot struct {
-	ID   int
-	Lane int
-	Pos  int
-	v    int
-	a    int
-}
-
-type Baton struct {
-	HolderID int
-}
-
-type Obstacle struct {
-	Lane int
-	Pos  int
-}
-
-func UpdateState(s State) State {
-	for i, t := range s.Teams {
-		s = doCommand(chooseCommand(s, i), s, i)
-		if b := activeBot(t); b != nil {
-			s = moveBot(s, i, *b)
-		}
-		s = maybePassBaton(s, i)
-	}
-
-	for _, t := range s.Teams {
-		if b := activeBot(t); b != nil && won(*b, s) {
-			s.GameOver = true
-		}
-	}
-
-	return s
-}
-
-func maybePassBaton(s State, teamID int) State {
-	t := s.Teams[teamID]
-	h := activeBot(t)
-	if h == nil {
-		return s
-	}
-
-	for i, b := range t.Bots {
-		if h.ID >= b.ID || h.Lane != b.Lane {
-			continue
-		}
-		if abs(b.Pos-h.Pos) <= passDistance {
-			log.Printf("team %v pass from %v to %v!", teamID, h.ID, b.ID)
-			h.v = 0
-			h.a = 0
-			s = updateBot(s, teamID, *h)
-			newH := t.Bots[i]
-			newH.a = baseAccel
-			t.Baton.HolderID = newH.ID
-			s = updateTeam(s, t)
-			return updateBot(s, teamID, newH)
-		}
-	}
-
-	return s
-}
-
-func activeBot(t Team) *Bot {
-	for _, b := range t.Bots {
-		if b.ID == t.Baton.HolderID {
-			return &b
-		}
-	}
-	return nil
-}
-
-func updateBot(s State, teamID int, b Bot) State {
-	t := s.Teams[teamID]
-	for i, bb := range t.Bots {
-		if bb.ID == b.ID {
-			t.Bots = append(t.Bots[:i], append([]Bot{b}, t.Bots[i+1:]...)...)
-			break
-		}
-	}
-
-	return updateTeam(s, t)
-}
-
-func updateTeam(s State, t Team) State {
-	s.Teams = append(s.Teams[:t.id], append([]Team{t}, s.Teams[t.id+1:]...)...)
-	return s
-}
-
-func won(b Bot, s State) bool {
-	return b.Pos >= Steps
-}
-
-func gameOver(s State) bool {
-	for _, t := range s.Teams {
-		if t.won {
-			return true
-		}
-	}
-	return false
-}
-
 const (
 	Steps    = 50
 	numBots  = 5
@@ -179,10 +185,3 @@ const (
 	maxA     = 3
 	maxV     = 10
 )
-
-func abs(n int) int {
-	if n < 0 {
-		return -n
-	}
-	return n
-}

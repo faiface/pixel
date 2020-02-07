@@ -13,7 +13,7 @@ const (
 	right
 )
 
-func doCommand(cmd command, s State, teamID int) State {
+func doCommand(cmd command, s State, sOld State, teamID int) State {
 	da := 1
 	da += rand.Intn(3) - 1
 
@@ -35,5 +35,5 @@ func doCommand(cmd command, s State, teamID int) State {
 		b.Lane--
 	}
 
-	return updateBot(s, teamID, *b)
+	return updateBot(s, sOld, teamID, *b)
 }
