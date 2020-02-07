@@ -11,10 +11,24 @@ import (
 	"golang.org/x/image/colornames"
 )
 
-func Render(s game.State, w *pixelgl.Window, d time.Duration) {
+type RenderState struct {
+	Animating bool
+	Frames    int
+	frame     int
+}
+
+func Render(rs RenderState, s game.State, w *pixelgl.Window, d time.Duration) RenderState {
+	//tween := float64(rs.frame) / float64(rs.Frames)
+
 	colors := teamColors(s.Teams)
 	renderBots(s, w, d, colors)
 	renderObstacles(s, w)
+
+	rs.frame++
+	if rs.frame >= rs.Frames {
+		rs.Animating = false
+	}
+	return rs
 }
 
 func renderBots(s game.State, w *pixelgl.Window, d time.Duration, colors map[*game.Team]pixel.RGBA) {
@@ -65,7 +79,7 @@ func renderObstacles(s game.State, w *pixelgl.Window) {
 	im := imdraw.New(nil)
 
 	for _, o := range s.Obstacles {
-		im.Color = pixel.RGB(1, 0, 1)
+		im.Color = pixel.RGB(0.1, 0.1, 0.2)
 
 		pos := lanePos(o.Pos, o.Lane, botWidth, b)
 

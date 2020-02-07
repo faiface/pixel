@@ -31,13 +31,22 @@ func run() {
 
 	for !w.Closed() && !s.GameOver {
 		w.Clear(colornames.Peru)
+
+		//sOld := s
+
 		switch {
 		case w.JustPressed(pixelgl.KeyQ):
 			return
 		case w.JustPressed(pixelgl.KeySpace):
 			s = game.UpdateState(s)
 		}
-		gfx.Render(s, w, time.Since(start))
+		rs := gfx.RenderState{
+			Animating: true,
+			Frames:    10,
+		}
+		for rs.Animating {
+			rs = gfx.Render(rs, s, w, time.Since(start))
+		}
 		w.Update()
 	}
 }

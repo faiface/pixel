@@ -23,6 +23,7 @@ func NewState() State {
 			bots = append(bots, b)
 		}
 		teams = append(teams, Team{
+			id:    i,
 			Bots:  bots,
 			Baton: Baton{Holder: &bots[0]},
 			Lane:  i,
@@ -40,11 +41,20 @@ func NewState() State {
 				Lane: 1,
 				Pos:  Steps * 2 / 3,
 			},
+			{
+				Lane: 2,
+				Pos:  Steps / 2,
+			},
+			{
+				Lane: 3,
+				Pos:  Steps * 3 / 4,
+			},
 		},
 	}
 }
 
 type Team struct {
+	id    int
 	Bots  []Bot
 	Baton Baton
 	won   bool
@@ -93,7 +103,7 @@ func maybePassBaton(t *Team) {
 			continue
 		}
 		if abs(b.Pos-h.Pos) <= passDistance {
-			log.Printf("pass from %v to %v!", h.id, b.id)
+			log.Printf("team %v pass from %v to %v!", t.id, h.id, b.id)
 			t.Baton.Holder.v = 0
 			t.Baton.Holder.a = 0
 			t.Baton.Holder = &t.Bots[i]
@@ -119,8 +129,8 @@ func gameOver(s State) bool {
 const (
 	Steps    = 50
 	numBots  = 5
-	NumTeams = 2
-	NumLanes = 4
+	NumTeams = 4
+	NumLanes = 6
 	maxA     = 3
 	maxV     = 10
 )
