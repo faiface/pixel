@@ -26,7 +26,7 @@ func moveBot(s State, teamID int, b Bot) State {
 		}
 	}
 
-	s = updateBot(s, s, teamID, b)
+	s = updateBot(s, teamID, b)
 	return s
 }
 

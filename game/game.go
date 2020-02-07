@@ -2,11 +2,11 @@ package game
 
 func UpdateState(s State, sOld State) State {
 	for i := range s.Teams {
-		s = doCommand(chooseCommand(s, i), s, sOld, i)
+		s = doCommand(chooseCommand(s, i), s, i)
 		if b := activeBot(s.Teams[i]); b != nil {
 			s = moveBot(s, i, *b)
 		}
-		s = maybePassBaton(s, sOld, i)
+		s = maybePassBaton(s, i)
 	}
 
 	for _, t := range s.Teams {
@@ -18,7 +18,7 @@ func UpdateState(s State, sOld State) State {
 	return s
 }
 
-func maybePassBaton(s State, sOld State, teamID int) State {
+func maybePassBaton(s State, teamID int) State {
 	t := s.Teams[teamID]
 	h := activeBot(t)
 	if h == nil {
@@ -32,12 +32,12 @@ func maybePassBaton(s State, sOld State, teamID int) State {
 		if abs(b.Pos-h.Pos) <= passDistance {
 			h.v = 0
 			h.a = 0
-			s = updateBot(s, s, teamID, *h)
+			s = updateBot(s, teamID, *h)
 			newH := t.Bots[i]
 			newH.a = baseAccel
 			t.Baton.HolderID = newH.ID
-			s = updateTeam(s, sOld, t)
-			return updateBot(s, sOld, teamID, newH)
+			s = updateTeam(s, t)
+			return updateBot(s, teamID, newH)
 		}
 	}
 
@@ -53,7 +53,7 @@ func activeBot(t Team) *Bot {
 	return nil
 }
 
-func updateBot(s State, sOld State, teamID int, b Bot) State {
+func updateBot(s State, teamID int, b Bot) State {
 	t := s.Teams[teamID]
 	for i, bb := range t.Bots {
 		if bb.ID == b.ID {
@@ -65,11 +65,11 @@ func updateBot(s State, sOld State, teamID int, b Bot) State {
 		}
 	}
 
-	s = updateTeam(s, sOld, t)
+	s = updateTeam(s, t)
 	return s
 }
 
-func updateTeam(s State, sOld State, t Team) State {
+func updateTeam(s State, t Team) State {
 	teams := append([]Team{}, s.Teams[:t.id]...)
 	teams = append(teams, t)
 	teams = append(teams, s.Teams[t.id+1:]...)
