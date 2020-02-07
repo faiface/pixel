@@ -3,7 +3,6 @@ package gfx
 import (
 	"image/color"
 	"relay/game"
-	"time"
 
 	"github.com/faiface/pixel"
 	"github.com/faiface/pixel/imdraw"
@@ -17,13 +16,13 @@ type RenderState struct {
 	Frame     int
 }
 
-func Render(rs RenderState, sOld, sNew game.State, w *pixelgl.Window, d time.Duration) RenderState {
+func Render(rs RenderState, sOld, sNew game.State, w *pixelgl.Window) RenderState {
 	w.Clear(colornames.Peru)
 
 	tween := float64(rs.Frame) / float64(rs.Frames)
 
 	colors := teamColors(sNew.Teams)
-	renderBots(sOld, sNew, tween, w, d, colors)
+	renderBots(sOld, sNew, tween, w, colors)
 	renderObstacles(sNew, w)
 
 	rs.Frame++
@@ -33,7 +32,7 @@ func Render(rs RenderState, sOld, sNew game.State, w *pixelgl.Window, d time.Dur
 	return rs
 }
 
-func renderBots(sOld, sNew game.State, tween float64, w *pixelgl.Window, _ time.Duration, colors map[*game.Team]pixel.RGBA) {
+func renderBots(sOld, sNew game.State, tween float64, w *pixelgl.Window, colors map[*game.Team]pixel.RGBA) {
 	bounds := w.Bounds()
 	im := imdraw.New(nil)
 

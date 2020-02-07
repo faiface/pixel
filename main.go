@@ -27,8 +27,6 @@ func run() {
 
 	s := game.NewState()
 
-	start := time.Now()
-
 	w.Clear(colornames.Peachpuff)
 
 	rs := gfx.RenderState{
@@ -42,7 +40,7 @@ func run() {
 		case w.Pressed(pixelgl.KeyQ):
 			return
 		case rs.Animating:
-			rs = gfx.Render(rs, sOld, s, w, time.Since(start))
+			rs = gfx.Render(rs, sOld, s, w)
 			if !rs.Animating {
 				sOld = s
 			}
