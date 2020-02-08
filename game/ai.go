@@ -1,5 +1,7 @@
 package game
 
+import "log"
+
 func chooseCommand(s State, teamID int) command {
 	t := s.Teams[teamID]
 	h := ActiveBot(t)
@@ -27,4 +29,29 @@ func chooseCommand(s State, teamID int) command {
 	}
 
 	return speedUp
+}
+
+func smartChooseCommand(s State, teamID int) command {
+	bestCmd, bestN := speedUp, 0
+
+	log.Printf("team %d base score: %d", teamID, score(s, teamID))
+	for _, cmd := range []command{speedUp, slowDown, left, right} {
+		ss := doCommand(cmd, s, teamID)
+		n := score(ss, teamID)
+		log.Printf("team %d score %s: %d", teamID, cmd, n)
+		if n > bestN {
+			bestCmd, bestN = cmd, n
+		}
+	}
+
+	return bestCmd
+}
+
+func score(s State, teamID int) int {
+	t := s.Teams[teamID]
+	b := ActiveBot(t)
+	if b == nil {
+		return 0
+	}
+	return b.Position.Pos
 }

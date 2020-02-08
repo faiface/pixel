@@ -4,11 +4,9 @@ import "log"
 
 func UpdateState(s State, sOld State) State {
 	for i := range s.Teams {
-		s = doCommand(chooseCommand(s, i), s, i)
-		if b := ActiveBot(s.Teams[i]); b != nil {
-			s = moveBot(s, *b)
-		}
-		s = maybePassBaton(s, i)
+		cmd := smartChooseCommand(s, i)
+		log.Printf("team %d chose to %v", i, cmd)
+		s = doCommand(cmd, s, i)
 	}
 
 	for _, t := range s.Teams {

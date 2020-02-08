@@ -1,7 +1,5 @@
 package game
 
-import "log"
-
 func accelerate(b Bot) Bot {
 	if b.a < -maxA {
 		b.a = -maxA
@@ -24,7 +22,6 @@ func accelerate(b Bot) Bot {
 func moveBot(s State, b Bot) State {
 	for i := 0; i < b.v; i++ {
 		if o := collide(b.Position.Pos+1, b.Position.Lane, s); o != nil {
-			log.Printf("bot %d crashed into %#v!", b.ID, o)
 			return destroyBot(s, b)
 		} else {
 			b.Position.Pos++

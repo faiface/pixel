@@ -1,6 +1,7 @@
 package main
 
 import (
+	"log"
 	"math/rand"
 	"relay/game"
 	"relay/gfx"
@@ -34,6 +35,7 @@ func run() {
 		Frames:    20,
 	}
 	sOld := s
+	turn := 1
 
 	for !w.Closed() && !s.GameOver {
 		switch {
@@ -45,12 +47,15 @@ func run() {
 				sOld = s
 			}
 		case w.Pressed(pixelgl.KeySpace):
+			log.Printf("TURN %d", turn)
 			rs.Animating = true
 			rs.Frame = 0
 			s = game.UpdateState(s, sOld)
+			turn++
 			if s.GameOver {
 				s = game.NewState()
 				sOld = s
+				turn = 1
 			}
 		}
 

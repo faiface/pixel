@@ -32,5 +32,25 @@ func doCommand(cmd command, s State, teamID int) State {
 	}
 
 	s = updateBot(s, *b)
+
+	if b := ActiveBot(s.Teams[teamID]); b != nil {
+		s = moveBot(s, *b)
+	}
+	s = maybePassBaton(s, teamID)
+
 	return s
+}
+
+func (c command) String() string {
+	switch c {
+	case speedUp:
+		return "speed up"
+	case slowDown:
+		return "slow down"
+	case left:
+		return "go left"
+	case right:
+		return "go right"
+	}
+	return "(unknown)"
 }
