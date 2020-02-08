@@ -14,7 +14,7 @@ import (
 func run() error {
 	cfg := pixelgl.WindowConfig{
 		Title:  "Relay",
-		Bounds: pixel.R(0, 0, 2048, 512),
+		Bounds: pixel.R(0, 0, 2048, 1024),
 		VSync:  true,
 	}
 
@@ -47,7 +47,7 @@ func run() error {
 			if !rs.Animating {
 				sOld = s
 			}
-		case w.Pressed(pixelgl.KeySpace):
+		case w.Pressed(pixelgl.KeySpace) || true:
 			log.Printf("TURN %d", turn)
 			rs.Animating = true
 			rs.Frame = 0

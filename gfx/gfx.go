@@ -5,6 +5,7 @@ import (
 	"image"
 	"image/color"
 	_ "image/png"
+	"math/rand"
 	"os"
 	"relay/game"
 
@@ -55,7 +56,7 @@ func loadPicture(path string) (pixel.Picture, error) {
 }
 
 func Render(rs RenderState, sOld, sNew game.State, w *pixelgl.Window, sb spriteBank) RenderState {
-	w.Clear(colornames.Black)
+	renderBackground(w)
 
 	colors := teamColors(sNew.Teams)
 	ctx := context{
@@ -72,6 +73,31 @@ func Render(rs RenderState, sOld, sNew game.State, w *pixelgl.Window, sb spriteB
 		rs.Animating = false
 	}
 	return rs
+}
+
+var stars []pixel.Vec
+
+func renderBackground(w *pixelgl.Window) {
+	w.Clear(colornames.Black)
+
+	if len(stars) == 0 {
+		const numStars = 100
+		for i := 0; i < numStars; i++ {
+			stars = append(stars, pixel.Vec{
+				X: rand.Float64() * w.Bounds().W(),
+				Y: rand.Float64() * w.Bounds().H(),
+			})
+		}
+	}
+
+	for _, star := range stars {
+		im := imdraw.New(nil)
+		im.Color = colornames.White
+		im.Push(star)
+		im.Clear()
+		im.Circle(2, 0)
+		im.Draw(w)
+	}
 }
 
 func renderBots(ctx context, colors map[*game.Team]pixel.RGBA, pic pixel.Picture) {
@@ -159,9 +185,9 @@ func teamColors(ts []game.Team) map[*game.Team]pixel.RGBA {
 		var c color.RGBA
 		switch i {
 		case 0:
-			c = colornames.Red
+			c = colornames.Palevioletred
 		case 1:
-			c = colornames.Green
+			c = colornames.Lime
 		case 2:
 			c = colornames.Cornflowerblue
 		case 3:
@@ -172,6 +198,11 @@ func teamColors(ts []game.Team) map[*game.Team]pixel.RGBA {
 			c = colornames.Yellow
 		case 6:
 			c = colornames.Blueviolet
+		case 7:
+			c = colornames.Orange
+		case 8:
+			c = colornames.Coral
+
 		}
 		m[&ts[i]] = pixel.ToRGBA(c)
 	}

@@ -216,7 +216,7 @@ func NewState() State {
 func randomObstacles(teams []Team) []Obstacle {
 	var os []Obstacle
 
-	const numObstacles = 12 * NumTeams
+	const numObstacles = 5 * NumTeams
 	for i := 0; i < numObstacles; i++ {
 		os = append(os, Obstacle{
 			Position: randomOpenPosition(teams, os),
@@ -286,6 +286,6 @@ var (
 const (
 	Steps    = 50
 	numBots  = 5
-	NumTeams = 6
+	NumTeams = 8
 	NumLanes = NumTeams
 )
