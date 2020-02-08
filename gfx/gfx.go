@@ -33,32 +33,16 @@ func Render(rs RenderState, sOld, sNew game.State, w *pixelgl.Window) RenderStat
 }
 
 func renderBots(sOld, sNew game.State, tween float64, w *pixelgl.Window, colors map[*game.Team]pixel.RGBA) {
-	bounds := w.Bounds()
-	im := imdraw.New(nil)
-
 	for i, t := range sNew.Teams {
+		c := colors[&sNew.Teams[i]]
 		for j, bot := range t.Bots {
-			c := colors[&sNew.Teams[i]]
-			im.Color = c
-
 			oldBot := sOld.Teams[i].Bots[j]
-			oldPos := lanePos(oldBot.Position.Pos, oldBot.Position.Lane, botWidth, bounds)
-			newPos := lanePos(bot.Position.Pos, bot.Position.Lane, botWidth, bounds)
-
-			pos := pixel.Vec{
-				X: oldPos.X + tween*(newPos.X-oldPos.X),
-				Y: oldPos.Y + tween*(newPos.Y-oldPos.Y),
-			}
-
-			im.Push(pos)
-			im.Clear()
-			im.Circle(botWidth, 0)
-			im.Draw(w)
+			renderBot(oldBot, bot, sOld, sNew, w, c, tween)
 		}
 
 		oldHolder, newHolder := game.ActiveBot(sOld.Teams[i]), game.ActiveBot(sNew.Teams[i])
-		oldPos := lanePos(oldHolder.Position.Pos, oldHolder.Position.Lane, botWidth, bounds)
-		newPos := lanePos(newHolder.Position.Pos, newHolder.Position.Lane, botWidth, bounds)
+		oldPos := lanePos(oldHolder.Position.Pos, oldHolder.Position.Lane, botWidth, w.Bounds())
+		newPos := lanePos(newHolder.Position.Pos, newHolder.Position.Lane, botWidth, w.Bounds())
 
 		pos := pixel.Vec{
 			X: oldPos.X + tween*(newPos.X-oldPos.X),
@@ -66,6 +50,24 @@ func renderBots(sOld, sNew game.State, tween float64, w *pixelgl.Window, colors 
 		}
 		renderBaton(pos, w)
 	}
+}
+
+func renderBot(oldBot, bot game.Bot, sOld, sNew game.State, w *pixelgl.Window, c pixel.RGBA, tween float64) {
+	im := imdraw.New(nil)
+	im.Color = c
+
+	oldPos := lanePos(oldBot.Position.Pos, oldBot.Position.Lane, botWidth, w.Bounds())
+	newPos := lanePos(bot.Position.Pos, bot.Position.Lane, botWidth, w.Bounds())
+
+	pos := pixel.Vec{
+		X: oldPos.X + tween*(newPos.X-oldPos.X),
+		Y: oldPos.Y + tween*(newPos.Y-oldPos.Y),
+	}
+
+	im.Push(pos)
+	im.Clear()
+	im.Circle(botWidth, 0)
+	im.Draw(w)
 }
 
 func renderBaton(pos pixel.Vec, w *pixelgl.Window) {

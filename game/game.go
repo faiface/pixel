@@ -85,11 +85,9 @@ func updateTeam(s State, t Team) State {
 func destroyBot(s State, b Bot) State {
 	// insert obstacle where bot was
 	s.Obstacles = append(s.Obstacles, Obstacle{Position: b.Position})
-	log.Printf("spawn obstacle at %v", b.Position)
 
 	// spawn bot back at starting position
 	b.Position = b.StartPos
-	log.Printf("respawn bot %d at %v", b.ID, b.Position)
 
 	return updateBot(s, b)
 }
@@ -97,7 +95,11 @@ func destroyBot(s State, b Bot) State {
 func removeObstacle(s State, pos Position) State {
 	for i, o := range s.Obstacles {
 		if o.Position == pos {
-			s.Obstacles = append(s.Obstacles[:i], s.Obstacles[i+1:]...)
+			var os []Obstacle
+			os = append(os, s.Obstacles[:i]...)
+			os = append(os, s.Obstacles[i+1:]...)
+			s.Obstacles = os
+			//s.Obstacles = append([]Obstacle{}, append(s.Obstacles[:i], s.Obstacles[i+1:]...)...)
 			break
 		}
 	}
@@ -257,8 +259,8 @@ var (
 )
 
 const (
-	Steps    = 40
-	numBots  = 4
-	NumTeams = 2
+	Steps    = 50
+	numBots  = 5
+	NumTeams = 6
 	NumLanes = NumTeams
 )
