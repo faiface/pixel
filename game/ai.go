@@ -20,7 +20,7 @@ func chooseCommand(s State, teamID int) command {
 
 	if nextRacer != nil {
 		if h.Position.Lane != nextRacer.Position.Lane {
-			if abs(nextRacer.Position.Pos-h.Position.Pos) < h.v {
+			if abs(nextRacer.Position.Pos-h.Position.Pos) < h.Kinetics.V {
 				return slowDown
 			}
 		}

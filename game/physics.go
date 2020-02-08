@@ -1,26 +1,26 @@
 package game
 
 func accelerate(r Racer) Racer {
-	if r.a < -MaxA {
-		r.a = -MaxA
+	if r.Kinetics.A < -MaxA {
+		r.Kinetics.A = -MaxA
 	}
-	if r.a > MaxA {
-		r.a = MaxA
+	if r.Kinetics.A > MaxA {
+		r.Kinetics.A = MaxA
 	}
 
-	r.v += r.a
-	if r.v > MaxV {
-		r.v = MaxV
+	r.Kinetics.V += r.Kinetics.A
+	if r.Kinetics.V > MaxV {
+		r.Kinetics.V = MaxV
 	}
-	if r.v < -MaxV {
-		r.v = -MaxV
+	if r.Kinetics.V < -MaxV {
+		r.Kinetics.V = -MaxV
 	}
 
 	return r
 }
 
 func moveRacer(s State, r Racer) State {
-	for i := 0; i < r.v; i++ {
+	for i := 0; i < r.Kinetics.V; i++ {
 		if o := collide(r.Position.Pos+1, r.Position.Lane, s); o != nil {
 			return destroyRacer(s, r)
 		} else {

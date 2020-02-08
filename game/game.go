@@ -33,11 +33,11 @@ func maybePassBaton(s State, teamID int) State {
 			continue
 		}
 		if abs(r.Position.Pos-h.Position.Pos) <= PassDistance {
-			h.v = 0
-			h.a = 0
+			h.Kinetics.V = 0
+			h.Kinetics.A = 0
 			s = updateRacer(s, *h)
 			newH := t.Racers[i]
-			newH.a = baseAccel
+			newH.Kinetics.A = baseAccel
 			t.Baton.HolderID = newH.ID
 			s = updateTeam(s, t)
 			return updateRacer(s, newH)
@@ -146,8 +146,12 @@ type Racer struct {
 	TeamID   int
 	Position Position
 	StartPos Position
-	v        int
-	a        int
+	Kinetics Kinetics
+}
+
+type Kinetics struct {
+	V int
+	A int
 }
 
 type Position struct {
