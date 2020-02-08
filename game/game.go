@@ -107,6 +107,22 @@ func gameOver(s State) bool {
 	return false
 }
 
+func legalMove(s State, teamID int, cmd command) bool {
+	b := ActiveBot(s.Teams[teamID])
+	if b == nil {
+		return false
+	}
+
+	switch cmd {
+	case left:
+		return b.Position.Lane < NumLanes-1
+	case right:
+		return b.Position.Lane > 0
+
+	}
+	return true
+}
+
 func abs(n int) int {
 	if n < 0 {
 		return -n

@@ -36,6 +36,9 @@ func smartChooseCommand(s State, teamID int) command {
 
 	log.Printf("team %d base score: %d", teamID, score(s, teamID))
 	for _, cmd := range []command{speedUp, slowDown, left, right} {
+		if !legalMove(s, teamID, cmd) {
+			continue
+		}
 		ss := doCommand(cmd, s, teamID)
 		n := score(ss, teamID)
 		log.Printf("team %d score %s: %d", teamID, cmd, n)
