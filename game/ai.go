@@ -37,9 +37,6 @@ func smartChooseHelper(s State, teamID int, depth int) command {
 	bestCmd, bestN := speedUp, 0
 
 	for _, cmd := range validCommands {
-		if !legalMove(s, teamID, cmd) {
-			continue
-		}
 		n := score(cmd, s, teamID, depth)
 		if n > bestN {
 			bestCmd, bestN = cmd, n
@@ -50,6 +47,9 @@ func smartChooseHelper(s State, teamID int, depth int) command {
 }
 
 func score(cmd command, s State, teamID int, depth int) int {
+	if !legalMove(s, teamID, cmd) {
+		return -1
+	}
 	s = doCommand(cmd, s, teamID)
 	if depth == 0 {
 		t := s.Teams[teamID]
@@ -60,6 +60,7 @@ func score(cmd command, s State, teamID int, depth int) int {
 		return b.Position.Pos
 	}
 
-	cmd2 := smartChooseHelper(s, teamID, depth-1)
-	return score(cmd2, s, teamID, depth-1)
+	depth--
+	cmd2 := smartChooseHelper(s, teamID, depth)
+	return score(cmd2, s, teamID, depth)
 }
