@@ -113,7 +113,7 @@ func renderRacers(ctx context, colors map[*game.Team]pixel.RGBA, pic pixel.Pictu
 		c := colors[&ctx.sNew.Teams[i]]
 		for j, racer := range t.Racers {
 			oldRacer := ctx.sOld.Teams[i].Racers[j]
-			renderRacer(ctx, oldRacer, racer, c, pic)
+			renderRacer(ctx, oldRacer, racer, racer.ID == ctx.sOld.Teams[i].Baton.HolderID, c, pic)
 		}
 
 		oldHolder, newHolder := game.ActiveRacer(ctx.sOld.Teams[i]), game.ActiveRacer(ctx.sNew.Teams[i])
@@ -128,21 +128,38 @@ func renderRacers(ctx context, colors map[*game.Team]pixel.RGBA, pic pixel.Pictu
 	}
 }
 
-func renderRacer(ctx context, oldRacer, racer game.Racer, c pixel.RGBA, pic pixel.Picture) {
-	im := imdraw.New(nil)
-	im.Color = c
-
+func renderRacer(ctx context, oldRacer, racer game.Racer, active bool, c pixel.RGBA, pic pixel.Picture) {
 	oldPos := lanePos(oldRacer.Position.Pos, oldRacer.Position.Lane, racerWidth, ctx.w.Bounds())
 	newPos := lanePos(racer.Position.Pos, racer.Position.Lane, racerWidth, ctx.w.Bounds())
-
 	pos := pixel.Vec{
 		X: oldPos.X + ctx.tween*(newPos.X-oldPos.X),
 		Y: oldPos.Y + ctx.tween*(newPos.Y-oldPos.Y),
 	}
 
-	im.Push(pos)
-	im.Clear()
-	im.Draw(ctx.w)
+	if active {
+		im := imdraw.New(nil)
+		projC := c
+		alpha := 0.25
+		projC.R *= alpha
+		projC.G *= alpha
+		projC.B *= alpha
+		projC.A = alpha
+		im.Color = projC
+		w := racerWidth * 2
+		ll := pixel.Vec{
+			X: pos.X + w,
+			Y: pos.Y - w,
+		}
+		ur := pixel.Vec{
+			X: pos.X + w*float64(racer.Kinetics.V+1),
+			Y: pos.Y + w,
+		}
+		im.Push(ll)
+		im.Push(ur)
+		im.Rectangle(0)
+		im.Draw(ctx.w)
+	}
+
 	bounds := pic.Bounds()
 	sprite := pixel.NewSprite(pic, bounds)
 	sprite.DrawColorMask(ctx.w, pixel.IM.Moved(pos).ScaledXY(pos, pixel.Vec{2, 2}), c)
