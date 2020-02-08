@@ -163,6 +163,23 @@ func renderRacer(ctx context, oldRacer, racer game.Racer, active bool, c pixel.R
 	bounds := pic.Bounds()
 	sprite := pixel.NewSprite(pic, bounds)
 	sprite.DrawColorMask(ctx.w, pixel.IM.Moved(pos).ScaledXY(pos, pixel.Vec{2, 2}), c)
+
+	im := imdraw.New(nil)
+	for i := 0; i < racer.Battery.Capacity; i++ {
+		pos := pos
+		pos.X -= racerWidth
+		pos.Y -= racerWidth
+		w := 4.0
+		pos.X += (w * 2) * float64(i)
+		im.Color = colornames.Yellow
+		im.Push(pos)
+		var lw float64
+		if i > racer.Battery.Charge {
+			lw = 1
+		}
+		im.Circle(w, lw)
+		im.Draw(ctx.w)
+	}
 }
 
 func renderBaton(pos pixel.Vec, w *pixelgl.Window) {

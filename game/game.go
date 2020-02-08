@@ -147,6 +147,7 @@ type Racer struct {
 	Position Position
 	StartPos Position
 	Kinetics Kinetics
+	Battery  Battery
 }
 
 type Kinetics struct {
@@ -180,6 +181,10 @@ func NewState() State {
 					Lane: i,
 					Pos:  j * (Steps / numRacers),
 				},
+				Battery: Battery{
+					Capacity: baseCharge,
+					Charge:   baseCharge,
+				},
 			}
 			r.Position = r.StartPos
 			racers = append(racers, r)
@@ -199,8 +204,9 @@ func NewState() State {
 }
 
 const (
-	Steps     = 50
-	numRacers = 5
-	NumTeams  = 8
-	NumLanes  = NumTeams
+	Steps      = 80
+	numRacers  = 3
+	NumTeams   = 8
+	NumLanes   = NumTeams
+	baseCharge = 4
 )

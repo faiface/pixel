@@ -8,6 +8,11 @@ func accelerate(r Racer) Racer {
 		r.Kinetics.A = MaxA
 	}
 
+	if r.Kinetics.A > r.Battery.Charge {
+		r.Kinetics.A = r.Battery.Charge
+	}
+	r.Battery.Charge -= r.Kinetics.A
+
 	r.Kinetics.V += r.Kinetics.A
 	if r.Kinetics.V > MaxV {
 		r.Kinetics.V = MaxV
@@ -51,6 +56,6 @@ func collide(pos, lane int, s State) interface{} {
 const (
 	baseAccel    = 1
 	MaxA         = 1
-	MaxV         = 3
+	MaxV         = 4
 	PassDistance = 2
 )
