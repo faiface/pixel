@@ -1,6 +1,9 @@
 package game
 
-import "log"
+import (
+	"log"
+	"math/rand"
+)
 
 func UpdateState(s State, sOld State) State {
 	for i := range s.Teams {
@@ -177,35 +180,55 @@ func NewState() State {
 	}
 
 	return State{
-		Teams: teams,
-		Obstacles: []Obstacle{
-			{
-				Position: Position{
-					Lane: 0,
-					Pos:  Steps / 3,
-				},
+		Teams:     teams,
+		Obstacles: randomObstacles(),
+	}
+}
+
+func randomObstacles() []Obstacle {
+	var os []Obstacle
+
+	const numObstacles = 4 * NumTeams
+	for i := 0; i < numObstacles; i++ {
+		os = append(os, Obstacle{
+			Position: Position{
+				Pos:  rand.Intn(Steps-8) + 4,
+				Lane: rand.Intn(NumLanes),
 			},
-			{
-				Position: Position{
-					Lane: 1,
-					Pos:  Steps * 2 / 3,
-				},
+		})
+	}
+
+	return os
+}
+
+var (
+	staticObstacles = []Obstacle{
+		{
+			Position: Position{
+				Lane: 0,
+				Pos:  Steps / 3,
 			},
-			{
-				Position: Position{
-					Lane: 2,
-					Pos:  Steps / 2,
-				},
+		},
+		{
+			Position: Position{
+				Lane: 1,
+				Pos:  Steps * 2 / 3,
 			},
-			{
-				Position: Position{
-					Lane: 3,
-					Pos:  Steps * 3 / 4,
-				},
+		},
+		{
+			Position: Position{
+				Lane: 2,
+				Pos:  Steps / 2,
+			},
+		},
+		{
+			Position: Position{
+				Lane: 3,
+				Pos:  Steps * 3 / 4,
 			},
 		},
 	}
-}
+)
 
 const (
 	Steps    = 40
