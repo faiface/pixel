@@ -29,10 +29,10 @@ func maybePassBaton(s State, teamID int) State {
 	}
 
 	for i, b := range t.Bots {
-		if h.ID >= b.ID || h.Lane != b.Lane {
+		if h.ID >= b.ID || h.Position.Lane != b.Position.Lane {
 			continue
 		}
-		if abs(b.Pos-h.Pos) <= passDistance {
+		if abs(b.Position.Pos-h.Position.Pos) <= passDistance {
 			h.v = 0
 			h.a = 0
 			s = updateBot(s, teamID, *h)
@@ -82,7 +82,7 @@ func updateTeam(s State, t Team) State {
 }
 
 func won(b Bot, s State) bool {
-	return b.Pos >= Steps
+	return b.Position.Pos >= Steps
 }
 
 func gameOver(s State) bool {
@@ -125,11 +125,15 @@ func (t Team) BatonHolder() *Bot {
 }
 
 type Bot struct {
-	ID   int
+	ID       int
+	Position Position
+	v        int
+	a        int
+}
+
+type Position struct {
 	Lane int
 	Pos  int
-	v    int
-	a    int
 }
 
 type Baton struct {
@@ -137,8 +141,7 @@ type Baton struct {
 }
 
 type Obstacle struct {
-	Lane int
-	Pos  int
+	Position Position
 }
 
 func NewState() State {
@@ -147,9 +150,11 @@ func NewState() State {
 		var bots []Bot
 		for j := 0; j < numBots; j++ {
 			b := Bot{
-				ID:   i*NumTeams + j,
-				Lane: i,
-				Pos:  j * (Steps / numBots),
+				ID: i*NumTeams + j,
+				Position: Position{
+					Lane: i,
+					Pos:  j * (Steps / numBots),
+				},
 			}
 			bots = append(bots, b)
 		}
@@ -165,20 +170,28 @@ func NewState() State {
 		Teams: teams,
 		Obstacles: []Obstacle{
 			{
-				Lane: 0,
-				Pos:  Steps / 3,
+				Position: Position{
+					Lane: 0,
+					Pos:  Steps / 3,
+				},
 			},
 			{
-				Lane: 1,
-				Pos:  Steps * 2 / 3,
+				Position: Position{
+					Lane: 1,
+					Pos:  Steps * 2 / 3,
+				},
 			},
 			{
-				Lane: 2,
-				Pos:  Steps / 2,
+				Position: Position{
+					Lane: 2,
+					Pos:  Steps / 2,
+				},
 			},
 			{
-				Lane: 3,
-				Pos:  Steps * 3 / 4,
+				Position: Position{
+					Lane: 3,
+					Pos:  Steps * 3 / 4,
+				},
 			},
 		},
 	}

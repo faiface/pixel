@@ -26,9 +26,9 @@ func doCommand(cmd command, s State, teamID int) State {
 		b.a -= da
 		*b = accelerate(*b)
 	case left:
-		b.Lane++
+		b.Position.Lane++
 	case right:
-		b.Lane--
+		b.Position.Lane--
 	}
 
 	s = updateBot(s, teamID, *b)

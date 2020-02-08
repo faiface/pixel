@@ -3,8 +3,8 @@ package game
 func chooseCommand(s State, teamID int) command {
 	t := s.Teams[teamID]
 	h := t.BatonHolder()
-	if collide(h.Pos+1, h.Lane, s) != nil {
-		if h.Lane <= t.Lane && h.Lane < NumLanes-1 {
+	if collide(h.Position.Pos+1, h.Position.Lane, s) != nil {
+		if h.Position.Lane <= t.Lane && h.Position.Lane < NumLanes-1 {
 			return left
 		}
 		return right
@@ -19,8 +19,8 @@ func chooseCommand(s State, teamID int) command {
 	}
 
 	if nextBot != nil {
-		if h.Lane != nextBot.Lane {
-			if abs(nextBot.Pos-h.Pos) < h.v {
+		if h.Position.Lane != nextBot.Position.Lane {
+			if abs(nextBot.Position.Pos-h.Position.Pos) < h.v {
 				return slowDown
 			}
 		}

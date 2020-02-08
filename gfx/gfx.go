@@ -42,8 +42,8 @@ func renderBots(sOld, sNew game.State, tween float64, w *pixelgl.Window, colors 
 			im.Color = c
 
 			oldBot := sOld.Teams[i].Bots[j]
-			oldPos := lanePos(oldBot.Pos, oldBot.Lane, botWidth, bounds)
-			newPos := lanePos(bot.Pos, bot.Lane, botWidth, bounds)
+			oldPos := lanePos(oldBot.Position.Pos, oldBot.Position.Lane, botWidth, bounds)
+			newPos := lanePos(bot.Position.Pos, bot.Position.Lane, botWidth, bounds)
 
 			pos := pixel.Vec{
 				X: oldPos.X + tween*(newPos.X-oldPos.X),
@@ -57,8 +57,8 @@ func renderBots(sOld, sNew game.State, tween float64, w *pixelgl.Window, colors 
 		}
 
 		oldHolder, newHolder := game.ActiveBot(sOld.Teams[i]), game.ActiveBot(sNew.Teams[i])
-		oldPos := lanePos(oldHolder.Pos, oldHolder.Lane, botWidth, bounds)
-		newPos := lanePos(newHolder.Pos, newHolder.Lane, botWidth, bounds)
+		oldPos := lanePos(oldHolder.Position.Pos, oldHolder.Position.Lane, botWidth, bounds)
+		newPos := lanePos(newHolder.Position.Pos, newHolder.Position.Lane, botWidth, bounds)
 
 		pos := pixel.Vec{
 			X: oldPos.X + tween*(newPos.X-oldPos.X),
@@ -92,7 +92,7 @@ func renderObstacles(s game.State, w *pixelgl.Window) {
 	for _, o := range s.Obstacles {
 		im.Color = pixel.RGB(0.1, 0.1, 0.2)
 
-		pos := lanePos(o.Pos, o.Lane, botWidth, b)
+		pos := lanePos(o.Position.Pos, o.Position.Lane, botWidth, b)
 
 		im.Push(pos)
 
