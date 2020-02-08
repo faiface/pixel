@@ -21,17 +21,17 @@ func accelerate(b Bot) Bot {
 	return b
 }
 
-func moveBot(s State, teamID int, b Bot) State {
+func moveBot(s State, b Bot) State {
 	for i := 0; i < b.v; i++ {
 		if o := collide(b.Position.Pos+1, b.Position.Lane, s); o != nil {
 			log.Printf("bot %d crashed into %#v!", b.ID, o)
-			break
+			return destroyBot(s, b)
 		} else {
 			b.Position.Pos++
 		}
 	}
 
-	s = updateBot(s, teamID, b)
+	s = updateBot(s, b)
 	return s
 }
 

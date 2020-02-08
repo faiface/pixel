@@ -6,7 +6,7 @@ func UpdateState(s State, sOld State) State {
 	for i := range s.Teams {
 		s = doCommand(chooseCommand(s, i), s, i)
 		if b := ActiveBot(s.Teams[i]); b != nil {
-			s = moveBot(s, i, *b)
+			s = moveBot(s, *b)
 		}
 		s = maybePassBaton(s, i)
 	}
@@ -35,12 +35,12 @@ func maybePassBaton(s State, teamID int) State {
 		if abs(b.Position.Pos-h.Position.Pos) <= passDistance {
 			h.v = 0
 			h.a = 0
-			s = updateBot(s, teamID, *h)
+			s = updateBot(s, *h)
 			newH := t.Bots[i]
 			newH.a = baseAccel
 			t.Baton.HolderID = newH.ID
 			s = updateTeam(s, t)
-			return updateBot(s, teamID, newH)
+			return updateBot(s, newH)
 		}
 	}
 
@@ -56,8 +56,8 @@ func ActiveBot(t Team) *Bot {
 	return nil
 }
 
-func updateBot(s State, teamID int, b Bot) State {
-	t := s.Teams[teamID]
+func updateBot(s State, b Bot) State {
+	t := s.Teams[b.TeamID]
 	for i, bb := range t.Bots {
 		if bb.ID == b.ID {
 			bots := append([]Bot{}, t.Bots[:i]...)
@@ -79,6 +79,18 @@ func updateTeam(s State, t Team) State {
 	s.Teams = teams
 
 	return s
+}
+
+func destroyBot(s State, b Bot) State {
+	// insert obstacle where bot was
+	s.Obstacles = append(s.Obstacles, Obstacle{Position: b.Position})
+	log.Printf("spawn obstacle at %v", b.Position)
+
+	// spawn bot back at starting position
+	b.Position = b.StartPos
+	log.Printf("respawn bot %d at %v", b.ID, b.Position)
+
+	return updateBot(s, b)
 }
 
 func won(b Bot, s State) bool {
@@ -115,18 +127,11 @@ type Team struct {
 	Lane  int
 }
 
-func (t Team) BatonHolder() *Bot {
-	for _, b := range t.Bots {
-		if b.ID == t.Baton.HolderID {
-			return &b
-		}
-	}
-	return nil
-}
-
 type Bot struct {
 	ID       int
+	TeamID   int
 	Position Position
+	StartPos Position
 	v        int
 	a        int
 }
@@ -134,6 +139,11 @@ type Bot struct {
 type Position struct {
 	Lane int
 	Pos  int
+}
+
+type Battery struct {
+	Capacity int
+	Charge   int
 }
 
 type Baton struct {
@@ -150,12 +160,14 @@ func NewState() State {
 		var bots []Bot
 		for j := 0; j < numBots; j++ {
 			b := Bot{
-				ID: i*NumTeams + j,
-				Position: Position{
+				ID:     i*NumTeams + j,
+				TeamID: i,
+				StartPos: Position{
 					Lane: i,
 					Pos:  j * (Steps / numBots),
 				},
 			}
+			b.Position = b.StartPos
 			bots = append(bots, b)
 		}
 		teams = append(teams, Team{
@@ -199,7 +211,7 @@ func NewState() State {
 
 const (
 	Steps    = 40
-	numBots  = 5
+	numBots  = 4
 	NumTeams = 4
-	NumLanes = 4
+	NumLanes = NumTeams
 )

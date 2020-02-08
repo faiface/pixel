@@ -2,7 +2,7 @@ package game
 
 func chooseCommand(s State, teamID int) command {
 	t := s.Teams[teamID]
-	h := t.BatonHolder()
+	h := ActiveBot(t)
 	if collide(h.Position.Pos+1, h.Position.Lane, s) != nil {
 		if h.Position.Lane <= t.Lane && h.Position.Lane < NumLanes-1 {
 			return left

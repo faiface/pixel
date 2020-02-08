@@ -31,6 +31,6 @@ func doCommand(cmd command, s State, teamID int) State {
 		b.Position.Lane--
 	}
 
-	s = updateBot(s, teamID, *b)
+	s = updateBot(s, *b)
 	return s
 }
