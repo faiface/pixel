@@ -9,10 +9,9 @@ import (
 
 	"github.com/faiface/pixel"
 	"github.com/faiface/pixel/pixelgl"
-	"golang.org/x/image/colornames"
 )
 
-func run() {
+func run() error {
 	cfg := pixelgl.WindowConfig{
 		Title:  "Relay",
 		Bounds: pixel.R(0, 0, 2048, 512),
@@ -21,18 +20,20 @@ func run() {
 
 	w, err := pixelgl.NewWindow(cfg)
 	if err != nil {
-		panic(err)
+		return err
 	}
 
 	rand.Seed(time.Now().UnixNano())
 
 	s := game.NewState()
 
-	w.Clear(colornames.Peachpuff)
-
 	rs := gfx.RenderState{
 		Animating: true,
 		Frames:    20,
+	}
+	sb, err := gfx.NewSpriteBank()
+	if err != nil {
+		return err
 	}
 	sOld := s
 	turn := 1
@@ -40,9 +41,9 @@ func run() {
 	for !w.Closed() && !s.GameOver {
 		switch {
 		case w.Pressed(pixelgl.KeyQ):
-			return
+			return nil
 		case rs.Animating:
-			rs = gfx.Render(rs, sOld, s, w)
+			rs = gfx.Render(rs, sOld, s, w, *sb)
 			if !rs.Animating {
 				sOld = s
 			}
@@ -61,8 +62,15 @@ func run() {
 
 		w.Update()
 	}
+	return nil
+}
+
+func pixelRun() {
+	if err := run(); err != nil {
+		log.Fatal(err)
+	}
 }
 
 func main() {
-	pixelgl.Run(run)
+	pixelgl.Run(pixelRun)
 }

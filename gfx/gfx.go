@@ -1,7 +1,11 @@
 package gfx
 
 import (
+	"fmt"
+	"image"
 	"image/color"
+	_ "image/png"
+	"os"
 	"relay/game"
 
 	"github.com/faiface/pixel"
@@ -23,8 +27,35 @@ type context struct {
 	w     *pixelgl.Window
 }
 
-func Render(rs RenderState, sOld, sNew game.State, w *pixelgl.Window) RenderState {
-	w.Clear(colornames.Olivedrab)
+type spriteBank struct {
+	bot pixel.Picture
+}
+
+func NewSpriteBank() (*spriteBank, error) {
+	pic, err := loadPicture("simplebot-white.png")
+	if err != nil {
+		return nil, fmt.Errorf("load picture: %w", err)
+	}
+	return &spriteBank{
+		bot: pic,
+	}, nil
+}
+
+func loadPicture(path string) (pixel.Picture, error) {
+	file, err := os.Open(path)
+	if err != nil {
+		return nil, err
+	}
+	defer file.Close()
+	img, _, err := image.Decode(file)
+	if err != nil {
+		return nil, err
+	}
+	return pixel.PictureDataFromImage(img), nil
+}
+
+func Render(rs RenderState, sOld, sNew game.State, w *pixelgl.Window, sb spriteBank) RenderState {
+	w.Clear(colornames.Black)
 
 	colors := teamColors(sNew.Teams)
 	ctx := context{
@@ -33,7 +64,7 @@ func Render(rs RenderState, sOld, sNew game.State, w *pixelgl.Window) RenderStat
 		tween: float64(rs.Frame) / float64(rs.Frames),
 		w:     w,
 	}
-	renderBots(ctx, colors)
+	renderBots(ctx, colors, sb.bot)
 	renderObstacles(sNew, w)
 
 	rs.Frame++
@@ -43,12 +74,12 @@ func Render(rs RenderState, sOld, sNew game.State, w *pixelgl.Window) RenderStat
 	return rs
 }
 
-func renderBots(ctx context, colors map[*game.Team]pixel.RGBA) {
+func renderBots(ctx context, colors map[*game.Team]pixel.RGBA, pic pixel.Picture) {
 	for i, t := range ctx.sNew.Teams {
 		c := colors[&ctx.sNew.Teams[i]]
 		for j, bot := range t.Bots {
 			oldBot := ctx.sOld.Teams[i].Bots[j]
-			renderBot(oldBot, bot, ctx.sOld, ctx.sNew, ctx.w, c, ctx.tween)
+			renderBot(ctx, oldBot, bot, c, pic)
 		}
 
 		oldHolder, newHolder := game.ActiveBot(ctx.sOld.Teams[i]), game.ActiveBot(ctx.sNew.Teams[i])
@@ -63,27 +94,33 @@ func renderBots(ctx context, colors map[*game.Team]pixel.RGBA) {
 	}
 }
 
-func renderBot(oldBot, bot game.Bot, sOld, sNew game.State, w *pixelgl.Window, c pixel.RGBA, tween float64) {
+func renderBot(ctx context, oldBot, bot game.Bot, c pixel.RGBA, pic pixel.Picture) {
 	im := imdraw.New(nil)
 	im.Color = c
 
-	oldPos := lanePos(oldBot.Position.Pos, oldBot.Position.Lane, botWidth, w.Bounds())
-	newPos := lanePos(bot.Position.Pos, bot.Position.Lane, botWidth, w.Bounds())
+	oldPos := lanePos(oldBot.Position.Pos, oldBot.Position.Lane, botWidth, ctx.w.Bounds())
+	newPos := lanePos(bot.Position.Pos, bot.Position.Lane, botWidth, ctx.w.Bounds())
 
 	pos := pixel.Vec{
-		X: oldPos.X + tween*(newPos.X-oldPos.X),
-		Y: oldPos.Y + tween*(newPos.Y-oldPos.Y),
+		X: oldPos.X + ctx.tween*(newPos.X-oldPos.X),
+		Y: oldPos.Y + ctx.tween*(newPos.Y-oldPos.Y),
 	}
 
 	im.Push(pos)
 	im.Clear()
-	im.Circle(botWidth, 0)
-	im.Draw(w)
+	//im.Circle(botWidth, 0)
+	im.Draw(ctx.w)
+	bounds := pic.Bounds()
+	//log.Println("bounds:", bounds)
+	//bounds = bounds.Resized(bounds.Center(), pixel.Vec{bounds.W() * 2, bounds.H() * 4})
+	//log.Println("resize:", bounds)
+	sprite := pixel.NewSprite(pic, bounds)
+	sprite.DrawColorMask(ctx.w, pixel.IM.Moved(pos).ScaledXY(pos, pixel.Vec{3, 3}), c)
 }
 
 func renderBaton(pos pixel.Vec, w *pixelgl.Window) {
 	im := imdraw.New(nil)
-	im.Color = pixel.RGB(0, 0, 0)
+	im.Color = colornames.Bisque
 	im.Push(pos)
 	im.Clear()
 	im.Circle(batonWidth, 3)
@@ -103,7 +140,7 @@ func renderObstacles(s game.State, w *pixelgl.Window) {
 	im := imdraw.New(nil)
 
 	for _, o := range s.Obstacles {
-		im.Color = pixel.RGB(0.1, 0.1, 0.2)
+		im.Color = colornames.Slategray
 
 		pos := lanePos(o.Position.Pos, o.Position.Lane, botWidth, b)
 
@@ -126,13 +163,15 @@ func teamColors(ts []game.Team) map[*game.Team]pixel.RGBA {
 		case 1:
 			c = colornames.Green
 		case 2:
-			c = colornames.Blue
+			c = colornames.Cornflowerblue
 		case 3:
 			c = colornames.Magenta
 		case 4:
 			c = colornames.Cyan
 		case 5:
 			c = colornames.Yellow
+		case 6:
+			c = colornames.Blueviolet
 		}
 		m[&ts[i]] = pixel.ToRGBA(c)
 	}
