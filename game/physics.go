@@ -51,6 +51,6 @@ func collide(pos, lane int, s State) interface{} {
 const (
 	baseAccel    = 1
 	MaxA         = 1
-	MaxV         = 2
+	MaxV         = 3
 	PassDistance = 2
 )
