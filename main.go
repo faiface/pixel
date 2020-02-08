@@ -30,7 +30,7 @@ func run() {
 	w.Clear(colornames.Peachpuff)
 
 	rs := gfx.RenderState{
-		Animating: false,
+		Animating: true,
 		Frames:    20,
 	}
 	sOld := s
