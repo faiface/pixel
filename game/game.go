@@ -198,10 +198,8 @@ func NewState() State {
 }
 
 const (
-	Steps    = 60
+	Steps    = 40
 	numBots  = 5
 	NumTeams = 4
 	NumLanes = 4
-	maxA     = 2
-	maxV     = 8
 )
