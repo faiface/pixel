@@ -1,34 +1,34 @@
 package game
 
-func accelerate(b Bot) Bot {
-	if b.a < -MaxA {
-		b.a = -MaxA
+func accelerate(r Racer) Racer {
+	if r.a < -MaxA {
+		r.a = -MaxA
 	}
-	if b.a > MaxA {
-		b.a = MaxA
-	}
-
-	b.v += b.a
-	if b.v > MaxV {
-		b.v = MaxV
-	}
-	if b.v < -MaxV {
-		b.v = -MaxV
+	if r.a > MaxA {
+		r.a = MaxA
 	}
 
-	return b
+	r.v += r.a
+	if r.v > MaxV {
+		r.v = MaxV
+	}
+	if r.v < -MaxV {
+		r.v = -MaxV
+	}
+
+	return r
 }
 
-func moveBot(s State, b Bot) State {
-	for i := 0; i < b.v; i++ {
-		if o := collide(b.Position.Pos+1, b.Position.Lane, s); o != nil {
-			return destroyBot(s, b)
+func moveRacer(s State, r Racer) State {
+	for i := 0; i < r.v; i++ {
+		if o := collide(r.Position.Pos+1, r.Position.Lane, s); o != nil {
+			return destroyRacer(s, r)
 		} else {
-			b.Position.Pos++
+			r.Position.Pos++
 		}
 	}
 
-	s = updateBot(s, b)
+	s = updateRacer(s, r)
 	return s
 }
 
@@ -39,9 +39,9 @@ func collide(pos, lane int, s State) interface{} {
 		}
 	}
 	for _, t := range s.Teams {
-		for _, b := range t.Bots {
-			if b.Position.Pos == pos && b.Position.Lane == lane {
-				return b
+		for _, r := range t.Racers {
+			if r.Position.Pos == pos && r.Position.Lane == lane {
+				return r
 			}
 		}
 	}

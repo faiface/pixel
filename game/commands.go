@@ -16,36 +16,36 @@ func doCommand(cmd command, s State, teamID int) State {
 	da := 1
 	//da += rand.Intn(3) - 1
 
-	b := ActiveBot(s.Teams[teamID])
-	if b == nil {
+	r := ActiveRacer(s.Teams[teamID])
+	if r == nil {
 		return s
 	}
 
 	switch cmd {
 	case speedUp:
-		b.a += da
-		*b = accelerate(*b)
-		s = updateBot(s, *b)
+		r.a += da
+		*r = accelerate(*r)
+		s = updateRacer(s, *r)
 	case slowDown:
-		b.a -= da
-		*b = accelerate(*b)
-		s = updateBot(s, *b)
+		r.a -= da
+		*r = accelerate(*r)
+		s = updateRacer(s, *r)
 	case left:
-		b.Position.Lane++
-		s = updateBot(s, *b)
+		r.Position.Lane++
+		s = updateRacer(s, *r)
 	case right:
-		b.Position.Lane--
-		s = updateBot(s, *b)
+		r.Position.Lane--
+		s = updateRacer(s, *r)
 	case clearObstacle:
-		pos := b.Position
+		pos := r.Position
 		pos.Pos++
 		s = removeObstacle(s, pos)
-		b.v = 0
-		s = updateBot(s, *b)
+		r.v = 0
+		s = updateRacer(s, *r)
 	}
 
-	if b := ActiveBot(s.Teams[teamID]); b != nil {
-		s = moveBot(s, *b)
+	if r := ActiveRacer(s.Teams[teamID]); r != nil {
+		s = moveRacer(s, *r)
 	}
 	s = maybePassBaton(s, teamID)
 

@@ -13,7 +13,7 @@ func UpdateState(s State, sOld State) State {
 	}
 
 	for _, t := range s.Teams {
-		if b := ActiveBot(t); b != nil && won(*b, s) {
+		if r := ActiveRacer(t); r != nil && won(*r, s) {
 			log.Printf("team %d won", t.id)
 			s.GameOver = true
 		}
@@ -24,47 +24,47 @@ func UpdateState(s State, sOld State) State {
 
 func maybePassBaton(s State, teamID int) State {
 	t := s.Teams[teamID]
-	h := ActiveBot(t)
+	h := ActiveRacer(t)
 	if h == nil {
 		return s
 	}
 
-	for i, b := range t.Bots {
-		if h.ID >= b.ID || h.Position.Lane != b.Position.Lane {
+	for i, r := range t.Racers {
+		if h.ID >= r.ID || h.Position.Lane != r.Position.Lane {
 			continue
 		}
-		if abs(b.Position.Pos-h.Position.Pos) <= PassDistance {
+		if abs(r.Position.Pos-h.Position.Pos) <= PassDistance {
 			h.v = 0
 			h.a = 0
-			s = updateBot(s, *h)
-			newH := t.Bots[i]
+			s = updateRacer(s, *h)
+			newH := t.Racers[i]
 			newH.a = baseAccel
 			t.Baton.HolderID = newH.ID
 			s = updateTeam(s, t)
-			return updateBot(s, newH)
+			return updateRacer(s, newH)
 		}
 	}
 
 	return s
 }
 
-func ActiveBot(t Team) *Bot {
-	for _, b := range t.Bots {
-		if b.ID == t.Baton.HolderID {
-			return &b
+func ActiveRacer(t Team) *Racer {
+	for _, r := range t.Racers {
+		if r.ID == t.Baton.HolderID {
+			return &r
 		}
 	}
 	return nil
 }
 
-func updateBot(s State, b Bot) State {
-	t := s.Teams[b.TeamID]
-	for i, bb := range t.Bots {
-		if bb.ID == b.ID {
-			bots := append([]Bot{}, t.Bots[:i]...)
-			bots = append(bots, b)
-			bots = append(bots, t.Bots[i+1:]...)
-			t.Bots = bots
+func updateRacer(s State, r Racer) State {
+	t := s.Teams[r.TeamID]
+	for i, rr := range t.Racers {
+		if rr.ID == r.ID {
+			racers := append([]Racer{}, t.Racers[:i]...)
+			racers = append(racers, r)
+			racers = append(racers, t.Racers[i+1:]...)
+			t.Racers = racers
 			break
 		}
 	}
@@ -82,14 +82,14 @@ func updateTeam(s State, t Team) State {
 	return s
 }
 
-func destroyBot(s State, b Bot) State {
-	// insert obstacle where bot was
-	s.Obstacles = append(s.Obstacles, Obstacle{Position: b.Position})
+func destroyRacer(s State, r Racer) State {
+	// insert obstacle where racer was
+	s.Obstacles = append(s.Obstacles, Obstacle{Position: r.Position})
 
-	// spawn bot back at starting position
-	b.Position = b.StartPos
+	// spawn racer back at starting position
+	r.Position = r.StartPos
 
-	return updateBot(s, b)
+	return updateRacer(s, r)
 }
 
 func removeObstacle(s State, pos Position) State {
@@ -106,8 +106,8 @@ func removeObstacle(s State, pos Position) State {
 	return s
 }
 
-func won(b Bot, s State) bool {
-	return b.Position.Pos >= Steps
+func won(r Racer, s State) bool {
+	return r.Position.Pos >= Steps
 }
 
 func gameOver(s State) bool {
@@ -120,16 +120,16 @@ func gameOver(s State) bool {
 }
 
 func legalMove(s State, teamID int, cmd command) bool {
-	b := ActiveBot(s.Teams[teamID])
-	if b == nil {
+	r := ActiveRacer(s.Teams[teamID])
+	if r == nil {
 		return false
 	}
 
 	switch cmd {
 	case left:
-		return b.Position.Lane < NumLanes-1
+		return r.Position.Lane < NumLanes-1
 	case right:
-		return b.Position.Lane > 0
+		return r.Position.Lane > 0
 
 	}
 	return true
@@ -149,14 +149,14 @@ type State struct {
 }
 
 type Team struct {
-	id    int
-	Bots  []Bot
-	Baton Baton
-	won   bool
-	Lane  int
+	id     int
+	Racers []Racer
+	Baton  Baton
+	won    bool
+	Lane   int
 }
 
-type Bot struct {
+type Racer struct {
 	ID       int
 	TeamID   int
 	Position Position
@@ -186,24 +186,24 @@ type Obstacle struct {
 func NewState() State {
 	var teams []Team
 	for i := 0; i < NumTeams; i++ {
-		var bots []Bot
-		for j := 0; j < numBots; j++ {
-			b := Bot{
+		var racers []Racer
+		for j := 0; j < numRacers; j++ {
+			r := Racer{
 				ID:     i*NumTeams + j,
 				TeamID: i,
 				StartPos: Position{
 					Lane: i,
-					Pos:  j * (Steps / numBots),
+					Pos:  j * (Steps / numRacers),
 				},
 			}
-			b.Position = b.StartPos
-			bots = append(bots, b)
+			r.Position = r.StartPos
+			racers = append(racers, r)
 		}
 		teams = append(teams, Team{
-			id:    i,
-			Bots:  bots,
-			Baton: Baton{HolderID: i * NumTeams},
-			Lane:  i,
+			id:     i,
+			Racers: racers,
+			Baton:  Baton{HolderID: i * NumTeams},
+			Lane:   i,
 		})
 	}
 
@@ -240,8 +240,8 @@ func randomOpenPosition(ts []Team, os []Obstacle) Position {
 
 func positionOpen(pos Position, ts []Team, os []Obstacle) bool {
 	for _, t := range ts {
-		for _, b := range t.Bots {
-			if b.Position == pos {
+		for _, r := range t.Racers {
+			if r.Position == pos {
 				return false
 			}
 		}
@@ -284,8 +284,8 @@ var (
 )
 
 const (
-	Steps    = 50
-	numBots  = 5
-	NumTeams = 8
-	NumLanes = NumTeams
+	Steps     = 50
+	numRacers = 5
+	NumTeams  = 8
+	NumLanes  = NumTeams
 )

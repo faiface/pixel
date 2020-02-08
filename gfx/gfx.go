@@ -29,12 +29,12 @@ type context struct {
 }
 
 type spriteBank struct {
-	bot      pixel.Picture
+	racer    pixel.Picture
 	obstacle pixel.Picture
 }
 
 func NewSpriteBank() (*spriteBank, error) {
-	bot, err := loadPicture("shuttle.png")
+	racer, err := loadPicture("shuttle.png")
 	if err != nil {
 		return nil, fmt.Errorf("load picture: %w", err)
 	}
@@ -45,7 +45,7 @@ func NewSpriteBank() (*spriteBank, error) {
 	}
 
 	return &spriteBank{
-		bot:      bot,
+		racer:    racer,
 		obstacle: ob,
 	}, nil
 }
@@ -73,7 +73,7 @@ func Render(rs RenderState, sOld, sNew game.State, w *pixelgl.Window, sb spriteB
 		tween: float64(rs.Frame) / float64(rs.Frames),
 		w:     w,
 	}
-	renderBots(ctx, colors, sb.bot)
+	renderRacers(ctx, colors, sb.racer)
 	renderObstacles(sNew, w, sb.obstacle)
 
 	rs.Frame++
@@ -108,17 +108,17 @@ func renderBackground(w *pixelgl.Window) {
 	}
 }
 
-func renderBots(ctx context, colors map[*game.Team]pixel.RGBA, pic pixel.Picture) {
+func renderRacers(ctx context, colors map[*game.Team]pixel.RGBA, pic pixel.Picture) {
 	for i, t := range ctx.sNew.Teams {
 		c := colors[&ctx.sNew.Teams[i]]
-		for j, bot := range t.Bots {
-			oldBot := ctx.sOld.Teams[i].Bots[j]
-			renderBot(ctx, oldBot, bot, c, pic)
+		for j, racer := range t.Racers {
+			oldRacer := ctx.sOld.Teams[i].Racers[j]
+			renderRacer(ctx, oldRacer, racer, c, pic)
 		}
 
-		oldHolder, newHolder := game.ActiveBot(ctx.sOld.Teams[i]), game.ActiveBot(ctx.sNew.Teams[i])
-		oldPos := lanePos(oldHolder.Position.Pos, oldHolder.Position.Lane, botWidth, ctx.w.Bounds())
-		newPos := lanePos(newHolder.Position.Pos, newHolder.Position.Lane, botWidth, ctx.w.Bounds())
+		oldHolder, newHolder := game.ActiveRacer(ctx.sOld.Teams[i]), game.ActiveRacer(ctx.sNew.Teams[i])
+		oldPos := lanePos(oldHolder.Position.Pos, oldHolder.Position.Lane, racerWidth, ctx.w.Bounds())
+		newPos := lanePos(newHolder.Position.Pos, newHolder.Position.Lane, racerWidth, ctx.w.Bounds())
 
 		pos := pixel.Vec{
 			X: oldPos.X + ctx.tween*(newPos.X-oldPos.X),
@@ -128,12 +128,12 @@ func renderBots(ctx context, colors map[*game.Team]pixel.RGBA, pic pixel.Picture
 	}
 }
 
-func renderBot(ctx context, oldBot, bot game.Bot, c pixel.RGBA, pic pixel.Picture) {
+func renderRacer(ctx context, oldRacer, racer game.Racer, c pixel.RGBA, pic pixel.Picture) {
 	im := imdraw.New(nil)
 	im.Color = c
 
-	oldPos := lanePos(oldBot.Position.Pos, oldBot.Position.Lane, botWidth, ctx.w.Bounds())
-	newPos := lanePos(bot.Position.Pos, bot.Position.Lane, botWidth, ctx.w.Bounds())
+	oldPos := lanePos(oldRacer.Position.Pos, oldRacer.Position.Lane, racerWidth, ctx.w.Bounds())
+	newPos := lanePos(racer.Position.Pos, racer.Position.Lane, racerWidth, ctx.w.Bounds())
 
 	pos := pixel.Vec{
 		X: oldPos.X + ctx.tween*(newPos.X-oldPos.X),
@@ -172,14 +172,14 @@ func renderObstacles(s game.State, w *pixelgl.Window, pic pixel.Picture) {
 	for _, o := range s.Obstacles {
 		//im.Color = colornames.Slategray
 
-		pos := lanePos(o.Position.Pos, o.Position.Lane, botWidth, b)
+		pos := lanePos(o.Position.Pos, o.Position.Lane, racerWidth, b)
 
 		im.Push(pos)
 
 		im.Clear()
 		sprite := pixel.NewSprite(pic, pic.Bounds())
 		sprite.Draw(w, pixel.IM.Moved(pos))
-		//im.Circle(float64(botWidth), 0)
+		//im.Circle(float64(racerWidth), 0)
 
 		im.Draw(w)
 	}
@@ -216,6 +216,6 @@ func teamColors(ts []game.Team) map[*game.Team]pixel.RGBA {
 }
 
 const (
-	botWidth   float64 = 17
+	racerWidth float64 = 17
 	batonWidth float64 = 12
 )
