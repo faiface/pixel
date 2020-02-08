@@ -5,6 +5,7 @@ import (
 	"image"
 	"image/color"
 	_ "image/png"
+	"math"
 	"math/rand"
 	"os"
 	"relay/game"
@@ -145,7 +146,7 @@ func renderRacer(ctx context, oldRacer, racer game.Racer, active bool, c pixel.R
 		projC.B *= alpha
 		projC.A = alpha
 		im.Color = projC
-		w := racerWidth * 2
+		w := pic.Bounds().W() * 0.65
 		ll := pixel.Vec{
 			X: pos.X + w,
 			Y: pos.Y - w,
@@ -154,6 +155,8 @@ func renderRacer(ctx context, oldRacer, racer game.Racer, active bool, c pixel.R
 			X: pos.X + w*float64(racer.Kinetics.V+1),
 			Y: pos.Y + w,
 		}
+		ur.X = math.Min(ur.X, newPos.X+racerWidth)
+		ur.X = math.Max(ur.X, ll.X)
 		im.Push(ll)
 		im.Push(ur)
 		im.Rectangle(0)
@@ -162,7 +165,7 @@ func renderRacer(ctx context, oldRacer, racer game.Racer, active bool, c pixel.R
 
 	bounds := pic.Bounds()
 	sprite := pixel.NewSprite(pic, bounds)
-	sprite.DrawColorMask(ctx.w, pixel.IM.Moved(pos).ScaledXY(pos, pixel.Vec{2, 2}), c)
+	sprite.DrawColorMask(ctx.w, pixel.IM.Moved(pos).ScaledXY(pos, pixel.Vec{1.7, 1.7}), c)
 
 	im := imdraw.New(nil)
 	for i := 0; i < racer.Battery.Capacity; i++ {
