@@ -167,9 +167,9 @@ func renderRacer(ctx context, oldRacer, racer game.Racer, active bool, c pixel.R
 	im := imdraw.New(nil)
 	for i := 0; i < racer.Battery.Capacity; i++ {
 		pos := pos
+		w := 3.0
 		pos.X -= racerWidth
-		pos.Y -= racerWidth
-		w := 4.0
+		pos.Y -= racerWidth + w*2
 		pos.X += (w * 2) * float64(i)
 		im.Color = colornames.Yellow
 		im.Push(pos)
