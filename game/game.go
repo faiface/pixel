@@ -5,14 +5,14 @@ import "log"
 func UpdateState(s State, sOld State) State {
 	for i := range s.Teams {
 		s = doCommand(chooseCommand(s, i), s, i)
-		if b := activeBot(s.Teams[i]); b != nil {
+		if b := ActiveBot(s.Teams[i]); b != nil {
 			s = moveBot(s, i, *b)
 		}
 		s = maybePassBaton(s, i)
 	}
 
 	for _, t := range s.Teams {
-		if b := activeBot(t); b != nil && won(*b, s) {
+		if b := ActiveBot(t); b != nil && won(*b, s) {
 			log.Printf("team %d won", t.id)
 			s.GameOver = true
 		}
@@ -23,7 +23,7 @@ func UpdateState(s State, sOld State) State {
 
 func maybePassBaton(s State, teamID int) State {
 	t := s.Teams[teamID]
-	h := activeBot(t)
+	h := ActiveBot(t)
 	if h == nil {
 		return s
 	}
@@ -47,7 +47,7 @@ func maybePassBaton(s State, teamID int) State {
 	return s
 }
 
-func activeBot(t Team) *Bot {
+func ActiveBot(t Team) *Bot {
 	for _, b := range t.Bots {
 		if b.ID == t.Baton.HolderID {
 			return &b

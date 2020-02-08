@@ -17,7 +17,7 @@ type RenderState struct {
 }
 
 func Render(rs RenderState, sOld, sNew game.State, w *pixelgl.Window) RenderState {
-	w.Clear(colornames.Peru)
+	w.Clear(colornames.Olivedrab)
 
 	tween := float64(rs.Frame) / float64(rs.Frames)
 
@@ -51,15 +51,20 @@ func renderBots(sOld, sNew game.State, tween float64, w *pixelgl.Window, colors 
 			}
 
 			im.Push(pos)
-
 			im.Clear()
 			im.Circle(botWidth, 0)
-
 			im.Draw(w)
-			if t.Bots[j].ID == t.Baton.HolderID {
-				renderBaton(pos, w)
-			}
 		}
+
+		oldHolder, newHolder := game.ActiveBot(sOld.Teams[i]), game.ActiveBot(sNew.Teams[i])
+		oldPos := lanePos(oldHolder.Pos, oldHolder.Lane, botWidth, bounds)
+		newPos := lanePos(newHolder.Pos, newHolder.Lane, botWidth, bounds)
+
+		pos := pixel.Vec{
+			X: oldPos.X + tween*(newPos.X-oldPos.X),
+			Y: oldPos.Y + tween*(newPos.Y-oldPos.Y),
+		}
+		renderBaton(pos, w)
 	}
 }
 
@@ -110,7 +115,7 @@ func teamColors(ts []game.Team) map[*game.Team]pixel.RGBA {
 		case 2:
 			c = colornames.Lavender
 		case 3:
-			c = colornames.Maroon
+			c = colornames.Rosybrown
 		}
 		m[&ts[i]] = pixel.ToRGBA(c)
 	}

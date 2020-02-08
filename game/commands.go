@@ -13,7 +13,7 @@ func doCommand(cmd command, s State, teamID int) State {
 	da := 1
 	//da += rand.Intn(3) - 1
 
-	b := activeBot(s.Teams[teamID])
+	b := ActiveBot(s.Teams[teamID])
 	if b == nil {
 		return s
 	}
