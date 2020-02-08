@@ -16,13 +16,24 @@ type RenderState struct {
 	Frame     int
 }
 
+type context struct {
+	sOld  game.State
+	sNew  game.State
+	tween float64
+	w     *pixelgl.Window
+}
+
 func Render(rs RenderState, sOld, sNew game.State, w *pixelgl.Window) RenderState {
 	w.Clear(colornames.Olivedrab)
 
-	tween := float64(rs.Frame) / float64(rs.Frames)
-
 	colors := teamColors(sNew.Teams)
-	renderBots(sOld, sNew, tween, w, colors)
+	ctx := context{
+		sOld:  sOld,
+		sNew:  sNew,
+		tween: float64(rs.Frame) / float64(rs.Frames),
+		w:     w,
+	}
+	renderBots(ctx, colors)
 	renderObstacles(sNew, w)
 
 	rs.Frame++
@@ -32,23 +43,23 @@ func Render(rs RenderState, sOld, sNew game.State, w *pixelgl.Window) RenderStat
 	return rs
 }
 
-func renderBots(sOld, sNew game.State, tween float64, w *pixelgl.Window, colors map[*game.Team]pixel.RGBA) {
-	for i, t := range sNew.Teams {
-		c := colors[&sNew.Teams[i]]
+func renderBots(ctx context, colors map[*game.Team]pixel.RGBA) {
+	for i, t := range ctx.sNew.Teams {
+		c := colors[&ctx.sNew.Teams[i]]
 		for j, bot := range t.Bots {
-			oldBot := sOld.Teams[i].Bots[j]
-			renderBot(oldBot, bot, sOld, sNew, w, c, tween)
+			oldBot := ctx.sOld.Teams[i].Bots[j]
+			renderBot(oldBot, bot, ctx.sOld, ctx.sNew, ctx.w, c, ctx.tween)
 		}
 
-		oldHolder, newHolder := game.ActiveBot(sOld.Teams[i]), game.ActiveBot(sNew.Teams[i])
-		oldPos := lanePos(oldHolder.Position.Pos, oldHolder.Position.Lane, botWidth, w.Bounds())
-		newPos := lanePos(newHolder.Position.Pos, newHolder.Position.Lane, botWidth, w.Bounds())
+		oldHolder, newHolder := game.ActiveBot(ctx.sOld.Teams[i]), game.ActiveBot(ctx.sNew.Teams[i])
+		oldPos := lanePos(oldHolder.Position.Pos, oldHolder.Position.Lane, botWidth, ctx.w.Bounds())
+		newPos := lanePos(newHolder.Position.Pos, newHolder.Position.Lane, botWidth, ctx.w.Bounds())
 
 		pos := pixel.Vec{
-			X: oldPos.X + tween*(newPos.X-oldPos.X),
-			Y: oldPos.Y + tween*(newPos.Y-oldPos.Y),
+			X: oldPos.X + ctx.tween*(newPos.X-oldPos.X),
+			Y: oldPos.Y + ctx.tween*(newPos.Y-oldPos.Y),
 		}
-		renderBaton(pos, w)
+		renderBaton(pos, ctx.w)
 	}
 }
 
