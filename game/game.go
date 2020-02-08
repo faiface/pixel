@@ -87,6 +87,7 @@ func destroyRacer(s State, r Racer) State {
 
 	// spawn racer back at starting position
 	r.Position = r.StartPos
+	r.Kinetics = Kinetics{}
 
 	return updateRacer(s, r)
 }
