@@ -1,19 +1,19 @@
 package game
 
 func accelerate(b Bot) Bot {
-	if b.a < -maxA {
-		b.a = -maxA
+	if b.a < -MaxA {
+		b.a = -MaxA
 	}
-	if b.a > maxA {
-		b.a = maxA
+	if b.a > MaxA {
+		b.a = MaxA
 	}
 
 	b.v += b.a
-	if b.v > maxV {
-		b.v = maxV
+	if b.v > MaxV {
+		b.v = MaxV
 	}
-	if b.v < -maxV {
-		b.v = -maxV
+	if b.v < -MaxV {
+		b.v = -MaxV
 	}
 
 	return b
@@ -50,7 +50,7 @@ func collide(pos, lane int, s State) interface{} {
 
 const (
 	baseAccel    = 1
-	maxA         = 1
-	maxV         = 2
-	passDistance = 2
+	MaxA         = 1
+	MaxV         = 2
+	PassDistance = 2
 )

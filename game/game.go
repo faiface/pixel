@@ -33,7 +33,7 @@ func maybePassBaton(s State, teamID int) State {
 		if h.ID >= b.ID || h.Position.Lane != b.Position.Lane {
 			continue
 		}
-		if abs(b.Position.Pos-h.Position.Pos) <= passDistance {
+		if abs(b.Position.Pos-h.Position.Pos) <= PassDistance {
 			h.v = 0
 			h.a = 0
 			s = updateBot(s, *h)
@@ -259,6 +259,6 @@ var (
 const (
 	Steps    = 40
 	numBots  = 4
-	NumTeams = 4
+	NumTeams = 2
 	NumLanes = NumTeams
 )

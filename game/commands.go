@@ -40,6 +40,8 @@ func doCommand(cmd command, s State, teamID int) State {
 		pos := b.Position
 		pos.Pos++
 		s = removeObstacle(s, pos)
+		b.v = 0
+		s = updateBot(s, *b)
 	}
 
 	if b := ActiveBot(s.Teams[teamID]); b != nil {

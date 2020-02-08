@@ -109,13 +109,17 @@ func teamColors(ts []game.Team) map[*game.Team]pixel.RGBA {
 		var c color.RGBA
 		switch i {
 		case 0:
-			c = colornames.Cyan
+			c = colornames.Red
 		case 1:
-			c = colornames.Gold
+			c = colornames.Green
 		case 2:
-			c = colornames.Lavender
+			c = colornames.Blue
 		case 3:
-			c = colornames.Rosybrown
+			c = colornames.Magenta
+		case 4:
+			c = colornames.Cyan
+		case 5:
+			c = colornames.Yellow
 		}
 		m[&ts[i]] = pixel.ToRGBA(c)
 	}
