@@ -29,16 +29,24 @@ type context struct {
 }
 
 type spriteBank struct {
-	bot pixel.Picture
+	bot      pixel.Picture
+	obstacle pixel.Picture
 }
 
 func NewSpriteBank() (*spriteBank, error) {
-	pic, err := loadPicture("simplebot-white.png")
+	bot, err := loadPicture("shuttle.png")
 	if err != nil {
 		return nil, fmt.Errorf("load picture: %w", err)
 	}
+
+	ob, err := loadPicture("rock.png")
+	if err != nil {
+		return nil, fmt.Errorf("load picture: %w", err)
+	}
+
 	return &spriteBank{
-		bot: pic,
+		bot:      bot,
+		obstacle: ob,
 	}, nil
 }
 
@@ -66,7 +74,7 @@ func Render(rs RenderState, sOld, sNew game.State, w *pixelgl.Window, sb spriteB
 		w:     w,
 	}
 	renderBots(ctx, colors, sb.bot)
-	renderObstacles(sNew, w)
+	renderObstacles(sNew, w, sb.obstacle)
 
 	rs.Frame++
 	if rs.Frame > rs.Frames {
@@ -134,14 +142,10 @@ func renderBot(ctx context, oldBot, bot game.Bot, c pixel.RGBA, pic pixel.Pictur
 
 	im.Push(pos)
 	im.Clear()
-	//im.Circle(botWidth, 0)
 	im.Draw(ctx.w)
 	bounds := pic.Bounds()
-	//log.Println("bounds:", bounds)
-	//bounds = bounds.Resized(bounds.Center(), pixel.Vec{bounds.W() * 2, bounds.H() * 4})
-	//log.Println("resize:", bounds)
 	sprite := pixel.NewSprite(pic, bounds)
-	sprite.DrawColorMask(ctx.w, pixel.IM.Moved(pos).ScaledXY(pos, pixel.Vec{3, 3}), c)
+	sprite.DrawColorMask(ctx.w, pixel.IM.Moved(pos).ScaledXY(pos, pixel.Vec{2, 2}), c)
 }
 
 func renderBaton(pos pixel.Vec, w *pixelgl.Window) {
@@ -161,19 +165,21 @@ func lanePos(pos, lane int, width float64, bounds pixel.Rect) pixel.Vec {
 		bounds.Min.Y+float64(lane+1)*vOffset)
 }
 
-func renderObstacles(s game.State, w *pixelgl.Window) {
+func renderObstacles(s game.State, w *pixelgl.Window, pic pixel.Picture) {
 	b := w.Bounds()
 	im := imdraw.New(nil)
 
 	for _, o := range s.Obstacles {
-		im.Color = colornames.Slategray
+		//im.Color = colornames.Slategray
 
 		pos := lanePos(o.Position.Pos, o.Position.Lane, botWidth, b)
 
 		im.Push(pos)
 
 		im.Clear()
-		im.Circle(float64(botWidth), 0)
+		sprite := pixel.NewSprite(pic, pic.Bounds())
+		sprite.Draw(w, pixel.IM.Moved(pos))
+		//im.Circle(float64(botWidth), 0)
 
 		im.Draw(w)
 	}
