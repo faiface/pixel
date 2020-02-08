@@ -209,24 +209,49 @@ func NewState() State {
 
 	return State{
 		Teams:     teams,
-		Obstacles: randomObstacles(),
+		Obstacles: randomObstacles(teams),
 	}
 }
 
-func randomObstacles() []Obstacle {
+func randomObstacles(teams []Team) []Obstacle {
 	var os []Obstacle
 
-	const numObstacles = 4 * NumTeams
+	const numObstacles = 12 * NumTeams
 	for i := 0; i < numObstacles; i++ {
 		os = append(os, Obstacle{
-			Position: Position{
-				Pos:  rand.Intn(Steps-8) + 4,
-				Lane: rand.Intn(NumLanes),
-			},
+			Position: randomOpenPosition(teams, os),
 		})
 	}
 
 	return os
+}
+
+func randomOpenPosition(ts []Team, os []Obstacle) Position {
+	for {
+		p := Position{
+			Pos:  rand.Intn(Steps-8) + 4,
+			Lane: rand.Intn(NumLanes),
+		}
+		if positionOpen(p, ts, os) {
+			return p
+		}
+	}
+}
+
+func positionOpen(pos Position, ts []Team, os []Obstacle) bool {
+	for _, t := range ts {
+		for _, b := range t.Bots {
+			if b.Position == pos {
+				return false
+			}
+		}
+	}
+	for _, o := range os {
+		if o.Position == pos {
+			return false
+		}
+	}
+	return true
 }
 
 var (
