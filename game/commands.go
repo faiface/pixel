@@ -20,14 +20,15 @@ func doCommand(cmd command, s State, teamID int) State {
 	if r == nil {
 		return s
 	}
+	r.Kinetics.A = 0
 
 	switch cmd {
 	case speedUp:
-		r.Kinetics.A += da
+		r.Kinetics.A = da
 		*r = accelerate(*r)
 		s = updateRacer(s, *r)
 	case slowDown:
-		r.Kinetics.A -= da
+		r.Kinetics.A = -da
 		*r = accelerate(*r)
 		s = updateRacer(s, *r)
 	case left:

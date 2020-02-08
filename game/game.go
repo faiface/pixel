@@ -37,7 +37,7 @@ func maybePassBaton(s State, teamID int) State {
 			h.Kinetics.A = 0
 			s = updateRacer(s, *h)
 			newH := t.Racers[i]
-			newH.Kinetics.A = baseAccel
+			//newH.Kinetics.A = baseAccel
 			t.Baton.HolderID = newH.ID
 			s = updateTeam(s, t)
 			return updateRacer(s, newH)
