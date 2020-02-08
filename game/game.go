@@ -94,6 +94,16 @@ func destroyBot(s State, b Bot) State {
 	return updateBot(s, b)
 }
 
+func removeObstacle(s State, pos Position) State {
+	for i, o := range s.Obstacles {
+		if o.Position == pos {
+			s.Obstacles = append(s.Obstacles[:i], s.Obstacles[i+1:]...)
+			break
+		}
+	}
+	return s
+}
+
 func won(b Bot, s State) bool {
 	return b.Position.Pos >= Steps
 }
