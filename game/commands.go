@@ -69,25 +69,21 @@ func doCommand(cmd Command, s State, teamID int) State {
 	case speedUp:
 		r.Kinetics.A = da
 		*r = accelerate(*r)
-		s = updateRacer(s, *r)
 	case slowDown:
 		r.Kinetics.A = -da
 		*r = accelerate(*r)
-		s = updateRacer(s, *r)
 	case left:
 		r.Position.Lane++
-		s = updateRacer(s, *r)
 	case right:
 		r.Position.Lane--
-		s = updateRacer(s, *r)
 	case clearObstacle:
 		pos := r.Position
 		pos.Pos++
 		s = removeObstacle(s, pos)
 		r.Kinetics.V = 0
-		s = updateRacer(s, *r)
 	}
 
+	s = updateRacer(s, *r)
 	s = moveRacer(s, *r)
 	s = maybePassBaton(s, teamID)
 
