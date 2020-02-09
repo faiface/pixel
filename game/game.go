@@ -42,7 +42,7 @@ type Baton struct {
 	HolderID int
 }
 
-func UpdateState(s State, sOld State) State {
+func checkWin(s State, sOld State) State {
 	var winners []int
 	for _, t := range s.Teams {
 		if r := ActiveRacer(t); r != nil {

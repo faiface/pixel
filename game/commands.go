@@ -35,7 +35,7 @@ func CommandLoop(w *pixelgl.Window, s State, stateCA chan<- State) {
 			for i, cmd := range <-cmdC {
 				s = doCommand(cmd, s, i)
 			}
-			s = UpdateState(s, sOld)
+			s = checkWin(s, sOld)
 			turn++
 			if s.GameOver {
 				s = NewState()
