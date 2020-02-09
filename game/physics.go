@@ -25,6 +25,12 @@ func accelerate(r Racer) Racer {
 }
 
 func moveRacer(s State, r Racer) State {
+	r.Battery.Charge--
+	s = updateRacer(s, r)
+	if r.Battery.Charge <= 0 {
+		return destroyRacer(s, r)
+	}
+
 	for i := 0; i < r.Kinetics.V; i++ {
 		if o := collide(r.Position.Pos+1, r.Position.Lane, s); o != nil {
 			return destroyRacer(s, r)

@@ -12,9 +12,11 @@ func UpdateState(s State, sOld State) State {
 	}
 
 	for _, t := range s.Teams {
-		if r := ActiveRacer(t); r != nil && won(*r, s) {
-			log.Printf("team %d won", t.id)
-			s.GameOver = true
+		if r := ActiveRacer(t); r != nil {
+			if won(*r, s) {
+				log.Printf("team %d won", t.id)
+				s.GameOver = true
+			}
 		}
 	}
 
@@ -209,5 +211,5 @@ const (
 	numRacers  = 3
 	NumTeams   = 8
 	NumLanes   = NumTeams
-	baseCharge = 4
+	baseCharge = 10
 )
