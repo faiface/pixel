@@ -42,11 +42,7 @@ type Baton struct {
 	HolderID int
 }
 
-func UpdateState(s State, sOld State, cmds []Command) State {
-	for i, cmd := range cmds {
-		s = doCommand(cmd, s, i)
-	}
-
+func UpdateState(s State, sOld State) State {
 	var winners []int
 	for _, t := range s.Teams {
 		if r := ActiveRacer(t); r != nil {
