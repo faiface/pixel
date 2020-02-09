@@ -7,14 +7,15 @@ import (
 type Command int
 
 const (
-	speedUp Command = iota
+	coast Command = iota
+	speedUp
 	slowDown
 	left
 	right
 	clearObstacle
 )
 
-var validCommands = []Command{speedUp, slowDown, left, right, clearObstacle}
+var validCommands = []Command{coast, speedUp, slowDown, left, right, clearObstacle}
 
 func PollCommands(s State) []Command {
 	cmds := make([]Command, len(s.Teams))
@@ -36,6 +37,7 @@ func doCommand(cmd Command, s State, teamID int) State {
 	r.Kinetics.A = 0
 
 	switch cmd {
+	case coast:
 	case speedUp:
 		r.Kinetics.A = da
 		*r = accelerate(*r)
@@ -68,6 +70,8 @@ func doCommand(cmd Command, s State, teamID int) State {
 
 func (c Command) String() string {
 	switch c {
+	case coast:
+		return "coast"
 	case speedUp:
 		return "speed up"
 	case slowDown:
