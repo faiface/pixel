@@ -29,8 +29,7 @@ func run() error {
 	s := game.NewState()
 
 	rs := gfx.RenderState{
-		Animating: true,
-		Frames:    15,
+		Frames: 15,
 	}
 	sb, err := gfx.NewSpriteBank()
 	if err != nil {
@@ -39,20 +38,30 @@ func run() error {
 	sOld := s
 	turn := 1
 
-	var (
-		frames = 0
-		second = time.Tick(time.Second)
-	)
-
 	cmdC := make(chan []game.Command)
 	go func() { cmdC <- game.PollCommands(s) }()
 
-	for !w.Closed() {
-		if rs.Animating {
-			rs = gfx.Render(rs, sOld, s, w, *sb)
-			if !rs.Animating {
-				sOld = s
+	stateCA := make(chan game.State)
+	stateCB := make(chan game.State)
+
+	go func(s game.State, sOld game.State, stateC <-chan game.State) {
+		var (
+			frames = 0
+			second = time.Tick(time.Second)
+		)
+
+		for !w.Closed() {
+			if rs.Frame == rs.Frames {
+				select {
+				case ss := <-stateCA:
+					sOld = s
+					s = ss
+					rs.Frame = 0
+				default:
+				}
 			}
+
+			rs = gfx.Render(rs, sOld, s, w, *sb)
 			w.Update()
 			frames++
 
@@ -62,28 +71,31 @@ func run() error {
 				frames = 0
 			default:
 			}
-		} else {
-			switch {
-			case w.Pressed(pixelgl.KeyQ):
-				return nil
-			case w.Pressed(pixelgl.KeySpace) || true:
-				//log.Printf("TURN %d", turn)
-				rs.Animating = true
-				rs.Frame = 0
-
-				cmds := <-cmdC
-				s = game.UpdateState(s, sOld, cmds)
-				turn++
-				if s.GameOver {
-					s = game.NewState()
-					sOld = s
-					turn = 1
-				}
-				go func() { cmdC <- game.PollCommands(s) }()
-			}
-
-			w.UpdateInput()
 		}
+	}(s, sOld, stateCA)
+
+	for !w.Closed() {
+		switch {
+		case w.Pressed(pixelgl.KeyQ):
+			return nil
+		case w.Pressed(pixelgl.KeySpace):
+			cmds := <-cmdC
+			s = game.UpdateState(s, sOld, cmds)
+			turn++
+			if s.GameOver {
+				s = game.NewState()
+				sOld = s
+				turn = 1
+			}
+			go func() {
+				s := <-stateCB
+				cmdC <- game.PollCommands(s)
+			}()
+			stateCA <- s
+			stateCB <- s
+		}
+
+		w.UpdateInput()
 	}
 	return nil
 }

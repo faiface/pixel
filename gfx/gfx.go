@@ -17,9 +17,8 @@ import (
 )
 
 type RenderState struct {
-	Animating bool
-	Frames    int
-	Frame     int
+	Frames int
+	Frame  int
 }
 
 type context struct {
@@ -87,9 +86,8 @@ func Render(rs RenderState, sOld, sNew game.State, w *pixelgl.Window, sb spriteB
 	renderSpawnPoints(sBatch, sNew.SpawnPoints, w.Bounds(), colors)
 	sBatch.Draw(w)
 
-	rs.Frame++
-	if rs.Frame > rs.Frames {
-		rs.Animating = false
+	if rs.Frame < rs.Frames {
+		rs.Frame++
 	}
 	return rs
 }
