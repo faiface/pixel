@@ -99,14 +99,14 @@ func renderBackground(w *pixelgl.Window) {
 		}
 	}
 
+	im := imdraw.New(nil)
+	im.Color = colornames.White
 	for _, star := range stars {
-		im := imdraw.New(nil)
-		im.Color = colornames.White
 		im.Push(star)
 		im.Clear()
-		im.Circle(2, 0)
-		im.Draw(w)
 	}
+	im.Circle(2, 0)
+	im.Draw(w)
 }
 
 func renderRacers(ctx context, colors map[*game.Team]pixel.RGBA, pic pixel.Picture) {
@@ -171,22 +171,26 @@ func renderRacer(ctx context, oldRacer, racer game.Racer, active bool, c pixel.R
 	sprite := pixel.NewSprite(pic, bounds)
 	sprite.DrawColorMask(ctx.w, pixel.IM.Moved(pos).ScaledXY(pos, pixel.Vec{1.7, 1.7}), c)
 
-	im := imdraw.New(nil)
+	w := 3.0
+
+	im1, im2 := imdraw.New(nil), imdraw.New(nil)
+	im1.Color = colornames.Yellow
+	im2.Color = colornames.Yellow
 	for i := 0; i < racer.Battery.Capacity; i++ {
 		pos := pos
-		w := 3.0
 		pos.X -= racerWidth
 		pos.Y -= racerWidth + w*2
 		pos.X += (w * 2) * float64(i)
-		im.Color = colornames.Yellow
-		im.Push(pos)
-		var lw float64
 		if i >= racer.Battery.Charge {
-			lw = 1
+			im2.Push(pos)
+		} else {
+			im1.Push(pos)
 		}
-		im.Circle(w, lw)
-		im.Draw(ctx.w)
 	}
+	im1.Circle(w, 0)
+	im2.Circle(w, 1)
+	im1.Draw(ctx.w)
+	im2.Draw(ctx.w)
 }
 
 func renderBaton(pos pixel.Vec, w *pixelgl.Window) {
