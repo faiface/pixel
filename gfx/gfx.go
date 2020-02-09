@@ -155,17 +155,21 @@ func renderRacer(ctx context, batch *pixel.Batch, oldRacer, racer game.Racer, ac
 	sprite := pixel.NewSprite(pic, bounds)
 	sprite.DrawColorMask(batch, pixel.IM.Moved(pos).ScaledXY(pos, pixel.Vec{1.7, 1.7}), c)
 
+	renderFuelGuage(batch, pos, racer.Battery)
+}
+
+func renderFuelGuage(b *pixel.Batch, pos pixel.Vec, batt game.Battery) {
 	w := 3.0
 
 	im1, im2 := imdraw.New(nil), imdraw.New(nil)
 	im1.Color = colornames.Yellow
 	im2.Color = colornames.Yellow
-	for i := 0; i < racer.Battery.Capacity; i++ {
+	for i := 0; i < batt.Capacity; i++ {
 		pos := pos
 		pos.X -= racerWidth
 		pos.Y -= racerWidth + w*2
 		pos.X += (w * 2) * float64(i)
-		if i >= racer.Battery.Charge {
+		if i >= batt.Charge {
 			im2.Push(pos)
 		} else {
 			im1.Push(pos)
@@ -173,8 +177,8 @@ func renderRacer(ctx context, batch *pixel.Batch, oldRacer, racer game.Racer, ac
 	}
 	im1.Circle(w, 0)
 	im2.Circle(w, 1)
-	im1.Draw(batch)
-	im2.Draw(batch)
+	im1.Draw(b)
+	im2.Draw(b)
 }
 
 func renderProjection(ctx context, b *pixel.Batch, c pixel.RGBA, bounds pixel.Rect, k game.Kinetics, pos, newPos pixel.Vec) {
