@@ -1,7 +1,7 @@
 package game
 
 func smartChooseCommand(s State, teamID int) command {
-	return smartChooseHelper(s, teamID, 2)
+	return smartChooseHelper(s, teamID, aiDepth)
 }
 
 func smartChooseHelper(s State, teamID int, depth int) command {
@@ -35,3 +35,7 @@ func score(cmd command, s State, teamID int, depth int) int {
 	cmd2 := smartChooseHelper(s, teamID, depth)
 	return score(cmd2, s, teamID, depth)
 }
+
+const (
+	aiDepth = 4
+)
