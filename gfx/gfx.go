@@ -147,37 +147,11 @@ func renderRacer(ctx context, batch *pixel.Batch, oldRacer, racer game.Racer, ac
 		Y: oldPos.Y + ctx.tween*(newPos.Y-oldPos.Y),
 	}
 
+	bounds := pic.Bounds()
 	if active {
-		im := imdraw.New(nil)
-		projC := c
-		alpha := 0.25
-		projC.R *= alpha
-		projC.G *= alpha
-		projC.B *= alpha
-		projC.A = alpha
-		im.Color = projC
-		w := pic.Bounds().W() * 0.65
-
-		ll := pixel.Vec{
-			X: pos.X + w,
-			Y: pos.Y - w,
-		}
-		ur := pixel.Vec{
-			X: pos.X + w*float64(racer.Kinetics.V+1),
-			Y: pos.Y + w,
-		}
-		if ctx.tween < 1 {
-			ur.X = math.Min(ur.X, newPos.X+racerWidth)
-		}
-		ur.X = math.Max(ur.X, ll.X)
-
-		im.Push(ll)
-		im.Push(ur)
-		im.Rectangle(0)
-		im.Draw(batch)
+		renderProjection(ctx, batch, c, bounds, racer.Kinetics, pos, newPos)
 	}
 
-	bounds := pic.Bounds()
 	sprite := pixel.NewSprite(pic, bounds)
 	sprite.DrawColorMask(batch, pixel.IM.Moved(pos).ScaledXY(pos, pixel.Vec{1.7, 1.7}), c)
 
@@ -201,6 +175,36 @@ func renderRacer(ctx context, batch *pixel.Batch, oldRacer, racer game.Racer, ac
 	im2.Circle(w, 1)
 	im1.Draw(batch)
 	im2.Draw(batch)
+}
+
+func renderProjection(ctx context, b *pixel.Batch, c pixel.RGBA, bounds pixel.Rect, k game.Kinetics, pos, newPos pixel.Vec) {
+	im := imdraw.New(nil)
+	projC := c
+	alpha := 0.25
+	projC.R *= alpha
+	projC.G *= alpha
+	projC.B *= alpha
+	projC.A = alpha
+	im.Color = projC
+	w := bounds.W() * 0.65
+
+	ll := pixel.Vec{
+		X: pos.X + w,
+		Y: pos.Y - w,
+	}
+	ur := pixel.Vec{
+		X: pos.X + w*float64(k.V+1),
+		Y: pos.Y + w,
+	}
+	if ctx.tween < 1 {
+		ur.X = math.Min(ur.X, newPos.X+racerWidth)
+	}
+	ur.X = math.Max(ur.X, ll.X)
+
+	im.Push(ll)
+	im.Push(ur)
+	im.Rectangle(0)
+	im.Draw(b)
 }
 
 func renderBaton(pos pixel.Vec, b *pixel.Batch) {
