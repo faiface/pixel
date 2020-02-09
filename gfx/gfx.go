@@ -177,7 +177,7 @@ func renderRacer(ctx context, oldRacer, racer game.Racer, active bool, c pixel.R
 		im.Color = colornames.Yellow
 		im.Push(pos)
 		var lw float64
-		if i > racer.Battery.Charge {
+		if i >= racer.Battery.Charge {
 			lw = 1
 		}
 		im.Circle(w, lw)

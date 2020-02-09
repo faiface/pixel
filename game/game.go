@@ -52,7 +52,8 @@ func maybePassBaton(s State, teamID int) State {
 func ActiveRacer(t Team) *Racer {
 	for _, r := range t.Racers {
 		if r.ID == t.Baton.HolderID {
-			return &r
+			rr := r
+			return &rr
 		}
 	}
 	return nil
