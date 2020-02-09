@@ -91,6 +91,7 @@ func destroyRacer(s State, r Racer) State {
 	// spawn racer back at starting position
 	r.Position = r.StartPos
 	r.Kinetics = Kinetics{}
+	r.Battery.Charge = r.Battery.Capacity
 
 	return updateRacer(s, r)
 }
@@ -212,5 +213,5 @@ const (
 	numRacers  = 3
 	NumTeams   = 8
 	NumLanes   = NumTeams
-	baseCharge = 10
+	baseCharge = 16
 )
