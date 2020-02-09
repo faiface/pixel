@@ -47,7 +47,7 @@ func run() error {
 	cmdC := make(chan []game.Command)
 	go func() { cmdC <- game.PollCommands(s) }()
 
-	for !w.Closed() && !s.GameOver {
+	for !w.Closed() {
 		if rs.Animating {
 			rs = gfx.Render(rs, sOld, s, w, *sb)
 			if !rs.Animating {
