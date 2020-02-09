@@ -65,8 +65,8 @@ func loadPicture(path string) (pixel.Picture, error) {
 }
 
 func Render(rs RenderState, sOld, sNew game.State, w *pixelgl.Window, sb spriteBank) RenderState {
-	batch := pixel.NewBatch(new(pixel.TrianglesData), nil)
-	renderBackground(w, batch)
+	bgBatch := pixel.NewBatch(new(pixel.TrianglesData), nil)
+	renderBackground(w, bgBatch)
 
 	colors := teamColors(sNew.Teams)
 	ctx := context{
@@ -75,8 +75,12 @@ func Render(rs RenderState, sOld, sNew game.State, w *pixelgl.Window, sb spriteB
 		tween: float64(rs.Frame) / float64(rs.Frames),
 		w:     w,
 	}
-	renderRacers(ctx, colors, sb.racer)
-	renderObstacles(sNew, w, sb.obstacle)
+	rBatch := pixel.NewBatch(new(pixel.TrianglesData), sb.racer)
+	renderRacers(ctx, rBatch, colors, sb.racer)
+	rBatch.Draw(w)
+	oBatch := pixel.NewBatch(new(pixel.TrianglesData), sb.obstacle)
+	renderObstacles(sNew, w, oBatch, sb.obstacle)
+	oBatch.Draw(w)
 
 	rs.Frame++
 	if rs.Frame > rs.Frames {
@@ -114,8 +118,7 @@ func renderBackground(w *pixelgl.Window, batch *pixel.Batch) {
 	batch.Draw(w)
 }
 
-func renderRacers(ctx context, colors map[*game.Team]pixel.RGBA, pic pixel.Picture) {
-	batch := pixel.NewBatch(new(pixel.TrianglesData), pic)
+func renderRacers(ctx context, batch *pixel.Batch, colors map[*game.Team]pixel.RGBA, pic pixel.Picture) {
 	for i, t := range ctx.sNew.Teams {
 		c := colors[&ctx.sNew.Teams[i]]
 		for j, racer := range t.Racers {
@@ -134,7 +137,6 @@ func renderRacers(ctx context, colors map[*game.Team]pixel.RGBA, pic pixel.Pictu
 
 		renderBaton(pos, batch)
 	}
-	batch.Draw(ctx.w)
 }
 
 func renderRacer(ctx context, batch *pixel.Batch, oldRacer, racer game.Racer, active bool, c pixel.RGBA, pic pixel.Picture) {
@@ -218,7 +220,7 @@ func lanePos(pos, lane int, width float64, bounds pixel.Rect) pixel.Vec {
 		bounds.Min.Y+float64(lane+1)*vOffset)
 }
 
-func renderObstacles(s game.State, w *pixelgl.Window, pic pixel.Picture) {
+func renderObstacles(s game.State, w *pixelgl.Window, batch *pixel.Batch, pic pixel.Picture) {
 	b := w.Bounds()
 	im := imdraw.New(nil)
 
@@ -231,10 +233,10 @@ func renderObstacles(s game.State, w *pixelgl.Window, pic pixel.Picture) {
 
 		im.Clear()
 		sprite := pixel.NewSprite(pic, pic.Bounds())
-		sprite.Draw(w, pixel.IM.Moved(pos))
+		sprite.Draw(batch, pixel.IM.Moved(pos))
 		//im.Circle(float64(racerWidth), 0)
 
-		im.Draw(w)
+		im.Draw(batch)
 	}
 }
 

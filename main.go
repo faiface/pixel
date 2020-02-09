@@ -30,7 +30,7 @@ func run() error {
 
 	rs := gfx.RenderState{
 		Animating: true,
-		Frames:    20,
+		Frames:    15,
 	}
 	sb, err := gfx.NewSpriteBank()
 	if err != nil {
