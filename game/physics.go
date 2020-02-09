@@ -22,7 +22,6 @@ func accelerate(r Racer) Racer {
 	if r.Kinetics.A > r.Battery.Charge {
 		r.Kinetics.A = r.Battery.Charge
 	}
-	r.Battery.Charge -= abs(r.Kinetics.A)
 
 	r.Kinetics.VX += r.Kinetics.A
 	if r.Kinetics.VX > MaxV {
