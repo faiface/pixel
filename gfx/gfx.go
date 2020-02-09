@@ -301,16 +301,16 @@ func renderSpawnPoints(b *pixel.Batch, sps map[int]game.SpawnPoint, bounds pixel
 	im.Draw(b)
 }
 
-var teamColors = map[int]pixel.RGBA{
-	0: pixel.ToRGBA(colornames.Palevioletred),
-	1: pixel.ToRGBA(colornames.Lime),
-	2: pixel.ToRGBA(colornames.Cornflowerblue),
-	3: pixel.ToRGBA(colornames.Magenta),
-	4: pixel.ToRGBA(colornames.Cyan),
-	5: pixel.ToRGBA(colornames.Yellow),
-	6: pixel.ToRGBA(colornames.Blueviolet),
-	7: pixel.ToRGBA(colornames.Orange),
-	8: pixel.ToRGBA(colornames.Coral),
+var teamColors = []pixel.RGBA{
+	pixel.ToRGBA(colornames.Palevioletred),
+	pixel.ToRGBA(colornames.Lime),
+	pixel.ToRGBA(colornames.Cornflowerblue),
+	pixel.ToRGBA(colornames.Magenta),
+	pixel.ToRGBA(colornames.Cyan),
+	pixel.ToRGBA(colornames.Yellow),
+	pixel.ToRGBA(colornames.Blueviolet),
+	pixel.ToRGBA(colornames.Orange),
+	pixel.ToRGBA(colornames.Coral),
 }
 
 const (
