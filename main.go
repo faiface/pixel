@@ -53,12 +53,21 @@ func run() error {
 			if !rs.Animating {
 				sOld = s
 			}
+			w.Update()
+			frames++
+
+			select {
+			case <-second:
+				w.SetTitle(fmt.Sprintf("%s | FPS: %d", cfg.Title, frames))
+				frames = 0
+			default:
+			}
 		} else {
 			switch {
 			case w.Pressed(pixelgl.KeyQ):
 				return nil
 			case w.Pressed(pixelgl.KeySpace) || true:
-				log.Printf("TURN %d", turn)
+				//log.Printf("TURN %d", turn)
 				rs.Animating = true
 				rs.Frame = 0
 
@@ -72,16 +81,8 @@ func run() error {
 				}
 				go func() { cmdC <- game.PollCommands(s) }()
 			}
-		}
 
-		w.Update()
-		frames++
-
-		select {
-		case <-second:
-			w.SetTitle(fmt.Sprintf("%s | FPS: %d", cfg.Title, frames))
-			frames = 0
-		default:
+			w.UpdateInput()
 		}
 	}
 	return nil

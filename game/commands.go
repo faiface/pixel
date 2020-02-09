@@ -1,9 +1,5 @@
 package game
 
-import (
-	"log"
-)
-
 type Command int
 
 const (
@@ -21,7 +17,7 @@ func PollCommands(s State) []Command {
 	cmds := make([]Command, len(s.Teams))
 	for i := range s.Teams {
 		cmd := chooseCommand(s, i)
-		log.Printf("team %d chose to %v", i, cmd)
+		//log.Printf("team %d chose to %v", i, cmd)
 		cmds[i] = cmd
 	}
 	return cmds
