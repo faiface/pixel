@@ -115,11 +115,12 @@ func renderBackground(w *pixelgl.Window, batch *pixel.Batch) {
 }
 
 func renderRacers(ctx context, colors map[*game.Team]pixel.RGBA, pic pixel.Picture) {
+	batch := pixel.NewBatch(new(pixel.TrianglesData), pic)
 	for i, t := range ctx.sNew.Teams {
 		c := colors[&ctx.sNew.Teams[i]]
 		for j, racer := range t.Racers {
 			oldRacer := ctx.sOld.Teams[i].Racers[j]
-			renderRacer(ctx, oldRacer, racer, racer.ID == ctx.sOld.Teams[i].Baton.HolderID, c, pic)
+			renderRacer(ctx, batch, oldRacer, racer, racer.ID == ctx.sOld.Teams[i].Baton.HolderID, c, pic)
 		}
 
 		oldHolder, newHolder := game.ActiveRacer(ctx.sOld.Teams[i]), game.ActiveRacer(ctx.sNew.Teams[i])
@@ -131,13 +132,12 @@ func renderRacers(ctx context, colors map[*game.Team]pixel.RGBA, pic pixel.Pictu
 			Y: oldPos.Y + ctx.tween*(newPos.Y-oldPos.Y),
 		}
 
-		batch := pixel.NewBatch(new(pixel.TrianglesData), nil)
 		renderBaton(pos, batch)
-		batch.Draw(ctx.w)
 	}
+	batch.Draw(ctx.w)
 }
 
-func renderRacer(ctx context, oldRacer, racer game.Racer, active bool, c pixel.RGBA, pic pixel.Picture) {
+func renderRacer(ctx context, batch *pixel.Batch, oldRacer, racer game.Racer, active bool, c pixel.RGBA, pic pixel.Picture) {
 	oldPos := lanePos(oldRacer.Position.Pos, oldRacer.Position.Lane, racerWidth, ctx.w.Bounds())
 	newPos := lanePos(racer.Position.Pos, racer.Position.Lane, racerWidth, ctx.w.Bounds())
 	pos := pixel.Vec{
@@ -172,12 +172,12 @@ func renderRacer(ctx context, oldRacer, racer game.Racer, active bool, c pixel.R
 		im.Push(ll)
 		im.Push(ur)
 		im.Rectangle(0)
-		im.Draw(ctx.w)
+		im.Draw(batch)
 	}
 
 	bounds := pic.Bounds()
 	sprite := pixel.NewSprite(pic, bounds)
-	sprite.DrawColorMask(ctx.w, pixel.IM.Moved(pos).ScaledXY(pos, pixel.Vec{1.7, 1.7}), c)
+	sprite.DrawColorMask(batch, pixel.IM.Moved(pos).ScaledXY(pos, pixel.Vec{1.7, 1.7}), c)
 
 	w := 3.0
 
@@ -197,8 +197,8 @@ func renderRacer(ctx context, oldRacer, racer game.Racer, active bool, c pixel.R
 	}
 	im1.Circle(w, 0)
 	im2.Circle(w, 1)
-	im1.Draw(ctx.w)
-	im2.Draw(ctx.w)
+	im1.Draw(batch)
+	im2.Draw(batch)
 }
 
 func renderBaton(pos pixel.Vec, b *pixel.Batch) {
