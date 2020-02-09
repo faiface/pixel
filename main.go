@@ -15,7 +15,7 @@ import (
 func run() error {
 	cfg := pixelgl.WindowConfig{
 		Title:  "Relay",
-		Bounds: pixel.R(0, 0, 2400, 1024),
+		Bounds: pixel.R(0, 0, 2400, 512),
 		VSync:  true,
 	}
 
