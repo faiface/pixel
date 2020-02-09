@@ -142,8 +142,8 @@ func NewState() State {
 				},
 			}
 			spawns[r.ID] = SpawnPoint{
-				TeamID: i,
-				Pos:    r.Position,
+				TeamID:   i,
+				Position: r.Position,
 			}
 			racers = append(racers, r)
 		}

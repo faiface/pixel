@@ -167,8 +167,8 @@ func renderRacers(ctx context, batch *pixel.Batch, pic pixel.Picture) {
 		}
 
 		oldHolder, newHolder := game.ActiveRacer(ctx.sOld.Teams[i]), game.ActiveRacer(ctx.sNew.Teams[i])
-		oldPos := lanePos(oldHolder.Position.Pos, oldHolder.Position.Lane, racerWidth, ctx.w.Bounds())
-		newPos := lanePos(newHolder.Position.Pos, newHolder.Position.Lane, racerWidth, ctx.w.Bounds())
+		oldPos := lanePos(oldHolder.Position, racerWidth, ctx.w.Bounds())
+		newPos := lanePos(newHolder.Position, racerWidth, ctx.w.Bounds())
 
 		pos := pixel.Vec{
 			X: oldPos.X + ctx.tween*(newPos.X-oldPos.X),
@@ -180,8 +180,8 @@ func renderRacers(ctx context, batch *pixel.Batch, pic pixel.Picture) {
 }
 
 func renderRacer(ctx context, batch *pixel.Batch, oldRacer, racer game.Racer, active bool, c pixel.RGBA, pic pixel.Picture) {
-	oldPos := lanePos(oldRacer.Position.Pos, oldRacer.Position.Lane, racerWidth, ctx.w.Bounds())
-	newPos := lanePos(racer.Position.Pos, racer.Position.Lane, racerWidth, ctx.w.Bounds())
+	oldPos := lanePos(oldRacer.Position, racerWidth, ctx.w.Bounds())
+	newPos := lanePos(racer.Position, racerWidth, ctx.w.Bounds())
 	pos := pixel.Vec{
 		X: oldPos.X + ctx.tween*(newPos.X-oldPos.X),
 		Y: oldPos.Y + ctx.tween*(newPos.Y-oldPos.Y),
@@ -260,12 +260,12 @@ func renderBaton(pos pixel.Vec, b *pixel.Batch) {
 	im.Draw(b)
 }
 
-func lanePos(pos, lane int, width float64, bounds pixel.Rect) pixel.Vec {
+func lanePos(pos game.Position, width float64, bounds pixel.Rect) pixel.Vec {
 	hOffset := bounds.Size().X / game.Steps
 	vOffset := bounds.Size().Y / (game.NumLanes + 1)
 
-	return pixel.V(bounds.Min.X+width/2+float64(pos)*hOffset,
-		bounds.Min.Y+float64(lane+1)*vOffset)
+	return pixel.V(bounds.Min.X+width/2+float64(pos.Pos)*hOffset,
+		bounds.Min.Y+float64(pos.Lane+1)*vOffset)
 }
 
 func renderObstacles(os []game.Obstacle, w *pixelgl.Window, batch *pixel.Batch, pic pixel.Picture) {
@@ -273,7 +273,7 @@ func renderObstacles(os []game.Obstacle, w *pixelgl.Window, batch *pixel.Batch, 
 	im := imdraw.New(nil)
 
 	for _, o := range os {
-		pos := lanePos(o.Position.Pos, o.Position.Lane, racerWidth, b)
+		pos := lanePos(o.Position, racerWidth, b)
 
 		im.Push(pos)
 		sprite := pixel.NewSprite(pic, pic.Bounds())
@@ -293,7 +293,7 @@ func renderSpawnPoints(b *pixel.Batch, sps map[int]game.SpawnPoint, bounds pixel
 		c.B *= 0.5
 		im.Color = c
 
-		pos := lanePos(sp.Pos.Pos, sp.Pos.Lane, racerWidth, bounds)
+		pos := lanePos(sp.Position, racerWidth, bounds)
 
 		im.Push(pos)
 		im.Circle(float64(racerWidth)*1.5, 3)

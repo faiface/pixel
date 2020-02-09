@@ -40,9 +40,9 @@ func destroyRacer(s State, r Racer) State {
 	s.Derelicts = append(s.Derelicts, Obstacle{Position: r.Position})
 
 	// spawn racer back at starting position
-	r.Position = s.SpawnPoints[r.ID].Pos
+	r.Position = s.SpawnPoints[r.ID].Position
 	r.Kinetics = Kinetics{}
-	r.Battery.Charge = r.Battery.Capacity
+	r.Charge = r.Capacity
 
 	return updateRacer(s, r)
 }

@@ -4,11 +4,11 @@ import "math/rand"
 
 type SpawnPoint struct {
 	TeamID int
-	Pos    Position
+	Position
 }
 
 type Obstacle struct {
-	Position Position
+	Position
 }
 
 func removeObstacle(s State, pos Position) State {
