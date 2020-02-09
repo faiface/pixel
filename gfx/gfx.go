@@ -189,7 +189,7 @@ func renderRacer(ctx context, batch *pixel.Batch, oldRacer, racer game.Racer, ac
 
 	bounds := pic.Bounds()
 	if active {
-		renderProjection(ctx, batch, c, bounds, racer.Kinetics, pos, newPos)
+		renderProjection(ctx, batch, c, bounds, racer.Kinetics, oldPos, pos, newPos)
 	}
 
 	sprite := pixel.NewSprite(pic, bounds)
@@ -221,7 +221,7 @@ func renderFuelGuage(b *pixel.Batch, pos pixel.Vec, batt game.Battery) {
 	im2.Draw(b)
 }
 
-func renderProjection(ctx context, b *pixel.Batch, c pixel.RGBA, bounds pixel.Rect, k game.Kinetics, pos, newPos pixel.Vec) {
+func renderProjection(ctx context, b *pixel.Batch, c pixel.RGBA, bounds pixel.Rect, k game.Kinetics, oldPos, pos, newPos pixel.Vec) {
 	im := imdraw.New(nil)
 	projC := c
 	alpha := 0.25
@@ -237,7 +237,7 @@ func renderProjection(ctx context, b *pixel.Batch, c pixel.RGBA, bounds pixel.Re
 		Y: pos.Y - w,
 	}
 	ur := pixel.Vec{
-		X: pos.X + w*float64(k.VX+1),
+		X: oldPos.X + w*float64(k.VX+1),
 		Y: pos.Y + w,
 	}
 	if ctx.tween < 1 {
