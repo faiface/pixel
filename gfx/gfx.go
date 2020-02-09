@@ -78,9 +78,14 @@ func Render(rs RenderState, sOld, sNew game.State, w *pixelgl.Window, sb spriteB
 	rBatch := pixel.NewBatch(new(pixel.TrianglesData), sb.racer)
 	renderRacers(ctx, rBatch, colors, sb.racer)
 	rBatch.Draw(w)
+
 	oBatch := pixel.NewBatch(new(pixel.TrianglesData), sb.obstacle)
 	renderObstacles(sNew, w, oBatch, sb.obstacle)
 	oBatch.Draw(w)
+
+	sBatch := pixel.NewBatch(new(pixel.TrianglesData), nil)
+	renderSpawnPoints(sBatch, sNew.SpawnPoints, w.Bounds(), colors)
+	sBatch.Draw(w)
 
 	rs.Frame++
 	if rs.Frame > rs.Frames {
@@ -118,9 +123,9 @@ func renderBackground(w *pixelgl.Window, batch *pixel.Batch) {
 	batch.Draw(w)
 }
 
-func renderRacers(ctx context, batch *pixel.Batch, colors map[*game.Team]pixel.RGBA, pic pixel.Picture) {
+func renderRacers(ctx context, batch *pixel.Batch, colors map[int]pixel.RGBA, pic pixel.Picture) {
 	for i, t := range ctx.sNew.Teams {
-		c := colors[&ctx.sNew.Teams[i]]
+		c := colors[i]
 		for j, racer := range t.Racers {
 			oldRacer := ctx.sOld.Teams[i].Racers[j]
 			renderRacer(ctx, batch, oldRacer, racer, racer.ID == ctx.sOld.Teams[i].Baton.HolderID, c, pic)
@@ -233,23 +238,36 @@ func renderObstacles(s game.State, w *pixelgl.Window, batch *pixel.Batch, pic pi
 	im := imdraw.New(nil)
 
 	for _, o := range s.Obstacles {
-		//im.Color = colornames.Slategray
-
 		pos := lanePos(o.Position.Pos, o.Position.Lane, racerWidth, b)
 
 		im.Push(pos)
-
-		im.Clear()
 		sprite := pixel.NewSprite(pic, pic.Bounds())
 		sprite.Draw(batch, pixel.IM.Moved(pos))
-		//im.Circle(float64(racerWidth), 0)
 
-		im.Draw(batch)
 	}
+	im.Draw(batch)
 }
 
-func teamColors(ts []game.Team) map[*game.Team]pixel.RGBA {
-	m := make(map[*game.Team]pixel.RGBA)
+func renderSpawnPoints(b *pixel.Batch, sps map[int]game.SpawnPoint, bounds pixel.Rect, colors map[int]pixel.RGBA) {
+	im := imdraw.New(nil)
+
+	for _, sp := range sps {
+		c := colors[sp.TeamID]
+		c.R *= 0.5
+		c.G *= 0.5
+		c.B *= 0.5
+		im.Color = c
+
+		pos := lanePos(sp.Pos.Pos, sp.Pos.Lane, racerWidth, bounds)
+
+		im.Push(pos)
+		im.Circle(float64(racerWidth)*1.5, 3)
+	}
+	im.Draw(b)
+}
+
+func teamColors(ts []game.Team) map[int]pixel.RGBA {
+	m := make(map[int]pixel.RGBA)
 	for i := range ts {
 		var c color.RGBA
 		switch i {
@@ -273,7 +291,7 @@ func teamColors(ts []game.Team) map[*game.Team]pixel.RGBA {
 			c = colornames.Coral
 
 		}
-		m[&ts[i]] = pixel.ToRGBA(c)
+		m[i] = pixel.ToRGBA(c)
 	}
 	return m
 }
