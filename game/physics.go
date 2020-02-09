@@ -11,27 +11,23 @@ type Kinetics struct {
 	A  int
 }
 
-func accelerate(r Racer) Racer {
-	if r.Kinetics.A < -MaxA {
-		r.Kinetics.A = -MaxA
+func accelerate(k Kinetics) Kinetics {
+	if k.A < -MaxA {
+		k.A = -MaxA
 	}
-	if r.Kinetics.A > MaxA {
-		r.Kinetics.A = MaxA
-	}
-
-	if r.Kinetics.A > r.Battery.Charge {
-		r.Kinetics.A = r.Battery.Charge
+	if k.A > MaxA {
+		k.A = MaxA
 	}
 
-	r.Kinetics.VX += r.Kinetics.A
-	if r.Kinetics.VX > MaxV {
-		r.Kinetics.VX = MaxV
+	k.VX += k.A
+	if k.VX > MaxV {
+		k.VX = MaxV
 	}
-	if r.Kinetics.VX < -MaxV {
-		r.Kinetics.VX = -MaxV
+	if k.VX < -MaxV {
+		k.VX = -MaxV
 	}
 
-	return r
+	return k
 }
 
 func moveRacer(s State, r Racer) State {

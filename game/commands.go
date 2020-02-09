@@ -78,12 +78,20 @@ func commandRacer(s State, cmd Command, r Racer) (State, Racer) {
 	case coast:
 	case speedUp:
 		r.Kinetics.A = da
-		r = accelerate(r)
-		r.Battery.Charge -= abs(r.Kinetics.A)
+		r.Kinetics = accelerate(r.Kinetics)
+		r.Battery.Charge -= abs(da)
+		if r.Kinetics.A > r.Battery.Charge {
+			r.Kinetics.A = r.Battery.Charge
+		}
+
 	case slowDown:
 		r.Kinetics.A = -da
-		r = accelerate(r)
-		r.Battery.Charge -= abs(r.Kinetics.A)
+		r.Kinetics = accelerate(r.Kinetics)
+		r.Battery.Charge -= abs(da)
+		if r.Kinetics.A > r.Battery.Charge {
+			r.Kinetics.A = r.Battery.Charge
+		}
+
 	case left:
 		r.Kinetics.VY = 1
 	case right:
