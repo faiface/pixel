@@ -277,7 +277,7 @@ func renderObstacles(os []game.Obstacle, w *pixelgl.Window, batch *pixel.Batch, 
 
 		im.Push(pos)
 		sprite := pixel.NewSprite(pic, pic.Bounds())
-		sprite.Draw(batch, pixel.IM.Moved(pos))
+		sprite.Draw(batch, pixel.IM.Moved(pos).ScaledXY(pos, pixel.Vec{1.7, 1.7}))
 
 	}
 	im.Draw(batch)
