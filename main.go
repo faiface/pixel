@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"math/rand"
 	"relay/game"
@@ -38,6 +39,11 @@ func run() error {
 	sOld := s
 	turn := 1
 
+	var (
+		frames = 0
+		second = time.Tick(time.Second)
+	)
+
 	for !w.Closed() && !s.GameOver {
 		switch {
 		case w.Pressed(pixelgl.KeyQ):
@@ -61,6 +67,13 @@ func run() error {
 		}
 
 		w.Update()
+		frames++
+		select {
+		case <-second:
+			w.SetTitle(fmt.Sprintf("%s | FPS: %d", cfg.Title, frames))
+			frames = 0
+		default:
+		}
 	}
 	return nil
 }
