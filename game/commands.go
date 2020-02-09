@@ -31,7 +31,7 @@ func CommandLoop(w *pixelgl.Window, s State, stateCA chan<- State) {
 		case w.Pressed(pixelgl.KeyQ):
 			w.SetClosed(true)
 			return
-		case w.JustPressed(pixelgl.KeyEnter) || w.Pressed(pixelgl.KeySpace):
+		case w.JustPressed(pixelgl.KeyEnter) || w.Pressed(pixelgl.KeySpace) || true:
 			cmds := <-cmdC
 			s = UpdateState(s, sOld, cmds)
 			turn++

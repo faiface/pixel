@@ -37,7 +37,7 @@ func RenderLoop(w *pixelgl.Window, s game.State, stateC <-chan game.State, sb *S
 			}
 		}
 
-		rs = Render(rs, sOld, s, w, *sb)
+		rs = render(rs, sOld, s, w, *sb)
 		w.Update()
 		frames++
 
@@ -53,6 +53,38 @@ func RenderLoop(w *pixelgl.Window, s game.State, stateC <-chan game.State, sb *S
 type renderState struct {
 	Frames int
 	Frame  int
+}
+
+func render(rs renderState, sOld, sNew game.State, w *pixelgl.Window, sb SpriteBank) renderState {
+	bgBatch := pixel.NewBatch(new(pixel.TrianglesData), nil)
+	renderBackground(w, bgBatch)
+
+	oBatch := pixel.NewBatch(new(pixel.TrianglesData), sb.obstacle)
+	renderObstacles(sNew.Obstacles, w, oBatch, sb.obstacle)
+	oBatch.Draw(w)
+
+	dBatch := pixel.NewBatch(new(pixel.TrianglesData), sb.derelict)
+	renderObstacles(sNew.Derelicts, w, dBatch, sb.derelict)
+	dBatch.Draw(w)
+
+	sBatch := pixel.NewBatch(new(pixel.TrianglesData), nil)
+	renderSpawnPoints(sBatch, sNew.SpawnPoints, w.Bounds())
+	sBatch.Draw(w)
+
+	ctx := context{
+		sOld:  sOld,
+		sNew:  sNew,
+		tween: float64(rs.Frame) / float64(rs.Frames),
+		w:     w,
+	}
+	rBatch := pixel.NewBatch(new(pixel.TrianglesData), sb.racer)
+	renderRacers(ctx, rBatch, sb.racer)
+	rBatch.Draw(w)
+
+	if rs.Frame < rs.Frames {
+		rs.Frame++
+	}
+	return rs
 }
 
 type context struct {
@@ -95,38 +127,6 @@ func loadPicture(path string) (pixel.Picture, error) {
 		return nil, err
 	}
 	return pixel.PictureDataFromImage(img), nil
-}
-
-func Render(rs renderState, sOld, sNew game.State, w *pixelgl.Window, sb SpriteBank) renderState {
-	bgBatch := pixel.NewBatch(new(pixel.TrianglesData), nil)
-	renderBackground(w, bgBatch)
-
-	oBatch := pixel.NewBatch(new(pixel.TrianglesData), sb.obstacle)
-	renderObstacles(sNew.Obstacles, w, oBatch, sb.obstacle)
-	oBatch.Draw(w)
-
-	dBatch := pixel.NewBatch(new(pixel.TrianglesData), sb.derelict)
-	renderObstacles(sNew.Derelicts, w, dBatch, sb.derelict)
-	dBatch.Draw(w)
-
-	sBatch := pixel.NewBatch(new(pixel.TrianglesData), nil)
-	renderSpawnPoints(sBatch, sNew.SpawnPoints, w.Bounds())
-	sBatch.Draw(w)
-
-	ctx := context{
-		sOld:  sOld,
-		sNew:  sNew,
-		tween: float64(rs.Frame) / float64(rs.Frames),
-		w:     w,
-	}
-	rBatch := pixel.NewBatch(new(pixel.TrianglesData), sb.racer)
-	renderRacers(ctx, rBatch, sb.racer)
-	rBatch.Draw(w)
-
-	if rs.Frame < rs.Frames {
-		rs.Frame++
-	}
-	return rs
 }
 
 var stars []pixel.Vec
