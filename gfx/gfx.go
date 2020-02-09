@@ -16,12 +16,13 @@ import (
 	"golang.org/x/image/colornames"
 )
 
-func RenderLoop(w *pixelgl.Window, s game.State, sOld game.State, stateC <-chan game.State, sb *SpriteBank) {
+func RenderLoop(w *pixelgl.Window, s game.State, stateC <-chan game.State, sb *SpriteBank) {
+	sOld := s
 	var (
 		frames = 0
 		second = time.Tick(time.Second)
 		rs     = renderState{
-			Frames: 15,
+			Frames: 30,
 		}
 	)
 
@@ -194,7 +195,7 @@ func renderRacer(ctx context, batch *pixel.Batch, oldRacer, racer game.Racer, ac
 	sprite := pixel.NewSprite(pic, bounds)
 	sprite.DrawColorMask(batch, pixel.IM.Moved(pos).ScaledXY(pos, pixel.Vec{1.7, 1.7}), c)
 
-	renderFuelGuage(batch, pos, racer.Battery)
+	//renderFuelGuage(batch, pos, racer.Battery)
 }
 
 func renderFuelGuage(b *pixel.Batch, pos pixel.Vec, batt game.Battery) {

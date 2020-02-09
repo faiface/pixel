@@ -31,39 +31,13 @@ func run() error {
 	if err != nil {
 		return err
 	}
-	sOld := s
-	turn := 1
 
-	cmdC := make(chan []game.Command)
-	go func() { cmdC <- game.PollCommands(s) }()
+	stateC := make(chan game.State)
 
-	stateCA := make(chan game.State)
-	stateCB := make(chan game.State)
-
-	go gfx.RenderLoop(w, s, sOld, stateCA, sb)
+	go gfx.RenderLoop(w, s, stateC, sb)
+	go game.CommandLoop(w, s, stateC)
 
 	for !w.Closed() {
-		switch {
-		case w.Pressed(pixelgl.KeyQ):
-			return nil
-		case w.JustPressed(pixelgl.KeySpace) || true:
-			cmds := <-cmdC
-			s = game.UpdateState(s, sOld, cmds)
-			turn++
-			if s.GameOver {
-				s = game.NewState()
-				sOld = s
-				turn = 1
-			}
-			go func() {
-				s := <-stateCB
-				cmdC <- game.PollCommands(s)
-			}()
-			stateCA <- s
-			stateCB <- s
-		}
-
-		w.UpdateInput()
 	}
 	return nil
 }

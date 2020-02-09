@@ -1,5 +1,9 @@
 package game
 
+import (
+	"github.com/faiface/pixel/pixelgl"
+)
+
 type Command int
 
 const (
@@ -13,12 +17,45 @@ const (
 
 var validCommands = []Command{coast, speedUp, slowDown, left, right, clearObstacle}
 
-func PollCommands(s State) []Command {
+func CommandLoop(w *pixelgl.Window, s State, stateCA chan<- State) {
+	cmdC := make(chan []Command)
+	go func() { cmdC <- pollCommands(s) }()
+
+	stateCB := make(chan State)
+
+	turn := 1
+	sOld := s
+
+	for !w.Closed() {
+		switch {
+		case w.Pressed(pixelgl.KeyQ):
+			w.SetClosed(true)
+			return
+		case w.JustPressed(pixelgl.KeyEnter) || w.Pressed(pixelgl.KeySpace):
+			cmds := <-cmdC
+			s = UpdateState(s, sOld, cmds)
+			turn++
+			if s.GameOver {
+				s = NewState()
+				sOld = s
+				turn = 1
+			}
+			go func() {
+				s := <-stateCB
+				cmdC <- pollCommands(s)
+			}()
+			stateCA <- s
+			stateCB <- s
+		}
+
+		w.UpdateInput()
+	}
+}
+
+func pollCommands(s State) []Command {
 	cmds := make([]Command, len(s.Teams))
 	for i := range s.Teams {
-		cmd := chooseCommand(s, i)
-		//log.Printf("team %d chose to %v", i, cmd)
-		cmds[i] = cmd
+		cmds[i] = chooseCommand(s, i)
 	}
 	return cmds
 }

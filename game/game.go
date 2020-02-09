@@ -222,5 +222,5 @@ const (
 	numRacers  = 3
 	NumTeams   = 8
 	NumLanes   = NumTeams
-	baseCharge = 16
+	baseCharge = 14
 )
