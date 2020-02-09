@@ -130,7 +130,10 @@ func renderRacers(ctx context, colors map[*game.Team]pixel.RGBA, pic pixel.Pictu
 			X: oldPos.X + ctx.tween*(newPos.X-oldPos.X),
 			Y: oldPos.Y + ctx.tween*(newPos.Y-oldPos.Y),
 		}
-		renderBaton(pos, ctx.w)
+
+		batch := pixel.NewBatch(new(pixel.TrianglesData), nil)
+		renderBaton(pos, batch)
+		batch.Draw(ctx.w)
 	}
 }
 
@@ -198,13 +201,13 @@ func renderRacer(ctx context, oldRacer, racer game.Racer, active bool, c pixel.R
 	im2.Draw(ctx.w)
 }
 
-func renderBaton(pos pixel.Vec, w *pixelgl.Window) {
+func renderBaton(pos pixel.Vec, b *pixel.Batch) {
 	im := imdraw.New(nil)
 	im.Color = colornames.Bisque
 	im.Push(pos)
 	im.Clear()
 	im.Circle(batonWidth, 3)
-	im.Draw(w)
+	im.Draw(b)
 }
 
 func lanePos(pos, lane int, width float64, bounds pixel.Rect) pixel.Vec {
