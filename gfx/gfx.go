@@ -22,7 +22,7 @@ func RenderLoop(w *pixelgl.Window, s game.State, stateC <-chan game.State, sb *S
 		frames = 0
 		second = time.Tick(time.Second)
 		rs     = renderState{
-			Frames: 30,
+			Frames: 10,
 		}
 	)
 
@@ -50,10 +50,19 @@ func RenderLoop(w *pixelgl.Window, s game.State, stateC <-chan game.State, sb *S
 	}
 }
 
+type context struct {
+	sOld game.State
+	sNew game.State
+	rs   renderState
+	w    *pixelgl.Window
+}
+
 type renderState struct {
 	Frames int
 	Frame  int
 }
+
+func (rs renderState) tween() float64 { return float64(rs.Frame) / float64(rs.Frames) }
 
 func render(rs renderState, sOld, sNew game.State, w *pixelgl.Window, sb SpriteBank) renderState {
 	w.Clear(colornames.Black)
@@ -75,10 +84,10 @@ func render(rs renderState, sOld, sNew game.State, w *pixelgl.Window, sb SpriteB
 	sBatch.Draw(w)
 
 	ctx := context{
-		sOld:  sOld,
-		sNew:  sNew,
-		tween: float64(rs.Frame) / float64(rs.Frames),
-		w:     w,
+		sOld: sOld,
+		sNew: sNew,
+		rs:   rs,
+		w:    w,
 	}
 	rBatch := pixel.NewBatch(new(pixel.TrianglesData), sb.racer)
 	renderRacers(ctx, rBatch, sb.racer)
@@ -88,13 +97,6 @@ func render(rs renderState, sOld, sNew game.State, w *pixelgl.Window, sb SpriteB
 		rs.Frame++
 	}
 	return rs
-}
-
-type context struct {
-	sOld  game.State
-	sNew  game.State
-	tween float64
-	w     *pixelgl.Window
 }
 
 type SpriteBank struct {
@@ -168,8 +170,8 @@ func renderRacers(ctx context, batch *pixel.Batch, pic pixel.Picture) {
 		newPos := lanePos(newHolder.Position, ctx.w.Bounds())
 
 		pos := pixel.Vec{
-			X: oldPos.X + ctx.tween*(newPos.X-oldPos.X),
-			Y: oldPos.Y + ctx.tween*(newPos.Y-oldPos.Y),
+			X: oldPos.X + ctx.rs.tween()*(newPos.X-oldPos.X),
+			Y: oldPos.Y + ctx.rs.tween()*(newPos.Y-oldPos.Y),
 		}
 
 		renderBaton(pos, batch)
@@ -180,13 +182,13 @@ func renderRacer(ctx context, batch *pixel.Batch, oldRacer, racer game.Racer, ac
 	oldPos := lanePos(oldRacer.Position, ctx.w.Bounds())
 	newPos := lanePos(racer.Position, ctx.w.Bounds())
 	pos := pixel.Vec{
-		X: oldPos.X + ctx.tween*(newPos.X-oldPos.X),
-		Y: oldPos.Y + ctx.tween*(newPos.Y-oldPos.Y),
+		X: oldPos.X + ctx.rs.tween()*(newPos.X-oldPos.X),
+		Y: oldPos.Y + ctx.rs.tween()*(newPos.Y-oldPos.Y),
 	}
 
 	bounds := pic.Bounds()
 	if active {
-		renderProjection(ctx, batch, c, bounds, racer.Position, racer.Kinetics, oldPos, pos, newPos)
+		renderProjection(ctx, batch, c, bounds, racer.Position, racer.Kinetics.VX, pos)
 	}
 
 	sprite := pixel.NewSprite(pic, bounds)
@@ -195,7 +197,7 @@ func renderRacer(ctx context, batch *pixel.Batch, oldRacer, racer game.Racer, ac
 	//renderFuelGuage(batch, pos, racer.Battery)
 }
 
-func renderProjection(ctx context, b *pixel.Batch, c pixel.RGBA, bounds pixel.Rect, p game.Position, k game.Kinetics, oldPos, pos, newPos pixel.Vec) {
+func renderProjection(ctx context, b *pixel.Batch, c pixel.RGBA, bounds pixel.Rect, p game.Position, vx int, pos pixel.Vec) {
 	im := imdraw.New(nil)
 	projC := c
 	alpha := 0.25
@@ -213,19 +215,17 @@ func renderProjection(ctx context, b *pixel.Batch, c pixel.RGBA, bounds pixel.Re
 	}
 
 	nextPos := p
-	if ctx.tween == 1 {
-		nextPos.Pos += k.VX
+	if ctx.rs.Frame == ctx.rs.Frames {
+		nextPos.Pos += vx
 	}
 	vNext := lanePos(nextPos, ctx.w.Bounds())
 
 	ur := pixel.Vec{
 		X: vNext.X + w,
-		//X: oldPos.X + w*float64(k.VX+2),
 		Y: pos.Y + w,
 	}
 
-	if ctx.tween < 1 {
-		// ur.X = math.Min(ur.X, newPos.X+racerWidth)
+	if ctx.rs.Frame == ctx.rs.Frames {
 		ur.X = math.Max(ur.X, ll.X)
 	}
 
@@ -271,7 +271,7 @@ func lanePos(pos game.Position, bounds pixel.Rect) pixel.Vec {
 	hOffset := bounds.Size().X / game.Steps
 	vOffset := bounds.Size().Y / (game.NumLanes + 1)
 
-	return pixel.V(bounds.Min.X+racerWidth/2+float64(pos.Pos)*hOffset,
+	return pixel.V(bounds.Min.X+racerWidth+float64(pos.Pos)*hOffset,
 		bounds.Min.Y+float64(pos.Lane+1)*vOffset)
 }
 

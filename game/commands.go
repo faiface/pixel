@@ -23,7 +23,6 @@ func CommandLoop(w *pixelgl.Window, s State, stateCA chan<- State) {
 
 	stateCB := make(chan State)
 
-	turn := 1
 	sOld := s
 
 	for !w.Closed() {
@@ -37,11 +36,9 @@ func CommandLoop(w *pixelgl.Window, s State, stateCA chan<- State) {
 			}
 
 			s = checkWin(s, sOld)
-			turn++
 			if s.GameOver {
 				s = NewState()
 				sOld = s
-				turn = 1
 			}
 			go func() {
 				s := <-stateCB

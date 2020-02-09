@@ -55,7 +55,7 @@ func randomOpenPosition(ts []Team, os []Obstacle) Position {
 func randomObstacles(teams []Team) []Obstacle {
 	var os []Obstacle
 
-	const numObstacles = 3 * NumTeams
+	const numObstacles = 1 * NumTeams
 	for i := 0; i < numObstacles; i++ {
 		os = append(os, Obstacle{
 			Position: randomOpenPosition(teams, os),
