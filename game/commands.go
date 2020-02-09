@@ -35,6 +35,7 @@ func CommandLoop(w *pixelgl.Window, s State, stateCA chan<- State) {
 			for i, cmd := range <-cmdC {
 				s = doCommand(cmd, s, i)
 			}
+
 			s = checkWin(s, sOld)
 			turn++
 			if s.GameOver {
@@ -87,9 +88,7 @@ func doCommand(cmd Command, s State, teamID int) State {
 		s = updateRacer(s, *r)
 	}
 
-	if r := ActiveRacer(s.Teams[teamID]); r != nil {
-		s = moveRacer(s, *r)
-	}
+	s = moveRacer(s, *r)
 	s = maybePassBaton(s, teamID)
 
 	return s
