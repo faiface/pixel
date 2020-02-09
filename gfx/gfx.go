@@ -5,6 +5,7 @@ import (
 	"image"
 	"image/color"
 	_ "image/png"
+	"log"
 	"math"
 	"math/rand"
 	"os"
@@ -147,16 +148,29 @@ func renderRacer(ctx context, oldRacer, racer game.Racer, active bool, c pixel.R
 		projC.A = alpha
 		im.Color = projC
 		w := pic.Bounds().W() * 0.65
+
 		ll := pixel.Vec{
 			X: pos.X + w,
 			Y: pos.Y - w,
 		}
-		ur := pixel.Vec{
-			X: pos.X + w*float64(racer.Kinetics.V+1),
-			Y: pos.Y + w,
+
+		var ur pixel.Vec
+		if ctx.tween == 1 {
+			ur = pixel.Vec{
+				X: pos.X + w*float64(racer.Kinetics.V+1),
+				Y: pos.Y + w,
+			}
+			log.Printf("ur: %+v", ur)
+			ur.X = math.Max(ur.X, ll.X)
+		} else {
+			ur = pixel.Vec{
+				X: pos.X + w*float64(racer.Kinetics.V+1),
+				Y: pos.Y + w,
+			}
+			ur.X = math.Min(ur.X, newPos.X+racerWidth)
+			ur.X = math.Max(ur.X, ll.X)
 		}
-		ur.X = math.Min(ur.X, newPos.X+racerWidth)
-		ur.X = math.Max(ur.X, ll.X)
+
 		im.Push(ll)
 		im.Push(ur)
 		im.Rectangle(0)
