@@ -56,22 +56,33 @@ func CommandLoop(w *pixelgl.Window, s State, stateCA chan<- State) {
 }
 
 func doCommand(cmd Command, s State, teamID int) State {
-	da := 1
-
 	r := ActiveRacer(s.Teams[teamID])
 	if r == nil {
 		return s
 	}
+
+	var rr Racer
+	s, rr = commandRacer(s, cmd, *r)
+
+	s = updateRacer(s, rr)
+	s = moveRacer(s, rr)
+	s = maybePassBaton(s, teamID)
+
+	return s
+}
+
+func commandRacer(s State, cmd Command, r Racer) (State, Racer) {
+	da := 1
 	r.Kinetics.A = 0
 
 	switch cmd {
 	case coast:
 	case speedUp:
 		r.Kinetics.A = da
-		*r = accelerate(*r)
+		r = accelerate(r)
 	case slowDown:
 		r.Kinetics.A = -da
-		*r = accelerate(*r)
+		r = accelerate(r)
 	case left:
 		r.Position.Lane++
 	case right:
@@ -83,11 +94,7 @@ func doCommand(cmd Command, s State, teamID int) State {
 		r.Kinetics.V = 0
 	}
 
-	s = updateRacer(s, *r)
-	s = moveRacer(s, *r)
-	s = maybePassBaton(s, teamID)
-
-	return s
+	return s, r
 }
 
 func (c Command) String() string {
