@@ -48,28 +48,30 @@ func run() error {
 	go func() { cmdC <- game.PollCommands(s) }()
 
 	for !w.Closed() && !s.GameOver {
-		switch {
-		case w.Pressed(pixelgl.KeyQ):
-			return nil
-		case rs.Animating:
+		if rs.Animating {
 			rs = gfx.Render(rs, sOld, s, w, *sb)
 			if !rs.Animating {
 				sOld = s
 			}
-		case w.Pressed(pixelgl.KeySpace) || true:
-			log.Printf("TURN %d", turn)
-			rs.Animating = true
-			rs.Frame = 0
+		} else {
+			switch {
+			case w.Pressed(pixelgl.KeyQ):
+				return nil
+			case w.Pressed(pixelgl.KeySpace) || true:
+				log.Printf("TURN %d", turn)
+				rs.Animating = true
+				rs.Frame = 0
 
-			cmds := <-cmdC
-			s = game.UpdateState(s, sOld, cmds)
-			turn++
-			if s.GameOver {
-				s = game.NewState()
-				sOld = s
-				turn = 1
+				cmds := <-cmdC
+				s = game.UpdateState(s, sOld, cmds)
+				turn++
+				if s.GameOver {
+					s = game.NewState()
+					sOld = s
+					turn = 1
+				}
+				go func() { cmdC <- game.PollCommands(s) }()
 			}
-			go func() { cmdC <- game.PollCommands(s) }()
 		}
 
 		w.Update()
