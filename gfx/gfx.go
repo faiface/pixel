@@ -65,7 +65,8 @@ func loadPicture(path string) (pixel.Picture, error) {
 }
 
 func Render(rs RenderState, sOld, sNew game.State, w *pixelgl.Window, sb spriteBank) RenderState {
-	renderBackground(w)
+	batch := pixel.NewBatch(new(pixel.TrianglesData), nil)
+	renderBackground(w, batch)
 
 	colors := teamColors(sNew.Teams)
 	ctx := context{
@@ -86,8 +87,10 @@ func Render(rs RenderState, sOld, sNew game.State, w *pixelgl.Window, sb spriteB
 
 var stars []pixel.Vec
 
-func renderBackground(w *pixelgl.Window) {
+func renderBackground(w *pixelgl.Window, batch *pixel.Batch) {
 	w.Clear(colornames.Black)
+
+	batch.Clear()
 
 	if len(stars) == 0 {
 		const numStars = 100
@@ -106,7 +109,9 @@ func renderBackground(w *pixelgl.Window) {
 		im.Clear()
 	}
 	im.Circle(2, 0)
-	im.Draw(w)
+	im.Draw(batch)
+
+	batch.Draw(w)
 }
 
 func renderRacers(ctx context, colors map[*game.Team]pixel.RGBA, pic pixel.Picture) {
