@@ -64,23 +64,23 @@ type context struct {
 type SpriteBank struct {
 	racer    pixel.Picture
 	obstacle pixel.Picture
+	derelict pixel.Picture
 }
 
 func NewSpriteBank() (*SpriteBank, error) {
-	racer, err := loadPicture("shuttle.png")
-	if err != nil {
-		return nil, fmt.Errorf("load picture: %w", err)
+	var sb SpriteBank
+	for file, field := range map[string]*pixel.Picture{
+		"shuttle.png":  &sb.racer,
+		"rock.png":     &sb.obstacle,
+		"derelict.png": &sb.derelict,
+	} {
+		p, err := loadPicture(file)
+		if err != nil {
+			return nil, fmt.Errorf("load picture %q: %w", file, err)
+		}
+		*field = p
 	}
-
-	ob, err := loadPicture("rock.png")
-	if err != nil {
-		return nil, fmt.Errorf("load picture: %w", err)
-	}
-
-	return &SpriteBank{
-		racer:    racer,
-		obstacle: ob,
-	}, nil
+	return &sb, nil
 }
 
 func loadPicture(path string) (pixel.Picture, error) {
@@ -101,8 +101,12 @@ func Render(rs renderState, sOld, sNew game.State, w *pixelgl.Window, sb SpriteB
 	renderBackground(w, bgBatch)
 
 	oBatch := pixel.NewBatch(new(pixel.TrianglesData), sb.obstacle)
-	renderObstacles(sNew, w, oBatch, sb.obstacle)
+	renderObstacles(sNew.Obstacles, w, oBatch, sb.obstacle)
 	oBatch.Draw(w)
+
+	dBatch := pixel.NewBatch(new(pixel.TrianglesData), sb.derelict)
+	renderObstacles(sNew.Derelicts, w, dBatch, sb.derelict)
+	dBatch.Draw(w)
 
 	sBatch := pixel.NewBatch(new(pixel.TrianglesData), nil)
 	renderSpawnPoints(sBatch, sNew.SpawnPoints, w.Bounds())
@@ -263,11 +267,11 @@ func lanePos(pos, lane int, width float64, bounds pixel.Rect) pixel.Vec {
 		bounds.Min.Y+float64(lane+1)*vOffset)
 }
 
-func renderObstacles(s game.State, w *pixelgl.Window, batch *pixel.Batch, pic pixel.Picture) {
+func renderObstacles(os []game.Obstacle, w *pixelgl.Window, batch *pixel.Batch, pic pixel.Picture) {
 	b := w.Bounds()
 	im := imdraw.New(nil)
 
-	for _, o := range s.Obstacles {
+	for _, o := range os {
 		pos := lanePos(o.Position.Pos, o.Position.Lane, racerWidth, b)
 
 		im.Push(pos)

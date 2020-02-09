@@ -8,6 +8,7 @@ type State struct {
 	Teams       []Team
 	SpawnPoints map[int]SpawnPoint // keys are racer IDs
 	Obstacles   []Obstacle
+	Derelicts   []Obstacle
 	GameOver    bool
 }
 
@@ -129,8 +130,8 @@ func updateTeam(s State, t Team) State {
 }
 
 func destroyRacer(s State, r Racer) State {
-	// insert obstacle where racer was
-	s.Obstacles = append(s.Obstacles, Obstacle{Position: r.Position})
+	// insert derelict where racer was
+	s.Derelicts = append(s.Derelicts, Obstacle{Position: r.Position})
 
 	// spawn racer back at starting position
 	r.Position = s.SpawnPoints[r.ID].Pos
