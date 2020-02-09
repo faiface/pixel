@@ -56,7 +56,7 @@ func run() error {
 			if !rs.Animating {
 				sOld = s
 			}
-		case w.Pressed(pixelgl.KeySpace):
+		case w.Pressed(pixelgl.KeySpace) || true:
 			log.Printf("TURN %d", turn)
 			rs.Animating = true
 			rs.Frame = 0
