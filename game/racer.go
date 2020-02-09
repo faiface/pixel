@@ -1,11 +1,12 @@
 package game
 
 type Racer struct {
-	ID       int
-	TeamID   int
-	Position Position
-	Kinetics Kinetics
-	Battery  Battery
+	ID     int
+	TeamID int
+
+	Position
+	Kinetics
+	Battery
 }
 
 func ActiveRacer(t Team) *Racer {
