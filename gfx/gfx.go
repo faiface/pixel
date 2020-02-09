@@ -237,7 +237,7 @@ func renderProjection(ctx context, b *pixel.Batch, c pixel.RGBA, bounds pixel.Re
 		Y: pos.Y - w,
 	}
 	ur := pixel.Vec{
-		X: pos.X + w*float64(k.V+1),
+		X: pos.X + w*float64(k.VX+1),
 		Y: pos.Y + w,
 	}
 	if ctx.tween < 1 {

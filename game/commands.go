@@ -83,14 +83,14 @@ func commandRacer(s State, cmd Command, r Racer) (State, Racer) {
 		r.Kinetics.A = -da
 		r = accelerate(r)
 	case left:
-		r.Position.Lane++
+		r.Kinetics.VY = 1
 	case right:
-		r.Position.Lane--
+		r.Kinetics.VY = -1
 	case clearObstacle:
 		pos := r.Position
 		pos.Pos++
 		s = removeObstacle(s, pos)
-		r.Kinetics.V = 0
+		r.Kinetics.VX = 0
 	}
 
 	s = updateRacer(s, r)

@@ -6,8 +6,9 @@ type Position struct {
 }
 
 type Kinetics struct {
-	V int
-	A int
+	VX int
+	VY int
+	A  int
 }
 
 func accelerate(r Racer) Racer {
@@ -23,12 +24,12 @@ func accelerate(r Racer) Racer {
 	}
 	r.Battery.Charge -= abs(r.Kinetics.A)
 
-	r.Kinetics.V += r.Kinetics.A
-	if r.Kinetics.V > MaxV {
-		r.Kinetics.V = MaxV
+	r.Kinetics.VX += r.Kinetics.A
+	if r.Kinetics.VX > MaxV {
+		r.Kinetics.VX = MaxV
 	}
-	if r.Kinetics.V < -MaxV {
-		r.Kinetics.V = -MaxV
+	if r.Kinetics.VX < -MaxV {
+		r.Kinetics.VX = -MaxV
 	}
 
 	return r
@@ -41,13 +42,16 @@ func moveRacer(s State, r Racer) State {
 		return destroyRacer(s, r)
 	}
 
-	for i := 0; i < r.Kinetics.V; i++ {
+	for i := 0; i < r.Kinetics.VX; i++ {
 		if o := collide(r.Position.Pos+1, r.Position.Lane, s); o != nil {
 			return destroyRacer(s, r)
 		} else {
 			r.Position.Pos++
 		}
 	}
+
+	r.Position.Lane += r.Kinetics.VY
+	r.Kinetics.VY = 0
 
 	s = updateRacer(s, r)
 	return s

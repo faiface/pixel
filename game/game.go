@@ -118,11 +118,11 @@ func maybePassBaton(s State, teamID int) State {
 			continue
 		}
 		if abs(r.Position.Pos-h.Position.Pos) <= PassDistance {
-			h.Kinetics.V = 0
+			h.Kinetics.VX = 0
 			h.Kinetics.A = 0
 			s = updateRacer(s, *h)
 			newH := t.Racers[i]
-			newH.Kinetics.V = 1
+			newH.Kinetics.VX = 1
 			t.Baton.HolderID = newH.ID
 			s = updateTeam(s, t)
 			return updateRacer(s, newH)
