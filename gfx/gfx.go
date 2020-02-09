@@ -186,7 +186,7 @@ func renderRacer(ctx context, batch *pixel.Batch, oldRacer, racer game.Racer, ac
 
 	bounds := pic.Bounds()
 	if active {
-		renderProjection(ctx, batch, c, bounds, racer.Kinetics, oldPos, pos, newPos)
+		renderProjection(ctx, batch, c, bounds, racer.Position, racer.Kinetics, oldPos, pos, newPos)
 	}
 
 	sprite := pixel.NewSprite(pic, bounds)
@@ -195,7 +195,7 @@ func renderRacer(ctx context, batch *pixel.Batch, oldRacer, racer game.Racer, ac
 	//renderFuelGuage(batch, pos, racer.Battery)
 }
 
-func renderProjection(ctx context, b *pixel.Batch, c pixel.RGBA, bounds pixel.Rect, k game.Kinetics, oldPos, pos, newPos pixel.Vec) {
+func renderProjection(ctx context, b *pixel.Batch, c pixel.RGBA, bounds pixel.Rect, p game.Position, k game.Kinetics, oldPos, pos, newPos pixel.Vec) {
 	im := imdraw.New(nil)
 	projC := c
 	alpha := 0.25
@@ -204,20 +204,30 @@ func renderProjection(ctx context, b *pixel.Batch, c pixel.RGBA, bounds pixel.Re
 	projC.B *= alpha
 	projC.A = alpha
 	im.Color = projC
+
 	w := bounds.W() * 0.65
 
 	ll := pixel.Vec{
 		X: pos.X + w,
 		Y: pos.Y - w,
 	}
+
+	nextPos := p
+	if ctx.tween == 1 {
+		nextPos.Pos += k.VX
+	}
+	vNext := lanePos(nextPos, ctx.w.Bounds())
+
 	ur := pixel.Vec{
-		X: oldPos.X + w*float64(k.VX+1),
+		X: vNext.X + w,
+		//X: oldPos.X + w*float64(k.VX+2),
 		Y: pos.Y + w,
 	}
+
 	if ctx.tween < 1 {
-		ur.X = math.Min(ur.X, newPos.X+racerWidth)
+		// ur.X = math.Min(ur.X, newPos.X+racerWidth)
+		ur.X = math.Max(ur.X, ll.X)
 	}
-	ur.X = math.Max(ur.X, ll.X)
 
 	im.Push(ll)
 	im.Push(ur)
