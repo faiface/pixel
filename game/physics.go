@@ -1,5 +1,10 @@
 package game
 
+type Position struct {
+	Lane int
+	Pos  int
+}
+
 func accelerate(r Racer) Racer {
 	if r.Kinetics.A < -MaxA {
 		r.Kinetics.A = -MaxA

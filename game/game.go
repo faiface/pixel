@@ -4,6 +4,43 @@ import (
 	"log"
 )
 
+type State struct {
+	Teams       []Team
+	SpawnPoints map[int]SpawnPoint // keys are racer IDs
+	Obstacles   []Obstacle
+	GameOver    bool
+}
+
+type Team struct {
+	id     int
+	Racers []Racer
+	Baton  Baton
+	won    bool
+	Lane   int
+}
+
+type Racer struct {
+	ID       int
+	TeamID   int
+	Position Position
+	Kinetics Kinetics
+	Battery  Battery
+}
+
+type Kinetics struct {
+	V int
+	A int
+}
+
+type Battery struct {
+	Capacity int
+	Charge   int
+}
+
+type Baton struct {
+	HolderID int
+}
+
 func UpdateState(s State, sOld State, cmds []Command) State {
 	for i, cmd := range cmds {
 		s = doCommand(cmd, s, i)
@@ -87,7 +124,7 @@ func destroyRacer(s State, r Racer) State {
 	s.Obstacles = append(s.Obstacles, Obstacle{Position: r.Position})
 
 	// spawn racer back at starting position
-	r.Position = r.StartPos
+	r.Position = s.SpawnPoints[r.ID].Pos
 	r.Kinetics = Kinetics{}
 	r.Battery.Charge = r.Battery.Capacity
 
@@ -130,49 +167,9 @@ func abs(n int) int {
 	return n
 }
 
-type State struct {
-	Teams     []Team
-	Obstacles []Obstacle
-	GameOver  bool
-}
-
-type Team struct {
-	id     int
-	Racers []Racer
-	Baton  Baton
-	won    bool
-	Lane   int
-}
-
-type Racer struct {
-	ID       int
-	TeamID   int
-	Position Position
-	StartPos Position
-	Kinetics Kinetics
-	Battery  Battery
-}
-
-type Kinetics struct {
-	V int
-	A int
-}
-
-type Position struct {
-	Lane int
-	Pos  int
-}
-
-type Battery struct {
-	Capacity int
-	Charge   int
-}
-
-type Baton struct {
-	HolderID int
-}
-
 func NewState() State {
+	spawns := make(map[int]SpawnPoint)
+
 	var teams []Team
 	for i := 0; i < NumTeams; i++ {
 		var racers []Racer
@@ -180,7 +177,7 @@ func NewState() State {
 			r := Racer{
 				ID:     i*NumTeams + j,
 				TeamID: i,
-				StartPos: Position{
+				Position: Position{
 					Lane: i,
 					Pos:  j * (Steps / numRacers),
 				},
@@ -189,7 +186,10 @@ func NewState() State {
 					Charge:   baseCharge,
 				},
 			}
-			r.Position = r.StartPos
+			spawns[r.ID] = SpawnPoint{
+				TeamID: i,
+				Pos:    r.Position,
+			}
 			racers = append(racers, r)
 		}
 		teams = append(teams, Team{
@@ -201,8 +201,9 @@ func NewState() State {
 	}
 
 	return State{
-		Teams:     teams,
-		Obstacles: randomObstacles(teams),
+		Teams:       teams,
+		SpawnPoints: spawns,
+		Obstacles:   randomObstacles(teams),
 	}
 }
 

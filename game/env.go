@@ -2,6 +2,11 @@ package game
 
 import "math/rand"
 
+type SpawnPoint struct {
+	TeamID int
+	Pos    Position
+}
+
 type Obstacle struct {
 	Position Position
 }
