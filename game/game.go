@@ -46,13 +46,22 @@ func UpdateState(s State, sOld State, cmds []Command) State {
 		s = doCommand(cmd, s, i)
 	}
 
+	var winners []int
 	for _, t := range s.Teams {
 		if r := ActiveRacer(t); r != nil {
 			if won(*r, s) {
-				log.Printf("team %d won", t.id)
-				s.GameOver = true
+				winners = append(winners, t.id)
 			}
 		}
+	}
+
+	switch n := len(winners); {
+	case n == 1:
+		log.Printf("team %d won", winners[0])
+		s.GameOver = true
+	case n > 1:
+		log.Printf("%d-way tie between teams: %v", len(winners), winners)
+		s.GameOver = true
 	}
 
 	return s
