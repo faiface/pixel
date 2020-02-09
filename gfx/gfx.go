@@ -56,8 +56,11 @@ type renderState struct {
 }
 
 func render(rs renderState, sOld, sNew game.State, w *pixelgl.Window, sb SpriteBank) renderState {
+	w.Clear(colornames.Black)
+
 	bgBatch := pixel.NewBatch(new(pixel.TrianglesData), nil)
-	renderBackground(w, bgBatch)
+	renderBackground(w.Bounds(), bgBatch)
+	bgBatch.Draw(w)
 
 	oBatch := pixel.NewBatch(new(pixel.TrianglesData), sb.obstacle)
 	renderObstacles(sNew.Obstacles, w.Bounds(), oBatch, sb.obstacle)
@@ -131,17 +134,13 @@ func loadPicture(path string) (pixel.Picture, error) {
 
 var stars []pixel.Vec
 
-func renderBackground(w *pixelgl.Window, batch *pixel.Batch) {
-	w.Clear(colornames.Black)
-
-	batch.Clear()
-
+func renderBackground(bounds pixel.Rect, batch *pixel.Batch) {
 	if len(stars) == 0 {
 		const numStars = 100
 		for i := 0; i < numStars; i++ {
 			stars = append(stars, pixel.Vec{
-				X: rand.Float64() * w.Bounds().W(),
-				Y: rand.Float64() * w.Bounds().H(),
+				X: rand.Float64() * bounds.W(),
+				Y: rand.Float64() * bounds.H(),
 			})
 		}
 	}
@@ -154,8 +153,6 @@ func renderBackground(w *pixelgl.Window, batch *pixel.Batch) {
 	}
 	im.Circle(2, 0)
 	im.Draw(batch)
-
-	batch.Draw(w)
 }
 
 func renderRacers(ctx context, batch *pixel.Batch, pic pixel.Picture) {
