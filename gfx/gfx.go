@@ -310,7 +310,6 @@ var teamColors = []pixel.RGBA{
 	pixel.ToRGBA(colornames.Yellow),
 	pixel.ToRGBA(colornames.Blueviolet),
 	pixel.ToRGBA(colornames.Orange),
-	pixel.ToRGBA(colornames.Coral),
 }
 
 const (

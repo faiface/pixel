@@ -2,6 +2,7 @@ package game
 
 import (
 	"log"
+	"strings"
 )
 
 type State struct {
@@ -50,10 +51,14 @@ func checkWin(s State, sOld State) State {
 
 	switch n := len(winners); {
 	case n == 1:
-		log.Printf("team %d won", winners[0])
+		log.Printf("%s team won", teamNames[winners[0]])
 		s.GameOver = true
 	case n > 1:
-		log.Printf("%d-way tie between teams: %v", len(winners), winners)
+		var names []string
+		for _, teamID := range winners {
+			names = append(names, teamNames[teamID])
+		}
+		log.Printf("%d-way tie between teams: %v", len(winners), strings.Join(names, ", "))
 		s.GameOver = true
 	}
 
@@ -169,3 +174,14 @@ const (
 	NumLanes   = NumTeams
 	baseCharge = 14
 )
+
+var teamNames = []string{
+	"Red",
+	"Green",
+	"Blue",
+	"Magenta",
+	"Cyan",
+	"Yellow",
+	"Purple",
+	"Orange",
+}
