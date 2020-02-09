@@ -64,7 +64,6 @@ func doCommand(cmd Command, s State, teamID int) State {
 	var rr Racer
 	s, rr = commandRacer(s, cmd, *r)
 
-	s = updateRacer(s, rr)
 	s = moveRacer(s, rr)
 	s = maybePassBaton(s, teamID)
 
@@ -94,6 +93,7 @@ func commandRacer(s State, cmd Command, r Racer) (State, Racer) {
 		r.Kinetics.V = 0
 	}
 
+	s = updateRacer(s, r)
 	return s, r
 }
 
