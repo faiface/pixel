@@ -44,35 +44,7 @@ func run() error {
 	stateCA := make(chan game.State)
 	stateCB := make(chan game.State)
 
-	go func(s game.State, sOld game.State, stateC <-chan game.State) {
-		var (
-			frames = 0
-			second = time.Tick(time.Second)
-		)
-
-		for !w.Closed() {
-			if rs.Frame == rs.Frames {
-				select {
-				case ss := <-stateCA:
-					sOld = s
-					s = ss
-					rs.Frame = 0
-				default:
-				}
-			}
-
-			rs = gfx.Render(rs, sOld, s, w, *sb)
-			w.Update()
-			frames++
-
-			select {
-			case <-second:
-				w.SetTitle(fmt.Sprintf("%s | FPS: %d", cfg.Title, frames))
-				frames = 0
-			default:
-			}
-		}
-	}(s, sOld, stateCA)
+	go renderLoop(w, rs, s, sOld, stateCA, sb)
 
 	for !w.Closed() {
 		switch {
@@ -108,4 +80,34 @@ func pixelRun() {
 
 func main() {
 	pixelgl.Run(pixelRun)
+}
+
+func renderLoop(w *pixelgl.Window, rs gfx.RenderState, s game.State, sOld game.State, stateC <-chan game.State, sb *gfx.SpriteBank) {
+	var (
+		frames = 0
+		second = time.Tick(time.Second)
+	)
+
+	for !w.Closed() {
+		if rs.Frame == rs.Frames {
+			select {
+			case ss := <-stateC:
+				sOld = s
+				s = ss
+				rs.Frame = 0
+			default:
+			}
+		}
+
+		rs = gfx.Render(rs, sOld, s, w, *sb)
+		w.Update()
+		frames++
+
+		select {
+		case <-second:
+			w.SetTitle(fmt.Sprintf("%s | FPS: %d", "Relay", frames))
+			frames = 0
+		default:
+		}
+	}
 }

@@ -28,12 +28,12 @@ type context struct {
 	w     *pixelgl.Window
 }
 
-type spriteBank struct {
+type SpriteBank struct {
 	racer    pixel.Picture
 	obstacle pixel.Picture
 }
 
-func NewSpriteBank() (*spriteBank, error) {
+func NewSpriteBank() (*SpriteBank, error) {
 	racer, err := loadPicture("shuttle.png")
 	if err != nil {
 		return nil, fmt.Errorf("load picture: %w", err)
@@ -44,7 +44,7 @@ func NewSpriteBank() (*spriteBank, error) {
 		return nil, fmt.Errorf("load picture: %w", err)
 	}
 
-	return &spriteBank{
+	return &SpriteBank{
 		racer:    racer,
 		obstacle: ob,
 	}, nil
@@ -63,7 +63,7 @@ func loadPicture(path string) (pixel.Picture, error) {
 	return pixel.PictureDataFromImage(img), nil
 }
 
-func Render(rs RenderState, sOld, sNew game.State, w *pixelgl.Window, sb spriteBank) RenderState {
+func Render(rs RenderState, sOld, sNew game.State, w *pixelgl.Window, sb SpriteBank) RenderState {
 	bgBatch := pixel.NewBatch(new(pixel.TrianglesData), nil)
 	renderBackground(w, bgBatch)
 
