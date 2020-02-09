@@ -5,9 +5,14 @@ import (
 )
 
 func UpdateState(s State, sOld State) State {
+	cmds := make([]command, len(s.Teams))
 	for i := range s.Teams {
 		cmd := smartChooseCommand(s, i)
 		log.Printf("team %d chose to %v", i, cmd)
+		cmds[i] = cmd
+	}
+
+	for i, cmd := range cmds {
 		s = doCommand(cmd, s, i)
 	}
 
