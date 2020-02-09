@@ -57,7 +57,15 @@ func run() error {
 			log.Printf("TURN %d", turn)
 			rs.Animating = true
 			rs.Frame = 0
-			s = game.UpdateState(s, sOld)
+
+			cmds := make([]game.Command, len(s.Teams))
+			for i := range s.Teams {
+				cmd := game.ChooseCommand(s, i)
+				log.Printf("team %d chose to %v", i, cmd)
+				cmds[i] = cmd
+			}
+
+			s = game.UpdateState(s, sOld, cmds)
 			turn++
 			if s.GameOver {
 				s = game.NewState()

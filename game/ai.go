@@ -1,10 +1,10 @@
 package game
 
-func smartChooseCommand(s State, teamID int) command {
-	return smartChooseHelper(s, teamID, aiDepth)
+func ChooseCommand(s State, teamID int) Command {
+	return chooseCommandHelper(s, teamID, aiDepth)
 }
 
-func smartChooseHelper(s State, teamID int, depth int) command {
+func chooseCommandHelper(s State, teamID int, depth int) Command {
 	bestCmd, bestN := speedUp, 0
 
 	for _, cmd := range validCommands {
@@ -17,7 +17,7 @@ func smartChooseHelper(s State, teamID int, depth int) command {
 	return bestCmd
 }
 
-func score(cmd command, s State, teamID int, depth int) int {
+func score(cmd Command, s State, teamID int, depth int) int {
 	if !legalMove(s, teamID, cmd) {
 		return -1
 	}
@@ -28,11 +28,11 @@ func score(cmd command, s State, teamID int, depth int) int {
 		if b == nil {
 			return 0
 		}
-		return b.Position.Pos
+		return b.Position.Pos*100 + b.Battery.Charge
 	}
 
 	depth--
-	cmd2 := smartChooseHelper(s, teamID, depth)
+	cmd2 := chooseCommandHelper(s, teamID, depth)
 	return score(cmd2, s, teamID, depth)
 }
 

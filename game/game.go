@@ -4,14 +4,7 @@ import (
 	"log"
 )
 
-func UpdateState(s State, sOld State) State {
-	cmds := make([]command, len(s.Teams))
-	for i := range s.Teams {
-		cmd := smartChooseCommand(s, i)
-		log.Printf("team %d chose to %v", i, cmd)
-		cmds[i] = cmd
-	}
-
+func UpdateState(s State, sOld State, cmds []Command) State {
 	for i, cmd := range cmds {
 		s = doCommand(cmd, s, i)
 	}
@@ -114,7 +107,7 @@ func gameOver(s State) bool {
 	return false
 }
 
-func legalMove(s State, teamID int, cmd command) bool {
+func legalMove(s State, teamID int, cmd Command) bool {
 	r := ActiveRacer(s.Teams[teamID])
 	if r == nil {
 		return false

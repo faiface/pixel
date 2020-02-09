@@ -1,18 +1,18 @@
 package game
 
-type command int
+type Command int
 
 const (
-	speedUp command = iota
+	speedUp Command = iota
 	slowDown
 	left
 	right
 	clearObstacle
 )
 
-var validCommands = []command{speedUp, slowDown, left, right, clearObstacle}
+var validCommands = []Command{speedUp, slowDown, left, right, clearObstacle}
 
-func doCommand(cmd command, s State, teamID int) State {
+func doCommand(cmd Command, s State, teamID int) State {
 	da := 1
 	//da += rand.Intn(3) - 1
 
@@ -53,7 +53,7 @@ func doCommand(cmd command, s State, teamID int) State {
 	return s
 }
 
-func (c command) String() string {
+func (c Command) String() string {
 	switch c {
 	case speedUp:
 		return "speed up"
