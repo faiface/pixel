@@ -1,5 +1,9 @@
 package game
 
+import (
+	"log"
+)
+
 type Command int
 
 const (
@@ -12,9 +16,18 @@ const (
 
 var validCommands = []Command{speedUp, slowDown, left, right, clearObstacle}
 
+func PollCommands(s State) []Command {
+	cmds := make([]Command, len(s.Teams))
+	for i := range s.Teams {
+		cmd := chooseCommand(s, i)
+		log.Printf("team %d chose to %v", i, cmd)
+		cmds[i] = cmd
+	}
+	return cmds
+}
+
 func doCommand(cmd Command, s State, teamID int) State {
 	da := 1
-	//da += rand.Intn(3) - 1
 
 	r := ActiveRacer(s.Teams[teamID])
 	if r == nil {

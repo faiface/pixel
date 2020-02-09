@@ -44,6 +44,9 @@ func run() error {
 		second = time.Tick(time.Second)
 	)
 
+	cmdC := make(chan []game.Command)
+	go func() { cmdC <- game.PollCommands(s) }()
+
 	for !w.Closed() && !s.GameOver {
 		switch {
 		case w.Pressed(pixelgl.KeyQ):
@@ -58,13 +61,7 @@ func run() error {
 			rs.Animating = true
 			rs.Frame = 0
 
-			cmds := make([]game.Command, len(s.Teams))
-			for i := range s.Teams {
-				cmd := game.ChooseCommand(s, i)
-				log.Printf("team %d chose to %v", i, cmd)
-				cmds[i] = cmd
-			}
-
+			cmds := <-cmdC
 			s = game.UpdateState(s, sOld, cmds)
 			turn++
 			if s.GameOver {
@@ -72,10 +69,12 @@ func run() error {
 				sOld = s
 				turn = 1
 			}
+			go func() { cmdC <- game.PollCommands(s) }()
 		}
 
 		w.Update()
 		frames++
+
 		select {
 		case <-second:
 			w.SetTitle(fmt.Sprintf("%s | FPS: %d", cfg.Title, frames))

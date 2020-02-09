@@ -1,6 +1,6 @@
 package game
 
-func ChooseCommand(s State, teamID int) Command {
+func chooseCommand(s State, teamID int) Command {
 	return chooseCommandHelper(s, teamID, aiDepth)
 }
 
