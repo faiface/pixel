@@ -32,8 +32,7 @@ func CommandLoop(w *pixelgl.Window, s State, stateCA chan<- State) {
 			w.SetClosed(true)
 			return
 		case w.JustPressed(pixelgl.KeyEnter) || w.Pressed(pixelgl.KeySpace) || true:
-			cmds := <-cmdC
-			s = UpdateState(s, sOld, cmds)
+			s = UpdateState(s, sOld, <-cmdC)
 			turn++
 			if s.GameOver {
 				s = NewState()
