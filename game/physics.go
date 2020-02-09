@@ -5,6 +5,11 @@ type Position struct {
 	Pos  int
 }
 
+type Kinetics struct {
+	V int
+	A int
+}
+
 func accelerate(r Racer) Racer {
 	if r.Kinetics.A < -MaxA {
 		r.Kinetics.A = -MaxA

@@ -54,14 +54,6 @@ func CommandLoop(w *pixelgl.Window, s State, stateCA chan<- State) {
 	}
 }
 
-func pollCommands(s State) []Command {
-	cmds := make([]Command, len(s.Teams))
-	for i := range s.Teams {
-		cmds[i] = chooseCommand(s, i)
-	}
-	return cmds
-}
-
 func doCommand(cmd Command, s State, teamID int) State {
 	da := 1
 

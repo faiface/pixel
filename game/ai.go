@@ -1,5 +1,13 @@
 package game
 
+func pollCommands(s State) []Command {
+	cmds := make([]Command, len(s.Teams))
+	for i := range s.Teams {
+		cmds[i] = chooseCommand(s, i)
+	}
+	return cmds
+}
+
 func chooseCommand(s State, teamID int) Command {
 	return chooseCommandHelper(s, teamID, aiDepth)
 }
