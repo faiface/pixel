@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"log"
 	"math/rand"
 	"relay/game"
@@ -28,9 +27,6 @@ func run() error {
 
 	s := game.NewState()
 
-	rs := gfx.RenderState{
-		Frames: 15,
-	}
 	sb, err := gfx.NewSpriteBank()
 	if err != nil {
 		return err
@@ -44,13 +40,13 @@ func run() error {
 	stateCA := make(chan game.State)
 	stateCB := make(chan game.State)
 
-	go renderLoop(w, rs, s, sOld, stateCA, sb)
+	go gfx.RenderLoop(w, s, sOld, stateCA, sb)
 
 	for !w.Closed() {
 		switch {
 		case w.Pressed(pixelgl.KeyQ):
 			return nil
-		case w.Pressed(pixelgl.KeySpace):
+		case w.JustPressed(pixelgl.KeySpace) || true:
 			cmds := <-cmdC
 			s = game.UpdateState(s, sOld, cmds)
 			turn++
@@ -80,34 +76,4 @@ func pixelRun() {
 
 func main() {
 	pixelgl.Run(pixelRun)
-}
-
-func renderLoop(w *pixelgl.Window, rs gfx.RenderState, s game.State, sOld game.State, stateC <-chan game.State, sb *gfx.SpriteBank) {
-	var (
-		frames = 0
-		second = time.Tick(time.Second)
-	)
-
-	for !w.Closed() {
-		if rs.Frame == rs.Frames {
-			select {
-			case ss := <-stateC:
-				sOld = s
-				s = ss
-				rs.Frame = 0
-			default:
-			}
-		}
-
-		rs = gfx.Render(rs, sOld, s, w, *sb)
-		w.Update()
-		frames++
-
-		select {
-		case <-second:
-			w.SetTitle(fmt.Sprintf("%s | FPS: %d", "Relay", frames))
-			frames = 0
-		default:
-		}
-	}
 }

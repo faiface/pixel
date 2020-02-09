@@ -3,12 +3,12 @@ package gfx
 import (
 	"fmt"
 	"image"
-	"image/color"
 	_ "image/png"
 	"math"
 	"math/rand"
 	"os"
 	"relay/game"
+	"time"
 
 	"github.com/faiface/pixel"
 	"github.com/faiface/pixel/imdraw"
@@ -16,7 +16,40 @@ import (
 	"golang.org/x/image/colornames"
 )
 
-type RenderState struct {
+func RenderLoop(w *pixelgl.Window, s game.State, sOld game.State, stateC <-chan game.State, sb *SpriteBank) {
+	var (
+		frames = 0
+		second = time.Tick(time.Second)
+		rs     = renderState{
+			Frames: 15,
+		}
+	)
+
+	for !w.Closed() {
+		if rs.Frame == rs.Frames {
+			select {
+			case ss := <-stateC:
+				sOld = s
+				s = ss
+				rs.Frame = 0
+			default:
+			}
+		}
+
+		rs = Render(rs, sOld, s, w, *sb)
+		w.Update()
+		frames++
+
+		select {
+		case <-second:
+			w.SetTitle(fmt.Sprintf("%s | FPS: %d", "Relay", frames))
+			frames = 0
+		default:
+		}
+	}
+}
+
+type renderState struct {
 	Frames int
 	Frame  int
 }
@@ -63,11 +96,18 @@ func loadPicture(path string) (pixel.Picture, error) {
 	return pixel.PictureDataFromImage(img), nil
 }
 
-func Render(rs RenderState, sOld, sNew game.State, w *pixelgl.Window, sb SpriteBank) RenderState {
+func Render(rs renderState, sOld, sNew game.State, w *pixelgl.Window, sb SpriteBank) renderState {
 	bgBatch := pixel.NewBatch(new(pixel.TrianglesData), nil)
 	renderBackground(w, bgBatch)
 
-	colors := teamColors(sNew.Teams)
+	oBatch := pixel.NewBatch(new(pixel.TrianglesData), sb.obstacle)
+	renderObstacles(sNew, w, oBatch, sb.obstacle)
+	oBatch.Draw(w)
+
+	sBatch := pixel.NewBatch(new(pixel.TrianglesData), nil)
+	renderSpawnPoints(sBatch, sNew.SpawnPoints, w.Bounds())
+	sBatch.Draw(w)
+
 	ctx := context{
 		sOld:  sOld,
 		sNew:  sNew,
@@ -75,16 +115,8 @@ func Render(rs RenderState, sOld, sNew game.State, w *pixelgl.Window, sb SpriteB
 		w:     w,
 	}
 	rBatch := pixel.NewBatch(new(pixel.TrianglesData), sb.racer)
-	renderRacers(ctx, rBatch, colors, sb.racer)
+	renderRacers(ctx, rBatch, sb.racer)
 	rBatch.Draw(w)
-
-	oBatch := pixel.NewBatch(new(pixel.TrianglesData), sb.obstacle)
-	renderObstacles(sNew, w, oBatch, sb.obstacle)
-	oBatch.Draw(w)
-
-	sBatch := pixel.NewBatch(new(pixel.TrianglesData), nil)
-	renderSpawnPoints(sBatch, sNew.SpawnPoints, w.Bounds(), colors)
-	sBatch.Draw(w)
 
 	if rs.Frame < rs.Frames {
 		rs.Frame++
@@ -121,9 +153,9 @@ func renderBackground(w *pixelgl.Window, batch *pixel.Batch) {
 	batch.Draw(w)
 }
 
-func renderRacers(ctx context, batch *pixel.Batch, colors map[int]pixel.RGBA, pic pixel.Picture) {
+func renderRacers(ctx context, batch *pixel.Batch, pic pixel.Picture) {
 	for i, t := range ctx.sNew.Teams {
-		c := colors[i]
+		c := teamColors[i]
 		for j, racer := range t.Racers {
 			oldRacer := ctx.sOld.Teams[i].Racers[j]
 			renderRacer(ctx, batch, oldRacer, racer, racer.ID == ctx.sOld.Teams[i].Baton.HolderID, c, pic)
@@ -246,11 +278,11 @@ func renderObstacles(s game.State, w *pixelgl.Window, batch *pixel.Batch, pic pi
 	im.Draw(batch)
 }
 
-func renderSpawnPoints(b *pixel.Batch, sps map[int]game.SpawnPoint, bounds pixel.Rect, colors map[int]pixel.RGBA) {
+func renderSpawnPoints(b *pixel.Batch, sps map[int]game.SpawnPoint, bounds pixel.Rect) {
 	im := imdraw.New(nil)
 
 	for _, sp := range sps {
-		c := colors[sp.TeamID]
+		c := teamColors[sp.TeamID]
 		c.R *= 0.5
 		c.G *= 0.5
 		c.B *= 0.5
@@ -264,34 +296,16 @@ func renderSpawnPoints(b *pixel.Batch, sps map[int]game.SpawnPoint, bounds pixel
 	im.Draw(b)
 }
 
-func teamColors(ts []game.Team) map[int]pixel.RGBA {
-	m := make(map[int]pixel.RGBA)
-	for i := range ts {
-		var c color.RGBA
-		switch i {
-		case 0:
-			c = colornames.Palevioletred
-		case 1:
-			c = colornames.Lime
-		case 2:
-			c = colornames.Cornflowerblue
-		case 3:
-			c = colornames.Magenta
-		case 4:
-			c = colornames.Cyan
-		case 5:
-			c = colornames.Yellow
-		case 6:
-			c = colornames.Blueviolet
-		case 7:
-			c = colornames.Orange
-		case 8:
-			c = colornames.Coral
-
-		}
-		m[i] = pixel.ToRGBA(c)
-	}
-	return m
+var teamColors = map[int]pixel.RGBA{
+	0: pixel.ToRGBA(colornames.Palevioletred),
+	1: pixel.ToRGBA(colornames.Lime),
+	2: pixel.ToRGBA(colornames.Cornflowerblue),
+	3: pixel.ToRGBA(colornames.Magenta),
+	4: pixel.ToRGBA(colornames.Cyan),
+	5: pixel.ToRGBA(colornames.Yellow),
+	6: pixel.ToRGBA(colornames.Blueviolet),
+	7: pixel.ToRGBA(colornames.Orange),
+	8: pixel.ToRGBA(colornames.Coral),
 }
 
 const (
