@@ -15,7 +15,14 @@ const (
 	clearObstacle
 )
 
-var validCommands = []Command{coast, speedUp, slowDown, left, right, clearObstacle}
+var validCommands = []Command{
+	coast,
+	speedUp,
+	slowDown,
+	left,
+	right,
+	clearObstacle,
+}
 
 func CommandLoop(w *pixelgl.Window, s State, stateCA chan<- State) {
 	cmdC := make(chan []Command)

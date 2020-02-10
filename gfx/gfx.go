@@ -38,7 +38,7 @@ func RenderLoop(w *pixelgl.Window, s game.State, stateC <-chan game.State, sb *S
 			}
 		}
 
-		if rs.frame == rs.frames {
+		if rs.frame == rs.frames && rs.timeFlowing {
 			rs.timeFlowing = false
 		}
 		rs = render(rs, sOld, s, w, *sb)
@@ -98,7 +98,7 @@ func render(rs renderState, sOld, sNew game.State, w *pixelgl.Window, sb SpriteB
 	renderRacers(ctx, rBatch, sb.racer)
 	rBatch.Draw(w)
 
-	if rs.frame < rs.frames {
+	if rs.frame != rs.frames {
 		rs.frame++
 	}
 	return rs
@@ -197,12 +197,16 @@ func renderRacer(ctx context, batch *pixel.Batch, oldRacer, racer game.Racer, ac
 	}
 
 	sprite := pixel.NewSprite(pic, bounds)
-	sprite.DrawColorMask(batch, pixel.IM.Moved(pos).ScaledXY(pos, pixel.Vec{1.7, 1.7}), c)
+	sprite.DrawColorMask(batch, pixel.IM.Moved(pos).ScaledXY(pos, pixel.Vec{scale, scale}), c)
 
 	//renderFuelGuage(batch, pos, racer.Battery)
 }
 
 func renderProjection(ctx context, b *pixel.Batch, c pixel.RGBA, bounds pixel.Rect, p game.Position, vx int, pos pixel.Vec) {
+	if vx == 0 {
+		return
+	}
+
 	im := imdraw.New(nil)
 	projC := c
 	alpha := 0.25
@@ -212,7 +216,7 @@ func renderProjection(ctx context, b *pixel.Batch, c pixel.RGBA, bounds pixel.Re
 	projC.A = alpha
 	im.Color = projC
 
-	w := bounds.W() * 0.65
+	w := bounds.W() * scale / 2
 
 	ll := pixel.Vec{
 		X: pos.X + w,
@@ -224,14 +228,11 @@ func renderProjection(ctx context, b *pixel.Batch, c pixel.RGBA, bounds pixel.Re
 		nextPos.Pos += vx
 	}
 	vNext := lanePos(nextPos, ctx.w.Bounds())
+	vNext.X += w
 
 	ur := pixel.Vec{
-		X: vNext.X + w,
+		X: math.Max(vNext.X+w, ll.X),
 		Y: pos.Y + w,
-	}
-
-	if !ctx.rs.timeFlowing {
-		ur.X = math.Max(ur.X, ll.X)
 	}
 
 	im.Push(ll)
@@ -288,7 +289,7 @@ func renderObstacles(os []game.Obstacle, bounds pixel.Rect, batch *pixel.Batch, 
 
 		im.Push(pos)
 		sprite := pixel.NewSprite(pic, pic.Bounds())
-		sprite.Draw(batch, pixel.IM.Moved(pos).ScaledXY(pos, pixel.Vec{1.7, 1.7}))
+		sprite.Draw(batch, pixel.IM.Moved(pos).ScaledXY(pos, pixel.Vec{scale, scale}))
 
 	}
 	im.Draw(batch)
@@ -326,4 +327,5 @@ var teamColors = []pixel.RGBA{
 const (
 	racerWidth float64 = 17
 	batonWidth float64 = 12
+	scale              = 1.5
 )

@@ -141,6 +141,9 @@ func NewState() State {
 					Lane: i,
 					Pos:  j * (Steps / numRacers),
 				},
+				Kinetics: Kinetics{
+					VX: 1,
+				},
 				Battery: Battery{
 					Capacity: baseCharge,
 					Charge:   baseCharge,
