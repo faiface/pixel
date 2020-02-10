@@ -22,21 +22,25 @@ func RenderLoop(w *pixelgl.Window, s game.State, stateC <-chan game.State, sb *S
 		frames = 0
 		second = time.Tick(time.Second)
 		rs     = renderState{
-			Frames: 10,
+			frames: 10,
 		}
 	)
 
 	for !w.Closed() {
-		if rs.Frame == rs.Frames {
+		if rs.frame == rs.frames {
 			select {
 			case ss := <-stateC:
 				sOld = s
 				s = ss
-				rs.Frame = 0
+				rs.frame = 0
+				rs.timeFlowing = true
 			default:
 			}
 		}
 
+		if rs.frame == rs.frames {
+			rs.timeFlowing = false
+		}
 		rs = render(rs, sOld, s, w, *sb)
 		w.Update()
 		frames++
@@ -58,11 +62,12 @@ type context struct {
 }
 
 type renderState struct {
-	Frames int
-	Frame  int
+	frames      int
+	frame       int
+	timeFlowing bool
 }
 
-func (rs renderState) tween() float64 { return float64(rs.Frame) / float64(rs.Frames) }
+func (rs renderState) tween() float64 { return float64(rs.frame) / float64(rs.frames) }
 
 func render(rs renderState, sOld, sNew game.State, w *pixelgl.Window, sb SpriteBank) renderState {
 	w.Clear(colornames.Black)
@@ -93,8 +98,8 @@ func render(rs renderState, sOld, sNew game.State, w *pixelgl.Window, sb SpriteB
 	renderRacers(ctx, rBatch, sb.racer)
 	rBatch.Draw(w)
 
-	if rs.Frame < rs.Frames {
-		rs.Frame++
+	if rs.frame < rs.frames {
+		rs.frame++
 	}
 	return rs
 }
@@ -215,7 +220,7 @@ func renderProjection(ctx context, b *pixel.Batch, c pixel.RGBA, bounds pixel.Re
 	}
 
 	nextPos := p
-	if ctx.rs.Frame == ctx.rs.Frames {
+	if !ctx.rs.timeFlowing {
 		nextPos.Pos += vx
 	}
 	vNext := lanePos(nextPos, ctx.w.Bounds())
@@ -225,7 +230,7 @@ func renderProjection(ctx context, b *pixel.Batch, c pixel.RGBA, bounds pixel.Re
 		Y: pos.Y + w,
 	}
 
-	if ctx.rs.Frame == ctx.rs.Frames {
+	if !ctx.rs.timeFlowing {
 		ur.X = math.Max(ur.X, ll.X)
 	}
 
