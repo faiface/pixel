@@ -42,7 +42,7 @@ func RenderLoop(w *pixelgl.Window, s game.State, stateC <-chan game.State, sb *S
 			rs.timeFlowing = false
 		}
 		rs = render(rs, sOld, s, w, *sb)
-		w.Update()
+		w.SwapBuffers()
 		frames++
 
 		select {
