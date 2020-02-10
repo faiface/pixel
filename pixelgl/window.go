@@ -173,6 +173,13 @@ func (w *Window) Destroy() {
 
 // Update swaps buffers and polls events. Call this method at the end of each frame.
 func (w *Window) Update() {
+	w.SwapBuffers()
+	w.UpdateInput()
+}
+
+// SwapBuffers swaps buffers. Call this to swap buffers without polling window events.
+// Note that Update invokes SwapBuffers.
+func (w *Window) SwapBuffers() {
 	mainthread.Call(func() {
 		_, _, oldW, oldH := intBounds(w.bounds)
 		newW, newH := w.window.GetSize()
@@ -207,8 +214,6 @@ func (w *Window) Update() {
 		w.window.SwapBuffers()
 		w.end()
 	})
-
-	w.UpdateInput()
 }
 
 // SetClosed sets the closed flag of the Window.
