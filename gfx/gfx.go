@@ -7,7 +7,7 @@ import (
 	"math"
 	"math/rand"
 	"os"
-	"relay/game"
+	"github.com/snargleplax/relay/game"
 	"time"
 
 	"github.com/faiface/pixel"

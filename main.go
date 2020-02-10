@@ -3,8 +3,8 @@ package main
 import (
 	"log"
 	"math/rand"
-	"relay/game"
-	"relay/gfx"
+	"github.com/snargleplax/relay/game"
+	"github.com/snargleplax/relay/gfx"
 	"time"
 
 	"github.com/faiface/pixel"
