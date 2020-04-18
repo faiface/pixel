@@ -24,6 +24,8 @@ See [requirements](#requirements) for the list of libraries necessary for compil
 
 All significant changes are documented in [CHANGELOG.md](CHANGELOG.md).
 
+Join the [Pixel Discord Server](https://discord.gg/q2DK4MP) to discuss its development.
+
 ## Tutorial
 
 The [Wiki of this repo](https://github.com/faiface/pixel/wiki) contains an extensive tutorial
