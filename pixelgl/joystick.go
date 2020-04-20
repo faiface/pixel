@@ -180,7 +180,7 @@ func (js *joystickState) getButton(joystick Joystick, button int) bool {
 	if js.buttons[joystick] == nil || button >= len(js.buttons[joystick]) || button < 0 {
 		return false
 	}
-	return js.buttons[joystick][byte(button)] == glfw.Press
+	return js.buttons[joystick][byte(button)] == 1
 }
 
 // Returns the value of a joystick axis, returning 0 if the button or joystick is invalid.
