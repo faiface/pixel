@@ -23,8 +23,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add `NoIconify` and `AlwaysOnTop` window hints
 
 ## [v0.8.0] - 2018-10-10
+- Added feature from https://github.com/faiface/pixel/pull/219
+  - Exposing Window.SwapBuffers so buffers can be swapped without polling input
+
+## [v0.8.0] - 2018-10-10
 Changelog for this and older versions can be found on the corresponding [GitHub
 releases](https://github.com/faiface/pixel/releases).
 
 [Unreleased]: https://github.com/faiface/pixel/compare/v0.8.0...HEAD
 [v0.8.0]: https://github.com/faiface/pixel/releases/tag/v0.8.0
+[v0.9.0]: https://github.com/faiface/pixel/releases/tag/v0.9.0
