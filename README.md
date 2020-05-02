@@ -153,6 +153,8 @@ The OpenGL version used is **OpenGL 3.3**.
 
 ## Contributing
 
+Join us in the [Discord Chat!](https://discord.gg/q2DK4MP)
+
 Pixel is in, let's say, mid-stage of development. Many of the important features are here, some are
 missing. That's why **contributions are very important and welcome!** All alone, I will be able to
 finish the library, but it'll take a lot of time. With your help, it'll take much less. I encourage
