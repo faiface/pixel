@@ -22,7 +22,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add support for Go Modules
 - Add `NoIconify` and `AlwaysOnTop` window hints
 
-## [v0.8.0] - 2018-10-10
+## [v0.9.0] - 2020-05-02
 - Added feature from https://github.com/faiface/pixel/pull/219
   - Exposing Window.SwapBuffers so buffers can be swapped without polling input
 
