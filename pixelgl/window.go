@@ -36,6 +36,9 @@ type WindowConfig struct {
 	// Bounds specify the bounds of the Window in pixels.
 	Bounds pixel.Rect
 
+	// Initial window position
+	Position pixel.Vec
+
 	// If set to nil, the Window will be windowed. Otherwise it will be fullscreen on the
 	// specified Monitor.
 	Monitor *Monitor
@@ -113,6 +116,10 @@ func NewWindow(cfg WindowConfig) (*Window, error) {
 		glfw.WindowHint(glfw.Floating, bool2int[cfg.AlwaysOnTop])
 		glfw.WindowHint(glfw.AutoIconify, bool2int[!cfg.NoIconify])
 
+		if cfg.Position.X != 0 || cfg.Position.Y != 0 {
+			glfw.WindowHint(glfw.Visible, glfw.False)
+		}
+
 		var share *glfw.Window
 		if currWin != nil {
 			share = currWin.window
@@ -127,6 +134,11 @@ func NewWindow(cfg WindowConfig) (*Window, error) {
 		)
 		if err != nil {
 			return err
+		}
+
+		if cfg.Position.X != 0 || cfg.Position.Y != 0 {
+			w.window.SetPos(int(cfg.Position.X), int(cfg.Position.Y))
+			w.window.Show()
 		}
 
 		// enter the OpenGL context
