@@ -6,6 +6,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 - Pending via #211: Upgrade to GLFW 3.3
+- Add support for glfw's DisableCursor
+  - Closes https://github.com/faiface/pixel/issues/213
+
+## [v0.9.0] - 2020-05-02
+- Added feature from https://github.com/faiface/pixel/pull/219
+  - Exposing Window.SwapBuffers so buffers can be swapped without polling input
 - Add more examples
 - Add position as out variable from vertex shader
 - Add experimental joystick support
@@ -22,9 +28,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add support for Go Modules
 - Add `NoIconify` and `AlwaysOnTop` window hints
 
-## [v0.9.0] - 2020-05-02
-- Added feature from https://github.com/faiface/pixel/pull/219
-  - Exposing Window.SwapBuffers so buffers can be swapped without polling input
 
 ## [v0.8.0] - 2018-10-10
 Changelog for this and older versions can be found on the corresponding [GitHub
