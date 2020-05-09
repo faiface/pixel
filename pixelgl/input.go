@@ -3,7 +3,7 @@ package pixelgl
 import (
 	"github.com/faiface/mainthread"
 	"github.com/faiface/pixel"
-	"github.com/go-gl/glfw/v3.2/glfw"
+	"github.com/go-gl/glfw/v3.3/glfw"
 )
 
 // Pressed returns whether the Button is currently pressed down.

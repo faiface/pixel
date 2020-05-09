@@ -1,7 +1,7 @@
 package pixelgl
 
 import (
-	"github.com/go-gl/glfw/v3.2/glfw"
+	"github.com/go-gl/glfw/v3.3/glfw"
 )
 
 // Joystick is a joystick or controller.
@@ -94,22 +94,22 @@ func (w *Window) JoystickAxis(js Joystick, axis int) float64 {
 func (w *Window) updateJoystickInput() {
 	for js := Joystick1; js <= JoystickLast; js++ {
 		// Determine and store if the joystick was connected
-		joystickPresent := glfw.JoystickPresent(glfw.Joystick(js))
+		joystickPresent := glfw.Joystick(js).Present()
 		w.tempJoy.connected[js] = joystickPresent
 
 		if joystickPresent {
-			w.tempJoy.buttons[js] = glfw.GetJoystickButtons(glfw.Joystick(js))
-			w.tempJoy.axis[js] = glfw.GetJoystickAxes(glfw.Joystick(js))
+			w.tempJoy.buttons[js] = glfw.Joystick(js).GetButtons()
+			w.tempJoy.axis[js] = glfw.Joystick(js).GetAxes()
 
 			if !w.currJoy.connected[js] {
 				// The joystick was recently connected, we get the name
-				w.tempJoy.name[js] = glfw.GetJoystickName(glfw.Joystick(js))
+				w.tempJoy.name[js] = glfw.Joystick(js).GetName()
 			} else {
 				// Use the name from the previous one
 				w.tempJoy.name[js] = w.currJoy.name[js]
 			}
 		} else {
-			w.tempJoy.buttons[js] = []byte{}
+			w.tempJoy.buttons[js] = []glfw.Action{}
 			w.tempJoy.axis[js] = []float32{}
 			w.tempJoy.name[js] = ""
 		}
@@ -122,7 +122,7 @@ func (w *Window) updateJoystickInput() {
 type joystickState struct {
 	connected [JoystickLast + 1]bool
 	name      [JoystickLast + 1]string
-	buttons   [JoystickLast + 1][]byte
+	buttons   [JoystickLast + 1][]glfw.Action
 	axis      [JoystickLast + 1][]float32
 }
 
