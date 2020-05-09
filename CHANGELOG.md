@@ -5,7 +5,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
-- Pending via #211: Upgrade to GLFW 3.3
+- Upgrade to GLFW 3.3! :tada:
+  - Closes https://github.com/faiface/pixel/issues/137
 - Add support for glfw's DisableCursor
   - Closes https://github.com/faiface/pixel/issues/213
 
