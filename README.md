@@ -172,10 +172,6 @@ better result.
 
 Take a look at [CONTRIBUTING.md](CONTRIBUTING.md) for further information.
 
-For any kind of discussion, feel free to use our
-[Gitter](https://gitter.im/pixellib/Lobby)
-community.
-
 ## License
 
 [MIT](LICENSE)
