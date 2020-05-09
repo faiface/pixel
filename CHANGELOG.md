@@ -3,8 +3,10 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
-
 ## [Unreleased]
+- Gamepad API?
+
+## [v0.10.0-alpha] 2020-05-08
 - Upgrade to GLFW 3.3! :tada:
   - Closes https://github.com/faiface/pixel/issues/137
 - Add support for glfw's DisableCursor
@@ -34,6 +36,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 Changelog for this and older versions can be found on the corresponding [GitHub
 releases](https://github.com/faiface/pixel/releases).
 
-[Unreleased]: https://github.com/faiface/pixel/compare/v0.9.0...HEAD
+[Unreleased]: https://github.com/faiface/pixel/compare/v0.10.0-alpha...HEAD
+[v0.10.0]: https://github.com/faiface/pixel/compare/v0.9.0...v0.10.0-alpha
 [v0.9.0]: https://github.com/faiface/pixel/compare/v0.8.0...v0.9.0
 [v0.8.0]: https://github.com/faiface/pixel/releases/tag/v0.8.0
