@@ -5,6 +5,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 ## [Unreleased]
 - Gamepad API?
+- Fixed Line intersects failing on lines passing through (0, 0)
 
 ## [v0.10.0-alpha] 2020-05-08
 - Upgrade to GLFW 3.3! :tada:
