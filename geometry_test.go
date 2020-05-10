@@ -1002,6 +1002,18 @@ func TestLine_Closest(t *testing.T) {
 			args:   args{v: pixel.V(20, 20)},
 			want:   pixel.V(10, 10),
 		},
+		{
+			name:   "Vertical line",
+			fields: fields{A: pixel.V(0, -10), B: pixel.V(0, 10)},
+			args:   args{v: pixel.V(-1, 0)},
+			want:   pixel.V(0, 0),
+		},
+		{
+			name:   "Horizontal line",
+			fields: fields{A: pixel.V(-10, 0), B: pixel.V(10, 0)},
+			args:   args{v: pixel.V(0, -1)},
+			want:   pixel.V(0, 0),
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -1296,6 +1308,12 @@ func TestLine_IntersectRect(t *testing.T) {
 			fields: fields{A: pixel.V(0, 0), B: pixel.V(10, 10)},
 			args:   args{r: pixel.R(20, 20, 21, 21)},
 			want:   pixel.ZV,
+		},
+		{
+			name:   "Line intersects at 0,0",
+			fields: fields{A: pixel.V(0, -10), B: pixel.V(0, 10)},
+			args:   args{r: pixel.R(-1, 0, 2, 2)},
+			want:   pixel.V(-1, 0),
 		},
 	}
 	for _, tt := range tests {
