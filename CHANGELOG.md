@@ -4,7 +4,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 ## [Unreleased]
-- Gamepad API support
+- Pending physical testing, Gamepad API support from [PR-233](https://github.com/faiface/pixel/pull/233)
 - Add `WindowConfig.TransparentFramebuffer` option to support window transparency onto the background
 - Fixed Line intersects failing on lines passing through (0, 0)
 
