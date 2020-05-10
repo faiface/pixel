@@ -406,12 +406,12 @@ func (l Line) IntersectRect(r Rect) Vec {
 			//  - the point is contained by the rectangle
 			//  - the point is not the corner itself
 			corners := r.Vertices()
-			closest := ZV
+			var closest *Vec
 			closestCorner := corners[0]
 			for _, c := range corners {
 				cc := l.Closest(c)
-				if closest == ZV || (closest.Len() > cc.Len() && r.Contains(cc)) {
-					closest = cc
+				if closest == nil || (closest.Len() > cc.Len() && r.Contains(cc)) {
+					closest = &cc
 					closestCorner = c
 				}
 			}
