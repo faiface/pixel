@@ -1279,36 +1279,36 @@ func TestLine_IntersectRect(t *testing.T) {
 		args   args
 		want   pixel.Vec
 	}{
-		//{
-		//	name:   "Line through rect vertically",
-		//	fields: fields{A: pixel.V(0, 0), B: pixel.V(0, 10)},
-		//	args:   args{r: pixel.R(-1, 1, 5, 5)},
-		//	want:   pixel.V(-1, 0),
-		//},
-		//{
-		//	name:   "Line through rect horizontally",
-		//	fields: fields{A: pixel.V(0, 1), B: pixel.V(10, 1)},
-		//	args:   args{r: pixel.R(1, 0, 5, 5)},
-		//	want:   pixel.V(0, -1),
-		//},
-		//{
-		//	name:   "Line through rect diagonally bottom and left edges",
-		//	fields: fields{A: pixel.V(0, 0), B: pixel.V(10, 10)},
-		//	args:   args{r: pixel.R(0, 2, 3, 3)},
-		//	want:   pixel.V(-1, 1),
-		//},
-		//{
-		//	name:   "Line through rect diagonally top and right edges",
-		//	fields: fields{A: pixel.V(10, 0), B: pixel.V(0, 10)},
-		//	args:   args{r: pixel.R(5, 0, 8, 3)},
-		//	want:   pixel.V(-2.5, -2.5),
-		//},
-		//{
-		//	name:   "Line with not rect intersect",
-		//	fields: fields{A: pixel.V(0, 0), B: pixel.V(10, 10)},
-		//	args:   args{r: pixel.R(20, 20, 21, 21)},
-		//	want:   pixel.ZV,
-		//},
+		{
+			name:   "Line through rect vertically",
+			fields: fields{A: pixel.V(0, 0), B: pixel.V(0, 10)},
+			args:   args{r: pixel.R(-1, 1, 5, 5)},
+			want:   pixel.V(-1, 0),
+		},
+		{
+			name:   "Line through rect horizontally",
+			fields: fields{A: pixel.V(0, 1), B: pixel.V(10, 1)},
+			args:   args{r: pixel.R(1, 0, 5, 5)},
+			want:   pixel.V(0, -1),
+		},
+		{
+			name:   "Line through rect diagonally bottom and left edges",
+			fields: fields{A: pixel.V(0, 0), B: pixel.V(10, 10)},
+			args:   args{r: pixel.R(0, 2, 3, 3)},
+			want:   pixel.V(-1, 1),
+		},
+		{
+			name:   "Line through rect diagonally top and right edges",
+			fields: fields{A: pixel.V(10, 0), B: pixel.V(0, 10)},
+			args:   args{r: pixel.R(5, 0, 8, 3)},
+			want:   pixel.V(-2.5, -2.5),
+		},
+		{
+			name:   "Line with not rect intersect",
+			fields: fields{A: pixel.V(0, 0), B: pixel.V(10, 10)},
+			args:   args{r: pixel.R(20, 20, 21, 21)},
+			want:   pixel.ZV,
+		},
 		{
 			name:   "Line intersects at 0,0",
 			fields: fields{A: pixel.V(0, -10), B: pixel.V(0, 10)},
