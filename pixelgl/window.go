@@ -59,6 +59,12 @@ type WindowConfig struct {
 	// implement proper full screen windows.
 	AlwaysOnTop bool
 
+	// TransparentFramebuffer specifies whether the window framebuffer will be
+	// transparent. If enabled and supported by the system, the window
+	// framebuffer alpha channel will be used to combine the framebuffer with
+	// the background. This does not affect window decorations.
+	TransparentFramebuffer bool
+
 	// VSync (vertical synchronization) synchronizes Window's framerate with the framerate of
 	// the monitor.
 	VSync bool
@@ -115,6 +121,7 @@ func NewWindow(cfg WindowConfig) (*Window, error) {
 		glfw.WindowHint(glfw.Decorated, bool2int[!cfg.Undecorated])
 		glfw.WindowHint(glfw.Floating, bool2int[cfg.AlwaysOnTop])
 		glfw.WindowHint(glfw.AutoIconify, bool2int[!cfg.NoIconify])
+		glfw.WindowHint(glfw.TransparentFramebuffer, bool2int[cfg.TransparentFramebuffer])
 
 		if cfg.Position.X != 0 || cfg.Position.Y != 0 {
 			glfw.WindowHint(glfw.Visible, glfw.False)
