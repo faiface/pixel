@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 - Gamepad API added
 - Support setting an initial window position
+- Support hiding the window initially
+- Support creating maximized windows
 
 ## [v0.10.0-beta] 2020-05-10
 - Add `WindowConfig.TransparentFramebuffer` option to support window transparency onto the background
