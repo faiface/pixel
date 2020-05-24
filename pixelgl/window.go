@@ -43,10 +43,10 @@ type WindowConfig struct {
 	// specified Monitor.
 	Monitor *Monitor
 
-	// Whether the Window is resizable.
+	// Resizable specifies whether the window will be resizable by the user.
 	Resizable bool
 
-	// Undecorated Window ommits the borders and decorations (close button, etc.).
+	// Undecorated Window omits the borders and decorations (close button, etc.).
 	Undecorated bool
 
 	// NoIconify specifies whether fullscreen windows should not automatically
@@ -68,6 +68,13 @@ type WindowConfig struct {
 	// VSync (vertical synchronization) synchronizes Window's framerate with the framerate of
 	// the monitor.
 	VSync bool
+
+	// Maximized specifies whether the window is maximized.
+	Maximized bool
+
+	// Invisible specifies whether the window will be initially hidden.
+	// You can make the window visible later using Window.Show().
+	Invisible bool
 }
 
 // Window is a window handler. Use this type to manipulate a window (input, drawing, etc.).
@@ -122,6 +129,8 @@ func NewWindow(cfg WindowConfig) (*Window, error) {
 		glfw.WindowHint(glfw.Floating, bool2int[cfg.AlwaysOnTop])
 		glfw.WindowHint(glfw.AutoIconify, bool2int[!cfg.NoIconify])
 		glfw.WindowHint(glfw.TransparentFramebuffer, bool2int[cfg.TransparentFramebuffer])
+		glfw.WindowHint(glfw.Maximized, bool2int[cfg.Maximized])
+		glfw.WindowHint(glfw.Visible, bool2int[!cfg.Invisible])
 
 		if cfg.Position.X != 0 || cfg.Position.Y != 0 {
 			glfw.WindowHint(glfw.Visible, glfw.False)
@@ -476,4 +485,12 @@ func (w *Window) Color(at pixel.Vec) pixel.RGBA {
 // Canvas returns the window's underlying Canvas
 func (w *Window) Canvas() *Canvas {
 	return w.canvas
+}
+
+// Show makes the window visible, if it was previously hidden. If the window is
+// already visible or is in full screen mode, this function does nothing.
+func (w *Window) Show() {
+	mainthread.Call(func() {
+		w.window.Show()
+	})
 }
