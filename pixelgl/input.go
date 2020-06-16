@@ -413,11 +413,11 @@ func (w *Window) UpdateInput() {
 	w.doUpdateInput()
 }
 
-// WaitInput blocks until an event is received or a timeout. If timeout is 0
+// UpdateInputWait blocks until an event is received or a timeout. If timeout is 0
 // then it will wait indefinitely
-func (w *Window) WaitInput(timeout time.Duration) {
+func (w *Window) UpdateInputWait(timeout time.Duration) {
 	mainthread.Call(func() {
-		if timeout == 0 {
+		if timeout <= 0 {
 			glfw.WaitEvents()
 		} else {
 			glfw.WaitEventsTimeout(timeout.Seconds())
