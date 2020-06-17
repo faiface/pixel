@@ -1,6 +1,8 @@
 package pixelgl
 
 import (
+	"time"
+
 	"github.com/faiface/mainthread"
 	"github.com/faiface/pixel"
 	"github.com/go-gl/glfw/v3.3/glfw"
@@ -408,7 +410,24 @@ func (w *Window) UpdateInput() {
 	mainthread.Call(func() {
 		glfw.PollEvents()
 	})
+	w.doUpdateInput()
+}
 
+// UpdateInputWait blocks until an event is received or a timeout. If timeout is 0
+// then it will wait indefinitely
+func (w *Window) UpdateInputWait(timeout time.Duration) {
+	mainthread.Call(func() {
+		if timeout <= 0 {
+			glfw.WaitEvents()
+		} else {
+			glfw.WaitEventsTimeout(timeout.Seconds())
+		}
+	})
+	w.doUpdateInput()
+}
+
+// internal input bookkeeping
+func (w *Window) doUpdateInput() {
 	w.prevInp = w.currInp
 	w.currInp = w.tempInp
 
