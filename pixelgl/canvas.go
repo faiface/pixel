@@ -315,6 +315,10 @@ func (ct *canvasTriangles) draw(tex *glhf.Texture, bounds pixel.Rect) {
 			ct.dst.shader.s.SetUniformAttr(loc, u.Value())
 		}
 
+		if clip, has := ct.ClipRect(); has {
+			gl.Scissor(int32(clip.Min.X), int32(clip.Min.Y), int32(clip.W()), int32(clip.H()))
+		}
+
 		if tex == nil {
 			ct.vs.Begin()
 			ct.vs.Draw()
@@ -327,9 +331,6 @@ func (ct *canvasTriangles) draw(tex *glhf.Texture, bounds pixel.Rect) {
 			}
 
 			ct.vs.Begin()
-			if clip, has := ct.ClipRect(); has {
-				gl.Scissor(int32(clip.Min.X), int32(clip.Min.Y), int32(clip.W()), int32(clip.H()))
-			}
 			ct.vs.Draw()
 			ct.vs.End()
 
