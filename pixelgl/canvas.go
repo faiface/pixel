@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"image/color"
 
+	"github.com/go-gl/gl/v3.3-core/gl"
+
 	"github.com/faiface/glhf"
 	"github.com/faiface/mainthread"
 	"github.com/faiface/pixel"
