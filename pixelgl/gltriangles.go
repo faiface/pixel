@@ -16,6 +16,7 @@ type GLTriangles struct {
 	vs     *glhf.VertexSlice
 	data   []float32
 	shader *glhf.Shader
+	clip   pixel.Rect
 }
 
 var (
@@ -212,4 +213,15 @@ func (gt *GLTriangles) Picture(i int) (pic pixel.Vec, intensity float64) {
 	ty := gt.data[i*gt.vs.Stride()+7]
 	intensity = float64(gt.data[i*gt.vs.Stride()+8])
 	return pixel.V(float64(tx), float64(ty)), intensity
+}
+
+// SetClipRect sets the rectangle to scissor the triangles by
+func (gt *GLTriangles) SetClipRect(r pixel.Rect) {
+	gt.clip = r.Norm()
+}
+
+// ClipRect gets the clipping rectangle and returns true if that
+//	rectangle is not the Zero Rectangle
+func (gt *GLTriangles) ClipRect() (pixel.Rect, bool) {
+	return gt.clip, gt.clip.Area() != 0
 }

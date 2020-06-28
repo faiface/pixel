@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Support hiding the window initially
 - Support creating maximized windows
 - Support waiting for events to reduce CPU load
+- Adding clipping rectangle support in GLTriangles
 
 ## [v0.10.0-beta] 2020-05-10
 - Add `WindowConfig.TransparentFramebuffer` option to support window transparency onto the background
