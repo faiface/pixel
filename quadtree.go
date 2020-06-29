@@ -15,9 +15,9 @@ type Common struct {
 	Cap   int // max amount of objects per quadrant, if there is more quadrant splits
 }
 
-type QuadTree struct {
+type Quadtree struct {
 	pixel.Rect
-	Nodes  []*QuadTree
+	Nodes  []*Quadtree
 	Shapes []Collidable
 	Common
 }
@@ -30,8 +30,8 @@ type QuadTree struct {
 // if shapes cannot fit into smallest quadrants.
 // cap - sets maximal capacity of quadrant before it splits to 4 smaller. Making can too big is
 // inefficient. optimal value can be 10 but its allways better to test what works the best.
-func NewQuadTree(bounds pixel.Rect, depth, cap int) *QuadTree {
-	return &QuadTree{
+func NewQuadtree(bounds pixel.Rect, depth, cap int) *Quadtree {
+	return &Quadtree{
 		Rect: bounds,
 		Common: Common{
 			Depth: depth,
@@ -41,15 +41,15 @@ func NewQuadTree(bounds pixel.Rect, depth, cap int) *QuadTree {
 }
 
 //generates subquadrants
-func (q *QuadTree) split() {
-	q.Nodes = make([]*QuadTree, 4)
+func (q *Quadtree) split() {
+	q.Nodes = make([]*Quadtree, 4)
 	newCommon := q.Common
 	newCommon.Level++
 	halfH := q.H() / 2
 	halfW := q.W() / 2
 	center := q.Center()
 	//top-left
-	q.Nodes[0] = &QuadTree{
+	q.Nodes[0] = &Quadtree{
 		Rect: pixel.Rect{
 			Min: pixel.V(q.Min.X, q.Min.Y+halfH),
 			Max: pixel.V(q.Max.X-halfW, q.Max.Y),
@@ -57,7 +57,7 @@ func (q *QuadTree) split() {
 		Common: newCommon,
 	}
 	//top-right
-	q.Nodes[1] = &QuadTree{
+	q.Nodes[1] = &Quadtree{
 		Rect: pixel.Rect{
 			Min: center,
 			Max: q.Max,
@@ -65,7 +65,7 @@ func (q *QuadTree) split() {
 		Common: newCommon,
 	}
 	//bottom-left
-	q.Nodes[2] = &QuadTree{
+	q.Nodes[2] = &Quadtree{
 		Rect: pixel.Rect{
 			Min: q.Min,
 			Max: center,
@@ -73,7 +73,7 @@ func (q *QuadTree) split() {
 		Common: newCommon,
 	}
 	//bottom-right
-	q.Nodes[3] = &QuadTree{
+	q.Nodes[3] = &Quadtree{
 		Rect: pixel.Rect{
 			Min: pixel.V(q.Min.X+halfW, q.Min.Y),
 			Max: pixel.V(q.Max.X, q.Min.Y+halfH),
@@ -84,7 +84,7 @@ func (q *QuadTree) split() {
 
 // finds out to witch subquadrant the shape belongs to. Shape has to overlap only with one quadrant,
 // otherwise it returns -1
-func (q *QuadTree) getSub(rect *pixel.Rect) int8 {
+func (q *Quadtree) getSub(rect *pixel.Rect) int8 {
 	vertical := q.Min.X + q.W()/2
 	horizontal := q.Min.Y + q.H()/2
 
@@ -116,7 +116,7 @@ func (q *QuadTree) getSub(rect *pixel.Rect) int8 {
 // Proper way is adding all shapes first and then detecting collisions.
 // For struct to implement Collidable interface it has to have
 // GetRect() *pixel.Rect defined. GetRect function also slightly affects performance.
-func (q *QuadTree) Insert(collidable Collidable) {
+func (q *Quadtree) Insert(collidable Collidable) {
 	rect := collidable.GetRect()
 	q.Shapes = append(q.Shapes, collidable)
 	if len(q.Nodes) != 0 {
@@ -137,7 +137,7 @@ func (q *QuadTree) Insert(collidable Collidable) {
 }
 
 // gets smallest generated quadrant that rect fits into
-func (q *QuadTree) getQuad(rect *pixel.Rect) *QuadTree {
+func (q *Quadtree) getQuad(rect *pixel.Rect) *Quadtree {
 	if len(q.Nodes) == 0 {
 		return q
 	}
@@ -150,12 +150,12 @@ func (q *QuadTree) getQuad(rect *pixel.Rect) *QuadTree {
 
 // returns all collidables that this rect can possibly collide with
 // thought it also returns the shape it self if it wos inserted
-func (q *QuadTree) Retrieve(rect *pixel.Rect) []Collidable {
+func (q *Quadtree) Retrieve(rect *pixel.Rect) []Collidable {
 	return q.getQuad(rect).Shapes
 }
 
 // returns all coliding shapes
-func (q *QuadTree) GetColliding(collidable Collidable) []Collidable {
+func (q *Quadtree) GetColliding(collidable Collidable) []Collidable {
 	var res []Collidable
 	rect := collidable.GetRect()
 	for _, c := range q.Retrieve(rect) {
@@ -168,7 +168,7 @@ func (q *QuadTree) GetColliding(collidable Collidable) []Collidable {
 
 // Resets the tree, use this every frame before inserting all shapes
 // other wise you will run out of memory eventually and tree will not even work properly
-func (q *QuadTree) Clear() {
+func (q *Quadtree) Clear() {
 	q.Shapes = []Collidable{}
-	q.Nodes = []*QuadTree{}
+	q.Nodes = []*Quadtree{}
 }
