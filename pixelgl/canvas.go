@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"image/color"
 
-	"github.com/go-gl/gl/v3.3-core/gl"
-
 	"github.com/faiface/glhf"
 	"github.com/faiface/mainthread"
 	"github.com/faiface/pixel"
@@ -320,10 +318,6 @@ func (ct *canvasTriangles) draw(tex *glhf.Texture, bounds pixel.Rect) {
 
 		for loc, u := range ct.shader.uniforms {
 			ct.shader.s.SetUniformAttr(loc, u.Value())
-		}
-
-		if clip, has := ct.ClipRect(); has {
-			gl.Scissor(int32(clip.Min.X), int32(clip.Min.Y), int32(clip.W()), int32(clip.H()))
 		}
 
 		if tex == nil {

@@ -92,7 +92,7 @@ type TrianglesColor interface {
 	Color(i int) RGBA
 }
 
-// TrianglesPicture specifies Triangles with Picture propery.
+// TrianglesPicture specifies Triangles with Picture property.
 //
 // The first value returned from Picture method is Picture coordinates. The second one specifies the
 // weight of the Picture. Value of 0 means, that Picture should be completely ignored, 1 means that
@@ -100,6 +100,15 @@ type TrianglesColor interface {
 type TrianglesPicture interface {
 	Triangles
 	Picture(i int) (pic Vec, intensity float64)
+}
+
+// TrianglesClipped specifies Triangles with Clipping Rectangle property.
+//
+// The first value returned from ClipRect method is the clipping rectangle. The second one specifies
+// if the triangle is clipped.
+type TrianglesClipped interface {
+	Triangles
+	ClipRect(i int) (rect Rect, is bool)
 }
 
 // Picture represents a rectangular area of raster data, such as a color. It has Bounds which

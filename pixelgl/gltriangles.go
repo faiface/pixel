@@ -16,13 +16,32 @@ type GLTriangles struct {
 	vs     *glhf.VertexSlice
 	data   []float32
 	shader *GLShader
-	clip   pixel.Rect
 }
 
 var (
 	_ pixel.TrianglesPosition = (*GLTriangles)(nil)
 	_ pixel.TrianglesColor    = (*GLTriangles)(nil)
 	_ pixel.TrianglesPicture  = (*GLTriangles)(nil)
+	_ pixel.TrianglesClipped  = (*GLTriangles)(nil)
+)
+
+// The following is a helper so that the indices of
+// 	each of these items is easier to see/debug.
+const (
+	triPosX = iota
+	triPosY
+	triColorR
+	triColorG
+	triColorB
+	triColorA
+	triPicX
+	triPicY
+	triIntensity
+	triClipMinX
+	triClipMinY
+	triClipMaxX
+	triClipMaxY
+	trisAttrLen
 )
 
 // NewGLTriangles returns GLTriangles initialized with the data from the supplied Triangles.
@@ -71,6 +90,7 @@ func (gt *GLTriangles) SetLen(length int) {
 				1, 1, 1, 1,
 				0, 0,
 				0,
+				0, 0, 0, 0,
 			)
 		}
 	case length < gt.Len():
@@ -111,17 +131,22 @@ func (gt *GLTriangles) updateData(t pixel.Triangles) {
 				col    = (*t)[i].Color
 				tx, ty = (*t)[i].Picture.XY()
 				in     = (*t)[i].Intensity
+				rec    = (*t)[i].ClipRect
 			)
-			d := gt.data[i*stride : i*stride+9]
-			d[0] = float32(px)
-			d[1] = float32(py)
-			d[2] = float32(col.R)
-			d[3] = float32(col.G)
-			d[4] = float32(col.B)
-			d[5] = float32(col.A)
-			d[6] = float32(tx)
-			d[7] = float32(ty)
-			d[8] = float32(in)
+			d := gt.data[i*stride : i*stride+trisAttrLen]
+			d[triPosX] = float32(px)
+			d[triPosY] = float32(py)
+			d[triColorR] = float32(col.R)
+			d[triColorG] = float32(col.G)
+			d[triColorB] = float32(col.B)
+			d[triColorA] = float32(col.A)
+			d[triPicX] = float32(tx)
+			d[triPicY] = float32(ty)
+			d[triIntensity] = float32(in)
+			d[triClipMinX] = float32(rec.Min.X)
+			d[triClipMinY] = float32(rec.Min.Y)
+			d[triClipMaxX] = float32(rec.Max.X)
+			d[triClipMaxY] = float32(rec.Max.Y)
 		}
 		return
 	}
@@ -129,25 +154,34 @@ func (gt *GLTriangles) updateData(t pixel.Triangles) {
 	if t, ok := t.(pixel.TrianglesPosition); ok {
 		for i := 0; i < length; i++ {
 			px, py := t.Position(i).XY()
-			gt.data[i*stride+0] = float32(px)
-			gt.data[i*stride+1] = float32(py)
+			gt.data[i*stride+triPosX] = float32(px)
+			gt.data[i*stride+triPosY] = float32(py)
 		}
 	}
 	if t, ok := t.(pixel.TrianglesColor); ok {
 		for i := 0; i < length; i++ {
 			col := t.Color(i)
-			gt.data[i*stride+2] = float32(col.R)
-			gt.data[i*stride+3] = float32(col.G)
-			gt.data[i*stride+4] = float32(col.B)
-			gt.data[i*stride+5] = float32(col.A)
+			gt.data[i*stride+triColorR] = float32(col.R)
+			gt.data[i*stride+triColorG] = float32(col.G)
+			gt.data[i*stride+triColorB] = float32(col.B)
+			gt.data[i*stride+triColorA] = float32(col.A)
 		}
 	}
 	if t, ok := t.(pixel.TrianglesPicture); ok {
 		for i := 0; i < length; i++ {
 			pic, intensity := t.Picture(i)
-			gt.data[i*stride+6] = float32(pic.X)
-			gt.data[i*stride+7] = float32(pic.Y)
-			gt.data[i*stride+8] = float32(intensity)
+			gt.data[i*stride+triPicX] = float32(pic.X)
+			gt.data[i*stride+triPicY] = float32(pic.Y)
+			gt.data[i*stride+triIntensity] = float32(intensity)
+		}
+	}
+	if t, ok := t.(pixel.TrianglesClipped); ok {
+		for i := 0; i < length; i++ {
+			rect, _ := t.ClipRect(i)
+			gt.data[i*stride+triClipMinX] = float32(rect.Min.X)
+			gt.data[i*stride+triClipMinY] = float32(rect.Min.Y)
+			gt.data[i*stride+triClipMaxX] = float32(rect.Max.X)
+			gt.data[i*stride+triClipMaxY] = float32(rect.Max.Y)
 		}
 	}
 }
@@ -161,6 +195,12 @@ func (gt *GLTriangles) Update(t pixel.Triangles) {
 	}
 	gt.updateData(t)
 
+	// Copy the verteces down to the glhf.VertexData
+	gt.CopyVertices()
+}
+
+// CopyVertices copies the GLTriangle data down to the vertex data.
+func (gt *GLTriangles) CopyVertices() {
 	// this code is supposed to copy the vertex data and CallNonBlock the update if
 	// the data is small enough, otherwise it'll block and not copy the data
 	if len(gt.data) < 256 { // arbitrary heurestic constant
@@ -186,19 +226,31 @@ func (gt *GLTriangles) Copy() pixel.Triangles {
 	return NewGLTriangles(gt.shader, gt)
 }
 
+// index is a helper function that returns the index in the data
+//	slice given the i-th vertex and the item index.
+func (gt *GLTriangles) index(i, idx int) int {
+	return i*gt.vs.Stride() + idx
+}
+
 // Position returns the Position property of the i-th vertex.
 func (gt *GLTriangles) Position(i int) pixel.Vec {
-	px := gt.data[i*gt.vs.Stride()+0]
-	py := gt.data[i*gt.vs.Stride()+1]
+	px := gt.data[gt.index(i, triPosX)]
+	py := gt.data[gt.index(i, triPosY)]
 	return pixel.V(float64(px), float64(py))
+}
+
+// SetPosition sets the position property of the i-th vertex.
+func (gt *GLTriangles) SetPosition(i int, p pixel.Vec) {
+	gt.data[gt.index(i, triPosX)] = float32(p.X)
+	gt.data[gt.index(i, triPosY)] = float32(p.Y)
 }
 
 // Color returns the Color property of the i-th vertex.
 func (gt *GLTriangles) Color(i int) pixel.RGBA {
-	r := gt.data[i*gt.vs.Stride()+2]
-	g := gt.data[i*gt.vs.Stride()+3]
-	b := gt.data[i*gt.vs.Stride()+4]
-	a := gt.data[i*gt.vs.Stride()+5]
+	r := gt.data[gt.index(i, triColorR)]
+	g := gt.data[gt.index(i, triColorG)]
+	b := gt.data[gt.index(i, triColorB)]
+	a := gt.data[gt.index(i, triColorA)]
 	return pixel.RGBA{
 		R: float64(r),
 		G: float64(g),
@@ -207,21 +259,44 @@ func (gt *GLTriangles) Color(i int) pixel.RGBA {
 	}
 }
 
+// SetColor sets the color property of the i-th vertex.
+func (gt *GLTriangles) SetColor(i int, c pixel.RGBA) {
+	gt.data[gt.index(i, triColorR)] = float32(c.R)
+	gt.data[gt.index(i, triColorG)] = float32(c.G)
+	gt.data[gt.index(i, triColorB)] = float32(c.B)
+	gt.data[gt.index(i, triColorA)] = float32(c.A)
+}
+
 // Picture returns the Picture property of the i-th vertex.
 func (gt *GLTriangles) Picture(i int) (pic pixel.Vec, intensity float64) {
-	tx := gt.data[i*gt.vs.Stride()+6]
-	ty := gt.data[i*gt.vs.Stride()+7]
-	intensity = float64(gt.data[i*gt.vs.Stride()+8])
+	tx := gt.data[gt.index(i, triPicX)]
+	ty := gt.data[gt.index(i, triPicY)]
+	intensity = float64(gt.data[gt.index(i, triIntensity)])
 	return pixel.V(float64(tx), float64(ty)), intensity
 }
 
-// SetClipRect sets the rectangle to scissor the triangles by
-func (gt *GLTriangles) SetClipRect(r pixel.Rect) {
-	gt.clip = r.Norm()
+// SetPicture sets the picture property of the i-th vertex.
+func (gt *GLTriangles) SetPicture(i int, pic pixel.Vec, intensity float64) {
+	gt.data[gt.index(i, triPicX)] = float32(pic.X)
+	gt.data[gt.index(i, triPicY)] = float32(pic.Y)
+	gt.data[gt.index(i, triIntensity)] = float32(intensity)
 }
 
-// ClipRect gets the clipping rectangle and returns true if that
-//	rectangle is not the Zero Rectangle
-func (gt *GLTriangles) ClipRect() (pixel.Rect, bool) {
-	return gt.clip, gt.clip.Area() != 0
+// ClipRect returns the Clipping rectangle property of the i-th vertex.
+func (gt *GLTriangles) ClipRect(i int) (rect pixel.Rect, is bool) {
+	mx := gt.data[gt.index(i, triClipMinX)]
+	my := gt.data[gt.index(i, triClipMinY)]
+	ax := gt.data[gt.index(i, triClipMaxX)]
+	ay := gt.data[gt.index(i, triClipMaxY)]
+	rect = pixel.R(float64(mx), float64(my), float64(ax), float64(ay))
+	is = rect.Area() != 0.0
+	return
+}
+
+// SetClipRect sets the Clipping rectangle property of the i-th vertex.
+func (gt *GLTriangles) SetClipRect(i int, rect pixel.Rect) {
+	gt.data[gt.index(i, triClipMinX)] = float32(rect.Min.X)
+	gt.data[gt.index(i, triClipMinY)] = float32(rect.Min.Y)
+	gt.data[gt.index(i, triClipMaxX)] = float32(rect.Max.X)
+	gt.data[gt.index(i, triClipMaxY)] = float32(rect.Max.Y)
 }
