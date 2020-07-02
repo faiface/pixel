@@ -1,11 +1,7 @@
 package pixel
 
-import (
-	"github.com/faiface/pixel"
-)
-
 type Collidable interface {
-	GetRect() *pixel.Rect
+	GetRect() *Rect
 }
 
 // i separated this data so i can simply copy it to subnodes
@@ -16,9 +12,9 @@ type Common struct {
 }
 
 type Quadtree struct {
-	pixel.Rect
-	Nodes  []*Quadtree
-	Shapes []Collidable
+	Rect
+	nodes  []*Quadtree
+	shapes []Collidable
 	Common
 }
 
@@ -30,7 +26,7 @@ type Quadtree struct {
 // if shapes cannot fit into smallest quadrants.
 // cap - sets maximal capacity of quadrant before it splits to 4 smaller. Making can too big is
 // inefficient. optimal value can be 10 but its allways better to test what works the best.
-func NewQuadtree(bounds pixel.Rect, depth, cap int) *Quadtree {
+func NewQuadtree(bounds Rect, depth, cap int) *Quadtree {
 	return &Quadtree{
 		Rect: bounds,
 		Common: Common{
@@ -42,41 +38,41 @@ func NewQuadtree(bounds pixel.Rect, depth, cap int) *Quadtree {
 
 //generates subquadrants
 func (q *Quadtree) split() {
-	q.Nodes = make([]*Quadtree, 4)
+	q.nodes = make([]*Quadtree, 4)
 	newCommon := q.Common
-	newCommon.Level++
+	newCommon.level++
 	halfH := q.H() / 2
 	halfW := q.W() / 2
 	center := q.Center()
 	//top-left
-	q.Nodes[0] = &Quadtree{
-		Rect: pixel.Rect{
-			Min: pixel.V(q.Min.X, q.Min.Y+halfH),
-			Max: pixel.V(q.Max.X-halfW, q.Max.Y),
+	q.nodes[0] = &Quadtree{
+		Rect: Rect{
+			Min: V(q.Min.X, q.Min.Y+halfH),
+			Max: V(q.Max.X-halfW, q.Max.Y),
 		},
 		Common: newCommon,
 	}
 	//top-right
-	q.Nodes[1] = &Quadtree{
-		Rect: pixel.Rect{
+	q.nodes[1] = &Quadtree{
+		Rect: Rect{
 			Min: center,
 			Max: q.Max,
 		},
 		Common: newCommon,
 	}
 	//bottom-left
-	q.Nodes[2] = &Quadtree{
-		Rect: pixel.Rect{
+	q.nodes[2] = &Quadtree{
+		Rect: Rect{
 			Min: q.Min,
 			Max: center,
 		},
 		Common: newCommon,
 	}
 	//bottom-right
-	q.Nodes[3] = &Quadtree{
-		Rect: pixel.Rect{
-			Min: pixel.V(q.Min.X+halfW, q.Min.Y),
-			Max: pixel.V(q.Max.X, q.Min.Y+halfH),
+	q.nodes[3] = &Quadtree{
+		Rect: Rect{
+			Min: V(q.Min.X+halfW, q.Min.Y),
+			Max: V(q.Max.X, q.Min.Y+halfH),
 		},
 		Common: newCommon,
 	}
@@ -84,7 +80,7 @@ func (q *Quadtree) split() {
 
 // finds out to witch subquadrant the shape belongs to. Shape has to overlap only with one quadrant,
 // otherwise it returns -1
-func (q *Quadtree) getSub(rect *pixel.Rect) int8 {
+func (q *Quadtree) getSub(rect *Rect) int8 {
 	vertical := q.Min.X + q.W()/2
 	horizontal := q.Min.Y + q.H()/2
 
@@ -118,40 +114,41 @@ func (q *Quadtree) getSub(rect *pixel.Rect) int8 {
 // GetRect() *pixel.Rect defined. GetRect function also slightly affects performance.
 func (q *Quadtree) Insert(collidable Collidable) {
 	rect := collidable.GetRect()
-	q.Shapes = append(q.Shapes, collidable)
-	if len(q.Nodes) != 0 {
+	// this is little memory expensive but it makes acsesing shapes faster
+	q.shapes = append(q.shapes, collidable)
+	if len(q.nodes) != 0 {
 		i := q.getSub(rect)
 		if i != -1 {
-			q.Nodes[i].Insert(collidable)
+			q.nodes[i].Insert(collidable)
 		}
 		return
-	} else if q.Cap == len(q.Shapes) && q.Level != q.Depth {
+	} else if q.Cap == len(q.shapes) && q.level != q.Depth {
 		q.split()
-		for _, s := range q.Shapes {
+		for _, s := range q.shapes {
 			i := q.getSub(s.GetRect())
 			if i != -1 {
-				q.Nodes[i].Insert(s)
+				q.nodes[i].Insert(s)
 			}
 		}
 	}
 }
 
 // gets smallest generated quadrant that rect fits into
-func (q *Quadtree) getQuad(rect *pixel.Rect) *Quadtree {
-	if len(q.Nodes) == 0 {
+func (q *Quadtree) getQuad(rect *Rect) *Quadtree {
+	if len(q.nodes) == 0 {
 		return q
 	}
 	subIdx := q.getSub(rect)
 	if subIdx == -1 {
 		return q
 	}
-	return q.Nodes[subIdx].getQuad(rect)
+	return q.nodes[subIdx].getQuad(rect)
 }
 
 // returns all collidables that this rect can possibly collide with
 // thought it also returns the shape it self if it wos inserted
-func (q *Quadtree) Retrieve(rect *pixel.Rect) []Collidable {
-	return q.getQuad(rect).Shapes
+func (q *Quadtree) Retrieve(rect *Rect) []Collidable {
+	return q.getQuad(rect).shapes
 }
 
 // returns all coliding shapes
@@ -169,6 +166,6 @@ func (q *Quadtree) GetColliding(collidable Collidable) []Collidable {
 // Resets the tree, use this every frame before inserting all shapes
 // other wise you will run out of memory eventually and tree will not even work properly
 func (q *Quadtree) Clear() {
-	q.Shapes = []Collidable{}
-	q.Nodes = []*Quadtree{}
+	q.shapes = []Collidable{}
+	q.nodes = []*Quadtree{}
 }

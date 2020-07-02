@@ -170,7 +170,7 @@ func (u Vec) Normal() Vec {
 }
 
 // Returns angle between two vectors
-func (u Vec) AngleTo(v Vec) {
+func (u Vec) AngleTo(v Vec) float64 {
 	u, v = u.Unit(), v.Unit()
 	return math.Acos(u.Dot(v))
 }
