@@ -1,7 +1,7 @@
 package pixel
 
 type Collidable interface {
-	GetRect() *Rect
+	GetRect() Rect
 }
 
 // i separated this data so i can simply copy it to subnodes
@@ -80,7 +80,7 @@ func (q *Quadtree) split() {
 
 // finds out to witch subquadrant the shape belongs to. Shape has to overlap only with one quadrant,
 // otherwise it returns -1
-func (q *Quadtree) getSub(rect *Rect) int8 {
+func (q *Quadtree) getSub(rect Rect) int8 {
 	vertical := q.Min.X + q.W()/2
 	horizontal := q.Min.Y + q.H()/2
 
@@ -134,7 +134,7 @@ func (q *Quadtree) Insert(collidable Collidable) {
 }
 
 // gets smallest generated quadrant that rect fits into
-func (q *Quadtree) getQuad(rect *Rect) *Quadtree {
+func (q *Quadtree) getQuad(rect Rect) *Quadtree {
 	if len(q.nodes) == 0 {
 		return q
 	}
@@ -147,7 +147,7 @@ func (q *Quadtree) getQuad(rect *Rect) *Quadtree {
 
 // returns all collidables that this rect can possibly collide with
 // thought it also returns the shape it self if it wos inserted
-func (q *Quadtree) Retrieve(rect *Rect) []Collidable {
+func (q *Quadtree) Retrieve(rect Rect) []Collidable {
 	return q.getQuad(rect).shapes
 }
 
@@ -156,7 +156,7 @@ func (q *Quadtree) GetColliding(collidable Collidable) []Collidable {
 	var res []Collidable
 	rect := collidable.GetRect()
 	for _, c := range q.Retrieve(rect) {
-		if c.GetRect().Intersects(*rect) && c != collidable {
+		if c.GetRect().Intersects(rect) && c != collidable {
 			res = append(res, c)
 		}
 	}
