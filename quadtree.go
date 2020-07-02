@@ -13,9 +13,9 @@ type Common struct {
 
 type Quadtree struct {
 	Rect
+	Common
 	nodes  []*Quadtree
 	shapes []Collidable
-	Common
 }
 
 // Creates new quad tree reference.
@@ -114,7 +114,7 @@ func (q *Quadtree) getSub(rect *Rect) int8 {
 // GetRect() *pixel.Rect defined. GetRect function also slightly affects performance.
 func (q *Quadtree) Insert(collidable Collidable) {
 	rect := collidable.GetRect()
-	// this is little memory expensive but it makes acsesing shapes faster
+	// this is little memory expensive but it makes acesing shapes faster
 	q.shapes = append(q.shapes, collidable)
 	if len(q.nodes) != 0 {
 		i := q.getSub(rect)
