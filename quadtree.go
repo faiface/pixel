@@ -1,21 +1,25 @@
 package pixel
 
+import (
+	"github.com/faiface/pixel/imdraw"
+)
+
 type Collidable interface {
 	GetRect() Rect
 }
 
-// i separated this data so i can simply copy it to subnodes
 type Common struct {
-	Depth int // maximal level tree can reach
-	level int // this takes track of level
-	Cap   int // max amount of objects per quadrant, if there is more quadrant splits
+	Depth int
+	Level int
+	Cap   int //max amount of objects per quadrant, if there is more quadrant splits
 }
 
 type Quadtree struct {
 	Rect
+	tl, tr, bl, br, pr *Quadtree
+	Shapes             []Collidable
 	Common
-	nodes  []*Quadtree
-	shapes []Collidable
+	splitted bool
 }
 
 // Creates new quad tree reference.
@@ -26,7 +30,7 @@ type Quadtree struct {
 // if shapes cannot fit into smallest quadrants.
 // cap - sets maximal capacity of quadrant before it splits to 4 smaller. Making can too big is
 // inefficient. optimal value can be 10 but its allways better to test what works the best.
-func NewQuadtree(bounds Rect, depth, cap int) *Quadtree {
+func NewQuadTree(bounds Rect, depth, cap int) *Quadtree {
 	return &Quadtree{
 		Rect: bounds,
 		Common: Common{
@@ -36,136 +40,199 @@ func NewQuadtree(bounds Rect, depth, cap int) *Quadtree {
 	}
 }
 
-//generates subquadrants
+// generates subquadrants, always check if quadrant is not already splitted
 func (q *Quadtree) split() {
-	q.nodes = make([]*Quadtree, 4)
+	q.splitted = true
 	newCommon := q.Common
-	newCommon.level++
+	newCommon.Level++
 	halfH := q.H() / 2
 	halfW := q.W() / 2
 	center := q.Center()
-	//top-left
-	q.nodes[0] = &Quadtree{
+	q.tl = &Quadtree{
 		Rect: Rect{
 			Min: V(q.Min.X, q.Min.Y+halfH),
 			Max: V(q.Max.X-halfW, q.Max.Y),
 		},
+		pr:     q,
 		Common: newCommon,
 	}
-	//top-right
-	q.nodes[1] = &Quadtree{
+	q.tr = &Quadtree{
 		Rect: Rect{
 			Min: center,
 			Max: q.Max,
 		},
+		pr:     q,
 		Common: newCommon,
 	}
-	//bottom-left
-	q.nodes[2] = &Quadtree{
+	q.bl = &Quadtree{
 		Rect: Rect{
 			Min: q.Min,
 			Max: center,
 		},
+		pr:     q,
 		Common: newCommon,
 	}
-	//bottom-right
-	q.nodes[3] = &Quadtree{
+	q.br = &Quadtree{
 		Rect: Rect{
 			Min: V(q.Min.X+halfW, q.Min.Y),
 			Max: V(q.Max.X, q.Min.Y+halfH),
 		},
+		pr:     q,
 		Common: newCommon,
 	}
 }
 
-// finds out to witch subquadrant the shape belongs to. Shape has to overlap only with one quadrant,
-// otherwise it returns -1
-func (q *Quadtree) getSub(rect Rect) int8 {
+func (q *Quadtree) fits(rect Rect) bool {
+	return rect.Max.X > q.Min.X && rect.Max.X < q.Max.X && rect.Min.Y > q.Min.Y && rect.Max.Y < q.Max.Y
+}
+
+// finds out in witch subquadrant the shape belongs to. Shape has to overlap only with one quadrant,
+// otherwise it returns nil
+func (q *Quadtree) getSub(rect Rect) *Quadtree {
 	vertical := q.Min.X + q.W()/2
 	horizontal := q.Min.Y + q.H()/2
 
-	if rect.Max.X < q.Min.X || rect.Max.X > q.Max.X || rect.Min.Y < q.Min.Y || rect.Max.Y > q.Max.Y {
-		return -1
+	if !q.fits(rect) {
+		return nil
 	}
 
-	left := rect.Max.X < vertical
-	right := rect.Min.X > vertical
-	if rect.Min.Y > horizontal {
-		// top
+	left := rect.Max.X <= vertical
+	right := rect.Min.X >= vertical
+	if rect.Min.Y >= horizontal {
 		if left {
-			return 0 // left
+			return q.tl
 		} else if right {
-			return 1 // right
+			return q.tr
 		}
-	} else if rect.Max.Y < horizontal {
-		// bottom
+	} else if rect.Max.Y <= horizontal {
 		if left {
-			return 2 // left
+			return q.bl
 		} else if right {
-			return 3 // right
+			return q.br
 		}
 	}
-	return -1
+	return nil
 }
 
 // Adds the shape to quad tree and asians it to correct quadrant.
 // Proper way is adding all shapes first and then detecting collisions.
-// For struct to implement Collidable interface it has to have
-// GetRect() *pixel.Rect defined. GetRect function also slightly affects performance.
+// For struct to implement Collidable interface it has to implement
+// GetRect() *pixel.Rect. GetRect function also slightly affects performance.
 func (q *Quadtree) Insert(collidable Collidable) {
 	rect := collidable.GetRect()
-	// this is little memory expensive but it makes acesing shapes faster
-	q.shapes = append(q.shapes, collidable)
-	if len(q.nodes) != 0 {
-		i := q.getSub(rect)
-		if i != -1 {
-			q.nodes[i].Insert(collidable)
+
+	if q.splitted {
+		fitting := q.getSub(rect)
+		if fitting != nil {
+			fitting.Insert(collidable)
+			return
 		}
+		q.Shapes = append(q.Shapes, collidable)
 		return
-	} else if q.Cap == len(q.shapes) && q.level != q.Depth {
+	}
+	q.Shapes = append(q.Shapes, collidable)
+	if q.Cap <= len(q.Shapes) && q.Level != q.Depth {
+
 		q.split()
-		for _, s := range q.shapes {
-			i := q.getSub(s.GetRect())
-			if i != -1 {
-				q.nodes[i].Insert(s)
+		new := []Collidable{}
+		for _, s := range q.Shapes {
+			fitting := q.getSub(s.GetRect())
+			if fitting != nil {
+				fitting.Insert(s)
+			} else {
+				new = append(new, s)
+			}
+		}
+		q.Shapes = new
+	}
+}
+
+// pushes shape to parrent until it fits him
+func (q *Quadtree) withdraw(c Collidable) {
+	if q.pr == nil || q.fits(c.GetRect()) {
+		q.Shapes = append(q.Shapes, c)
+	} else {
+		q.pr.withdraw(c)
+	}
+}
+
+// reassigns shapes to quadrants if needed
+func (q *Quadtree) Update() {
+	new := []Collidable{}
+	if len(q.Shapes) > q.Cap && !q.splitted {
+		q.split()
+	}
+	if q.splitted {
+		q.tl.Update()
+		q.tr.Update()
+		q.bl.Update()
+		q.br.Update()
+		for _, c := range q.Shapes {
+			rect := c.GetRect()
+			sub := q.getSub(rect)
+			if sub != nil {
+				sub.Shapes = append(sub.Shapes, c)
+			} else if q.fits(rect) || q.pr == nil {
+				new = append(new, c)
+			} else {
+				q.pr.withdraw(c)
+			}
+		}
+	} else {
+		for _, c := range q.Shapes {
+			if q.fits(c.GetRect()) || q.pr == nil {
+				new = append(new, c)
+			} else {
+				q.pr.withdraw(c)
 			}
 		}
 	}
+
+	q.Shapes = new
 }
 
-// gets smallest generated quadrant that rect fits into
-func (q *Quadtree) getQuad(rect Rect) *Quadtree {
-	if len(q.nodes) == 0 {
-		return q
-	}
-	subIdx := q.getSub(rect)
-	if subIdx == -1 {
-		return q
-	}
-	return q.nodes[subIdx].getQuad(rect)
-}
-
-// returns all collidables that this rect can possibly collide with
-// thought it also returns the shape it self if it wos inserted
-func (q *Quadtree) Retrieve(rect Rect) []Collidable {
-	return q.getQuad(rect).shapes
-}
-
-// returns all coliding shapes
-func (q *Quadtree) GetColliding(collidable Collidable) []Collidable {
-	var res []Collidable
-	rect := collidable.GetRect()
-	for _, c := range q.Retrieve(rect) {
-		if c.GetRect().Intersects(rect) && c != collidable {
-			res = append(res, c)
+// returns all coliding collidables, if rect belongs to object that is already
+// inserted in tree it returns is as well
+func (q *Quadtree) GetColliding(rect Rect, con *[]Collidable) {
+	if q.splitted {
+		if q.tl.Intersects(rect) {
+			q.tl.GetColliding(rect, con)
+		}
+		if q.tr.Intersects(rect) {
+			q.tr.GetColliding(rect, con)
+		}
+		if q.bl.Intersects(rect) {
+			q.bl.GetColliding(rect, con)
+		}
+		if q.br.Intersects(rect) {
+			q.br.GetColliding(rect, con)
 		}
 	}
-	return res
+	for _, c := range q.Shapes {
+		if c.GetRect().Intersects(rect) {
+			*con = append(*con, c)
+		}
+	}
 }
 
 // Resets the tree, use this every frame before inserting all shapes
 // other wise you will run out of memory eventually and tree will not even work properly
 func (q *Quadtree) Clear() {
-	q.shapes = []Collidable{}
-	q.nodes = []*Quadtree{}
+	q.Shapes = []Collidable{}
+	q.tl, q.tr, q.bl, q.br = nil, nil, nil, nil
+	q.splitted = false
+}
+
+// visualizes state of quadtree
+func (q *Quadtree) Draw(id *imdraw.IMDraw, thickness float64) {
+	id.Push(q.Min)
+	id.Push(q.Max)
+	id.Rectangle(thickness)
+	if !q.splitted {
+		return
+	}
+	q.tl.Draw(id, thickness)
+	q.tr.Draw(id, thickness)
+	q.bl.Draw(id, thickness)
+	q.br.Draw(id, thickness)
 }
