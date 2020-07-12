@@ -4,16 +4,26 @@ import (
 	"errors"
 )
 
+// Quadtree entry interface
 type Collidable interface {
 	GetRect() Rect
 }
 
+// Common part of quadtree. Commot is always coppied to children
+// with change of the level
 type Common struct {
 	Depth int
 	Level int
 	Cap   int //max amount of objects per quadrant, if there is more quadrant splits
 }
 
+// Quadtree is is datastructure used for effective collision detection.
+// In most cases you really only need to interact with root node.
+// There are to ways to use quadtree. If objects used in quadtree hes very
+// short live spam it is better to clear tree and reinset objects every frame.
+// On the other hand, if objects are rather permanent use update approach.
+// insert every shape just once and remove it if needed. Use Update method before
+// detecting collisions or removing shapes.
 type Quadtree struct {
 	Rect
 	tl, tr, bl, br, pr *Quadtree
@@ -82,6 +92,7 @@ func (q *Quadtree) split() {
 	}
 }
 
+// returns weather shape fits into quadtree completely
 func (q *Quadtree) fits(rect Rect) bool {
 	return rect.Max.X > q.Min.X && rect.Max.X < q.Max.X && rect.Min.Y > q.Min.Y && rect.Max.Y < q.Max.Y
 }
@@ -114,10 +125,8 @@ func (q *Quadtree) getSub(rect Rect) *Quadtree {
 	return nil
 }
 
-// Adds the shape to quad tree and asians it to correct quadrant.
+// Adds the shape to quad tree and assigns it to correct quadrant.
 // Proper way is adding all shapes first and then detecting collisions.
-// For struct to implement Collidable interface it has to implement
-// GetRect() *pixel.Rect. GetRect function also slightly affects performance.
 func (q *Quadtree) Insert(collidable Collidable) {
 	rect := collidable.GetRect()
 
@@ -241,7 +250,7 @@ func (q *Quadtree) Remove(c Collidable) error {
 			return nil
 		}
 	}
-	return errors.New("Shape wos not found. Update before removing.")
+	return errors.New("Shape not found. Update before removing.")
 }
 
 // Resets the tree, use this every frame before inserting all shapes
