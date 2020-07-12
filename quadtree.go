@@ -1,7 +1,7 @@
 package pixel
 
 import (
-	"github.com/faiface/pixel/imdraw"
+	"errors"
 )
 
 type Collidable interface {
@@ -215,24 +215,39 @@ func (q *Quadtree) GetColliding(rect Rect, con *[]Collidable) {
 	}
 }
 
+// gets a smallest possible quadrant rect fits into.
+func (q *Quadtree) GetSmallestQuad(rect Rect) *Quadtree {
+	current := q
+	for {
+		sub := current.getSub(rect)
+		if sub == nil {
+			break
+		}
+		current = sub
+	}
+	return current
+}
+
+// removed shape from quadtree the fast wey. Always update before removing objects
+// unless you are not ,moving with it.
+func (q *Quadtree) Remove(c Collidable) error {
+	sq := q.GetSmallestQuad(c.GetRect())
+	for i, o := range sq.Shapes {
+		if o == c {
+			last := len(sq.Shapes) - 1
+			sq.Shapes[i] = nil
+			sq.Shapes[i] = sq.Shapes[last]
+			sq.Shapes = sq.Shapes[:last]
+			return nil
+		}
+	}
+	return errors.New("Shape wos not found. Update before removing.")
+}
+
 // Resets the tree, use this every frame before inserting all shapes
 // other wise you will run out of memory eventually and tree will not even work properly
 func (q *Quadtree) Clear() {
 	q.Shapes = []Collidable{}
 	q.tl, q.tr, q.bl, q.br = nil, nil, nil, nil
 	q.splitted = false
-}
-
-// visualizes state of quadtree
-func (q *Quadtree) Draw(id *imdraw.IMDraw, thickness float64) {
-	id.Push(q.Min)
-	id.Push(q.Max)
-	id.Rectangle(thickness)
-	if !q.splitted {
-		return
-	}
-	q.tl.Draw(id, thickness)
-	q.tr.Draw(id, thickness)
-	q.bl.Draw(id, thickness)
-	q.br.Draw(id, thickness)
 }
