@@ -29,7 +29,7 @@ type Quadtree struct {
 // and depth is 2 smallest quadrants will be 25 x 25. Making resolution too high is redundant
 // if shapes cannot fit into smallest quadrants.
 // cap - sets maximal capacity of quadrant before it splits to 4 smaller. Making can too big is
-// inefficient. optimal value can be 10 but its allways better to test what works the best.
+// inefficient. Optimal value can be 5 but its allways better to test what works the best.
 func NewQuadTree(bounds Rect, depth, cap int) *Quadtree {
 	return &Quadtree{
 		Rect: bounds,
