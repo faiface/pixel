@@ -169,12 +169,6 @@ func (u Vec) Normal() Vec {
 	return Vec{-u.Y, u.X}
 }
 
-// Returns angle between two vectors
-func (u Vec) AngleTo(v Vec) float64 {
-	u, v = u.Unit(), v.Unit()
-	return math.Acos(u.Dot(v))
-}
-
 // Dot returns the dot product of vectors u and v.
 func (u Vec) Dot(v Vec) float64 {
 	return u.X*v.X + u.Y*v.Y

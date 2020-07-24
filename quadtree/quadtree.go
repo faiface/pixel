@@ -1,12 +1,14 @@
-package pixel
+package quadtree
 
 import (
 	"errors"
+
+	"github.com/faiface/pixel"
 )
 
-// Quadtree entry interface
+// Collidable is interface that stores inserted objects
 type Collidable interface {
-	GetRect() Rect
+	GetRect() pixel.Rect
 }
 
 // Common part of quadtree. Commot is always coppied to children
@@ -25,14 +27,14 @@ type Common struct {
 // insert every shape just once and remove it if needed. Use Update method before
 // detecting collisions or removing shapes.
 type Quadtree struct {
-	Rect
+	pixel.Rect
 	tl, tr, bl, br, pr *Quadtree
 	Shapes             []Collidable
 	Common
 	splitted bool
 }
 
-// Creates new quad tree reference.
+// New creates new quad tree reference.
 // bounds - defines position of quad tree and its size. If shapes goes out of bounds they
 // will not be assigned to quadrants and the tree will be ineffective.
 // depth - resolution of quad tree. It lavais splits in half so if bounds size is 100 x 100
@@ -40,7 +42,7 @@ type Quadtree struct {
 // if shapes cannot fit into smallest quadrants.
 // cap - sets maximal capacity of quadrant before it splits to 4 smaller. Making can too big is
 // inefficient. Optimal value can be 5 but its allways better to test what works the best.
-func NewQuadTree(bounds Rect, depth, cap int) *Quadtree {
+func New(bounds pixel.Rect, depth, cap int) *Quadtree {
 	return &Quadtree{
 		Rect: bounds,
 		Common: Common{
@@ -59,15 +61,12 @@ func (q *Quadtree) split() {
 	halfW := q.W() / 2
 	center := q.Center()
 	q.tl = &Quadtree{
-		Rect: Rect{
-			Min: V(q.Min.X, q.Min.Y+halfH),
-			Max: V(q.Max.X-halfW, q.Max.Y),
-		},
+		Rect: pixel.R(q.Min.X, q.Min.Y+halfH,q.Max.X-halfW, q.Max.Y),
 		pr:     q,
 		Common: newCommon,
 	}
 	q.tr = &Quadtree{
-		Rect: Rect{
+		Rect: pixel.Rect{
 			Min: center,
 			Max: q.Max,
 		},
@@ -75,7 +74,7 @@ func (q *Quadtree) split() {
 		Common: newCommon,
 	}
 	q.bl = &Quadtree{
-		Rect: Rect{
+		Rect: pixel.Rect{
 			Min: q.Min,
 			Max: center,
 		},
@@ -83,23 +82,20 @@ func (q *Quadtree) split() {
 		Common: newCommon,
 	}
 	q.br = &Quadtree{
-		Rect: Rect{
-			Min: V(q.Min.X+halfW, q.Min.Y),
-			Max: V(q.Max.X, q.Min.Y+halfH),
-		},
+		Rect: pixel.R(q.Min.X+halfW, q.Min.Y,q.Max.X, q.Min.Y+halfH),
 		pr:     q,
 		Common: newCommon,
 	}
 }
 
 // returns weather shape fits into quadtree completely
-func (q *Quadtree) fits(rect Rect) bool {
+func (q *Quadtree) fits(rect pixel.Rect) bool {
 	return rect.Max.X > q.Min.X && rect.Max.X < q.Max.X && rect.Min.Y > q.Min.Y && rect.Max.Y < q.Max.Y
 }
 
 // finds out in witch subquadrant the shape belongs to. Shape has to overlap only with one quadrant,
 // otherwise it returns nil
-func (q *Quadtree) getSub(rect Rect) *Quadtree {
+func (q *Quadtree) getSub(rect pixel.Rect) *Quadtree {
 	vertical := q.Min.X + q.W()/2
 	horizontal := q.Min.Y + q.H()/2
 
@@ -125,7 +121,7 @@ func (q *Quadtree) getSub(rect Rect) *Quadtree {
 	return nil
 }
 
-// Adds the shape to quad tree and assigns it to correct quadrant.
+// Insert adds the shape to quad tree and assigns it to correct quadrant.
 // Proper way is adding all shapes first and then detecting collisions.
 func (q *Quadtree) Insert(collidable Collidable) {
 	rect := collidable.GetRect()
@@ -156,16 +152,7 @@ func (q *Quadtree) Insert(collidable Collidable) {
 	}
 }
 
-// pushes shape to parrent until it fits him
-func (q *Quadtree) withdraw(c Collidable) {
-	if q.pr == nil || q.fits(c.GetRect()) {
-		q.Shapes = append(q.Shapes, c)
-	} else {
-		q.pr.withdraw(c)
-	}
-}
-
-// reassigns shapes to quadrants if needed
+//Update reassigns shapes to quadrants if needed
 func (q *Quadtree) Update() {
 	new := []Collidable{}
 	if len(q.Shapes) > q.Cap && !q.splitted {
@@ -180,11 +167,11 @@ func (q *Quadtree) Update() {
 			rect := c.GetRect()
 			sub := q.getSub(rect)
 			if sub != nil {
-				sub.Shapes = append(sub.Shapes, c)
+				sub.Insert(c)
 			} else if q.fits(rect) || q.pr == nil {
 				new = append(new, c)
 			} else {
-				q.pr.withdraw(c)
+				q.pr.Shapes = append(q.pr.Shapes, c)
 			}
 		}
 	} else {
@@ -192,7 +179,7 @@ func (q *Quadtree) Update() {
 			if q.fits(c.GetRect()) || q.pr == nil {
 				new = append(new, c)
 			} else {
-				q.pr.withdraw(c)
+				q.pr.Shapes = append(q.pr.Shapes, c)
 			}
 		}
 	}
@@ -200,9 +187,9 @@ func (q *Quadtree) Update() {
 	q.Shapes = new
 }
 
-// returns all coliding collidables, if rect belongs to object that is already
-// inserted in tree it returns is as well
-func (q *Quadtree) GetColliding(rect Rect, con *[]Collidable) {
+// GetColliding returns all coliding collidables, if rect belongs to object that is already
+// inserted in tree it returns it as well
+func (q *Quadtree) GetColliding(rect pixel.Rect, con *[]Collidable) {
 	if q.splitted {
 		if q.tl.Intersects(rect) {
 			q.tl.GetColliding(rect, con)
@@ -225,7 +212,7 @@ func (q *Quadtree) GetColliding(rect Rect, con *[]Collidable) {
 }
 
 // gets a smallest possible quadrant rect fits into.
-func (q *Quadtree) GetSmallestQuad(rect Rect) *Quadtree {
+func (q *Quadtree) getSmallestQuad(rect pixel.Rect) *Quadtree {
 	current := q
 	for {
 		sub := current.getSub(rect)
@@ -237,10 +224,10 @@ func (q *Quadtree) GetSmallestQuad(rect Rect) *Quadtree {
 	return current
 }
 
-// removed shape from quadtree the fast wey. Always update before removing objects
+// Remove removes shape from quadtree the fast wey. Always update before removing objects
 // unless you are not ,moving with it.
 func (q *Quadtree) Remove(c Collidable) error {
-	sq := q.GetSmallestQuad(c.GetRect())
+	sq := q.getSmallestQuad(c.GetRect())
 	for i, o := range sq.Shapes {
 		if o == c {
 			last := len(sq.Shapes) - 1
@@ -250,11 +237,12 @@ func (q *Quadtree) Remove(c Collidable) error {
 			return nil
 		}
 	}
-	return errors.New("Shape not found. Update before removing.")
+	return errors.New("shape not found, update before removing")
 }
 
-// Resets the tree, use this every frame before inserting all shapes
-// other wise you will run out of memory eventually and tree will not even work properly
+// Clear clears the tree, use this every frame before inserting all shapes
+// other wise you will run out of memory eventually and tree will not even work properly.
+// You should not use this if you are using Upsate() nethod
 func (q *Quadtree) Clear() {
 	q.Shapes = []Collidable{}
 	q.tl, q.tr, q.bl, q.br = nil, nil, nil, nil
