@@ -99,7 +99,7 @@ func TestQuadtree_Update(t *testing.T) {
 	}
 	for _, test := range tests {
 		t.Run(test.description, func(t *testing.T) {
-			qt := New(pixel.R(-200, -200, 200, 200), 2, 1)
+			qt := New(pixel.R(-100, -100, 300, 300), 2, 1)
 			qt.Insert(&test.target)
 			test.target.Vec = test.target.Vec.Add(test.target.vel)
 			for _, o := range test.other {
