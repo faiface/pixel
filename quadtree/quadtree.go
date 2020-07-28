@@ -1,14 +1,13 @@
 package quadtree
 
 import (
-	"errors"
-
 	"github.com/faiface/pixel"
 )
 
 // Collidable is interface that stores inserted objects
 type Collidable interface {
 	GetRect() pixel.Rect
+	IsDead() bool
 }
 
 // Common part of quadtree. Commot is always coppied to children
@@ -164,6 +163,9 @@ func (q *Quadtree) Update() {
 		q.bl.Update()
 		q.br.Update()
 		for _, c := range q.Shapes {
+			if c.IsDead() {
+				continue
+			}
 			rect := c.GetRect()
 			sub := q.getSub(rect)
 			if sub != nil {
@@ -176,6 +178,9 @@ func (q *Quadtree) Update() {
 		}
 	} else {
 		for _, c := range q.Shapes {
+			if c.IsDead() {
+				continue
+			}
 			if q.fits(c.GetRect()) || q.pr == nil {
 				new = append(new, c)
 			} else {
@@ -209,35 +214,6 @@ func (q *Quadtree) GetColliding(rect pixel.Rect, con *[]Collidable) {
 			*con = append(*con, c)
 		}
 	}
-}
-
-// gets a smallest possible quadrant rect fits into.
-func (q *Quadtree) getSmallestQuad(rect pixel.Rect) *Quadtree {
-	current := q
-	for {
-		sub := current.getSub(rect)
-		if sub == nil {
-			break
-		}
-		current = sub
-	}
-	return current
-}
-
-// Remove removes shape from quadtree the fast wey. Always update before removing objects
-// unless you are not ,moving with it.
-func (q *Quadtree) Remove(c Collidable) error {
-	sq := q.getSmallestQuad(c.GetRect())
-	for i, o := range sq.Shapes {
-		if o == c {
-			last := len(sq.Shapes) - 1
-			sq.Shapes[i] = nil
-			sq.Shapes[i] = sq.Shapes[last]
-			sq.Shapes = sq.Shapes[:last]
-			return nil
-		}
-	}
-	return errors.New("shape not found, update before removing")
 }
 
 // Clear clears the tree, use this every frame before inserting all shapes

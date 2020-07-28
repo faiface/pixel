@@ -31,6 +31,10 @@ func (c *collider) GetRect() pixel.Rect {
 	return pixel.R(c.X-c.size, c.Y-c.size, c.X+c.size, c.Y+c.size)
 }
 
+func (c *collider) IsDead() bool {
+	return false
+}
+
 type collizionTest struct {
 	description string
 	target      collider
