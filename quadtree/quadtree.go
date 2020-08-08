@@ -60,7 +60,7 @@ func (q *Quadtree) split() {
 	halfW := q.W() / 2
 	center := q.Center()
 	q.tl = &Quadtree{
-		Rect: pixel.R(q.Min.X, q.Min.Y+halfH,q.Max.X-halfW, q.Max.Y),
+		Rect:   pixel.R(q.Min.X, q.Min.Y+halfH, q.Max.X-halfW, q.Max.Y),
 		pr:     q,
 		Common: newCommon,
 	}
@@ -81,7 +81,7 @@ func (q *Quadtree) split() {
 		Common: newCommon,
 	}
 	q.br = &Quadtree{
-		Rect: pixel.R(q.Min.X+halfW, q.Min.Y,q.Max.X, q.Min.Y+halfH),
+		Rect:   pixel.R(q.Min.X+halfW, q.Min.Y, q.Max.X, q.Min.Y+halfH),
 		pr:     q,
 		Common: newCommon,
 	}
