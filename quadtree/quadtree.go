@@ -151,45 +151,43 @@ func (q *Quadtree) Insert(collidable Collidable) {
 	}
 }
 
-//Update reassigns shapes to quadrants if needed
+// Update reassigns shapes to correct quadrants if needed
 func (q *Quadtree) Update() {
-	new := []Collidable{}
-	if len(q.Shapes) > q.Cap && !q.splitted {
-		q.split()
+	toReinsert := []Collidable{}
+	q.update(&toReinsert)
+	for _, s := range toReinsert {
+		q.Insert(s)
 	}
-	if q.splitted {
-		q.tl.Update()
-		q.tr.Update()
-		q.bl.Update()
-		q.br.Update()
-		for _, c := range q.Shapes {
-			if c.IsDead() {
-				continue
-			}
-			rect := c.GetRect()
-			sub := q.getSub(rect)
-			if sub != nil {
-				sub.Insert(c)
-			} else if q.fits(rect) || q.pr == nil {
-				new = append(new, c)
-			} else {
-				q.pr.Shapes = append(q.pr.Shapes, c)
-			}
+}
+
+func (q *Quadtree) update(moved *[]Collidable) {
+	i := 0
+	for _, s := range q.Shapes {
+		if s.IsDead() {
+			continue
 		}
-	} else {
-		for _, c := range q.Shapes {
-			if c.IsDead() {
-				continue
-			}
-			if q.fits(c.GetRect()) || q.pr == nil {
-				new = append(new, c)
-			} else {
-				q.pr.Shapes = append(q.pr.Shapes, c)
-			}
+		if !q.fits(s.GetRect()) {
+			*moved = append(*moved, s)
+			continue
 		}
+
+		q.Shapes[i] = s
+		i++
 	}
 
-	q.Shapes = new
+	for j := i; j < len(q.Shapes); j++ {
+		q.Shapes[j] = nil
+	}
+
+	q.Shapes = q.Shapes[:i]
+
+	if !q.splitted {
+		return
+	}
+	q.tl.update(moved)
+	q.tr.update(moved)
+	q.bl.update(moved)
+	q.br.update(moved)
 }
 
 // GetColliding returns all coliding collidables, if rect belongs to object that is already
