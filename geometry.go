@@ -548,7 +548,7 @@ func (r Rect) Edges() [4]Line {
 }
 
 // AnchorPos enumerates available anchor positions, such as `Center`, `Top`, `TopRight`, etc.
-type AnchorPos struct{ v Vec }
+type AnchorPos struct{ Val Vec }
 
 var (
 	Center      = AnchorPos{V(0.5, 0.5)}
@@ -590,8 +590,14 @@ func (anchorPos AnchorPos) String() string {
 
 // AnchorPos returns the position of the given anchor of the Rect.
 func (r *Rect) AnchorPos(anchor AnchorPos) Vec {
-	// func (u Vec) ScaledXY(v Vec) Vec {
-	return r.Min.Add(r.Size().ScaledXY(anchor.v))
+	return r.Min.Add(r.Size().ScaledXY(anchor.Val))
+}
+
+// AnchorTo updates the Rect position to align it on the given anchor.
+func (r *Rect) AnchorTo(anchor AnchorPos) {
+	size := r.Size()
+	r.Min = r.Min.Sub(size.ScaledXY(anchor.Val))
+	r.Max = r.Max.Sub(size.ScaledXY(anchor.Val))
 }
 
 // Center returns the position of the center of the Rect.
