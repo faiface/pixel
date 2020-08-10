@@ -547,7 +547,55 @@ func (r Rect) Edges() [4]Line {
 	}
 }
 
+// AnchorPos enumerates available anchor positions, such as `Center`, `Top`, `TopRight`, etc.
+type AnchorPos struct{ v Vec }
+
+var (
+	Center      = AnchorPos{V(0.5, 0.5)}
+	Top         = AnchorPos{V(0.5, 1)}
+	TopRight    = AnchorPos{V(1, 1)}
+	Right       = AnchorPos{V(1, 0.5)}
+	BottomRight = AnchorPos{V(1, 0)}
+	Bottom      = AnchorPos{V(0.5, 0)}
+	BottomLeft  = AnchorPos{V(0, 0)}
+	Left        = AnchorPos{V(0, 0.5)}
+	TopLeft     = AnchorPos{V(0, 1)}
+)
+
+// String returns the string representation of an anchor.
+func (anchorPos AnchorPos) String() string {
+	switch anchorPos {
+	case Center:
+		return "Center"
+	case Top:
+		return "Top"
+	case TopRight:
+		return "TopRight"
+	case Right:
+		return "Right"
+	case BottomRight:
+		return "BottomRight"
+	case Bottom:
+		return "Bottom"
+	case BottomLeft:
+		return "BottomLeft"
+	case Left:
+		return "Left"
+	case TopLeft:
+		return "TopLeft"
+	default:
+		return ""
+	}
+}
+
+// AnchorPos returns the position of the given anchor of the Rect.
+func (r *Rect) AnchorPos(anchor AnchorPos) Vec {
+	// func (u Vec) ScaledXY(v Vec) Vec {
+	return r.Min.Add(r.Size().ScaledXY(anchor.v))
+}
+
 // Center returns the position of the center of the Rect.
+// `rect.Center()` is equivalent to `rect.AnchorPos(pixel.AnchorPos.Center)`
 func (r Rect) Center() Vec {
 	return Lerp(r.Min, r.Max, 0.5)
 }
