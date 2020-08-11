@@ -101,6 +101,7 @@ type Text struct {
 	trans  pixel.TrianglesData
 	transD pixel.Drawer
 	dirty  bool
+	anchor pixel.Anchor
 }
 
 // New creates a new Text capable of drawing runes contained in the provided Atlas. Orig and Dot
@@ -182,6 +183,12 @@ func (txt *Text) BoundsOf(s string) pixel.Rect {
 	return bounds
 }
 
+// AlignedTo returns the text moved by the given anchor.
+func (txt *Text) AlignedTo(anchor pixel.Anchor) *Text {
+	txt.anchor = anchor
+	return txt
+}
+
 // Clear removes all written text from the Text. The Dot field is reset to Orig.
 func (txt *Text) Clear() {
 	txt.prevR = -1
@@ -244,6 +251,10 @@ func (txt *Text) DrawColorMask(t pixel.Target, matrix pixel.Matrix, mask color.C
 		txt.mat = matrix
 		txt.dirty = true
 	}
+
+	offset := txt.Bounds().AnchorPos(txt.anchor)
+	txt.mat = pixel.IM.Moved(offset).Chained(txt.mat)
+
 	if mask == nil {
 		mask = pixel.Alpha(1)
 	}
