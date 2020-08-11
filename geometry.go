@@ -547,59 +547,59 @@ func (r Rect) Edges() [4]Line {
 	}
 }
 
-// AnchorPos enumerates available anchor positions, such as `Center`, `Top`, `TopRight`, etc.
-type AnchorPos struct{ Val Vec }
+// Anchor is a vector used to define anchors, such as `Center`, `Top`, `TopRight`, etc.
+type Anchor Vec
 
 var (
-	Center      = AnchorPos{V(0.5, 0.5)}
-	Top         = AnchorPos{V(0.5, 1)}
-	TopRight    = AnchorPos{V(1, 1)}
-	Right       = AnchorPos{V(1, 0.5)}
-	BottomRight = AnchorPos{V(1, 0)}
-	Bottom      = AnchorPos{V(0.5, 0)}
-	BottomLeft  = AnchorPos{V(0, 0)}
-	Left        = AnchorPos{V(0, 0.5)}
-	TopLeft     = AnchorPos{V(0, 1)}
+	Center      = Anchor{0.5, 0.5}
+	Top         = Anchor{0.5, 1}
+	TopRight    = Anchor{1,   1}
+	Right       = Anchor{1,   0.5}
+	BottomRight = Anchor{1,   0}
+	Bottom      = Anchor{0.5, 0}
+	BottomLeft  = Anchor{0,   0}
+	Left        = Anchor{0,   0.5}
+	TopLeft     = Anchor{0,   1}
 )
 
 // String returns the string representation of an anchor.
-func (anchorPos AnchorPos) String() string {
-	switch anchorPos {
+func (anchor Anchor) String() string {
+	switch anchor {
 	case Center:
-		return "Center"
+		return "center"
 	case Top:
-		return "Top"
+		return "top"
 	case TopRight:
-		return "TopRight"
+		return "top-right"
 	case Right:
-		return "Right"
+		return "right"
 	case BottomRight:
-		return "BottomRight"
+		return "bottom-right"
 	case Bottom:
-		return "Bottom"
+		return "bottom"
 	case BottomLeft:
-		return "BottomLeft"
+		return "bottom-left"
 	case Left:
-		return "Left"
+		return "left"
 	case TopLeft:
-		return "TopLeft"
+		return "top-left"
 	default:
 		return ""
 	}
 }
 
-// AnchorPos returns the position of the given anchor of the Rect.
-func (r Rect) AnchorPos(anchorPos AnchorPos) Vec {
-	return r.Size().ScaledXY(V(0, 0).Sub(anchorPos.Val))
+// AnchorPos returns the relative position of the given anchor.
+func (r Rect) AnchorPos(anchor Anchor) Vec {
+	return r.Size().ScaledXY(V(0, 0).Sub(Vec(anchor)))
 }
 
-// AlignedTo returns the rect moved to be aligned on the given anchor.
-func (rect Rect) AlignedTo(anchorPos AnchorPos) Rect {
-	return rect.Moved(rect.AnchorPos(anchorPos))
+// AlignedTo returns the rect moved by the given anchor.
+func (rect Rect) AlignedTo(anchor Anchor) Rect {
+	return rect.Moved(rect.AnchorPos(anchor))
 }
 
 // Center returns the position of the center of the Rect.
-// `rect.Center()` is equivalent to `rect.AnchorPos(pixel.AnchorPos.Center)`
+// `rect.Center()` is equivalent to `rect.Anchor(pixel.Anchor.Center)`
 func (r Rect) Center() Vec {
 	return Lerp(r.Min, r.Max, 0.5)
 }
