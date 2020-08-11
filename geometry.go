@@ -589,22 +589,13 @@ func (anchorPos AnchorPos) String() string {
 }
 
 // AnchorPos returns the position of the given anchor of the Rect.
-func (r *Rect) AnchorPos(anchorPos AnchorPos) Vec {
-	return r.Min.Add(r.Size().ScaledXY(anchorPos.Val))
+func (r Rect) AnchorPos(anchorPos AnchorPos) Vec {
+	return r.Size().ScaledXY(V(0, 0).Sub(anchorPos.Val))
 }
 
-// AnchorTo updates the Rect position to align it on the given anchor.
-func (rect *Rect) AnchorTo(anchorPos AnchorPos) {
-	size := rect.Size()
-	rect.Min = rect.Min.Sub(size.ScaledXY(anchorPos.Val))
-	rect.Max = rect.Max.Sub(size.ScaledXY(anchorPos.Val))
-}
-
-// Aligned moves everything to align the given rectangle on the given anchor position.
-func (m Matrix) Aligned(rect Rect, anchorPos AnchorPos) Matrix {
-	vect := rect.Size().ScaledXY(anchorPos.Val)
-	m[4], m[5] = m[4]-vect.X, m[5]-vect.Y
-	return m
+// AlignedTo returns the rect moved to be aligned on the given anchor.
+func (rect Rect) AlignedTo(anchorPos AnchorPos) Rect {
+	return rect.Moved(rect.AnchorPos(anchorPos))
 }
 
 // Center returns the position of the center of the Rect.
