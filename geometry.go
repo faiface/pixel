@@ -553,13 +553,13 @@ type Anchor Vec
 var (
 	Center      = Anchor{0.5, 0.5}
 	Top         = Anchor{0.5, 0}
-	TopRight    = Anchor{0,   0}
-	Right       = Anchor{0,   0.5}
-	BottomRight = Anchor{0,   1}
+	TopRight    = Anchor{0, 0}
+	Right       = Anchor{0, 0.5}
+	BottomRight = Anchor{0, 1}
 	Bottom      = Anchor{0.5, 1}
-	BottomLeft  = Anchor{1,   1}
-	Left        = Anchor{1,   0.5}
-	TopLeft     = Anchor{1,   0}
+	BottomLeft  = Anchor{1, 1}
+	Left        = Anchor{1, 0.5}
+	TopLeft     = Anchor{1, 0}
 )
 
 var anchorStrings map[Anchor]string = map[Anchor]string{
@@ -577,6 +577,23 @@ var anchorStrings map[Anchor]string = map[Anchor]string{
 // String returns the string representation of an anchor.
 func (anchor Anchor) String() string {
 	return anchorStrings[anchor]
+}
+
+var oppositeAnchors map[Anchor]Anchor = map[Anchor]Anchor{
+	Center:      Center,
+	Top:         Bottom,
+	Bottom:      Top,
+	Right:       Left,
+	Left:        Right,
+	TopRight:    BottomLeft,
+	BottomLeft:  TopRight,
+	BottomRight: TopLeft,
+	TopLeft:     BottomRight,
+}
+
+// Opposite returns the opposite position of the anchor (ie. Top -> Bottom; BottomLeft -> TopRight, etc.).
+func (anchor Anchor) Opposite() Anchor {
+	return oppositeAnchors[anchor]
 }
 
 // AnchorPos returns the relative position of the given anchor.
