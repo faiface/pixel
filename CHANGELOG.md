@@ -49,7 +49,7 @@ Changelog for this and older versions can be found on the corresponding [GitHub
 releases](https://github.com/faiface/pixel/releases).
 
 [Unreleased]: https://github.com/faiface/pixel/compare/v0.10.0...HEAD
-[v0.10.0]: https://github.com/faiface/pixel/compare/v0.10.0-beta...https://github.com/faiface/pixel/compare/v0.10.0
+[v0.10.0]: https://github.com/faiface/pixel/compare/v0.10.0-beta...v0.10.0
 [v0.10.0-beta]: https://github.com/faiface/pixel/compare/v0.10.0-alpha...v0.10.0-beta
 [v0.10.0-alpha]: https://github.com/faiface/pixel/compare/v0.9.0...v0.10.0-alpha
 [v0.9.0]: https://github.com/faiface/pixel/compare/v0.8.0...v0.9.0
