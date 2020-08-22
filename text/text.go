@@ -252,7 +252,7 @@ func (txt *Text) DrawColorMask(t pixel.Target, matrix pixel.Matrix, mask color.C
 		txt.dirty = true
 	}
 
-	offset := txt.Bounds().AnchorPos(txt.anchor)
+	offset := txt.Orig.Sub(txt.Bounds().Max.Add(txt.Bounds().AnchorPos(txt.anchor.Opposite())))
 	txt.mat = pixel.IM.Moved(offset).Chained(txt.mat)
 
 	if mask == nil {
