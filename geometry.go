@@ -189,8 +189,7 @@ func (u Vec) Project(v Vec) Vec {
 
 // AngleTo returns angle between u and v.
 func (u Vec) AngleTo(v Vec) float64 {
-	u, v = u.Unit(), v.Unit()
-	return math.Cos(u.Dot(v))
+	return math.Cos(u.Unit().Dot(v.Unit()))
 }
 
 // Map applies the function f to both x and y components of the vector u and returns the modified
