@@ -187,6 +187,12 @@ func (u Vec) Project(v Vec) Vec {
 	return v.Unit().Scaled(len)
 }
 
+// AngleTo returns angle between u and v.
+func (u Vec) AngleTo(v Vec) float64 {
+	u, v = u.Unit(), v.Unit()
+	return math.Cos(u.Dot(v))
+}
+
 // Map applies the function f to both x and y components of the vector u and returns the modified
 // vector.
 //
@@ -1106,4 +1112,57 @@ func (m Matrix) Unproject(u Vec) Vec {
 		(m[3]*(u.X-m[4]) - m[2]*(u.Y-m[5])) / det,
 		(-m[1]*(u.X-m[4]) + m[0]*(u.Y-m[5])) / det,
 	}
+}
+
+// Bezier is cubic Bézier curve used for interpolation. For more info
+// see https://en.wikipedia.org/wiki/B%C3%A9zier_curve,
+// In case you are looking for visualization see https://www.desmos.com/calculator/d1ofwre0fr
+type Bezier struct {
+	Start, StartHandle, EndHandle, End Vec
+	redundant                          bool
+}
+
+// ZB is Zero Bezier Curve that skips calculation and always returns V(1, 0)
+// Its mainly because Calculation uses lot of function calls and in case of
+// particles, it can make some difference
+var ZB = Constant(V(1, 0))
+
+// B returns new curve. if curve is just placeholder use constant. Handles are
+// relative to start and end point so:
+//
+// pixel.B(ZV, ZV, ZV, V(1, 0)) == Bezier{ZV, ZV, V(1, 0), V(1, 0)}
+func B(start, startHandle, endHandle, end Vec) *Bezier {
+	return &Bezier{start, startHandle.Add(start), endHandle.Add(end), end, false}
+}
+
+// Linear returns linear Bezier curve
+func Linear(start, end Vec) *Bezier {
+	return B(start, ZV, ZV, end)
+}
+
+// Constant returns Bezier curve that always return same point,
+// This is usefull as placeholder, because it skips calculation
+func Constant(constant Vec) *Bezier {
+	return &Bezier{
+		Start:     constant,
+		redundant: true,
+	}
+}
+
+// Point returns point along the curve determinate by t (0 - 1)
+// You can of course pass any value though its really hard to
+// predict what value will it return
+func (b *Bezier) Point(t float64) Vec {
+	/* Formula from Wikipedia article on Bézier curves. */
+	if b.redundant || b.Start == b.End {
+		b.redundant = true
+		return b.Start
+	}
+
+	inv := 1.0 - t
+
+	return b.Start.Scaled(inv * inv * inv).
+		Add(b.StartHandle.Scaled(inv * inv * t * 3.0)).
+		Add(b.EndHandle.Scaled(inv * t * t * 3.0).
+			Add(b.End.Scaled(t * t * t)))
 }
