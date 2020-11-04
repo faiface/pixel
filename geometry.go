@@ -1153,7 +1153,6 @@ func Constant(constant Vec) *Bezier {
 // You can of course pass any value though its really hard to
 // predict what value will it return
 func (b *Bezier) Point(t float64) Vec {
-	/* Formula from Wikipedia article on Bézier curves. */
 	if b.redundant || b.Start == b.End {
 		b.redundant = true
 		return b.Start
