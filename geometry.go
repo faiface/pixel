@@ -1158,9 +1158,10 @@ func (b Bezier) Point(t float64) Vec {
 	}
 
 	inv := 1.0 - t
+	c, d, e, f := inv*inv*inv, inv*inv*t*3.0, inv*t*t*3.0, t*t*t
 
-	return b.Start.Scaled(inv * inv * inv).
-		Add(b.StartHandle.Scaled(inv * inv * t * 3.0)).
-		Add(b.EndHandle.Scaled(inv * t * t * 3.0).
-			Add(b.End.Scaled(t * t * t)))
+	return V(
+		b.Start.X*c+b.StartHandle.X*d+b.EndHandle.X*e+b.End.X*f,
+		b.Start.Y*c+b.StartHandle.Y*d+b.EndHandle.Y*e+b.End.Y*f,
+	)
 }
