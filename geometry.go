@@ -1130,19 +1130,19 @@ var ZB = Constant(V(1, 0))
 // relative to start and end point so:
 //
 // pixel.B(ZV, ZV, ZV, V(1, 0)) == Bezier{ZV, ZV, V(1, 0), V(1, 0)}
-func B(start, startHandle, endHandle, end Vec) *Bezier {
-	return &Bezier{start, startHandle.Add(start), endHandle.Add(end), end, false}
+func B(start, startHandle, endHandle, end Vec) Bezier {
+	return Bezier{start, startHandle.Add(start), endHandle.Add(end), end, false}
 }
 
 // Linear returns linear Bezier curve
-func Linear(start, end Vec) *Bezier {
+func Linear(start, end Vec) Bezier {
 	return B(start, ZV, ZV, end)
 }
 
 // Constant returns Bezier curve that always return same point,
 // This is usefull as placeholder, because it skips calculation
-func Constant(constant Vec) *Bezier {
-	return &Bezier{
+func Constant(constant Vec) Bezier {
+	return Bezier{
 		Start:     constant,
 		redundant: true,
 	}
@@ -1151,7 +1151,7 @@ func Constant(constant Vec) *Bezier {
 // Point returns point along the curve determinate by t (0 - 1)
 // You can of course pass any value though its really hard to
 // predict what value will it return
-func (b *Bezier) Point(t float64) Vec {
+func (b Bezier) Point(t float64) Vec {
 	if b.redundant || b.Start == b.End {
 		b.redundant = true
 		return b.Start
