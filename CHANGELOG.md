@@ -6,6 +6,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 - Fix SIGSEGV on text.NewAtlas if glyph absent 
+- Use slice for range in Drawer.Dirty(), to improve performance
 
 ## [v0.10.0] 2020-08-22
 - Gamepad API added
