@@ -15,7 +15,7 @@ import (
 type GLTriangles struct {
 	vs     *glhf.VertexSlice
 	data   []float32
-	shader *glhf.Shader
+	shader *GLShader
 	clip   pixel.Rect
 }
 
@@ -28,11 +28,11 @@ var (
 // NewGLTriangles returns GLTriangles initialized with the data from the supplied Triangles.
 //
 // Only draw the Triangles using the provided Shader.
-func NewGLTriangles(shader *glhf.Shader, t pixel.Triangles) *GLTriangles {
+func NewGLTriangles(shader *GLShader, t pixel.Triangles) *GLTriangles {
 	var gt *GLTriangles
 	mainthread.Call(func() {
 		gt = &GLTriangles{
-			vs:     glhf.MakeVertexSlice(shader, 0, t.Len()),
+			vs:     glhf.MakeVertexSlice(shader.s, 0, t.Len()),
 			shader: shader,
 		}
 	})
@@ -49,7 +49,7 @@ func (gt *GLTriangles) VertexSlice() *glhf.VertexSlice {
 }
 
 // Shader returns the GLTriangles's associated shader.
-func (gt *GLTriangles) Shader() *glhf.Shader {
+func (gt *GLTriangles) Shader() *GLShader {
 	return gt.shader
 }
 
