@@ -45,7 +45,7 @@ func (w *Window) SetMousePosition(v pixel.Vec) {
 	mainthread.Call(func() {
 		if (v.X >= 0 && v.X <= w.bounds.W()) &&
 			(v.Y >= 0 && v.Y <= w.bounds.H()) {
-			w.window.SetCursorPos(
+			w.Window.SetCursorPos(
 				v.X+w.bounds.Min.X,
 				(w.bounds.H()-v.Y)+w.bounds.Min.Y,
 			)
@@ -359,7 +359,7 @@ var buttonNames = map[Button]string{
 
 func (w *Window) initInput() {
 	mainthread.Call(func() {
-		w.window.SetMouseButtonCallback(func(_ *glfw.Window, button glfw.MouseButton, action glfw.Action, mod glfw.ModifierKey) {
+		w.Window.SetMouseButtonCallback(func(_ *glfw.Window, button glfw.MouseButton, action glfw.Action, mod glfw.ModifierKey) {
 			switch action {
 			case glfw.Press:
 				w.tempInp.buttons[Button(button)] = true
@@ -368,7 +368,7 @@ func (w *Window) initInput() {
 			}
 		})
 
-		w.window.SetKeyCallback(func(_ *glfw.Window, key glfw.Key, scancode int, action glfw.Action, mods glfw.ModifierKey) {
+		w.Window.SetKeyCallback(func(_ *glfw.Window, key glfw.Key, scancode int, action glfw.Action, mods glfw.ModifierKey) {
 			if key == glfw.KeyUnknown {
 				return
 			}
@@ -382,23 +382,23 @@ func (w *Window) initInput() {
 			}
 		})
 
-		w.window.SetCursorEnterCallback(func(_ *glfw.Window, entered bool) {
+		w.Window.SetCursorEnterCallback(func(_ *glfw.Window, entered bool) {
 			w.cursorInsideWindow = entered
 		})
 
-		w.window.SetCursorPosCallback(func(_ *glfw.Window, x, y float64) {
+		w.Window.SetCursorPosCallback(func(_ *glfw.Window, x, y float64) {
 			w.tempInp.mouse = pixel.V(
 				x+w.bounds.Min.X,
 				(w.bounds.H()-y)+w.bounds.Min.Y,
 			)
 		})
 
-		w.window.SetScrollCallback(func(_ *glfw.Window, xoff, yoff float64) {
+		w.Window.SetScrollCallback(func(_ *glfw.Window, xoff, yoff float64) {
 			w.tempInp.scroll.X += xoff
 			w.tempInp.scroll.Y += yoff
 		})
 
-		w.window.SetCharCallback(func(_ *glfw.Window, r rune) {
+		w.Window.SetCharCallback(func(_ *glfw.Window, r rune) {
 			w.tempInp.typed += string(r)
 		})
 	})

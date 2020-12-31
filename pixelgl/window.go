@@ -79,7 +79,7 @@ type WindowConfig struct {
 
 // Window is a window handler. Use this type to manipulate a window (input, drawing, etc.).
 type Window struct {
-	window *glfw.Window
+	*glfw.Window
 
 	bounds             pixel.Rect
 	canvas             *Canvas
@@ -138,10 +138,10 @@ func NewWindow(cfg WindowConfig) (*Window, error) {
 
 		var share *glfw.Window
 		if currWin != nil {
-			share = currWin.window
+			share = currWin.Window
 		}
 		_, _, width, height := intBounds(cfg.Bounds)
-		w.window, err = glfw.CreateWindow(
+		w.Window, err = glfw.CreateWindow(
 			width,
 			height,
 			cfg.Title,
@@ -153,8 +153,8 @@ func NewWindow(cfg WindowConfig) (*Window, error) {
 		}
 
 		if cfg.Position.X != 0 || cfg.Position.Y != 0 {
-			w.window.SetPos(int(cfg.Position.X), int(cfg.Position.Y))
-			w.window.Show()
+			w.Window.SetPos(int(cfg.Position.X), int(cfg.Position.Y))
+			w.Window.Show()
 		}
 
 		// enter the OpenGL context
@@ -175,7 +175,7 @@ func NewWindow(cfg WindowConfig) (*Window, error) {
 			imgs[i] = pic.Image()
 		}
 		mainthread.Call(func() {
-			w.window.SetIcon(imgs)
+			w.Window.SetIcon(imgs)
 		})
 	}
 
@@ -195,7 +195,7 @@ func NewWindow(cfg WindowConfig) (*Window, error) {
 // Destroy destroys the Window. The Window can't be used any further.
 func (w *Window) Destroy() {
 	mainthread.Call(func() {
-		w.window.Destroy()
+		w.Window.Destroy()
 	})
 }
 
@@ -210,7 +210,7 @@ func (w *Window) Update() {
 func (w *Window) SwapBuffers() {
 	mainthread.Call(func() {
 		_, _, oldW, oldH := intBounds(w.bounds)
-		newW, newH := w.window.GetSize()
+		newW, newH := w.Window.GetSize()
 		w.bounds = w.bounds.ResizedMin(w.bounds.Size().Add(pixel.V(
 			float64(newW-oldW),
 			float64(newH-oldH),
@@ -222,7 +222,7 @@ func (w *Window) SwapBuffers() {
 	mainthread.Call(func() {
 		w.begin()
 
-		framebufferWidth, framebufferHeight := w.window.GetFramebufferSize()
+		framebufferWidth, framebufferHeight := w.Window.GetFramebufferSize()
 		glhf.Bounds(0, 0, framebufferWidth, framebufferHeight)
 
 		glhf.Clear(0, 0, 0, 0)
@@ -239,7 +239,7 @@ func (w *Window) SwapBuffers() {
 		} else {
 			glfw.SwapInterval(0)
 		}
-		w.window.SwapBuffers()
+		w.Window.SwapBuffers()
 		w.end()
 	})
 }
@@ -250,7 +250,7 @@ func (w *Window) SwapBuffers() {
 // Window from within the program.
 func (w *Window) SetClosed(closed bool) {
 	mainthread.Call(func() {
-		w.window.SetShouldClose(closed)
+		w.Window.SetShouldClose(closed)
 	})
 }
 
@@ -260,7 +260,7 @@ func (w *Window) SetClosed(closed bool) {
 func (w *Window) Closed() bool {
 	var closed bool
 	mainthread.Call(func() {
-		closed = w.window.ShouldClose()
+		closed = w.Window.ShouldClose()
 	})
 	return closed
 }
@@ -268,7 +268,7 @@ func (w *Window) Closed() bool {
 // SetTitle changes the title of the Window.
 func (w *Window) SetTitle(title string) {
 	mainthread.Call(func() {
-		w.window.SetTitle(title)
+		w.Window.SetTitle(title)
 	})
 }
 
@@ -278,7 +278,7 @@ func (w *Window) SetBounds(bounds pixel.Rect) {
 	w.bounds = bounds
 	mainthread.Call(func() {
 		_, _, width, height := intBounds(bounds)
-		w.window.SetSize(width, height)
+		w.Window.SetSize(width, height)
 	})
 }
 
@@ -290,7 +290,7 @@ func (w *Window) SetBounds(bounds pixel.Rect) {
 func (w *Window) SetPos(pos pixel.Vec) {
 	mainthread.Call(func() {
 		left, top := int(pos.X), int(pos.Y)
-		w.window.SetPos(left, top)
+		w.Window.SetPos(left, top)
 	})
 }
 
@@ -299,7 +299,7 @@ func (w *Window) SetPos(pos pixel.Vec) {
 func (w *Window) GetPos() pixel.Vec {
 	var v pixel.Vec
 	mainthread.Call(func() {
-		x, y := w.window.GetPos()
+		x, y := w.Window.GetPos()
 		v = pixel.V(float64(x), float64(y))
 	})
 	return v
@@ -312,12 +312,12 @@ func (w *Window) Bounds() pixel.Rect {
 
 func (w *Window) setFullscreen(monitor *Monitor) {
 	mainthread.Call(func() {
-		w.restore.xpos, w.restore.ypos = w.window.GetPos()
-		w.restore.width, w.restore.height = w.window.GetSize()
+		w.restore.xpos, w.restore.ypos = w.Window.GetPos()
+		w.restore.width, w.restore.height = w.Window.GetSize()
 
 		mode := monitor.monitor.GetVideoMode()
 
-		w.window.SetMonitor(
+		w.Window.SetMonitor(
 			monitor.monitor,
 			0,
 			0,
@@ -330,7 +330,7 @@ func (w *Window) setFullscreen(monitor *Monitor) {
 
 func (w *Window) setWindowed() {
 	mainthread.Call(func() {
-		w.window.SetMonitor(
+		w.Window.SetMonitor(
 			nil,
 			w.restore.xpos,
 			w.restore.ypos,
@@ -361,7 +361,7 @@ func (w *Window) SetMonitor(monitor *Monitor) {
 func (w *Window) Monitor() *Monitor {
 	var monitor *glfw.Monitor
 	mainthread.Call(func() {
-		monitor = w.window.GetMonitor()
+		monitor = w.Window.GetMonitor()
 	})
 	if monitor == nil {
 		return nil
@@ -375,7 +375,7 @@ func (w *Window) Monitor() *Monitor {
 func (w *Window) Focused() bool {
 	var focused bool
 	mainthread.Call(func() {
-		focused = w.window.GetAttrib(glfw.Focused) == glfw.True
+		focused = w.Window.GetAttrib(glfw.Focused) == glfw.True
 	})
 	return focused
 }
@@ -395,9 +395,9 @@ func (w *Window) SetCursorVisible(visible bool) {
 	w.cursorVisible = visible
 	mainthread.Call(func() {
 		if visible {
-			w.window.SetInputMode(glfw.CursorMode, glfw.CursorNormal)
+			w.Window.SetInputMode(glfw.CursorMode, glfw.CursorNormal)
 		} else {
-			w.window.SetInputMode(glfw.CursorMode, glfw.CursorHidden)
+			w.Window.SetInputMode(glfw.CursorMode, glfw.CursorHidden)
 		}
 	})
 }
@@ -405,10 +405,10 @@ func (w *Window) SetCursorVisible(visible bool) {
 // SetCursorDisabled hides the cursor and provides unlimited virtual cursor movement
 // make cursor visible using SetCursorVisible
 func (w *Window) SetCursorDisabled() {
-    w.cursorVisible = false
-    mainthread.Call(func() {
-        w.window.SetInputMode(glfw.CursorMode, glfw.CursorDisabled)
-    })
+	w.cursorVisible = false
+	mainthread.Call(func() {
+		w.Window.SetInputMode(glfw.CursorMode, glfw.CursorDisabled)
+	})
 }
 
 // CursorVisible returns the visibility status of the mouse cursor.
@@ -419,7 +419,7 @@ func (w *Window) CursorVisible() bool {
 // Note: must be called inside the main thread.
 func (w *Window) begin() {
 	if currWin != w {
-		w.window.MakeContextCurrent()
+		w.Window.MakeContextCurrent()
 		currWin = w
 	}
 }
@@ -491,6 +491,6 @@ func (w *Window) Canvas() *Canvas {
 // already visible or is in full screen mode, this function does nothing.
 func (w *Window) Show() {
 	mainthread.Call(func() {
-		w.window.Show()
+		w.Window.Show()
 	})
 }
