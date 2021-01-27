@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - GLTriangle's fragment shader is used when rendered by the Canvas.
 
 ## [v0.10.0] 2020-08-22
+- Add AnchorPos struct and functions
 - Gamepad API added
 - Support setting an initial window position
 - Support hiding the window initially
