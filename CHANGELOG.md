@@ -5,6 +5,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+- Add Clipboard Support
 - Fix SIGSEGV on text.NewAtlas if glyph absent 
 - Use slice for range in Drawer.Dirty(), to improve performance
 - GLTriangle's fragment shader is used when rendered by the Canvas.
