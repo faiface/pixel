@@ -405,10 +405,10 @@ func (w *Window) SetCursorVisible(visible bool) {
 // SetCursorDisabled hides the cursor and provides unlimited virtual cursor movement
 // make cursor visible using SetCursorVisible
 func (w *Window) SetCursorDisabled() {
-    w.cursorVisible = false
-    mainthread.Call(func() {
-        w.window.SetInputMode(glfw.CursorMode, glfw.CursorDisabled)
-    })
+	w.cursorVisible = false
+	mainthread.Call(func() {
+		w.window.SetInputMode(glfw.CursorMode, glfw.CursorDisabled)
+	})
 }
 
 // CursorVisible returns the visibility status of the mouse cursor.
@@ -492,5 +492,21 @@ func (w *Window) Canvas() *Canvas {
 func (w *Window) Show() {
 	mainthread.Call(func() {
 		w.window.Show()
+	})
+}
+
+// Clipboard returns the contents of the system clipboard.
+func (w *Window) Clipboard() string {
+	var clipboard string
+	mainthread.Call(func() {
+		clipboard = w.window.GetClipboardString()
+	})
+	return clipboard
+}
+
+// SetClipboardString sets the system clipboard to the specified UTF-8 encoded string.
+func (w *Window) SetClipboard(str string) {
+	mainthread.Call(func() {
+		w.window.SetClipboardString(str)
 	})
 }
