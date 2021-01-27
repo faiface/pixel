@@ -547,7 +547,67 @@ func (r Rect) Edges() [4]Line {
 	}
 }
 
+// Anchor is a vector used to define anchors, such as `Center`, `Top`, `TopRight`, etc.
+type Anchor Vec
+
+var (
+	Center      = Anchor{0.5, 0.5}
+	Top         = Anchor{0.5, 0}
+	TopRight    = Anchor{0, 0}
+	Right       = Anchor{0, 0.5}
+	BottomRight = Anchor{0, 1}
+	Bottom      = Anchor{0.5, 1}
+	BottomLeft  = Anchor{1, 1}
+	Left        = Anchor{1, 0.5}
+	TopLeft     = Anchor{1, 0}
+)
+
+var anchorStrings map[Anchor]string = map[Anchor]string{
+	Center:      "center",
+	Top:         "top",
+	TopRight:    "top-right",
+	Right:       "right",
+	BottomRight: "bottom-right",
+	Bottom:      "bottom",
+	BottomLeft:  "bottom-left",
+	Left:        "left",
+	TopLeft:     "top-left",
+}
+
+// String returns the string representation of an anchor.
+func (anchor Anchor) String() string {
+	return anchorStrings[anchor]
+}
+
+var oppositeAnchors map[Anchor]Anchor = map[Anchor]Anchor{
+	Center:      Center,
+	Top:         Bottom,
+	Bottom:      Top,
+	Right:       Left,
+	Left:        Right,
+	TopRight:    BottomLeft,
+	BottomLeft:  TopRight,
+	BottomRight: TopLeft,
+	TopLeft:     BottomRight,
+}
+
+// Opposite returns the opposite position of the anchor (ie. Top -> Bottom; BottomLeft -> TopRight, etc.).
+func (anchor Anchor) Opposite() Anchor {
+	return oppositeAnchors[anchor]
+}
+
+// AnchorPos returns the relative position of the given anchor.
+func (r Rect) AnchorPos(anchor Anchor) Vec {
+	return r.Size().ScaledXY(V(0, 0).Sub(Vec(anchor)))
+}
+
+// AlignedTo returns the rect moved by the given anchor.
+func (rect Rect) AlignedTo(anchor Anchor) Rect {
+	return rect.Moved(rect.AnchorPos(anchor))
+}
+
 // Center returns the position of the center of the Rect.
+// `rect.Center()` is equivalent to `rect.Anchor(pixel.Anchor.Center)`
 func (r Rect) Center() Vec {
 	return Lerp(r.Min, r.Max, 0.5)
 }
