@@ -23,6 +23,49 @@ func closeEnough(got, expected float64, decimalAccuracy int) bool {
 	return math.Trunc(gotShifted) == math.Trunc(expectedShifted)
 }
 
+type clampTest struct {
+	number   float64
+	min      float64
+	max      float64
+	expected float64
+}
+
+func TestClamp(t *testing.T) {
+	tests := []clampTest{
+		{number: 1, min: 0, max: 5, expected: 1},
+		{number: 2, min: 0, max: 5, expected: 2},
+		{number: 8, min: 0, max: 5, expected: 5},
+		{number: -5, min: 0, max: 5, expected: 0},
+		{number: -5, min: -4, max: 5, expected: -4},
+	}
+
+	for _, tc := range tests {
+		result := pixel.Clamp(tc.number, tc.min, tc.max)
+		if result != tc.expected {
+			t.Error(fmt.Sprintf("Clamping %v with min %v and max %v should have given %v, but gave %v", tc.number, tc.min, tc.max, tc.expected, result))
+		}
+	}
+}
+
+type floorTest struct {
+	input    pixel.Vec
+	expected pixel.Vec
+}
+
+func TestFloor(t *testing.T) {
+	tests := []floorTest{
+		{input: pixel.V(4.50, 6.70), expected: pixel.V(4, 6)},
+		{input: pixel.V(9.0, 6.70), expected: pixel.V(9, 6)},
+	}
+
+	for _, tc := range tests {
+		result := tc.input.Floor()
+		if result != tc.expected {
+			t.Error(fmt.Sprintf("Expected %v but got %v", tc.expected, result))
+		}
+	}
+}
+
 func TestRect_Edges(t *testing.T) {
 	type fields struct {
 		Min pixel.Vec
