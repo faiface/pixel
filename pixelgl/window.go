@@ -8,6 +8,7 @@ import (
 	"github.com/faiface/glhf"
 	"github.com/faiface/mainthread"
 	"github.com/faiface/pixel"
+	"github.com/go-gl/gl/v3.3-core/gl"
 	"github.com/go-gl/glfw/v3.3/glfw"
 	"github.com/pkg/errors"
 )
@@ -75,6 +76,9 @@ type WindowConfig struct {
 	// Invisible specifies whether the window will be initially hidden.
 	// You can make the window visible later using Window.Show().
 	Invisible bool
+
+	//SamplesMSAA specifies the level of MSAA to be used. 0 to disable.
+	SamplesMSAA int
 }
 
 // Window is a window handler. Use this type to manipulate a window (input, drawing, etc.).
@@ -100,7 +104,7 @@ type Window struct {
 		typed   string
 	}
 
-	pressEvents, tempPressEvents [KeyLast + 1]bool
+	pressEvents, tempPressEvents     [KeyLast + 1]bool
 	releaseEvents, tempReleaseEvents [KeyLast + 1]bool
 
 	prevJoy, currJoy, tempJoy joystickState
@@ -127,6 +131,8 @@ func NewWindow(cfg WindowConfig) (*Window, error) {
 		glfw.WindowHint(glfw.OpenGLProfile, glfw.OpenGLCoreProfile)
 		glfw.WindowHint(glfw.OpenGLForwardCompatible, glfw.True)
 
+		gl.Enable(gl.MULTISAMPLE)
+
 		glfw.WindowHint(glfw.Resizable, bool2int[cfg.Resizable])
 		glfw.WindowHint(glfw.Decorated, bool2int[!cfg.Undecorated])
 		glfw.WindowHint(glfw.Floating, bool2int[cfg.AlwaysOnTop])
@@ -134,6 +140,7 @@ func NewWindow(cfg WindowConfig) (*Window, error) {
 		glfw.WindowHint(glfw.TransparentFramebuffer, bool2int[cfg.TransparentFramebuffer])
 		glfw.WindowHint(glfw.Maximized, bool2int[cfg.Maximized])
 		glfw.WindowHint(glfw.Visible, bool2int[!cfg.Invisible])
+		glfw.WindowHint(glfw.Samples, cfg.SamplesMSAA)
 
 		if cfg.Position.X != 0 || cfg.Position.Y != 0 {
 			glfw.WindowHint(glfw.Visible, glfw.False)
