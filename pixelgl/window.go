@@ -131,8 +131,6 @@ func NewWindow(cfg WindowConfig) (*Window, error) {
 		glfw.WindowHint(glfw.OpenGLProfile, glfw.OpenGLCoreProfile)
 		glfw.WindowHint(glfw.OpenGLForwardCompatible, glfw.True)
 
-		gl.Enable(gl.MULTISAMPLE)
-
 		glfw.WindowHint(glfw.Resizable, bool2int[cfg.Resizable])
 		glfw.WindowHint(glfw.Decorated, bool2int[!cfg.Undecorated])
 		glfw.WindowHint(glfw.Floating, bool2int[cfg.AlwaysOnTop])
@@ -170,6 +168,7 @@ func NewWindow(cfg WindowConfig) (*Window, error) {
 		// enter the OpenGL context
 		w.begin()
 		glhf.Init()
+		gl.Enable(gl.MULTISAMPLE)
 		w.end()
 
 		return nil
