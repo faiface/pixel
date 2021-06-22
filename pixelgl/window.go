@@ -208,6 +208,17 @@ func (w *Window) Update() {
 	w.UpdateInput()
 }
 
+// ClipboardText returns the current value of the systems clipboard.
+func (w *Window) ClipboardText() string {
+	return w.window.GetClipboardString()
+}
+
+// SetClipboardText passes the given string to the underlying glfw window to set the
+//	systems clipboard.
+func (w *Window) SetClipboardText(text string) {
+	w.window.SetClipboardString(text)
+}
+
 // SwapBuffers swaps buffers. Call this to swap buffers without polling window events.
 // Note that Update invokes SwapBuffers.
 func (w *Window) SwapBuffers() {
