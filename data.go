@@ -8,15 +8,13 @@ import (
 	"math"
 )
 
-var (
-	// zeroValueTriangleData is the default value of a TriangleData element
-	zeroValueTriangleData = struct {
-		Position  Vec
-		Color     RGBA
-		Picture   Vec
-		Intensity float64
-	}{Color: RGBA{1, 1, 1, 1}}
-)
+// zeroValueTriangleData is the default value of a TriangleData element
+var zeroValueTriangleData = struct {
+	Position  Vec
+	Color     RGBA
+	Picture   Vec
+	Intensity float64
+}{Color: RGBA{1, 1, 1, 1}}
 
 // TrianglesData specifies a list of Triangles vertices with three common properties:
 // TrianglesPosition, TrianglesColor and TrianglesPicture.

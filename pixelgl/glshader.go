@@ -40,10 +40,10 @@ const (
 )
 
 var defaultCanvasVertexFormat = glhf.AttrFormat{
-	canvasPosition:  {Name: "aPosition", Type: glhf.Vec2},
-	canvasColor:     {Name: "aColor", Type: glhf.Vec4},
-	canvasTexCoords: {Name: "aTexCoords", Type: glhf.Vec2},
-	canvasIntensity: {Name: "aIntensity", Type: glhf.Float},
+	canvasPosition:  glhf.Attr{Name: "aPosition", Type: glhf.Vec2},
+	canvasColor:     glhf.Attr{Name: "aColor", Type: glhf.Vec4},
+	canvasTexCoords: glhf.Attr{Name: "aTexCoords", Type: glhf.Vec2},
+	canvasIntensity: glhf.Attr{Name: "aIntensity", Type: glhf.Float},
 }
 
 // Sets up a base shader with everything needed for a Pixel
