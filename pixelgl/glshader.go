@@ -68,13 +68,14 @@ func NewGLShader(fragmentShader string) *GLShader {
 
 // Update reinitialize GLShader data and recompile the underlying gl shader object
 func (gs *GLShader) Update() {
-	gs.uf = nil
-	for _, u := range gs.uniforms {
-		gs.uf = append(gs.uf, glhf.Attr{
-			Name: u.Name,
-			Type: u.Type,
-		})
+	gs.uf = make([]glhf.Attr, len(gs.uniforms))
+	for idx := range gs.uniforms {
+		gs.uf[idx] = glhf.Attr{
+			Name: gs.uniforms[idx].Name,
+			Type: gs.uniforms[idx].Type,
+		}
 	}
+
 	var shader *glhf.Shader
 	mainthread.Call(func() {
 		var err error
