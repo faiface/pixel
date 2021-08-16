@@ -1,6 +1,7 @@
 package pixelgl
 
 import (
+	"fmt"
 	"image"
 	"image/color"
 	"runtime"
@@ -122,6 +123,17 @@ func NewWindow(cfg WindowConfig) (*Window, error) {
 	}
 
 	w := &Window{bounds: cfg.Bounds, cursorVisible: true}
+
+	flag := false
+	for _, v := range []int{0, 2, 4, 8, 16} {
+		if cfg.SamplesMSAA == v {
+			flag = true
+			break
+		}
+	}
+	if !flag {
+		return nil, fmt.Errorf("invalid value '%v' for msaaSamples", cfg.SamplesMSAA)
+	}
 
 	err := mainthread.CallErr(func() error {
 		var err error
