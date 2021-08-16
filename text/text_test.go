@@ -76,7 +76,7 @@ func BenchmarkTextWrite(b *testing.B) {
 		b.Run(fmt.Sprintf("%d", len(chunk)), func(b *testing.B) {
 			txt := text.New(pixel.ZV, atlas)
 			for i := 0; i < b.N; i++ {
-				txt.Write(chunk)
+				_, _ = txt.Write(chunk)
 			}
 		})
 	}

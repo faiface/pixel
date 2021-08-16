@@ -100,7 +100,7 @@ type Window struct {
 		typed   string
 	}
 
-	pressEvents, tempPressEvents [KeyLast + 1]bool
+	pressEvents, tempPressEvents     [KeyLast + 1]bool
 	releaseEvents, tempReleaseEvents [KeyLast + 1]bool
 
 	prevJoy, currJoy, tempJoy joystickState

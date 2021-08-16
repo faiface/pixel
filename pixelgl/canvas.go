@@ -135,7 +135,7 @@ func (c *Canvas) SetBounds(bounds pixel.Rect) {
 		c.sprite = pixel.NewSprite(nil, pixel.Rect{})
 	}
 	c.sprite.Set(c, c.Bounds())
-	//c.sprite.SetMatrix(pixel.IM.Moved(c.Bounds().Center()))
+	// c.sprite.SetMatrix(pixel.IM.Moved(c.Bounds().Center()))
 }
 
 // Bounds returns the rectangular bounds of the Canvas.

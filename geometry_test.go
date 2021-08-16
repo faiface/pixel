@@ -1236,7 +1236,8 @@ func TestLine_Intersect(t *testing.T) {
 			args:   args{k: pixel.L(pixel.V(0, 1), pixel.V(10, 11))},
 			want:   pixel.ZV,
 			want1:  false,
-		}, {
+		},
+		{
 			name:   "Lines intersect",
 			fields: fields{A: pixel.V(600, 600), B: pixel.V(925, 150)},
 			args:   args{k: pixel.L(pixel.V(740, 255), pixel.V(925, 255))},
