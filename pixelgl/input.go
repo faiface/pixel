@@ -13,14 +13,14 @@ func (w *Window) Pressed(button Button) bool {
 	return w.currInp.buttons[button]
 }
 
-// JustPressed returns whether the Button has just been pressed down.
+// JustPressed returns whether the Button has been pressed in the last frame.
 func (w *Window) JustPressed(button Button) bool {
-	return w.currInp.buttons[button] && !w.prevInp.buttons[button]
+	return w.pressEvents[button]
 }
 
-// JustReleased returns whether the Button has just been released up.
+// JustReleased returns whether the Button has been released in the last frame.
 func (w *Window) JustReleased(button Button) bool {
-	return !w.currInp.buttons[button] && w.prevInp.buttons[button]
+	return w.releaseEvents[button]
 }
 
 // Repeated returns whether a repeat event has been triggered on button.
@@ -362,8 +362,10 @@ func (w *Window) initInput() {
 		w.window.SetMouseButtonCallback(func(_ *glfw.Window, button glfw.MouseButton, action glfw.Action, mod glfw.ModifierKey) {
 			switch action {
 			case glfw.Press:
+				w.tempPressEvents[Button(button)] = true
 				w.tempInp.buttons[Button(button)] = true
 			case glfw.Release:
+				w.tempReleaseEvents[Button(button)] = true
 				w.tempInp.buttons[Button(button)] = false
 			}
 		})
@@ -374,8 +376,10 @@ func (w *Window) initInput() {
 			}
 			switch action {
 			case glfw.Press:
+				w.tempPressEvents[Button(key)] = true
 				w.tempInp.buttons[Button(key)] = true
 			case glfw.Release:
+				w.tempReleaseEvents[Button(key)] = true
 				w.tempInp.buttons[Button(key)] = false
 			case glfw.Repeat:
 				w.tempInp.repeat[Button(key)] = true
@@ -431,6 +435,12 @@ func (w *Window) doUpdateInput() {
 	w.prevInp = w.currInp
 	w.currInp = w.tempInp
 
+	w.pressEvents = w.tempPressEvents
+	w.releaseEvents = w.tempReleaseEvents
+
+	// Clear last frame's temporary status
+	w.tempPressEvents = [KeyLast + 1]bool{}
+	w.tempReleaseEvents = [KeyLast + 1]bool{}
 	w.tempInp.repeat = [KeyLast + 1]bool{}
 	w.tempInp.scroll = pixel.ZV
 	w.tempInp.typed = ""
