@@ -54,8 +54,9 @@ func TestSprite_Draw(t *testing.T) {
 	sprite := pixel.NewSprite(pic, pic.Bounds())
 
 	cfg := pixelgl.WindowConfig{
-		Title:  "testing",
-		Bounds: pixel.R(0, 0, 150, 150),
+		Title:     "testing",
+		Bounds:    pixel.R(0, 0, 150, 150),
+		Invisible: true,
 	}
 
 	win, err := pixelgl.NewWindow(cfg)
