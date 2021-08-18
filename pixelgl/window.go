@@ -78,7 +78,7 @@ type WindowConfig struct {
 	// You can make the window visible later using Window.Show().
 	Invisible bool
 
-	//SamplesMSAA specifies the level of MSAA to be used. 0 to disable.
+	//SamplesMSAA specifies the level of MSAA to be used. Must be a power of 2. 0 to disable.
 	SamplesMSAA int
 }
 
