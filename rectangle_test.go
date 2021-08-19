@@ -329,28 +329,56 @@ func TestRect_IntersectionPoints(t *testing.T) {
 	}
 }
 
-func BenchmarkRect_Intersect(b *testing.B) {
-	root := pixel.R(10, 10, 50, 50)
-	inter := pixel.R(11, 11, 15, 15)
+var rectIntTests = []struct {
+	name      string
+	r1, r2    pixel.Rect
+	want      pixel.Rect
+	intersect bool
+}{
+	{
+		name: "Nothing touching",
+		r1:   pixel.R(0, 0, 10, 10),
+		r2:   pixel.R(21, 21, 40, 40),
+		want: pixel.ZR,
+	},
+	{
+		name: "Edge touching",
+		r1:   pixel.R(0, 0, 10, 10),
+		r2:   pixel.R(10, 10, 20, 20),
+		want: pixel.ZR,
+	},
+	{
+		name:      "Bit of overlap",
+		r1:        pixel.R(0, 0, 10, 10),
+		r2:        pixel.R(0, 9, 20, 20),
+		want:      pixel.R(0, 9, 10, 10),
+		intersect: true,
+	},
+	{
+		name:      "Fully overlapped",
+		r1:        pixel.R(0, 0, 10, 10),
+		r2:        pixel.R(0, 0, 10, 10),
+		want:      pixel.R(0, 0, 10, 10),
+		intersect: true,
+	},
+}
 
-	for i := 0; i < b.N; i++ {
-		if root.Intersect(inter) != pixel.ZR {
-			// do a thing
-		}
-
-		// do a thing
+func TestRect_Intersect(t *testing.T) {
+	for _, tt := range rectIntTests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := tt.r1.Intersect(tt.r2); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("Rect.Intersect() = %v, want %v", got, tt.want)
+			}
+		})
 	}
 }
 
-func BenchmarkRect_IsIntersect(b *testing.B) {
-	root := pixel.R(10, 10, 50, 50)
-	inter := pixel.R(11, 11, 15, 15)
-
-	for i := 0; i < b.N; i++ {
-		if root.Intersects(inter) {
-			// do a thing
-		}
-
-		// do a thing
+func TestRect_Intersects(t *testing.T) {
+	for _, tt := range rectIntTests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := tt.r1.Intersects(tt.r2); got != tt.intersect {
+				t.Errorf("Rect.Intersects() = %v, want %v", got, tt.want)
+			}
+		})
 	}
 }

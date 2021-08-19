@@ -222,10 +222,10 @@ func (r Rect) Intersect(s Rect) Rect {
 // This function is overall about 5x faster than Intersect, so it is better
 // to use if you have no need for the returned Rect from Intersect.
 func (r Rect) Intersects(s Rect) bool {
-	return !(s.Max.X < r.Min.X ||
-		s.Min.X > r.Max.X ||
-		s.Max.Y < r.Min.Y ||
-		s.Min.Y > r.Max.Y)
+	return !(s.Max.X <= r.Min.X ||
+		s.Min.X >= r.Max.X ||
+		s.Max.Y <= r.Min.Y ||
+		s.Min.Y >= r.Max.Y)
 }
 
 // IntersectCircle returns a minimal required Vector, such that moving the rect by that vector would stop the Circle
