@@ -14,6 +14,8 @@ var zeroValueTriangleData = struct {
 	Color     RGBA
 	Picture   Vec
 	Intensity float64
+	ClipRect  Rect
+	IsClipped bool
 }{Color: RGBA{1, 1, 1, 1}}
 
 // TrianglesData specifies a list of Triangles vertices with three common properties:
@@ -23,6 +25,8 @@ type TrianglesData []struct {
 	Color     RGBA
 	Picture   Vec
 	Intensity float64
+	ClipRect  Rect
+	IsClipped bool
 }
 
 // MakeTrianglesData creates TrianglesData of length len initialized with default property values.
@@ -87,6 +91,11 @@ func (td *TrianglesData) updateData(t Triangles) {
 			(*td)[i].Picture, (*td)[i].Intensity = t.Picture(i)
 		}
 	}
+	if t, ok := t.(TrianglesClipped); ok {
+		for i := range *td {
+			(*td)[i].ClipRect, (*td)[i].IsClipped = t.ClipRect(i)
+		}
+	}
 }
 
 // Update copies vertex properties from the supplied Triangles into this TrianglesData.
@@ -119,6 +128,11 @@ func (td *TrianglesData) Color(i int) RGBA {
 // Picture returns the picture property of i-th vertex.
 func (td *TrianglesData) Picture(i int) (pic Vec, intensity float64) {
 	return (*td)[i].Picture, (*td)[i].Intensity
+}
+
+// ClipRect returns the clipping rectangle property of the i-th vertex.
+func (td *TrianglesData) ClipRect(i int) (rect Rect, has bool) {
+	return (*td)[i].ClipRect, (*td)[i].IsClipped
 }
 
 // PictureData specifies an in-memory rectangular area of pixels and implements Picture and
