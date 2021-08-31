@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fix SIGSEGV on text.NewAtlas if glyph absent 
 - Use slice for range in Drawer.Dirty(), to improve performance
 - GLTriangle's fragment shader is used when rendered by the Canvas.
+- Add MSAA support
 
 ## [v0.10.0] 2020-08-22
 - Add AnchorPos struct and functions

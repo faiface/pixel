@@ -1,6 +1,7 @@
 package pixelgl
 
 import (
+	"fmt"
 	"image"
 	"image/color"
 	"runtime"
@@ -8,6 +9,7 @@ import (
 	"github.com/faiface/glhf"
 	"github.com/faiface/mainthread"
 	"github.com/faiface/pixel"
+	"github.com/go-gl/gl/v3.3-core/gl"
 	"github.com/go-gl/glfw/v3.3/glfw"
 	"github.com/pkg/errors"
 )
@@ -75,6 +77,9 @@ type WindowConfig struct {
 	// Invisible specifies whether the window will be initially hidden.
 	// You can make the window visible later using Window.Show().
 	Invisible bool
+
+	//SamplesMSAA specifies the level of MSAA to be used. Must be one of 0, 2, 4, 8, 16. 0 to disable.
+	SamplesMSAA int
 }
 
 // Window is a window handler. Use this type to manipulate a window (input, drawing, etc.).
@@ -119,6 +124,17 @@ func NewWindow(cfg WindowConfig) (*Window, error) {
 
 	w := &Window{bounds: cfg.Bounds, cursorVisible: true}
 
+	flag := false
+	for _, v := range []int{0, 2, 4, 8, 16} {
+		if cfg.SamplesMSAA == v {
+			flag = true
+			break
+		}
+	}
+	if !flag {
+		return nil, fmt.Errorf("invalid value '%v' for msaaSamples", cfg.SamplesMSAA)
+	}
+
 	err := mainthread.CallErr(func() error {
 		var err error
 
@@ -134,6 +150,7 @@ func NewWindow(cfg WindowConfig) (*Window, error) {
 		glfw.WindowHint(glfw.TransparentFramebuffer, bool2int[cfg.TransparentFramebuffer])
 		glfw.WindowHint(glfw.Maximized, bool2int[cfg.Maximized])
 		glfw.WindowHint(glfw.Visible, bool2int[!cfg.Invisible])
+		glfw.WindowHint(glfw.Samples, cfg.SamplesMSAA)
 
 		if cfg.Position.X != 0 || cfg.Position.Y != 0 {
 			glfw.WindowHint(glfw.Visible, glfw.False)
@@ -163,6 +180,7 @@ func NewWindow(cfg WindowConfig) (*Window, error) {
 		// enter the OpenGL context
 		w.begin()
 		glhf.Init()
+		gl.Enable(gl.MULTISAMPLE)
 		w.end()
 
 		return nil
