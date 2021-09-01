@@ -97,6 +97,14 @@ type Window struct {
 		xpos, ypos, width, height int
 	}
 
+	callbacks struct {
+		buttonCallbacks      []ButtonCallback
+		cursorEnterCallbacks []CursorEnterCallback
+		cursorPosCallbacks   []CursorPosCallback
+		scrollCallbacks      []ScrollCallback
+		charCallbacks        []CharCallback
+	}
+
 	prevInp, currInp, tempInp struct {
 		mouse   pixel.Vec
 		buttons [KeyLast + 1]bool
