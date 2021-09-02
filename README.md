@@ -110,6 +110,7 @@ Here's the list of the main features in Pixel. Although Pixel is still under hea
  Here are some packages which use Pixel:
  - [TilePix](https://github.com/bcvery1/tilepix) Makes handling TMX files built with [Tiled](https://www.mapeditor.org/) trivially easy to work with using Pixel.
  - [spriteplus](https://github.com/cebarks/spriteplus) Basic `SpriteSheet` and `Animation` implementations
+ - [PixelUI](https://github.com/dusk125/pixelui) Imgui-based GUIs for Pixel
  - [pixelutils](https://github.com/dusk125/pixelutils) Variety of game related utilities (sprite packer, id generator, ticker, sprite loader, voronoia diagrams)
 
 ## Missing features
