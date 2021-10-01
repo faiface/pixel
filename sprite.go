@@ -27,7 +27,7 @@ func NewSprite(pic Picture, frame Rect) *Sprite {
 	tri := MakeTrianglesData(6)
 	s := &Sprite{
 		tri: tri,
-		d:   Drawer{Triangles: tri},
+		d:   Drawer{Triangles: tri, Cached: true},
 	}
 	s.matrix = IM
 	s.mask = Alpha(1)
@@ -42,6 +42,13 @@ func (s *Sprite) Set(pic Picture, frame Rect) {
 		s.frame = frame
 		s.calcData()
 	}
+}
+
+// SetCached makes the sprite cache all the
+// incoming pictures if the argument is true, and
+// doesn't make it do that if the argument is false.
+func (s *Sprite) SetCached(cached bool) {
+	s.d.Cached = cached
 }
 
 // Picture returns the current Sprite's Picture.

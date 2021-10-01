@@ -26,7 +26,7 @@ var _ BasicTarget = (*Batch)(nil)
 //
 // Note, that if the container does not support TrianglesColor, color masking will not work.
 func NewBatch(container Triangles, pic Picture) *Batch {
-	b := &Batch{cont: Drawer{Triangles: container, Picture: pic}}
+	b := &Batch{cont: Drawer{Triangles: container, Picture: pic, Cached: true}}
 	b.SetMatrix(IM)
 	b.SetColorMask(Alpha(1))
 	return b

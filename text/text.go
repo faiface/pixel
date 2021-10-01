@@ -136,6 +136,7 @@ func New(orig pixel.Vec, atlas *Atlas) *Text {
 
 	txt.transD.Picture = txt.atlas.pic
 	txt.transD.Triangles = &txt.trans
+	txt.transD.Cached = true
 
 	txt.Clear()
 
