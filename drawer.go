@@ -23,6 +23,7 @@ package pixel
 type Drawer struct {
 	Triangles Triangles
 	Picture   Picture
+	Cached    bool
 
 	targets    map[Target]*drawerTarget
 	allTargets []*drawerTarget
@@ -91,7 +92,10 @@ func (d *Drawer) Draw(t Target) {
 	pic := dt.pics[d.Picture]
 	if pic == nil {
 		pic = t.MakePicture(d.Picture)
-		dt.pics[d.Picture] = pic
+
+		if d.Cached {
+			dt.pics[d.Picture] = pic
+		}
 	}
 
 	pic.Draw(dt.tris)
