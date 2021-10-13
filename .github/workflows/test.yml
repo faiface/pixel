@@ -9,6 +9,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     env:
       GO111MODULE: on
+      DISPLAY: localhost:0
     steps:
       - name: Install env dependancies
         run: |
