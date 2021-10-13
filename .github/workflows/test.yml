@@ -13,7 +13,6 @@ jobs:
           if [ "$RUNNER_OS" == "Linux" ]; then
                sudo apt-get install -y xorg-dev libx11-dev libxrandr-dev libxinerama-dev libxcursor-dev libxi-dev libopenal-dev libasound2-dev libgl1-mesa-dev
           elif [ "$RUNNER_OS" == "Windows" ]; then
-#               choco install important_windows_software
                echo "windows"
           else
                echo "$RUNNER_OS not supported"
