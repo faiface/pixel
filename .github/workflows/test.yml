@@ -8,6 +8,8 @@ jobs:
         os: [ubuntu-latest, macos-latest, windows-latest]
     runs-on: ${{ matrix.os }}
     steps:
+      - name: Install env dependancies
+        run: sudo apt-get install -y xorg-dev libx11-dev libxrandr-dev libxinerama-dev libxcursor-dev libxi-dev libopenal-dev libasound2-dev libgl1-mesa-dev
       - name: Install Go
         uses: actions/setup-go@v2
         with:
