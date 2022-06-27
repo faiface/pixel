@@ -114,7 +114,7 @@ type TrianglesClipped interface {
 // Picture represents a rectangular area of raster data, such as a color. It has Bounds which
 // specify the rectangle where data is located.
 type Picture interface {
-	// Bounds returns the rectangle of the Picture. All data is located witih this rectangle.
+	// Bounds returns the rectangle of the Picture. All data is located within this rectangle.
 	// Querying properties outside the rectangle should return default value of that property.
 	Bounds() Rect
 }
