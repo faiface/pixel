@@ -128,6 +128,11 @@ func (u Vec) Len() float64 {
 	return math.Hypot(u.X, u.Y)
 }
 
+// SqLen returns the squared length of the vector u (faster to compute than Len).
+func (u Vec) SqLen() float64 {
+	return u.X*u.X + u.Y*u.Y
+}
+
 // Angle returns the angle between the vector u and the x-axis. The result is in range [-Pi, Pi].
 func (u Vec) Angle() float64 {
 	return math.Atan2(u.Y, u.X)
