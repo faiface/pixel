@@ -46,10 +46,10 @@ var defaultCanvasVertexFormat = glhf.AttrFormat{
 	canvasColor:     glhf.Attr{Name: "aColor", Type: glhf.Vec4},
 	canvasTexCoords: glhf.Attr{Name: "aTexCoords", Type: glhf.Vec2},
 	canvasIntensity: glhf.Attr{Name: "aIntensity", Type: glhf.Float},
-  canvasClip:      glhf.Attr{Name: "aClipRect", Type: glhf.Vec4},
+	canvasClip:      glhf.Attr{Name: "aClipRect", Type: glhf.Vec4},
 }
 
-// Sets up a base shader with everything needed for a Pixel
+// NewGLShader sets up a base shader with everything needed for a Pixel
 // canvas to render correctly. The defaults can be overridden
 // by simply using the SetUniform function.
 func NewGLShader(fragmentShader string) *GLShader {
@@ -109,10 +109,10 @@ func (gs *GLShader) getUniform(Name string) int {
 // SetUniform appends a custom uniform name and value to the shader.
 // if the uniform already exists, it will simply be overwritten.
 //
-// example:
+// Example:
 //
-//   utime := float32(time.Since(starttime)).Seconds())
-//   mycanvas.shader.AddUniform("u_time", &utime)
+//	utime := float32(time.Since(starttime)).Seconds())
+//	mycanvas.shader.AddUniform("u_time", &utime)
 func (gs *GLShader) SetUniform(name string, value interface{}) {
 	t, p := getAttrType(value)
 	if loc := gs.getUniform(name); loc > -1 {
