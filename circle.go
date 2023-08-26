@@ -48,6 +48,14 @@ func (c Circle) Area() float64 {
 	return math.Pi * math.Pow(c.Radius, 2)
 }
 
+// Bounds returns the bounding box for the circle
+func (c Circle) Bounds() Rect {
+	return Rect{
+		Min: V(c.Center.X-c.Radius, c.Center.Y-c.Radius),
+		Max: V(c.Center.X+c.Radius, c.Center.Y+c.Radius),
+	}
+}
+
 // Moved returns the Circle moved by the given vector delta.
 func (c Circle) Moved(delta Vec) Circle {
 	return Circle{
