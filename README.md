@@ -1,6 +1,6 @@
 # \*\*\*\*\*NOTICE\*\*\*\*\* 
 
-This repo is not under active development anymore and has been archived. Continued development has been migrated to [Pixel2](https://github.com/duysqubix/pixel2). A big thank you to [faiface](https://github.com/faiface) for creating this awesome library and for all the hard work put into it. We encourage old and new users to check out the new repo and contribute to it.
+This repo is not under active development anymore and has been archived. Continued development has been migrated to [Pixel2](https://github.com/gopxl/pixel). A big thank you to [faiface](https://github.com/faiface) for creating this awesome library and for all the hard work put into it. We encourage old and new users to check out the new repo and contribute to it.
 
 
 
