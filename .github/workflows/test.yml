@@ -1,0 +1,32 @@
+on: [ push, pull_request ]
+name: test
+jobs:
+  test:
+    strategy:
+      matrix:
+        go-version: [ 1.16.x, 1.17.x ]
+        os: [ ubuntu-latest ]
+    runs-on: ${{ matrix.os }}
+    env:
+      GO111MODULE: on
+      DISPLAY: localhost:0
+    steps:
+      - name: Install env dependancies
+        run: |
+          if [ "$RUNNER_OS" == "Linux" ]; then
+               sudo apt-get install -y xorg-dev libx11-dev libxrandr-dev libxinerama-dev libxcursor-dev libxi-dev libopenal-dev libasound2-dev libgl1-mesa-dev mesa-utils
+          elif [ "$RUNNER_OS" == "Windows" ]; then
+               echo "windows"
+          else
+               echo "$RUNNER_OS not supported"
+               exit 1
+          fi
+        shell: bash
+      - name: Install Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: ${{ matrix.go-version }}
+      - name: Checkout code
+        uses: actions/checkout@v2
+      - name: Test
+        run: go test -v -race -mod=readonly ./...
