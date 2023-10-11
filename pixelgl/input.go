@@ -71,6 +71,46 @@ func (w *Window) Typed() string {
 	return w.currInp.typed
 }
 
+// Register button callback
+func (w *Window) RegisterButtonCallback(cbfun ButtonCallback) {
+	w.callbacks.buttonCallbacks = append(w.callbacks.buttonCallbacks, cbfun)
+}
+
+// Register cursor enter callback
+func (w *Window) RegisterCursorEnterCallback(cbfun CursorEnterCallback) {
+	w.callbacks.cursorEnterCallbacks = append(w.callbacks.cursorEnterCallbacks, cbfun)
+}
+
+// Register cursor pos callback
+func (w *Window) RegisterCursorPosCallback(cbfun CursorPosCallback) {
+	w.callbacks.cursorPosCallbacks = append(w.callbacks.cursorPosCallbacks, cbfun)
+}
+
+// Register scroll callback
+func (w *Window) RegisterScrollCallback(cbfun ScrollCallback) {
+	w.callbacks.scrollCallbacks = append(w.callbacks.scrollCallbacks, cbfun)
+}
+
+// Register char callback
+func (w *Window) RegisterCharCallback(cbfun CharCallback) {
+	w.callbacks.charCallbacks = append(w.callbacks.charCallbacks, cbfun)
+}
+
+type ButtonCallback func(key Button, action ButtonAction)
+type CursorEnterCallback func()
+type CursorPosCallback func(x, y float64)
+type ScrollCallback func(xoff, yoff float64)
+type CharCallback func(r rune)
+
+type ButtonAction int
+
+// List of all button actions.
+const (
+	Press   = ButtonAction(glfw.Press)
+	Release = ButtonAction(glfw.Release)
+	Repeat  = ButtonAction(glfw.Repeat)
+)
+
 // Button is a keyboard or mouse button. Why distinguish?
 type Button int
 
@@ -368,6 +408,10 @@ func (w *Window) initInput() {
 				w.tempReleaseEvents[Button(button)] = true
 				w.tempInp.buttons[Button(button)] = false
 			}
+
+			for _, cbfun := range w.callbacks.buttonCallbacks {
+				go cbfun(Button(button), ButtonAction(action))
+			}
 		})
 
 		w.window.SetKeyCallback(func(_ *glfw.Window, key glfw.Key, scancode int, action glfw.Action, mods glfw.ModifierKey) {
@@ -384,10 +428,18 @@ func (w *Window) initInput() {
 			case glfw.Repeat:
 				w.tempInp.repeat[Button(key)] = true
 			}
+
+			for _, cbfun := range w.callbacks.buttonCallbacks {
+				go cbfun(Button(key), ButtonAction(action))
+			}
 		})
 
 		w.window.SetCursorEnterCallback(func(_ *glfw.Window, entered bool) {
 			w.cursorInsideWindow = entered
+
+			for _, cbfun := range w.callbacks.cursorEnterCallbacks {
+				go cbfun()
+			}
 		})
 
 		w.window.SetCursorPosCallback(func(_ *glfw.Window, x, y float64) {
@@ -395,15 +447,26 @@ func (w *Window) initInput() {
 				x+w.bounds.Min.X,
 				(w.bounds.H()-y)+w.bounds.Min.Y,
 			)
+
+			for _, cbfun := range w.callbacks.cursorPosCallbacks {
+				go cbfun(x, y)
+			}
 		})
 
 		w.window.SetScrollCallback(func(_ *glfw.Window, xoff, yoff float64) {
 			w.tempInp.scroll.X += xoff
 			w.tempInp.scroll.Y += yoff
+
+			for _, cbfun := range w.callbacks.scrollCallbacks {
+				go cbfun(xoff, yoff)
+			}
 		})
 
 		w.window.SetCharCallback(func(_ *glfw.Window, r rune) {
 			w.tempInp.typed += string(r)
+			for _, cbfun := range w.callbacks.charCallbacks {
+				go cbfun(r)
+			}
 		})
 	})
 }
