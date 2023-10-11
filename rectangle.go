@@ -70,6 +70,11 @@ func (r Rect) Area() float64 {
 	return r.W() * r.H()
 }
 
+// Bounds returns the bounding box for the rect (itself)
+func (r Rect) Bounds() Rect {
+	return r
+}
+
 // Edges will return the four lines which make up the edges of the rectangle.
 func (r Rect) Edges() [4]Line {
 	corners := r.Vertices()
