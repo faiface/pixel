@@ -1,4 +1,4 @@
-module github.com/faiface/pixel
+module github.com/Retro-Carnage-Team/pixel
 
 go 1.12
 
